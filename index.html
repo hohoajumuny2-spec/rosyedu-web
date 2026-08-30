@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로지에듀 최준용 국어</title>
+    <style>
+        /* 기본 여백 제거 및 폰트 설정 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            background-color: #fff;
+            color: #1d1d1f;
+            word-break: keep-all;
+        }
+
+        a { text-decoration: none; }
+        
+        /* 반투명 상단 네비게이션 바 */
+        .global-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .global-nav a {
+            color: #f5f5f7;
+            font-size: 12px;
+            font-weight: 400;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .global-nav a:hover { opacity: 1; }
+
+        /* 로고 스타일 강조 */
+        .global-nav .logo {
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 20px;
+            opacity: 1;
+        }
+
+        /* 공통 섹션 스타일 */
+        .section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-top: 120px;
+            box-sizing: border-box;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+
+        /* 텍스트 요소 */
+        .title {
+            font-size: 56px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .subtitle {
+            font-size: 28px;
+            font-weight: 400;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .links a {
+            font-size: 21px;
+            color: #06c;
+            margin: 0 15px;
+        }
+
+        .links a:hover { text-decoration: underline; }
+
+        /* 다크 테마 / 라이트 테마 */
+        .theme-dark { background-color: #000; color: #f5f5f7; }
+        .theme-light { background-color: #fbfbfd; color: #1d1d1f; }
+
+        /* 메인 대형 배너 영역 */
+        .hero {
+            height: 700px;
+            margin-top: 48px;
+        }
+
+        /* 2단 그리드 영역 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 12px;
+            background-color: #fff;
+        }
+
+        .grid-item {
+            height: 580px;
+            padding-top: 50px;
+        }
+
+        /* 페이드인 애니메이션 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s cubic-bezier(0.25, 1, 0.5, 1), transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 모바일 반응형 처리 */
+        @media (max-width: 768px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .title { font-size: 40px; }
+            .subtitle { font-size: 21px; }
+            .global-nav { gap: 15px; }
+            .global-nav .logo { display: none; /* 모바일에서는 공간 확보를 위해 로고 숨김 */ }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 상단 네비게이션 -->
+    <nav class="global-nav">
+        <a href="#" class="logo">로지에듀 최준용 국어</a>
+        <a href="#">소개</a>
+        <a href="#">강사진</a>
+        <a href="#">커리큘럼</a>
+        <a href="#">합격후기</a>
+        <a href="#">상담예약</a>
+    </nav>
+
+    <!-- 첫 번째 대형 배너 -->
+    <section class="section hero theme-dark">
+        <div class="fade-in">
+            <h1 class="title">국최 24h</h1>
+            <p class="subtitle">수능 국어의 본질을 완벽하게 꿰뚫다.</p>
+            <div class="links">
+                <a href="#">더 알아보기 &gt;</a>
+                <a href="#">수강 신청 &gt;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 두 번째 대형 배너 -->
+    <section class="section hero theme-light">
+        <div class="fade-in">
+            <h1 class="title">완벽한 내신 대비</h1>
+            <p class="subtitle">학교별 맞춤 전략으로 1등급을 완성하세요.</p>
+            <div class="links">
+                <a href="#">커리큘럼 보기 &gt;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 하단 2단 그리드 배너 -->
+    <div class="grid-container">
+        <!-- 왼쪽 배너 -->
+        <div class="section grid-item theme-light">
+            <div class="fade-in">
+                <h2 class="title" style="font-size: 32px;">예비 고1 특강</h2>
+                <p class="subtitle" style="font-size: 19px;">기초부터 탄탄하게 다지는 첫걸음.</p>
+                <div class="links">
+                    <a href="#" style="font-size: 17px;">자세히 보기 &gt;</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 오른쪽 배너 -->
+        <div class="section grid-item theme-dark">
+            <div class="fade-in">
+                <h2 class="title" style="font-size: 32px;">파이널 모의고사</h2>
+                <p class="subtitle" style="font-size: 19px;">실전 감각을 극대화하는 마지막 훈련.</p>
+                <div class="links">
+                    <a href="#" style="font-size: 17px;">자세히 보기 &gt;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크롤 애니메이션 자바스크립트 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach(el => observer.observe(el));
+        });
+    </script>
+
+</body>
+</html>
