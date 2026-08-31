@@ -16,6 +16,9 @@
             color: #ffffff; 
             overflow-x: hidden;
             scroll-behavior: smooth;
+            /* ★ 글자(어절) 끊김 완벽 방지 ★ */
+            word-break: keep-all; 
+            overflow-wrap: break-word;
         }
 
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -24,22 +27,10 @@
             to { opacity: 1; transform: translateY(0); } 
         }
 
-        /* 기하학 도형 (상상국어 스타일) */
-        .geo-shape {
-            width: 80px; height: 80px;
-            border: 1px solid rgba(255,255,255,0.3);
-            display: inline-block;
-            margin: 0 10px;
-        }
+        /* 기하학 도형 */
+        .geo-shape { width: 80px; height: 80px; border: 1px solid rgba(255,255,255,0.3); display: inline-block; margin: 0 10px; }
         .geo-circle { border-radius: 50%; }
-        .geo-triangle {
-            width: 0; height: 0;
-            border-left: 40px solid transparent;
-            border-right: 40px solid transparent;
-            border-bottom: 80px solid rgba(255,255,255,0.3);
-            border-top: none;
-            background-color: transparent;
-        }
+        .geo-triangle { width: 0; height: 0; border-left: 40px solid transparent; border-right: 40px solid transparent; border-bottom: 80px solid rgba(255,255,255,0.3); border-top: none; background-color: transparent; }
         
         .scroll-down { writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.2em; }
         ::-webkit-scrollbar { width: 8px; }
@@ -47,9 +38,12 @@
         ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
         
-        /* 앱 아이콘/카드 호버 효과 */
         .app-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2), 0 10px 10px -5px rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
+
+        /* 관리자 탭 스위치용 CSS */
+        .admin-tab-content { display: none; }
+        .admin-tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -58,7 +52,7 @@
          1. 상단 네비게이션 헤더
          ========================================== -->
     <nav class="fixed top-0 w-full flex justify-between items-center px-8 md:px-16 py-6 z-50 bg-[#1a1e29]/90 backdrop-blur-md border-b border-gray-800">
-        <!-- 좌측 메뉴 (클릭 시 스크롤 이동) -->
+        <!-- 좌측 메뉴 -->
         <div class="hidden lg:flex gap-8 text-xs font-bold text-gray-400 tracking-wider">
             <button onclick="scrollToSection('section-academy')" class="hover:text-white transition uppercase">Academy</button>
             <button onclick="scrollToSection('section-contents')" class="hover:text-white transition uppercase">Contents</button>
@@ -72,14 +66,13 @@
 
         <!-- 우측 인증/유틸리티 메뉴 -->
         <div class="flex items-center gap-6 text-sm font-medium text-gray-400">
-            <div id="auth-nav" class="flex gap-4">
+            <div id="auth-nav" class="flex gap-4 whitespace-nowrap">
                 <button onclick="showModal('signup')" class="hover:text-white transition"><i class="fa-regular fa-user mr-1"></i> 회원가입</button>
                 <span class="text-gray-700">|</span>
                 <button onclick="showModal('login')" class="hover:text-white transition"><i class="fa-solid fa-lock mr-1"></i> 로그인</button>
             </div>
             
-            <div id="user-nav" class="hidden items-center gap-4">
-                <!-- 관리자 접속 시 여기에 [관리자] 최준용 원장님 표시 -->
+            <div id="user-nav" class="hidden items-center gap-4 whitespace-nowrap">
                 <span id="header-user-info" class="text-blue-400 font-bold"></span>
                 <button onclick="goToDashboard()" class="text-white hover:text-blue-400 transition font-bold border border-gray-600 px-3 py-1 rounded">학습실 입장</button>
                 <button onclick="logout()" class="hover:text-white transition text-xs underline underline-offset-4">로그아웃</button>
@@ -89,7 +82,7 @@
 
 
     <!-- ==========================================
-         [HOME 뷰] 메인 랜딩 (Hero) 화면
+         [HOME 뷰] 메인 랜딩 화면
          ========================================== -->
     <div id="home-view" class="w-full">
         <!-- Hero Section -->
@@ -100,7 +93,6 @@
             </div>
 
             <div class="flex justify-between items-center w-full ml-8 md:ml-16">
-                <!-- 메인 카피 영역 -->
                 <div class="max-w-3xl z-10 fade-in">
                     <p class="text-lg md:text-xl font-medium text-gray-400 mb-4 tracking-tight">언제든! 어디서든! 무엇이든! 그리고 누구나!</p>
                     <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8 tracking-tighter">
@@ -116,8 +108,7 @@
                     </button>
                 </div>
 
-                <!-- 우측 기하학 도형 -->
-                <div class="hidden lg:flex items-center opacity-40 z-0">
+                <div class="hidden lg:flex items-center opacity-40 z-0 whitespace-nowrap">
                     <div class="geo-shape"></div>
                     <span class="text-gray-500 mx-2 text-xl font-light">X</span>
                     <div class="geo-shape geo-circle"></div>
@@ -126,26 +117,103 @@
             </div>
         </main>
 
-        <!-- ACADEMY, CONTENTS, CLINIC 섹션 (이전과 동일하게 유지) -->
+        <!-- ACADEMY Section -->
         <section id="section-academy" class="py-32 px-8 md:px-24 bg-[#151922]">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
                 <div class="md:w-1/2">
                     <h3 class="text-blue-500 font-bold mb-2 tracking-widest text-sm">ACADEMY</h3>
-                    <h2 class="text-4xl md:text-5xl font-black mb-8 leading-tight">1인 원장의 물리적 한계를 넘어<br>완벽을 복제하다.</h2>
-                    <p class="text-gray-400 leading-relaxed mb-6 text-lg">로지에듀 최준용 국어는 타협하지 않습니다. '적당히' 넘어가는 법 없이 오직 <strong>'정확하고 올바른 답'</strong>만을 추구합니다.</p>
-                    <p class="text-gray-400 leading-relaxed mb-6 text-lg">1인 원장으로서 학생 한 명 한 명에게 쏟고 싶은 열정은 무한하지만, 물리적인 시간은 유한했습니다. 그래서 결심했습니다. <strong>저의 국어적 두뇌와 학원의 모든 노하우를 데이터화하여 AI 플랫폼에 이식하기로 말입니다.</strong></p>
-                    <p class="text-gray-300 font-bold leading-relaxed text-lg">이제 우리 학생들은 새벽 2시에도 원장과 마주 앉아 1:1 과외를 받는 것과 같은 치밀한 밀착 지도를 경험하게 될 것입니다.</p>
+                    <h2 class="text-4xl md:text-5xl font-black mb-8 leading-tight block">
+                        <span class="inline-block">1인 원장의 물리적 한계를 넘어</span> 
+                        <span class="inline-block">완벽을 복제하다.</span>
+                    </h2>
+                    <p class="text-gray-400 leading-relaxed mb-6 text-lg">
+                        로지에듀 최준용 국어는 타협하지 않습니다. '적당히' 넘어가는 법 없이 오직 <strong>'정확하고 올바른 답'</strong>만을 추구합니다.
+                    </p>
+                    <p class="text-gray-400 leading-relaxed mb-6 text-lg">
+                        1인 원장으로서 학생 한 명 한 명에게 쏟고 싶은 열정은 무한하지만, 물리적인 시간은 유한했습니다. 그래서 결심했습니다. <strong>저의 국어적 두뇌와 학원의 모든 노하우를 데이터화하여 AI 플랫폼에 이식하기로 말입니다.</strong>
+                    </p>
+                    <p class="text-gray-300 font-bold leading-relaxed text-lg">
+                        이제 우리 학생들은 새벽 2시에도 원장과 마주 앉아 1:1 과외를 받는 것과 같은 치밀한 밀착 지도를 경험하게 될 것입니다.
+                    </p>
                 </div>
                 <div class="md:w-1/2">
-                    <div class="w-full aspect-square border border-gray-700 relative flex items-center justify-center bg-[#1a1e29]">
+                    <div class="w-full aspect-square border border-gray-700 relative flex items-center justify-center bg-[#1a1e29] rounded-xl overflow-hidden">
                         <i class="fa-solid fa-microchip text-7xl text-blue-500/50"></i>
-                        <div class="absolute inset-4 border border-blue-500/20"></div>
+                        <div class="absolute inset-4 border border-blue-500/20 rounded-lg"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- (나머지 홈 섹션 생략 처리 방지용 기본 레이아웃 유지) -->
+        <!-- CONTENTS Section -->
+        <section id="section-contents" class="py-32 px-8 md:px-24">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-20">
+                    <h3 class="text-blue-500 font-bold mb-2 tracking-widest text-sm">CONTENTS</h3>
+                    <h2 class="text-4xl font-black mb-4">비교 불가능한 스마트 학습 시스템</h2>
+                    <p class="text-gray-400">오직 로지에듀 재원생들만을 위해 고안된 5가지 핵심 프로그램을 소개합니다.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl content-card">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-robot"></i></div>
+                        <h4 class="text-2xl font-bold mb-4">1. 24시간 AI 국최</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            원장님의 두뇌를 그대로 이식한 전용 AI 조교입니다. 모의고사 해설이나 어려운 개념에 대해 밤낮을 가리지 않고 질문하세요. 한 치의 오차 없는 완벽한 해설을 즉각 제공합니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl content-card">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-file-arrow-up"></i></div>
+                        <h4 class="text-2xl font-bold mb-4">2. 매일 학습 '과제 제출'</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            국어 실력의 핵심은 '꾸준함'입니다. 플랫폼을 통해 매일 주어지는 과제를 간편하게 업로드하고, 제출 현황과 성취도를 원장님이 직접 꼼꼼하게 관리하고 피드백합니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl content-card">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div>
+                        <h4 class="text-2xl font-bold mb-4">3. 온라인 실시간 모의고사</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            집에서도 수능 시험장과 동일한 긴장감을 유지합니다. 실시간 타이머와 온라인 뷰어를 통해 지정된 시간에 다 함께 모의고사를 치르며 실전 감각을 극대화합니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl content-card">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-school"></i></div>
+                        <h4 class="text-2xl font-bold mb-4">4. 반별 온라인 TEST</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            학교별, 수준별 맞춤형 온라인 테스트를 진행합니다. OMR 자동 채점 시스템과 연동되어 1초 만에 자신의 취약점을 정확하게 파악할 수 있습니다.
+                        </p>
+                    </div>
+
+                    <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl content-card md:col-span-2 lg:col-span-1">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-pen-nib"></i></div>
+                        <h4 class="text-2xl font-bold mb-4">5. AI 논술 정밀 첨삭</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            단순한 맞춤법 교정이 아닙니다. 학생이 쓴 글의 논리 구조, 근거의 타당성, 문장력을 원장님의 엄격한 평가 기준에 맞게 AI가 다각도로 분석하여 입체적인 첨삭을 제공합니다.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- CLINIC Section -->
+        <section id="section-clinic" class="py-32 px-8 md:px-24 bg-[#1a1e29]">
+            <div class="max-w-5xl mx-auto text-center">
+                <h3 class="text-blue-500 font-bold mb-2 tracking-widest text-sm">CLINIC</h3>
+                <h2 class="text-4xl md:text-5xl font-black mb-8 leading-tight">단 하나의 개념 누수도 허락하지 않는<br>데이터 기반 1:1 클리닉</h2>
+                <div class="w-24 h-1 bg-blue-500 mx-auto mb-8"></div>
+                <p class="text-gray-400 leading-relaxed text-lg mb-12 max-w-3xl mx-auto">
+                    로지에듀의 클리닉은 맹목적인 문제 풀이가 아닙니다. 
+                    플랫폼에 누적된 OMR 채점 데이터와 AI 분석 결과를 바탕으로, <strong>학생 개개인이 유독 자주 틀리는 세부 영역과 오개념을 정확하게 타겟팅</strong>합니다. 
+                    정규 수업에서 채우지 못한 2%의 틈새를 완벽하게 메워, 기복 없는 탄탄한 1등급의 기반을 완성합니다.
+                </p>
+            </div>
+        </section>
+        
         <footer class="py-12 text-center text-gray-600 text-sm border-t border-gray-800">
             <p>경기도 하남시 로지에듀 최준용 국어학원</p>
             <p class="mt-2">&copy; 2026 LOGY EDU. All rights reserved.</p>
@@ -165,53 +233,42 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
-                <!-- 프로그램 카드 1 -->
                 <div onclick="openProgram('chat')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start">
                     <div class="w-14 h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg shadow-blue-900/50"><i class="fa-solid fa-robot"></i></div>
                     <h3 class="text-xl font-bold mb-2">24시간 AI 튜터</h3>
                     <p class="text-gray-400 text-sm leading-relaxed">모의고사 해설 및 개념 질의응답을 언제든 자유롭게 진행할 수 있습니다.</p>
                 </div>
 
-                <!-- 프로그램 카드 2 -->
                 <div onclick="openProgram('omr')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start">
                     <div class="w-14 h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg shadow-indigo-900/50"><i class="fa-solid fa-check-double"></i></div>
                     <h3 class="text-xl font-bold mb-2">OMR 자동 채점</h3>
                     <p class="text-gray-400 text-sm leading-relaxed">온라인으로 과제 정답을 마킹하고 즉시 채점 결과를 분석받습니다.</p>
                 </div>
 
-                <!-- 프로그램 카드 3 -->
                 <div onclick="openProgram('essay')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start">
                     <div class="w-14 h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg shadow-emerald-900/50"><i class="fa-solid fa-pen-nib"></i></div>
                     <h3 class="text-xl font-bold mb-2">AI 정밀 논술/요약</h3>
                     <p class="text-gray-400 text-sm leading-relaxed">글의 논리 구조와 문장력을 원장님의 기준에 맞게 엄격히 첨삭합니다.</p>
                 </div>
 
-                <!-- 프로그램 카드 4 -->
                 <div onclick="alert('준비 중인 서비스입니다.')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start opacity-70">
                     <div class="w-14 h-14 bg-gray-700 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-stopwatch"></i></div>
                     <h3 class="text-xl font-bold mb-2">온라인 시험장</h3>
                     <p class="text-gray-400 text-sm leading-relaxed">실전과 동일한 환경에서 타이머와 함께 실시간 모의고사를 치릅니다.</p>
                 </div>
 
-                <!-- 프로그램 카드 5 -->
-                <div onclick="alert('준비 중인 서비스입니다.')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start opacity-70">
-                    <div class="w-14 h-14 bg-gray-700 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-folder-open"></i></div>
-                    <h3 class="text-xl font-bold mb-2">비밀 자료실</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">로지에듀 재원생들만을 위한 각종 학습 자료 및 기출문제를 제공합니다.</p>
-                </div>
-
-                <!-- 프로그램 카드 6 (원장님 접속 시에만 노출) -->
-                <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start relative overflow-hidden">
+                <!-- 시스템 관리 (원장님용) -->
+                <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-8 rounded-2xl cursor-pointer app-card flex-col items-start relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-500/20 rounded-full blur-xl"></div>
                     <div class="w-14 h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg shadow-red-900/50 relative z-10"><i class="fa-solid fa-gears"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-white relative z-10">시스템 관리</h3>
-                    <p class="text-red-300 text-sm leading-relaxed relative z-10">AI 지식베이스 업데이트 등 플랫폼 전반을 설정합니다.</p>
+                    <p class="text-red-300 text-sm leading-relaxed relative z-10">AI 지식베이스 업데이트, 학생 관리 등 플랫폼 전반을 설정합니다.</p>
                 </div>
 
             </div>
         </div>
 
-        <!-- 2. 프로그램 상세 화면 컨테이너 (클릭 시 열림) -->
+        <!-- 2. 프로그램 상세 화면 컨테이너 -->
         <div id="program-view" class="hidden fade-in">
             
             <button onclick="closeProgram()" class="mb-8 text-gray-400 hover:text-white transition font-bold flex items-center gap-2">
@@ -276,17 +333,104 @@
                 </div>
             </div>
 
-            <!-- 2-4. 시스템 관리 (원장님용) -->
-            <div id="prog-admin" class="prog-content hidden w-full">
-                <div class="bg-[#1e2430] border border-gray-800 p-8 rounded-xl max-w-3xl mx-auto shadow-xl">
-                    <h2 class="text-2xl font-bold mb-6 text-red-400"><i class="fa-solid fa-gears mr-2"></i>시스템 관리</h2>
-                    <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg text-center">
-                        <h3 class="text-xl font-bold mb-2 text-white">AI 지식베이스 주입 (RAG)</h3>
-                        <p class="text-sm text-gray-400 mb-8">해설지(.txt)를 업로드하여 AI 두뇌를 업데이트합니다.</p>
-                        <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-6 font-medium text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 w-full">
-                        <button onclick="uploadKnowledge()" class="w-full bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded text-lg font-bold transition">서버에 지식 이식하기</button>
-                        <p id="admin-msg" class="mt-6 font-bold text-sm"></p>
+            <!-- 2-4. 시스템 관리 (원장님 4가지 통합 메뉴) -->
+            <div id="prog-admin" class="prog-content hidden w-full max-w-5xl mx-auto">
+                <div class="bg-[#1e2430] border border-gray-800 p-6 md:p-10 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                        <i class="fa-solid fa-gears text-red-500"></i>시스템 통합 관리
+                    </h2>
+                    
+                    <!-- 관리자 하위 탭 메뉴 -->
+                    <div class="flex overflow-x-auto gap-4 border-b border-gray-700 pb-4 mb-8">
+                        <button onclick="switchAdminTab('admin-ai')" id="btn-admin-ai" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">🧠 AI 지식 주입</button>
+                        <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">👥 학생 계정 관리</button>
+                        <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">💻 실시간 모의고사 세팅</button>
+                        <button onclick="switchAdminTab('admin-report')" id="btn-admin-report" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">📊 과제/성적 확인</button>
                     </div>
+
+                    <!-- 1. AI 지식 주입 탭 -->
+                    <div id="admin-ai" class="admin-tab-content active">
+                        <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg text-center">
+                            <h3 class="text-xl font-bold mb-2 text-white">AI 두뇌 업데이트 (RAG)</h3>
+                            <p class="text-sm text-gray-400 mb-8">바탕 모의고사 해설지나 자체 교재(.txt)를 업로드하여 AI의 지식을 확장합니다.</p>
+                            <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-6 font-medium text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 w-full">
+                            <button onclick="uploadKnowledge()" class="w-full bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded text-lg font-bold transition">서버에 지식 이식하기</button>
+                            <p id="admin-msg" class="mt-6 font-bold text-sm"></p>
+                        </div>
+                    </div>
+
+                    <!-- 2. 학생 계정 관리 탭 (UI 시연용) -->
+                    <div id="admin-users" class="admin-tab-content">
+                        <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
+                            <h3 class="text-lg font-bold mb-4 text-white">학생 가입 승인 대기자 목록</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-gray-400">
+                                    <thead class="text-xs uppercase bg-gray-800 text-gray-300">
+                                        <tr><th class="px-4 py-3">이름</th><th class="px-4 py-3">소속 반</th><th class="px-4 py-3">연락처</th><th class="px-4 py-3">상태</th><th class="px-4 py-3 text-center">관리</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                                            <td class="px-4 py-3 font-bold text-white">이승기</td><td class="px-4 py-3">고1 미강고</td><td class="px-4 py-3">010-1234-5678</td>
+                                            <td class="px-4 py-3"><span class="bg-yellow-900 text-yellow-300 px-2 py-1 rounded text-xs">승인 대기</span></td>
+                                            <td class="px-4 py-3 text-center"><button class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-500">가입 승인</button></td>
+                                        </tr>
+                                        <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                                            <td class="px-4 py-3 font-bold text-white">김채원</td><td class="px-4 py-3">논술</td><td class="px-4 py-3">010-9876-5432</td>
+                                            <td class="px-4 py-3"><span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs">가입 완료</span></td>
+                                            <td class="px-4 py-3 text-center"><button class="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-500">정보 수정</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 실시간 모의고사 세팅 탭 (UI 시연용) -->
+                    <div id="admin-exam" class="admin-tab-content">
+                        <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg">
+                            <h3 class="text-lg font-bold mb-6 text-white">신규 모의고사 방 개설</h3>
+                            <div class="space-y-4 max-w-md">
+                                <div>
+                                    <label class="text-sm font-bold text-gray-400 block mb-2">시험명</label>
+                                    <input type="text" placeholder="예: 3월 학력평가 대비 직전 모의고사" class="w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-bold text-gray-400 block mb-2">시험지 PDF 업로드</label>
+                                    <input type="file" accept=".pdf" class="w-full bg-[#1e2430] border border-gray-600 text-gray-400 p-2 rounded text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-bold text-gray-400 block mb-2">제한 시간 (분)</label>
+                                    <input type="number" value="80" class="w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm">
+                                </div>
+                                <button onclick="alert('서버 백엔드 업데이트 후 활성화됩니다.')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded mt-4 transition">시험방 개설 및 학생 호출하기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 학습/성적 리포트 탭 (UI 시연용) -->
+                    <div id="admin-report" class="admin-tab-content">
+                        <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
+                            <h3 class="text-lg font-bold mb-4 text-white">최근 제출된 과제 및 성적</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-gray-400">
+                                    <thead class="text-xs uppercase bg-gray-800 text-gray-300">
+                                        <tr><th class="px-4 py-3">제출일</th><th class="px-4 py-3">이름 (반)</th><th class="px-4 py-3">과제명</th><th class="px-4 py-3">유형</th><th class="px-4 py-3 text-center">점수/상태</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                                            <td class="px-4 py-3">오늘 14:30</td><td class="px-4 py-3 font-bold text-white">최준용 (논술)</td><td class="px-4 py-3">미강고 중간고사 대비 1회</td>
+                                            <td class="px-4 py-3">OMR 채점</td><td class="px-4 py-3 text-center font-bold text-blue-400">100점</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                                            <td class="px-4 py-3">어제 22:15</td><td class="px-4 py-3 font-bold text-white">이승기 (고1 미사고)</td><td class="px-4 py-3">3월 모의고사 비문학 요약</td>
+                                            <td class="px-4 py-3">AI 첨삭</td><td class="px-4 py-3 text-center text-green-400">분석 완료</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -331,7 +475,6 @@
                 </div>
             </div>
 
-            <!-- 회원가입 폼 -->
             <div id="signup-form" class="hidden space-y-4">
                 <div>
                     <label class="text-sm text-gray-400 block mb-1">소속 반</label>
@@ -347,7 +490,7 @@
                     <label class="text-sm text-gray-400 block mb-1">연락처</label>
                     <input type="text" placeholder="010-0000-0000" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
                 </div>
-                <button onclick="alert('가입 신청이 완료되었습니다. 승인 후 로그인 가능합니다.'); switchModal('login');" class="w-full bg-gray-200 hover:bg-white text-black font-bold p-4 rounded mt-4 transition">
+                <button onclick="alert('가입 신청이 완료되었습니다. 원장님 승인 후 로그인 가능합니다.'); switchModal('login');" class="w-full bg-gray-200 hover:bg-white text-black font-bold p-4 rounded mt-4 transition">
                     가입 신청하기
                 </button>
             </div>
@@ -358,17 +501,21 @@
         // ★★★ 원장님의 Render 서버 주소로 반드시 변경하세요 ★★★
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         
-        // 홈페이지 접속 시 백그라운드에서 서버 미리 깨우기
+        // 홈페이지 접속 시 서버 미리 깨우기 (로그인 딜레이 해소)
         window.addEventListener('DOMContentLoaded', () => {
             fetch(`${API_URL}/api/health`).catch(() => console.log('Waking up server...'));
         });
 
         let currentUser = null;
 
+        // 네비게이션 스크롤 에러 수정 (setTimeout 적용)
         function scrollToSection(id) {
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+                const target = document.getElementById(id);
+                if(target) target.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
         }
 
         function showModal(type) {
@@ -401,11 +548,11 @@
             if(!currentUser) return showModal('login');
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
-            closeProgram(); // 대시보드 메인으로 초기화
+            closeProgram(); 
             window.scrollTo(0,0);
         }
 
-        // 앱 구조 전환 함수 (대시보드 <-> 프로그램 상세)
+        // 앱 구조 오픈/클로즈
         function openProgram(progId) {
             document.getElementById('dashboard-home').classList.add('hidden');
             document.getElementById('program-view').classList.remove('hidden');
@@ -418,6 +565,26 @@
         function closeProgram() {
             document.getElementById('program-view').classList.add('hidden');
             document.getElementById('dashboard-home').classList.remove('hidden');
+        }
+
+        // 관리자 내부 탭 전환 스크립트
+        function switchAdminTab(tabId) {
+            const btns = ['admin-ai', 'admin-users', 'admin-exam', 'admin-report'];
+            btns.forEach(id => {
+                const btn = document.getElementById('btn-' + id);
+                if(btn) {
+                    btn.className = btn.className.replace('bg-gray-800 text-white', 'text-gray-400 hover:text-white');
+                }
+                const content = document.getElementById(id);
+                if(content) content.classList.remove('active');
+            });
+            
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if(activeBtn) {
+                activeBtn.className = activeBtn.className.replace('text-gray-400 hover:text-white', 'bg-gray-800 text-white');
+            }
+            const activeContent = document.getElementById(tabId);
+            if(activeContent) activeContent.classList.add('active');
         }
 
         async function login() {
@@ -452,7 +619,6 @@
                     document.getElementById('user-nav').classList.remove('hidden');
                     document.getElementById('user-nav').classList.add('flex');
                     
-                    // 원장님 요청: 관리자 접속 시 정확히 "[관리자] 최준용 원장님" 출력
                     if (data.is_admin) {
                         document.getElementById('header-user-info').innerText = `[관리자] ${sName} 원장님`;
                         document.getElementById('card-admin').classList.remove('hidden');
@@ -471,7 +637,7 @@
             } catch (error) {
                 loadingMsg.classList.add('hidden');
                 document.getElementById('login-btn').disabled = false;
-                errDiv.textContent = "서버 연결 지연. 서버가 잠에서 깨어나는 중이니 1분 후 다시 눌러주세요.";
+                errDiv.textContent = "서버가 아직 수면 중입니다. 약 30초 뒤 다시 눌러주세요!";
                 errDiv.classList.remove('hidden');
             }
         }
