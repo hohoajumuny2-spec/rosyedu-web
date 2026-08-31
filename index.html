@@ -16,7 +16,6 @@
             color: #ffffff; 
             overflow-x: hidden;
             scroll-behavior: smooth;
-            /* ★ 글자(어절) 끊김 완벽 방지 ★ */
             word-break: keep-all; 
             overflow-wrap: break-word;
         }
@@ -27,7 +26,6 @@
             to { opacity: 1; transform: translateY(0); } 
         }
 
-        /* 기하학 도형 */
         .geo-shape { width: 80px; height: 80px; border: 1px solid rgba(255,255,255,0.3); display: inline-block; margin: 0 10px; }
         .geo-circle { border-radius: 50%; }
         .geo-triangle { width: 0; height: 0; border-left: 40px solid transparent; border-right: 40px solid transparent; border-bottom: 80px solid rgba(255,255,255,0.3); border-top: none; background-color: transparent; }
@@ -41,7 +39,6 @@
         .app-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2), 0 10px 10px -5px rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
 
-        /* 관리자 탭 스위치용 CSS */
         .admin-tab-content { display: none; }
         .admin-tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
     </style>
@@ -52,19 +49,16 @@
          1. 상단 네비게이션 헤더
          ========================================== -->
     <nav class="fixed top-0 w-full flex justify-between items-center px-8 md:px-16 py-6 z-50 bg-[#1a1e29]/90 backdrop-blur-md border-b border-gray-800">
-        <!-- 좌측 메뉴 -->
         <div class="hidden lg:flex gap-8 text-xs font-bold text-gray-400 tracking-wider">
             <button onclick="scrollToSection('section-academy')" class="hover:text-white transition uppercase">Academy</button>
             <button onclick="scrollToSection('section-contents')" class="hover:text-white transition uppercase">Contents</button>
             <button onclick="scrollToSection('section-clinic')" class="hover:text-white transition uppercase">Clinic</button>
         </div>
 
-        <!-- 중앙 로고 -->
         <div class="text-2xl md:text-3xl font-black text-white cursor-pointer tracking-widest absolute left-1/2 transform -translate-x-1/2" onclick="goHome()">
             로지에듀<span class="text-blue-500">*</span>
         </div>
 
-        <!-- 우측 인증/유틸리티 메뉴 -->
         <div class="flex items-center gap-6 text-sm font-medium text-gray-400">
             <div id="auth-nav" class="flex gap-4 whitespace-nowrap">
                 <button onclick="showModal('signup')" class="hover:text-white transition"><i class="fa-regular fa-user mr-1"></i> 회원가입</button>
@@ -85,7 +79,6 @@
          [HOME 뷰] 메인 랜딩 화면
          ========================================== -->
     <div id="home-view" class="w-full">
-        <!-- Hero Section -->
         <main id="hero-screen" class="pt-32 px-8 md:px-24 flex flex-col justify-center relative min-h-screen">
             <div class="absolute left-8 md:left-16 bottom-0 h-48 flex flex-col items-center">
                 <span class="scroll-down text-gray-500 text-xs mb-4">Scroll Down</span>
@@ -117,7 +110,6 @@
             </div>
         </main>
 
-        <!-- ACADEMY Section -->
         <section id="section-academy" class="py-32 px-8 md:px-24 bg-[#151922]">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center">
                 <div class="md:w-1/2">
@@ -145,7 +137,6 @@
             </div>
         </section>
 
-        <!-- CONTENTS Section -->
         <section id="section-contents" class="py-32 px-8 md:px-24">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-20">
@@ -155,7 +146,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    
                     <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl content-card">
                         <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-robot"></i></div>
                         <h4 class="text-2xl font-bold mb-4">1. 24시간 AI 국최</h4>
@@ -195,12 +185,10 @@
                             단순한 맞춤법 교정이 아닙니다. 학생이 쓴 글의 논리 구조, 근거의 타당성, 문장력을 원장님의 엄격한 평가 기준에 맞게 AI가 다각도로 분석하여 입체적인 첨삭을 제공합니다.
                         </p>
                     </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- CLINIC Section -->
         <section id="section-clinic" class="py-32 px-8 md:px-24 bg-[#1a1e29]">
             <div class="max-w-5xl mx-auto text-center">
                 <h3 class="text-blue-500 font-bold mb-2 tracking-widest text-sm">CLINIC</h3>
@@ -226,13 +214,11 @@
          ========================================== -->
     <div id="dashboard-screen" class="hidden flex-grow pt-28 px-4 md:px-12 w-full max-w-7xl mx-auto flex flex-col fade-in pb-12">
         
-        <!-- 1. 앱 런처 (메인 대시보드 화면) -->
         <div id="dashboard-home">
             <h2 class="text-3xl font-bold mb-2">스마트 학습실</h2>
             <p class="text-gray-400 mb-10">원하는 학습 프로그램을 선택해 주세요.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
                 <div onclick="openProgram('chat')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start">
                     <div class="w-14 h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg shadow-blue-900/50"><i class="fa-solid fa-robot"></i></div>
                     <h3 class="text-xl font-bold mb-2">24시간 AI 튜터</h3>
@@ -257,20 +243,23 @@
                     <p class="text-gray-400 text-sm leading-relaxed">실전과 동일한 환경에서 타이머와 함께 실시간 모의고사를 치릅니다.</p>
                 </div>
 
-                <!-- 시스템 관리 (원장님용) -->
+                <div onclick="alert('준비 중인 서비스입니다.')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card flex flex-col items-start opacity-70">
+                    <div class="w-14 h-14 bg-gray-700 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-folder-open"></i></div>
+                    <h3 class="text-xl font-bold mb-2">비밀 자료실</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">로지에듀 재원생들만을 위한 각종 학습 자료 및 기출문제를 제공합니다.</p>
+                </div>
+
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-8 rounded-2xl cursor-pointer app-card flex-col items-start relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-500/20 rounded-full blur-xl"></div>
                     <div class="w-14 h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg shadow-red-900/50 relative z-10"><i class="fa-solid fa-gears"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-white relative z-10">시스템 관리</h3>
-                    <p class="text-red-300 text-sm leading-relaxed relative z-10">AI 지식베이스 업데이트, 학생 관리 등 플랫폼 전반을 설정합니다.</p>
+                    <p class="text-red-300 text-sm leading-relaxed relative z-10">AI 지식베이스 업데이트, 학생 직접 등록 등 플랫폼 전반을 설정합니다.</p>
                 </div>
-
             </div>
         </div>
 
         <!-- 2. 프로그램 상세 화면 컨테이너 -->
         <div id="program-view" class="hidden fade-in">
-            
             <button onclick="closeProgram()" class="mb-8 text-gray-400 hover:text-white transition font-bold flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left"></i> <span>학습실 메인으로 돌아가기</span>
             </button>
@@ -333,63 +322,83 @@
                 </div>
             </div>
 
-            <!-- 2-4. 시스템 관리 (원장님 4가지 통합 메뉴) -->
-            <div id="prog-admin" class="prog-content hidden w-full max-w-5xl mx-auto">
+            <!-- 2-4. 시스템 관리 (원장님용 4개 탭) -->
+            <div id="prog-admin" class="prog-content hidden w-full max-w-6xl mx-auto">
                 <div class="bg-[#1e2430] border border-gray-800 p-6 md:p-10 rounded-xl shadow-xl">
                     <h2 class="text-3xl font-bold mb-8 text-white flex items-center gap-3">
                         <i class="fa-solid fa-gears text-red-500"></i>시스템 통합 관리
                     </h2>
                     
-                    <!-- 관리자 하위 탭 메뉴 -->
-                    <div class="flex overflow-x-auto gap-4 border-b border-gray-700 pb-4 mb-8">
-                        <button onclick="switchAdminTab('admin-ai')" id="btn-admin-ai" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">🧠 AI 지식 주입</button>
-                        <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">👥 학생 계정 관리</button>
+                    <div class="flex overflow-x-auto gap-4 border-b border-gray-700 pb-4 mb-8 whitespace-nowrap">
+                        <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded transition">👥 학생 직접 등록 및 명부</button>
+                        <button onclick="switchAdminTab('admin-ai')" id="btn-admin-ai" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">🧠 AI 지식 주입</button>
                         <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">💻 실시간 모의고사 세팅</button>
-                        <button onclick="switchAdminTab('admin-report')" id="btn-admin-report" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">📊 과제/성적 확인</button>
+                        <button onclick="switchAdminTab('admin-report')" id="btn-admin-report" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">📊 과제/성적 장부</button>
                     </div>
 
-                    <!-- 1. AI 지식 주입 탭 -->
-                    <div id="admin-ai" class="admin-tab-content active">
-                        <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg text-center">
-                            <h3 class="text-xl font-bold mb-2 text-white">AI 두뇌 업데이트 (RAG)</h3>
-                            <p class="text-sm text-gray-400 mb-8">바탕 모의고사 해설지나 자체 교재(.txt)를 업로드하여 AI의 지식을 확장합니다.</p>
+                    <!-- 학생 직접 등록 및 명부 관리 -->
+                    <div id="admin-users" class="admin-tab-content active">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg lg:col-span-1 h-fit">
+                                <h3 class="text-lg font-bold mb-4 text-white">신규 학생 직접 등록</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-sm font-bold text-gray-400 block mb-2">소속 반</label>
+                                        <select class="w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm">
+                                            <option>고1 미강고</option><option>고1 미사고</option><option>고1 하남고</option><option>논술</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-bold text-gray-400 block mb-2">이름</label>
+                                        <input type="text" placeholder="학생 이름" class="w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-bold text-gray-400 block mb-2">연락처</label>
+                                        <input type="text" placeholder="010-0000-0000" class="w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm">
+                                    </div>
+                                    <button onclick="alert('학생 계정이 성공적으로 등록되었습니다. (서버 연결 시 활성화)')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded mt-4 transition">학생 등록하기</button>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg lg:col-span-2">
+                                <h3 class="text-lg font-bold mb-4 text-white">등록된 학생 명부</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm text-gray-400">
+                                        <thead class="text-xs uppercase bg-gray-800 text-gray-300">
+                                            <tr><th class="px-4 py-3">이름</th><th class="px-4 py-3">소속 반</th><th class="px-4 py-3">연락처</th><th class="px-4 py-3 text-center">관리</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                                                <td class="px-4 py-3 font-bold text-white">최준용</td><td class="px-4 py-3">논술</td><td class="px-4 py-3">010-1234-5678</td>
+                                                <td class="px-4 py-3 text-center"><button class="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-500">수정 / 삭제</button></td>
+                                            </tr>
+                                            <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                                                <td class="px-4 py-3 font-bold text-white">김민수</td><td class="px-4 py-3">고1 미강고</td><td class="px-4 py-3">010-9876-5432</td>
+                                                <td class="px-4 py-3 text-center"><button class="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-500">수정 / 삭제</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI 지식 주입 -->
+                    <div id="admin-ai" class="admin-tab-content">
+                        <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg text-center max-w-3xl mx-auto">
+                            <h3 class="text-xl font-bold mb-2 text-white">AI 두뇌 지식 자료실</h3>
+                            <p class="text-sm text-gray-400 mb-8">모의고사 해설지나 자체 교재(.txt)를 업로드하여 AI의 지식을 확장합니다.</p>
                             <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-6 font-medium text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 w-full">
                             <button onclick="uploadKnowledge()" class="w-full bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded text-lg font-bold transition">서버에 지식 이식하기</button>
                             <p id="admin-msg" class="mt-6 font-bold text-sm"></p>
                         </div>
                     </div>
 
-                    <!-- 2. 학생 계정 관리 탭 (UI 시연용) -->
-                    <div id="admin-users" class="admin-tab-content">
-                        <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
-                            <h3 class="text-lg font-bold mb-4 text-white">학생 가입 승인 대기자 목록</h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm text-gray-400">
-                                    <thead class="text-xs uppercase bg-gray-800 text-gray-300">
-                                        <tr><th class="px-4 py-3">이름</th><th class="px-4 py-3">소속 반</th><th class="px-4 py-3">연락처</th><th class="px-4 py-3">상태</th><th class="px-4 py-3 text-center">관리</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-                                            <td class="px-4 py-3 font-bold text-white">이승기</td><td class="px-4 py-3">고1 미강고</td><td class="px-4 py-3">010-1234-5678</td>
-                                            <td class="px-4 py-3"><span class="bg-yellow-900 text-yellow-300 px-2 py-1 rounded text-xs">승인 대기</span></td>
-                                            <td class="px-4 py-3 text-center"><button class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-500">가입 승인</button></td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-                                            <td class="px-4 py-3 font-bold text-white">김채원</td><td class="px-4 py-3">논술</td><td class="px-4 py-3">010-9876-5432</td>
-                                            <td class="px-4 py-3"><span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs">가입 완료</span></td>
-                                            <td class="px-4 py-3 text-center"><button class="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-500">정보 수정</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. 실시간 모의고사 세팅 탭 (UI 시연용) -->
+                    <!-- 실시간 모의고사 세팅 -->
                     <div id="admin-exam" class="admin-tab-content">
-                        <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg">
+                        <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg max-w-2xl mx-auto">
                             <h3 class="text-lg font-bold mb-6 text-white">신규 모의고사 방 개설</h3>
-                            <div class="space-y-4 max-w-md">
+                            <div class="space-y-4">
                                 <div>
                                     <label class="text-sm font-bold text-gray-400 block mb-2">시험명</label>
                                     <input type="text" placeholder="예: 3월 학력평가 대비 직전 모의고사" class="w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm">
@@ -407,10 +416,10 @@
                         </div>
                     </div>
 
-                    <!-- 4. 학습/성적 리포트 탭 (UI 시연용) -->
+                    <!-- 학습/성적 리포트 -->
                     <div id="admin-report" class="admin-tab-content">
                         <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
-                            <h3 class="text-lg font-bold mb-4 text-white">최근 제출된 과제 및 성적</h3>
+                            <h3 class="text-lg font-bold mb-4 text-white">과제 제출 및 성적 통합 장부</h3>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm text-gray-400">
                                     <thead class="text-xs uppercase bg-gray-800 text-gray-300">
@@ -422,7 +431,7 @@
                                             <td class="px-4 py-3">OMR 채점</td><td class="px-4 py-3 text-center font-bold text-blue-400">100점</td>
                                         </tr>
                                         <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-                                            <td class="px-4 py-3">어제 22:15</td><td class="px-4 py-3 font-bold text-white">이승기 (고1 미사고)</td><td class="px-4 py-3">3월 모의고사 비문학 요약</td>
+                                            <td class="px-4 py-3">어제 22:15</td><td class="px-4 py-3 font-bold text-white">김민수 (고1 미사고)</td><td class="px-4 py-3">3월 모의고사 비문학 요약</td>
                                             <td class="px-4 py-3">AI 첨삭</td><td class="px-4 py-3 text-center text-green-400">분석 완료</td>
                                         </tr>
                                     </tbody>
@@ -439,7 +448,7 @@
 
 
     <!-- ==========================================
-         인증 모달 (회원가입 / 로그인)
+         인증 모달
          ========================================== -->
     <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-xl w-full max-w-md relative shadow-2xl">
@@ -475,6 +484,7 @@
                 </div>
             </div>
 
+            <!-- 회원가입 폼은 유지 (UI용) -->
             <div id="signup-form" class="hidden space-y-4">
                 <div>
                     <label class="text-sm text-gray-400 block mb-1">소속 반</label>
@@ -490,7 +500,7 @@
                     <label class="text-sm text-gray-400 block mb-1">연락처</label>
                     <input type="text" placeholder="010-0000-0000" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
                 </div>
-                <button onclick="alert('가입 신청이 완료되었습니다. 원장님 승인 후 로그인 가능합니다.'); switchModal('login');" class="w-full bg-gray-200 hover:bg-white text-black font-bold p-4 rounded mt-4 transition">
+                <button onclick="alert('가입 신청이 원장님께 전송되었습니다. 승인 후 로그인 가능합니다.'); switchModal('login');" class="w-full bg-gray-200 hover:bg-white text-black font-bold p-4 rounded mt-4 transition">
                     가입 신청하기
                 </button>
             </div>
@@ -501,14 +511,12 @@
         // ★★★ 원장님의 Render 서버 주소로 반드시 변경하세요 ★★★
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         
-        // 홈페이지 접속 시 서버 미리 깨우기 (로그인 딜레이 해소)
         window.addEventListener('DOMContentLoaded', () => {
             fetch(`${API_URL}/api/health`).catch(() => console.log('Waking up server...'));
         });
 
         let currentUser = null;
 
-        // 네비게이션 스크롤 에러 수정 (setTimeout 적용)
         function scrollToSection(id) {
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('dashboard-screen').classList.add('hidden');
@@ -552,7 +560,6 @@
             window.scrollTo(0,0);
         }
 
-        // 앱 구조 오픈/클로즈
         function openProgram(progId) {
             document.getElementById('dashboard-home').classList.add('hidden');
             document.getElementById('program-view').classList.remove('hidden');
@@ -567,9 +574,8 @@
             document.getElementById('dashboard-home').classList.remove('hidden');
         }
 
-        // 관리자 내부 탭 전환 스크립트
         function switchAdminTab(tabId) {
-            const btns = ['admin-ai', 'admin-users', 'admin-exam', 'admin-report'];
+            const btns = ['admin-users', 'admin-ai', 'admin-exam', 'admin-report'];
             btns.forEach(id => {
                 const btn = document.getElementById('btn-' + id);
                 if(btn) {
