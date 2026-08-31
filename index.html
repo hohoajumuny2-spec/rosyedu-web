@@ -12,62 +12,142 @@
         
         body { 
             font-family: 'Pretendard', sans-serif; 
-            background-color: #f4f0ea; 
-            color: #111; 
-        }
-        
-        /* 네오 브루탈리즘 핵심 CSS */
-        .brutal-border { border: 3px solid #111; }
-        .brutal-shadow { box-shadow: 6px 6px 0px #111; transition: all 0.2s ease; }
-        .brutal-shadow-sm { box-shadow: 3px 3px 0px #111; transition: all 0.2s ease; }
-        
-        .brutal-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px #111; }
-        .brutal-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #111; }
-        
-        .menu-radio:checked + label { 
-            background-color: #111; color: #fff; box-shadow: 0px 0px 0px #111; transform: translate(3px, 3px); 
+            background-color: #1a1e29; /* 하이엔드 딥 네이비 배경 */
+            color: #ffffff; 
+            overflow-x: hidden;
         }
 
-        .tab-content { display: none; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .tab-content.active { display: block; }
-        @keyframes popIn { 
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); } 
-            100% { opacity: 1; transform: scale(1) translateY(0); } 
+        /* 탭 및 모달 애니메이션 */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* 상상국어 스타일 기하학 도형 */
+        .geo-shape {
+            width: 80px; height: 80px;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: inline-block;
+            margin: 0 10px;
+        }
+        .geo-circle { border-radius: 50%; }
+        .geo-triangle {
+            width: 0; height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 80px solid rgba(255,255,255,0.3);
+            border-top: none;
+            background-color: transparent;
         }
         
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: #f4f0ea; border-left: 2px solid #111; }
-        ::-webkit-scrollbar-thumb { background: #111; }
+        /* 스크롤 다운 텍스트 */
+        .scroll-down {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            letter-spacing: 0.2em;
+        }
+
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1e29; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+
+        /* 모달 백그라운드 */
+        .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center">
+<body class="min-h-screen flex flex-col">
 
     <!-- ==========================================
-         1. 힙한 로그인 화면 & 오프닝 동영상
+         1. 상단 네비게이션 헤더
          ========================================== -->
-    <div id="login-screen" class="w-full flex-grow flex flex-col items-center justify-center p-4">
-        
-        <!-- 오프닝 동영상 영역 -->
-        <div class="bg-white brutal-border brutal-shadow p-2 max-w-lg w-full mb-8 rounded-xl transform -rotate-1 relative">
-            <div class="absolute -top-4 -right-4 bg-[#ffde59] px-3 py-1 brutal-border font-black z-10 rotate-12">ON AIR 🔴</div>
-            <!-- 유튜브 영상 (autoplay, mute 설정 적용) src 안의 아이디를 원장님 영상으로 바꾸시면 됩니다 -->
-            <iframe class="w-full aspect-video brutal-border pointer-events-none" 
-                    src="https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=1&loop=1&playlist=5qap5aO4i9A&controls=0" 
-                    frameborder="0" allow="autoplay; fullscreen"></iframe>
+    <nav class="fixed top-0 w-full flex justify-between items-center px-8 md:px-16 py-6 z-50 bg-[#1a1e29] border-b border-gray-800">
+        <!-- 좌측 더미 메뉴 (디자인 요소) -->
+        <div class="hidden lg:flex gap-8 text-xs font-bold text-gray-400 tracking-wider">
+            <a href="#" class="hover:text-white transition">ACADEMY</a>
+            <a href="#" class="hover:text-white transition">CONTENTS</a>
+            <a href="#" class="hover:text-white transition">CLINIC</a>
+            <a href="#" class="hover:text-white transition">COMMUNITY</a>
         </div>
 
-        <div class="mb-6 text-center">
-            <h1 class="text-5xl font-black tracking-tighter mb-2" style="text-shadow: 3px 3px 0px #ff6b6b;">로지에듀</h1>
-            <p class="text-xl font-bold bg-[#ffde59] brutal-border inline-block px-4 py-1 rotate-[2deg]">최준용 국어 AI 플랫폼</p>
+        <!-- 중앙 로고 (클릭 시 메인 홈으로 이동) -->
+        <div class="text-2xl md:text-3xl font-black text-white cursor-pointer tracking-widest absolute left-1/2 transform -translate-x-1/2" onclick="goHome()">
+            로지에듀<span class="text-blue-500">*</span>
         </div>
-        
-        <div class="bg-white brutal-border brutal-shadow p-8 max-w-lg w-full rounded-xl">
-            <h2 class="text-2xl font-black mb-6 border-b-4 border-black pb-2">학생 입장 티켓 🎫</h2>
+
+        <!-- 우측 인증/유틸리티 메뉴 -->
+        <div class="flex items-center gap-6 text-sm font-medium text-gray-400">
+            <div id="auth-nav" class="flex gap-4">
+                <button onclick="showModal('signup')" class="hover:text-white transition"><i class="fa-regular fa-user mr-1"></i> 회원가입</button>
+                <span class="text-gray-700">|</span>
+                <button onclick="showModal('login')" class="hover:text-white transition"><i class="fa-solid fa-lock mr-1"></i> 로그인</button>
+            </div>
             
-            <div class="space-y-5">
+            <div id="user-nav" class="hidden items-center gap-4">
+                <span id="header-user-info" class="text-blue-400 font-bold"></span>
+                <button onclick="goToDashboard()" class="text-white hover:text-blue-400 transition font-bold border border-gray-600 px-3 py-1 rounded">학습실 입장</button>
+                <button onclick="logout()" class="hover:text-white transition text-xs underline underline-offset-4">로그아웃</button>
+            </div>
+            
+            <i class="fa-solid fa-magnifying-glass text-lg hover:text-white cursor-pointer ml-2"></i>
+        </div>
+    </nav>
+
+
+    <!-- ==========================================
+         2. 메인 랜딩 (Hero) 화면
+         ========================================== -->
+    <main id="hero-screen" class="flex-grow pt-32 px-8 md:px-24 flex flex-col justify-center relative min-h-screen">
+        
+        <!-- 좌측 수직 스크롤 바 -->
+        <div class="absolute left-8 md:left-16 bottom-0 h-48 flex flex-col items-center">
+            <span class="scroll-down text-gray-500 text-xs mb-4">Scroll Down</span>
+            <div class="w-[1px] h-24 bg-gray-600"></div>
+        </div>
+
+        <div class="flex justify-between items-center w-full ml-8 md:ml-16">
+            <!-- 메인 카피 영역 -->
+            <div class="max-w-3xl z-10 fade-in">
+                <p class="text-lg md:text-xl font-medium text-gray-400 mb-4 tracking-tight">언제든! 어디서든! 무엇이든! 그리고 누구나!</p>
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8 tracking-tighter">
+                    우리는 언제나<br>
+                    <span class="text-blue-500 font-black">'올바름'</span>을 찾아냈습니다
+                </h1>
+                
+                <p class="text-lg md:text-xl text-gray-400 mb-2 font-light">당신을 위한 24시 국어 선생님이 되어 드리겠습니다.</p>
+                <p class="text-2xl font-bold text-white tracking-wide mb-12">24H 국최</p>
+
+                <button onclick="showModal('login')" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded font-bold text-lg transition shadow-lg shadow-blue-500/20 tracking-wider">
+                    스마트 학습실 입장하기
+                </button>
+            </div>
+
+            <!-- 우측 기하학 도형 (상상국어 스타일) -->
+            <div class="hidden lg:flex items-center opacity-40 z-0">
+                <div class="geo-shape"></div>
+                <span class="text-gray-500 mx-2 text-xl font-light">X</span>
+                <div class="geo-shape geo-circle"></div>
+                <div class="geo-shape geo-triangle mx-4 relative top-10 border-b-[80px] border-l-[40px] border-r-[40px] border-b-white/30"></div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ==========================================
+         3. 인증 모달 (회원가입 / 로그인)
+         ========================================== -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-xl w-full max-w-md relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-4 right-5 text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            
+            <h2 id="modal-title" class="text-2xl font-bold mb-6 text-center tracking-wide">로그인</h2>
+            
+            <!-- 로그인 폼 -->
+            <div id="login-form" class="space-y-4">
                 <div>
-                    <label class="font-bold text-sm block mb-1">소속 반</label>
-                    <select id="login-class" class="w-full bg-[#f4f0ea] brutal-border p-3 font-bold focus:outline-none focus:bg-[#ffde59]">
+                    <label class="text-sm text-gray-400 block mb-1">소속 반</label>
+                    <select id="login-class" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
                         <option value="" disabled selected>반을 선택하세요</option>
                         <option value="고1 미강고">고1 미강고</option>
                         <option value="고1 미사고">고1 미사고</option>
@@ -76,223 +156,141 @@
                     </select>
                 </div>
                 <div>
-                    <label class="font-bold text-sm block mb-1">이름</label>
-                    <input type="text" id="login-name" placeholder="최준용" class="w-full bg-white brutal-border p-3 font-bold focus:outline-none focus:bg-[#e0e7ff]">
+                    <label class="text-sm text-gray-400 block mb-1">이름</label>
+                    <input type="text" id="login-name" placeholder="최준용" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
                 </div>
-                <div class="pt-4 border-t-2 border-dashed border-gray-400">
-                    <label class="font-bold text-sm text-gray-500 block mb-1">🔑 원장님 전용 스텔스 키</label>
-                    <input type="password" id="login-pw" placeholder="학생은 비워두세요" class="w-full bg-gray-100 brutal-border p-3 font-bold focus:outline-none focus:bg-pink-100">
+                <div>
+                    <label class="text-sm text-gray-500 block mb-1 mt-4">원장님 전용 스텔스 키 (학생은 비워둠)</label>
+                    <input type="password" id="login-pw" placeholder="••••" class="w-full bg-[#151922] border border-gray-700 text-gray-400 p-3 rounded focus:outline-none focus:border-blue-500">
                 </div>
-                
-                <button id="login-btn" onclick="login()" class="w-full bg-[#4d4dff] text-white font-black text-lg py-4 brutal-border brutal-shadow brutal-btn rounded-lg mt-2 flex justify-center items-center gap-2">
-                    <span>입장하기 🚀</span>
+                <button id="login-btn" onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded mt-4 transition">
+                    로그인
                 </button>
+                <p id="loading-msg" class="hidden text-center text-blue-400 text-sm mt-2 animate-pulse">서버 연결 중... (첫 접속 시 1분 소요)</p>
+                <p id="login-error" class="hidden text-center text-red-400 text-sm mt-2"></p>
+                <div class="text-center mt-4 text-sm text-gray-400">
+                    아직 회원이 아니신가요? <button onclick="switchModal('signup')" class="text-blue-400 hover:underline">회원가입</button>
+                </div>
+            </div>
 
-                <!-- 서버 깨어나는 중 알림 (추가됨) -->
-                <p id="loading-msg" class="hidden text-center font-bold text-sm text-[#4d4dff] mt-2 animate-pulse">
-                    서버를 깨우는 중입니다. (최대 1분 소요될 수 있습니다)⏳
-                </p>
-
-                <div id="login-msg" class="hidden mt-4 p-3 bg-[#4ade80] brutal-border brutal-shadow-sm font-black text-center">원장님 관리자 모드 활성화!</div>
-                <div id="login-error" class="hidden mt-4 p-3 bg-[#ff6b6b] text-white brutal-border font-black text-center"></div>
+            <!-- 회원가입 폼 (UI 연출용) -->
+            <div id="signup-form" class="hidden space-y-4">
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">소속 반</label>
+                    <select class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
+                        <option>고1 미강고</option><option>고1 미사고</option><option>고1 하남고</option><option>논술</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">이름</label>
+                    <input type="text" placeholder="본명 입력" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">비밀번호</label>
+                    <input type="password" placeholder="비밀번호 설정" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500">
+                </div>
+                <button onclick="alert('가입 신청이 완료되었습니다. 승인 후 로그인 가능합니다.'); switchModal('login');" class="w-full bg-gray-200 hover:bg-white text-black font-bold p-4 rounded mt-4 transition">
+                    회원가입 신청
+                </button>
+                <div class="text-center mt-4 text-sm text-gray-400">
+                    이미 계정이 있으신가요? <button onclick="switchModal('login')" class="text-blue-400 hover:underline">로그인</button>
+                </div>
             </div>
         </div>
     </div>
 
 
     <!-- ==========================================
-         2. 메인 시스템 화면
+         4. 대시보드 (학습 시스템) 화면
          ========================================== -->
-    <div id="app-screen" class="hidden w-full max-w-6xl mx-auto flex flex-col p-4 md:p-8">
+    <div id="dashboard-screen" class="hidden flex-grow pt-28 px-4 md:px-12 w-full max-w-7xl mx-auto flex flex-col fade-in">
         
-        <!-- 상단 헤더 -->
-        <header class="flex flex-wrap justify-between items-end mb-8 border-b-[4px] border-black pb-4 gap-4">
-            <div>
-                <h1 class="text-3xl font-black tracking-tight"><span class="bg-[#ff6b6b] text-white px-2 py-1 brutal-border shadow-[2px_2px_0px_#111] mr-2">LOGY EDU</span> AI PLATFORM</h1>
-            </div>
-            <div class="flex items-center gap-4 bg-white brutal-border px-4 py-2 rounded-full shadow-[3px_3px_0px_#111]">
-                <span id="user-info" class="font-bold"></span>
-                <button onclick="logout()" class="bg-gray-200 border-2 border-black px-3 py-1 rounded font-bold text-sm">OUT</button>
-            </div>
-        </header>
-
-        <!-- 9구역 컬러풀 라디오 메뉴 -->
-        <nav class="mb-10">
-            <div class="flex flex-wrap gap-3">
-                <div id="nav-admin" class="hidden">
-                    <input type="radio" name="main-menu" id="menu-admin" class="hidden menu-radio" onclick="switchTab('admin')">
-                    <label for="menu-admin" class="cursor-pointer inline-block px-4 py-2 bg-[#ffde59] font-black brutal-border brutal-shadow-sm rounded-lg">⚙️ 통제실</label>
-                </div>
-                
-                <div>
-                    <input type="radio" name="main-menu" id="menu-chat" class="hidden menu-radio" onclick="switchTab('chat')" checked>
-                    <label for="menu-chat" class="cursor-pointer inline-block px-4 py-2 bg-white font-black brutal-border brutal-shadow-sm rounded-lg">💬 AI 튜터</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-submit" class="hidden menu-radio" onclick="switchTab('submit')">
-                    <label for="menu-submit" class="cursor-pointer inline-block px-4 py-2 bg-[#ff90e8] font-black brutal-border brutal-shadow-sm rounded-lg">📄 과제 제출</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-omr" class="hidden menu-radio" onclick="switchTab('omr')">
-                    <label for="menu-omr" class="cursor-pointer inline-block px-4 py-2 bg-[#e0e7ff] font-black brutal-border brutal-shadow-sm rounded-lg">💯 OMR 채점</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-exam" class="hidden menu-radio" onclick="switchTab('exam')">
-                    <label for="menu-exam" class="cursor-pointer inline-block px-4 py-2 bg-white font-black brutal-border brutal-shadow-sm rounded-lg">💻 온라인 시험장</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-live" class="hidden menu-radio" onclick="switchTab('live')">
-                    <label for="menu-live" class="cursor-pointer inline-block px-4 py-2 bg-[#4ade80] font-black brutal-border brutal-shadow-sm rounded-lg">⏳ 실시간 모의고사</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-summary" class="hidden menu-radio" onclick="switchTab('summary')">
-                    <label for="menu-summary" class="cursor-pointer inline-block px-4 py-2 bg-white font-black brutal-border brutal-shadow-sm rounded-lg">✍️ AI 요약 첨삭</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-essay" class="hidden menu-radio" onclick="switchTab('essay')">
-                    <label for="menu-essay" class="cursor-pointer inline-block px-4 py-2 bg-white font-black brutal-border brutal-shadow-sm rounded-lg">📝 AI 논술 첨삭</label>
-                </div>
-                <div>
-                    <input type="radio" name="main-menu" id="menu-library" class="hidden menu-radio" onclick="switchTab('library')">
-                    <label for="menu-library" class="cursor-pointer inline-block px-4 py-2 bg-[#ffde59] font-black brutal-border brutal-shadow-sm rounded-lg">📁 자료실</label>
-                </div>
-            </div>
+        <!-- 하위 탭 메뉴 (상상국어 스타일) -->
+        <nav class="flex overflow-x-auto gap-8 border-b border-gray-700 pb-4 mb-8 text-sm md:text-base font-bold whitespace-nowrap">
+            <button onclick="switchTab('chat')" id="tab-btn-chat" class="text-blue-400 border-b-2 border-blue-400 pb-4 -mb-[17px]">24시간 AI 튜터</button>
+            <button onclick="switchTab('omr')" id="tab-btn-omr" class="text-gray-400 hover:text-white transition pb-4 -mb-[17px]">OMR 자동 채점</button>
+            <button onclick="switchTab('essay')" id="tab-btn-essay" class="text-gray-400 hover:text-white transition pb-4 -mb-[17px]">AI 요약 및 논술 첨삭</button>
+            <button onclick="alert('준비 중인 서비스입니다.')" class="text-gray-400 hover:text-white transition pb-4 -mb-[17px]">온라인 시험장</button>
+            <button onclick="alert('준비 중인 서비스입니다.')" class="text-gray-400 hover:text-white transition pb-4 -mb-[17px]">비밀 자료실</button>
+            <button onclick="switchTab('admin')" id="tab-btn-admin" class="hidden text-red-400 hover:text-red-300 transition pb-4 -mb-[17px]">원장님 관제실</button>
         </nav>
 
-        <!-- 2-1. 24시간 AI 튜터 -->
+        <!-- 4-1. 24시간 AI 튜터 -->
         <div id="tab-chat" class="tab-content active w-full">
-            <div class="bg-white brutal-border brutal-shadow p-6 rounded-xl flex flex-col md:flex-row gap-6">
+            <div class="bg-[#1e2430] border border-gray-800 p-6 md:p-8 rounded-xl flex flex-col md:flex-row gap-8 shadow-xl">
                 <div class="md:w-1/3 flex flex-col gap-4">
-                    <h2 class="text-3xl font-black bg-[#ffde59] inline-block px-2 py-1 -rotate-1 brutal-border shadow-[2px_2px_0_#111]">AI 국최 호출 🤖</h2>
-                    <p class="font-bold text-gray-600 border-l-4 border-black pl-3 py-1">질문을 입력하면 바탕 모의고사 해설지 등 학원 DB를 검색해 답변해줍니다.</p>
+                    <h2 class="text-2xl font-bold tracking-tight mb-2">24시간 AI 튜터 시스템</h2>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-6">학원 자체 교재와 해설지 DB가 연동되어 있습니다. 모르는 문항 번호나 지문 내용을 질문하세요.</p>
+                    <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg text-center cursor-pointer hover:border-gray-500 transition">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl mb-3 text-gray-500"></i>
+                        <p class="font-bold text-gray-300">질문할 이미지/PDF 첨부</p>
+                        <p class="text-xs text-gray-500 mt-2">(현재 텍스트 질문만 가능)</p>
+                    </div>
                 </div>
-                <div class="md:w-2/3 flex flex-col bg-[#f4f0ea] brutal-border rounded-xl h-[450px]">
-                    <div id="chat-history" class="flex-grow p-6 overflow-y-auto flex flex-col gap-4">
+                
+                <div class="md:w-2/3 flex flex-col bg-[#151922] border border-gray-700 rounded-xl h-[500px]">
+                    <div id="chat-history" class="flex-grow p-6 overflow-y-auto flex flex-col gap-5">
                         <div class="flex justify-start">
-                            <div class="bg-white brutal-border brutal-shadow-sm px-5 py-3 rounded-2xl rounded-tl-none font-bold">
-                                안녕! 로지에듀 전용 AI 조교야. 궁금한 문제나 개념을 물어봐!
+                            <div class="bg-[#2a3441] text-gray-200 px-5 py-4 rounded-xl rounded-tl-none max-w-[85%] text-sm font-medium leading-relaxed">
+                                <span class="text-blue-400 font-bold block mb-1"><i class="fa-solid fa-robot mr-1"></i> AI 국최</span>
+                                안녕하세요. 로지에듀 학습 조교입니다. 학습 중 궁금한 사항을 자유롭게 질문해 주세요.
                             </div>
                         </div>
                     </div>
-                    <div class="p-4 bg-white border-t-[3px] border-black flex gap-3 rounded-b-xl">
-                        <input type="text" id="chat-input" class="flex-grow bg-[#f4f0ea] brutal-border p-3 font-bold focus:outline-none focus:bg-white" placeholder="질문 입력..." onkeypress="if(event.key==='Enter') sendChat()">
-                        <button onclick="sendChat()" class="bg-[#4d4dff] text-white px-6 brutal-border brutal-shadow-sm brutal-btn font-black text-lg">전송</button>
+                    <div class="p-4 bg-[#1e2430] border-t border-gray-700 flex gap-3 rounded-b-xl">
+                        <input type="text" id="chat-input" class="flex-grow bg-[#151922] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-blue-500 text-sm" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded font-bold transition"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2-2. OMR 자동 채점 -->
+        <!-- 4-2. OMR 자동 채점 -->
         <div id="tab-omr" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-4xl mx-auto text-center">
-                <h2 class="text-4xl font-black mb-8 inline-block bg-[#e0e7ff] px-4 py-2 brutal-border transform rotate-1">💯 1초 컷! OMR 채점</h2>
-                <div class="text-left bg-[#f4f0ea] p-6 brutal-border mb-6">
-                    <label class="font-black text-lg block mb-2">📌 과제명 입력 (정확히 입력)</label>
-                    <input type="text" id="omr-task" placeholder="예: 미강고 중간고사 대비 1회" class="w-full bg-white brutal-border p-4 font-bold text-xl">
+            <div class="bg-[#1e2430] border border-gray-800 p-8 md:p-12 rounded-xl max-w-4xl mx-auto text-center shadow-xl">
+                <h2 class="text-3xl font-bold mb-10 tracking-tight">OMR 초정밀 채점</h2>
+                <div class="text-left bg-[#151922] border border-gray-700 p-6 rounded-lg mb-8">
+                    <label class="text-sm font-bold text-gray-400 block mb-3">응시 과제명 입력</label>
+                    <input type="text" id="omr-task" placeholder="예: 미강고 중간고사 대비 1회" class="w-full bg-[#1e2430] border border-gray-600 text-white p-4 rounded focus:outline-none focus:border-blue-500">
                 </div>
-                <div class="bg-[#ffde59] p-6 brutal-border mb-8">
-                    <div class="grid grid-cols-5 gap-2" id="omr-inputs">
-                        <input type="text" placeholder="1" class="w-full bg-white brutal-border p-3 text-center font-black text-2xl omr-ans">
-                        <input type="text" placeholder="2" class="w-full bg-white brutal-border p-3 text-center font-black text-2xl omr-ans">
-                        <input type="text" placeholder="3" class="w-full bg-white brutal-border p-3 text-center font-black text-2xl omr-ans">
-                        <input type="text" placeholder="4" class="w-full bg-white brutal-border p-3 text-center font-black text-2xl omr-ans">
-                        <input type="text" placeholder="5" class="w-full bg-white brutal-border p-3 text-center font-black text-2xl omr-ans">
+                <div class="text-left bg-[#151922] border border-gray-700 p-6 rounded-lg mb-8">
+                    <label class="text-sm font-bold text-gray-400 block mb-4">문항 정답 마킹 (5문항)</label>
+                    <div class="grid grid-cols-5 gap-3" id="omr-inputs">
+                        <input type="text" placeholder="1" class="w-full bg-[#1e2430] border border-gray-600 text-white p-4 text-center font-bold text-lg rounded focus:outline-none focus:border-blue-500 omr-ans">
+                        <input type="text" placeholder="2" class="w-full bg-[#1e2430] border border-gray-600 text-white p-4 text-center font-bold text-lg rounded focus:outline-none focus:border-blue-500 omr-ans">
+                        <input type="text" placeholder="3" class="w-full bg-[#1e2430] border border-gray-600 text-white p-4 text-center font-bold text-lg rounded focus:outline-none focus:border-blue-500 omr-ans">
+                        <input type="text" placeholder="4" class="w-full bg-[#1e2430] border border-gray-600 text-white p-4 text-center font-bold text-lg rounded focus:outline-none focus:border-blue-500 omr-ans">
+                        <input type="text" placeholder="5" class="w-full bg-[#1e2430] border border-gray-600 text-white p-4 text-center font-bold text-lg rounded focus:outline-none focus:border-blue-500 omr-ans">
                     </div>
                 </div>
-                <button onclick="submitOMR()" class="w-full bg-[#ff6b6b] text-white py-5 text-2xl brutal-border brutal-shadow brutal-btn font-black rounded-xl">채점 돌리기 🎯</button>
-                <div id="omr-result" class="mt-8 p-6 bg-white brutal-border hidden"></div>
+                <button onclick="submitOMR()" class="w-full bg-white text-black py-4 font-bold text-lg rounded-lg hover:bg-gray-200 transition tracking-wide">채점 결과 확인</button>
+                <div id="omr-result" class="mt-8 p-6 bg-[#151922] border border-gray-700 rounded-lg hidden"></div>
             </div>
         </div>
 
-        <!-- 2-3. AI 요약 / 논술 첨삭 (서버 연동 구현 완료) -->
-        <div id="tab-summary" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-4xl mx-auto">
-                <h2 class="text-3xl font-black mb-4">✍️ AI 요약 첨삭기</h2>
-                <textarea id="summary-input" class="w-full h-40 bg-[#f4f0ea] brutal-border p-4 font-bold focus:bg-white mb-4" placeholder="비문학 지문 요약 내용을 이곳에 적어주세요."></textarea>
-                <button onclick="requestFeedback('summary')" class="w-full bg-black text-white py-4 font-black text-xl brutal-border brutal-shadow brutal-btn rounded-xl">AI 요약 평가받기</button>
-                <div id="summary-result" class="mt-6 p-6 bg-[#e0e7ff] brutal-border hidden font-bold whitespace-pre-wrap leading-relaxed"></div>
-            </div>
-        </div>
-
+        <!-- 4-3. AI 논술 첨삭 -->
         <div id="tab-essay" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-4xl mx-auto">
-                <h2 class="text-3xl font-black mb-4">📝 AI 국최 논술 첨삭</h2>
-                <textarea id="essay-input" class="w-full h-64 bg-[#f4f0ea] brutal-border p-4 font-bold focus:bg-white mb-4" placeholder="작성한 논술 답안을 기재하세요. 문장력, 논리 구조, 근거의 타당성을 분석해 줍니다."></textarea>
-                <button onclick="requestFeedback('essay')" class="w-full bg-[#4d4dff] text-white py-4 font-black text-xl brutal-border brutal-shadow brutal-btn rounded-xl">논술 정밀 첨삭 요청</button>
-                <div id="essay-result" class="mt-6 p-6 bg-[#ffde59] brutal-border hidden font-bold whitespace-pre-wrap leading-relaxed"></div>
+            <div class="bg-[#1e2430] border border-gray-800 p-8 rounded-xl max-w-4xl mx-auto shadow-xl">
+                <h2 class="text-2xl font-bold mb-6">AI 정밀 논술/요약 첨삭</h2>
+                <textarea id="essay-input" class="w-full h-64 bg-[#151922] border border-gray-700 text-gray-200 p-5 rounded-lg focus:outline-none focus:border-blue-500 mb-6 text-sm leading-relaxed" placeholder="작성한 논술 답안이나 비문학 요약 내용을 기재하세요. 문장력, 논리 구조, 근거의 타당성을 기준으로 엄격하게 분석합니다."></textarea>
+                <button onclick="requestEssay()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 font-bold text-lg rounded-lg transition">평가 및 첨삭 요청</button>
+                <div id="essay-result" class="mt-6 p-6 bg-[#151922] border border-blue-900 text-gray-300 rounded-lg hidden text-sm whitespace-pre-wrap leading-relaxed"></div>
             </div>
         </div>
 
-        <!-- 2-4. 과제 제출 -->
-        <div id="tab-submit" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-2xl mx-auto text-center">
-                <h2 class="text-3xl font-black mb-6 border-b-4 border-black pb-2">📄 서술형 / 수행평가 과제 제출</h2>
-                <div class="border-4 border-dashed border-black bg-[#f4f0ea] p-12 mb-6 hover:bg-[#ffde59] cursor-pointer transition">
-                    <i class="fa-solid fa-file-upload text-5xl mb-4"></i>
-                    <p class="font-black text-xl">여기로 파일을 드래그 하세요.</p>
-                    <input type="file" class="mt-4">
-                </div>
-                <button onclick="alert('과제가 성공적으로 원장님께 전송되었습니다!')" class="w-full bg-[#4ade80] py-4 brutal-border brutal-shadow font-black text-xl rounded-lg">제출 완료</button>
-            </div>
-        </div>
-
-        <!-- 2-5. 온라인 시험장 / 실시간 모의고사 -->
-        <div id="tab-exam" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-4xl mx-auto">
-                <div class="flex justify-between items-center border-b-4 border-black pb-4 mb-6">
-                    <h2 class="text-3xl font-black">💻 온라인 시험장 (테스트)</h2>
-                    <span class="bg-[#ff6b6b] text-white font-black px-4 py-2 brutal-border text-xl animate-pulse">45:00 남음</span>
-                </div>
-                <div class="bg-[#f4f0ea] brutal-border p-6 font-bold mb-6 h-48 flex items-center justify-center">
-                    <p class="text-xl">시험지가 이곳에 뷰어로 열립니다.</p>
-                </div>
-                <div class="grid grid-cols-5 gap-2">
-                    <button class="bg-white brutal-border py-2 font-black hover:bg-[#ffde59]">1번</button>
-                    <button class="bg-white brutal-border py-2 font-black hover:bg-[#ffde59]">2번</button>
-                    <button class="bg-white brutal-border py-2 font-black hover:bg-[#ffde59]">3번</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-live" class="tab-content w-full">
-            <div class="bg-[#ffde59] brutal-border brutal-shadow p-12 rounded-xl text-center max-w-2xl mx-auto mt-10">
-                <i class="fa-solid fa-clock text-6xl mb-6 text-[#ff6b6b]"></i>
-                <h2 class="text-4xl font-black mb-4">현재 진행 중인 실시간 모의고사가 없습니다.</h2>
-                <p class="font-bold text-lg">원장님이 시험을 시작하면 화면이 활성화됩니다.</p>
-            </div>
-        </div>
-
-        <!-- 2-6. 자료실 -->
-        <div id="tab-library" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-4xl mx-auto">
-                <h2 class="text-3xl font-black mb-6 border-b-4 border-black pb-2">📁 학원 비밀 자료실</h2>
-                <ul class="space-y-4">
-                    <li class="bg-[#f4f0ea] brutal-border p-4 flex justify-between items-center hover:bg-white transition">
-                        <span class="font-bold">2026학년도 수능특강 국어 변형문제.pdf</span>
-                        <button class="bg-black text-white px-4 py-1 font-black brutal-border">다운로드</button>
-                    </li>
-                    <li class="bg-[#f4f0ea] brutal-border p-4 flex justify-between items-center hover:bg-white transition">
-                        <span class="font-bold">미강고 1학년 중간고사 직보 자료.pdf</span>
-                        <button class="bg-black text-white px-4 py-1 font-black brutal-border">다운로드</button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- 2-7. 원장님 관제실 (기존과 동일) -->
+        <!-- 4-4. 원장님 관제실 -->
         <div id="tab-admin" class="tab-content w-full">
-            <div class="bg-white brutal-border brutal-shadow p-8 rounded-xl max-w-3xl mx-auto">
-                <h2 class="text-3xl font-black mb-6 border-b-4 border-black pb-4">⚙️ 통제실 (Admin)</h2>
-                <div class="bg-[#f4f0ea] brutal-border p-8 text-center">
-                    <h3 class="text-2xl font-black mb-2">🧠 AI 지식 주입기</h3>
-                    <p class="font-bold text-gray-600 mb-6">모의고사 해설지(.txt)를 업로드하세요.</p>
-                    <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-4 font-bold border-2 border-black bg-white p-2 w-full">
-                    <button onclick="uploadKnowledge()" class="w-full bg-black text-white px-8 py-3 text-xl brutal-border brutal-shadow-sm brutal-btn font-black">서버에 이식하기 ⚡</button>
-                    <p id="admin-msg" class="mt-4 font-black text-lg"></p>
+            <div class="bg-[#1e2430] border border-gray-800 p-8 rounded-xl max-w-3xl mx-auto shadow-xl">
+                <h2 class="text-2xl font-bold mb-6 text-red-400"><i class="fa-solid fa-lock mr-2"></i> 관리자 관제실</h2>
+                <div class="bg-[#151922] border border-gray-700 p-8 rounded-lg text-center">
+                    <h3 class="text-xl font-bold mb-2 text-white">AI 지식베이스 주입 (RAG)</h3>
+                    <p class="text-sm text-gray-400 mb-8">바탕 모의고사 해설지나 자체 교재(.txt)를 업로드하여 AI 두뇌를 업데이트합니다.</p>
+                    <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-6 font-medium text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600 w-full">
+                    <button onclick="uploadKnowledge()" class="w-full bg-white hover:bg-gray-200 text-black px-8 py-3 rounded text-lg font-bold transition">서버에 지식 이식하기</button>
+                    <p id="admin-msg" class="mt-6 font-bold text-sm"></p>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -300,6 +298,42 @@
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         
         let currentUser = null;
+
+        // 모달 제어 함수
+        function showModal(type) {
+            document.getElementById('auth-modal').classList.remove('hidden');
+            switchModal(type);
+        }
+        function closeModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+        function switchModal(type) {
+            document.getElementById('login-error').classList.add('hidden');
+            if (type === 'login') {
+                document.getElementById('modal-title').innerText = '로그인';
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('signup-form').classList.add('hidden');
+            } else {
+                document.getElementById('modal-title').innerText = '회원가입';
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('signup-form').classList.remove('hidden');
+            }
+        }
+
+        // 로고 클릭 시 동작
+        function goHome() {
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('hero-screen').classList.remove('hidden');
+            document.getElementById('hero-screen').classList.add('flex');
+        }
+
+        // 학습실 입장 (로그인된 상태에서 헤더 버튼 클릭 시)
+        function goToDashboard() {
+            if(!currentUser) return showModal('login');
+            document.getElementById('hero-screen').classList.add('hidden');
+            document.getElementById('hero-screen').classList.remove('flex');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+        }
 
         async function login() {
             const sClass = document.getElementById('login-class').value;
@@ -311,12 +345,11 @@
             errDiv.classList.add('hidden');
 
             if (!sClass || !sName) {
-                errDiv.textContent = "반과 이름을 모두 입력해주세요!";
+                errDiv.textContent = "반과 이름을 모두 입력해주세요.";
                 errDiv.classList.remove('hidden');
                 return;
             }
 
-            // 서버 깨우기 안내 메시지 표시 (렌더 무료서버 딜레이 대비)
             loadingMsg.classList.remove('hidden');
             document.getElementById('login-btn').disabled = true;
 
@@ -333,13 +366,22 @@
                 
                 if (res.ok && data.success) {
                     currentUser = { class: sClass, name: sName, isAdmin: data.is_admin };
+                    closeModal();
+                    
+                    // 헤더 업데이트
+                    document.getElementById('auth-nav').classList.add('hidden');
+                    document.getElementById('user-nav').classList.remove('hidden');
+                    document.getElementById('user-nav').classList.add('flex');
+                    document.getElementById('header-user-info').innerText = `${sClass} ${sName} 학생`;
+
                     if (data.is_admin) {
-                        document.getElementById('login-msg').classList.remove('hidden');
-                        document.getElementById('nav-admin').classList.remove('hidden');
-                        setTimeout(() => enterSystem(sClass, sName), 1000); 
-                    } else {
-                        enterSystem(sClass, sName);
+                        document.getElementById('header-user-info').innerText = `[관리자] ${sName} 원장님`;
+                        document.getElementById('tab-btn-admin').classList.remove('hidden');
                     }
+                    
+                    // 대시보드로 이동
+                    goToDashboard();
+                    
                 } else {
                     errDiv.textContent = data.detail || "인증 실패!";
                     errDiv.classList.remove('hidden');
@@ -347,29 +389,37 @@
             } catch (error) {
                 loadingMsg.classList.add('hidden');
                 document.getElementById('login-btn').disabled = false;
-                errDiv.textContent = "서버가 잠에서 깨어나는 중이거나 통신 오류입니다. 1분 뒤에 다시 눌러주세요!";
+                errDiv.textContent = "서버 연결 지연. 잠시 후 다시 시도해주세요.";
                 errDiv.classList.remove('hidden');
             }
         }
 
-        function enterSystem(sClass, sName) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('user-info').textContent = `${sClass} ${sName}`;
-            document.getElementById('menu-chat').checked = true;
-            switchTab('chat');
-        }
-
         function logout() {
             currentUser = null;
-            document.getElementById('app-screen').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('auth-nav').classList.remove('hidden');
+            document.getElementById('user-nav').classList.add('hidden');
+            document.getElementById('user-nav').classList.remove('flex');
+            document.getElementById('tab-btn-admin').classList.add('hidden');
             document.getElementById('login-pw').value = '';
-            document.getElementById('nav-admin').classList.add('hidden');
-            document.getElementById('login-msg').classList.add('hidden');
+            goHome();
         }
 
         function switchTab(tabId) {
+            // 버튼 스타일 초기화
+            const buttons = ['chat', 'omr', 'essay', 'admin'];
+            buttons.forEach(id => {
+                const btn = document.getElementById('tab-btn-' + id);
+                if(btn) {
+                    btn.className = btn.className.replace('text-blue-400 border-b-2 border-blue-400', 'text-gray-400 hover:text-white transition');
+                }
+            });
+            // 클릭된 버튼 스타일 적용
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            if(activeBtn) {
+                activeBtn.className = activeBtn.className.replace('text-gray-400 hover:text-white transition', 'text-blue-400 border-b-2 border-blue-400');
+            }
+
+            // 탭 내용 전환
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
         }
@@ -382,7 +432,7 @@
             const chatHistory = document.getElementById('chat-history');
             chatHistory.innerHTML += `
                 <div class="flex justify-end">
-                    <div class="bg-[#ffde59] brutal-border brutal-shadow-sm px-5 py-3 rounded-2xl rounded-tr-none font-black text-lg max-w-[85%]">${prompt}</div>
+                    <div class="bg-blue-600 text-white px-5 py-3 rounded-xl rounded-tr-none text-sm font-medium max-w-[85%] leading-relaxed">${prompt}</div>
                 </div>`;
             input.value = '';
             chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -397,30 +447,27 @@
                 if (data.success) {
                     chatHistory.innerHTML += `
                         <div class="flex justify-start">
-                            <div class="bg-white brutal-border brutal-shadow-sm px-5 py-4 rounded-2xl rounded-tl-none font-bold whitespace-pre-wrap max-w-[90%]">
-                                <span class="block text-[#4d4dff] font-black mb-2 border-b-2 border-black pb-1 inline-block">AI 국최</span><br>${data.reply}
+                            <div class="bg-[#2a3441] text-gray-200 px-5 py-4 rounded-xl rounded-tl-none max-w-[85%] text-sm font-medium leading-relaxed">
+                                <span class="text-blue-400 font-bold block mb-2"><i class="fa-solid fa-robot mr-1"></i> AI 국최</span>
+                                ${data.reply}
                             </div>
                         </div>`;
                 }
             } catch (error) {
-                chatHistory.innerHTML += `<div class="text-center bg-[#ff6b6b] text-white p-2 font-bold brutal-border mt-2">통신 오류</div>`;
+                chatHistory.innerHTML += `<div class="text-center text-red-400 text-xs mt-2">서버 통신 오류</div>`;
             }
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
 
-        // [신규 기능] 파이썬 서버의 Chat API를 역이용하여 논술/요약 첨삭 기능 구현
-        async function requestFeedback(type) {
-            const inputId = type === 'summary' ? 'summary-input' : 'essay-input';
-            const resultId = type === 'summary' ? 'summary-result' : 'essay-result';
-            const text = document.getElementById(inputId).value.trim();
-            const resultDiv = document.getElementById(resultId);
-            
+        async function requestEssay() {
+            const text = document.getElementById('essay-input').value.trim();
+            const resultDiv = document.getElementById('essay-result');
             if (!text) return alert('내용을 먼저 입력해주세요.');
 
             resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = "AI 국최가 꼼꼼하게 분석 중입니다... 잠시만 기다려주세요 ⏳";
+            resultDiv.innerHTML = "<span class='animate-pulse text-blue-400'>AI 국최가 꼼꼼하게 분석 중입니다... 잠시만 기다려주세요 ⏳</span>";
 
-            const prefix = type === 'summary' ? "[요약 첨삭 요청]\n다음 글을 읽고 구조와 내용을 요약 첨삭해줘:\n\n" : "[논술 첨삭 요청]\n다음 논술 답안을 문장력, 논리 구조, 근거의 타당성 기준으로 엄격하게 평가하고 첨삭해줘:\n\n";
+            const prefix = "[논술/요약 첨삭 요청]\n다음 글을 문장력, 논리 구조, 근거의 타당성 기준으로 엄격하게 평가하고 첨삭해줘:\n\n";
 
             try {
                 const res = await fetch(`${API_URL}/api/chat`, {
@@ -446,7 +493,7 @@
             const resultDiv = document.getElementById('omr-result');
             
             if (!taskName) {
-                resultDiv.innerHTML = `<span class="text-[#ff6b6b] font-black text-xl">과제명을 입력해주세요!</span>`;
+                resultDiv.innerHTML = `<span class="text-red-400 font-bold">과제명을 입력해주세요.</span>`;
                 resultDiv.classList.remove('hidden');
                 return;
             }
@@ -466,19 +513,19 @@
                 resultDiv.classList.remove('hidden');
 
                 if (res.ok && data.success) {
-                    let html = `<h3 class="text-3xl font-black mb-4">결과: <span class="bg-[#ffde59] px-2 brutal-border">${data.score}점</span></h3>`;
+                    let html = `<h3 class="text-2xl font-bold mb-4 text-white">결과: <span class="text-blue-400">${data.score}점</span></h3>`;
                     if (data.score === 100) {
-                        html += `<p class="text-[#4ade80] font-black text-2xl">🎉 완벽해! 만점이야!</p>`;
-                        confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 }, colors: ['#ffde59', '#ff6b6b', '#4d4dff', '#4ade80'] });
+                        html += `<p class="text-green-400 font-bold text-lg">🎉 완벽합니다! 만점입니다.</p>`;
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#3b82f6', '#ffffff'] });
                     } else {
-                        html += `<p class="bg-[#ff6b6b] text-white inline-block px-3 py-1 font-black brutal-border">틀린 문항: ${data.wrongs.join(', ')}</p>`;
+                        html += `<p class="text-red-400 font-bold border border-red-900 bg-red-900/20 inline-block px-3 py-1 rounded">틀린 문항: ${data.wrongs.join(', ')}</p>`;
                     }
                     resultDiv.innerHTML = html;
                 } else {
-                    resultDiv.innerHTML = `<p class="text-[#ff6b6b] font-black text-lg">${data.detail || '서버에 해당 과제 정답이 없습니다.'}</p>`;
+                    resultDiv.innerHTML = `<p class="text-red-400 font-bold">${data.detail || '서버에 해당 과제 정답이 없습니다.'}</p>`;
                 }
             } catch (error) {
-                resultDiv.innerHTML = `<span class="text-[#ff6b6b] font-black">서버 오류가 발생했습니다.</span>`;
+                resultDiv.innerHTML = `<span class="text-red-400 font-bold">서버 오류가 발생했습니다.</span>`;
                 resultDiv.classList.remove('hidden');
             }
         }
@@ -487,8 +534,8 @@
             const fileInput = document.getElementById('knowledge-files');
             const msgDiv = document.getElementById('admin-msg');
             if (fileInput.files.length === 0) {
-                msgDiv.className = "mt-4 font-black text-[#ff6b6b]";
-                msgDiv.textContent = "파일을 먼저 선택해주세요!";
+                msgDiv.className = "mt-6 font-bold text-red-400";
+                msgDiv.textContent = "파일을 먼저 선택해주세요.";
                 return;
             }
 
@@ -496,8 +543,8 @@
             for (const file of fileInput.files) {
                 formData.append('files', file);
             }
-            msgDiv.className = "mt-4 font-black text-gray-500 animate-pulse";
-            msgDiv.textContent = "데이터 이식 중... 🚀";
+            msgDiv.className = "mt-6 font-bold text-blue-400 animate-pulse";
+            msgDiv.textContent = "서버로 데이터 전송 중... 🚀";
 
             try {
                 const res = await fetch(`${API_URL}/api/admin/knowledge/bulk`, {
@@ -506,12 +553,12 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    msgDiv.className = "mt-4 font-black text-[#4d4dff]";
+                    msgDiv.className = "mt-6 font-bold text-green-400";
                     msgDiv.textContent = "✅ " + data.message;
                     fileInput.value = '';
                 } else { throw new Error(data.detail); }
             } catch (error) {
-                msgDiv.className = "mt-4 font-black text-[#ff6b6b]";
+                msgDiv.className = "mt-6 font-bold text-red-400";
                 msgDiv.textContent = "❌ 실패: " + error.message;
             }
         }
