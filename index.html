@@ -3,112 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로지에듀 최준용 국어 - AI 튜터 시스템</title>
+    <title>로지에듀 최준용 국어 - AI 스마트 플랫폼</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0e1117',
+                        darkCard: '#262730',
+                        brandBlue: '#4b88f3',
+                        brandGreen: '#188754'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f3f4f6; }
-        .tab-content { display: none; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #0e1117; color: #fafafa; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
         .tab-content.active { display: block; }
-        .chat-box { max-height: 400px; overflow-y: auto; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 커스텀 스크롤바 (다크모드) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0e1117; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* 라디오 버튼 스타일 메뉴 */
+        .menu-radio:checked + label { background-color: #4b88f3; color: white; border-color: #4b88f3; font-weight: bold; }
     </style>
 </head>
-<body>
+<body class="antialiased min-h-screen flex flex-col">
 
-    <!-- 1. 로그인 화면 -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-md w-96">
-            <h1 class="text-2xl font-bold text-center text-blue-800 mb-6">로지에듀 최준용 국어</h1>
-            <div class="space-y-4">
-                <input type="text" id="login-class" placeholder="소속 (예: 고1 미강고, 논술)" class="w-full border p-2 rounded">
-                <input type="text" id="login-name" placeholder="이름 (예: 홍길동, 최준용)" class="w-full border p-2 rounded">
-                <input type="password" id="login-pw" placeholder="관리자 비밀번호 (원장님만 입력)" class="w-full border p-2 rounded">
-                <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 font-bold">입장하기</button>
+    <!-- ==========================================
+         1. 로그인 화면 (학생 인증)
+         ========================================== -->
+    <div id="login-screen" class="flex-grow flex flex-col items-center justify-center p-4 mt-10">
+        <div class="w-full max-w-2xl">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-user text-purple-400"></i> 학생 인증
+            </h2>
+            
+            <div class="space-y-4 bg-darkCard p-6 rounded-lg border border-gray-700 shadow-xl">
+                <div>
+                    <select id="login-class" class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-brandBlue">
+                        <option value="" disabled selected>반을 선택하세요</option>
+                        <option value="고1 미강고">고1 미강고</option>
+                        <option value="고1 미사고">고1 미사고</option>
+                        <option value="고1 하남고">고1 하남고</option>
+                        <option value="논술">논술</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="text" id="login-name" placeholder="이름을 입력하세요 (예: 최준용)" class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-brandBlue">
+                </div>
+                <div class="pt-4 border-t border-gray-700">
+                    <label class="text-sm text-gray-400 mb-2 block"><i class="fa-solid fa-key text-yellow-500"></i> 관리자 비밀번호를 입력하세요.</label>
+                    <div class="relative">
+                        <input type="password" id="login-pw" placeholder="••••" class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-brandBlue">
+                        <button onclick="login()" class="absolute right-2 top-2 bg-gray-700 hover:bg-gray-600 px-4 py-1 rounded text-sm transition">입장</button>
+                    </div>
+                </div>
+                <div id="login-msg" class="hidden mt-4 p-3 bg-brandGreen/20 text-brandGreen border border-brandGreen rounded text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i> 원장님, 환영합니다! 스텔스 관리자 모드가 활성화되었습니다.
+                </div>
+                <div id="login-error" class="hidden mt-4 p-3 bg-red-500/20 text-red-400 border border-red-500 rounded text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 정보를 정확히 입력해주세요.
+                </div>
             </div>
-            <p id="login-msg" class="text-red-500 text-sm mt-2 text-center"></p>
         </div>
     </div>
 
-    <!-- 2. 메인 시스템 화면 -->
-    <div id="app-screen" class="hidden min-h-screen flex flex-col">
-        <!-- 상단 네비게이션 -->
-        <header class="bg-blue-800 text-white p-4 flex justify-between items-center shadow-md">
-            <h1 class="text-xl font-bold">로지에듀 24시 국최 AI</h1>
-            <div>
-                <span id="user-info" class="mr-4 font-semibold"></span>
-                <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded text-sm hover:bg-red-600">로그아웃</button>
+
+    <!-- ==========================================
+         2. 메인 시스템 화면
+         ========================================== -->
+    <div id="app-screen" class="hidden flex-grow flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full">
+        
+        <!-- 상단 환영 메시지 & 로그아웃 -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-100 flex items-center gap-2">
+                <i class="fa-solid fa-graduation-cap text-brandBlue"></i> 로지에듀 스마트 플랫폼
+            </h1>
+            <div class="flex items-center gap-4">
+                <span id="user-info" class="text-sm text-gray-400 font-medium"></span>
+                <button onclick="logout()" class="text-xs text-gray-400 hover:text-white underline decoration-gray-600">로그아웃</button>
             </div>
-        </header>
+        </div>
 
-        <!-- 탭 메뉴 -->
-        <nav class="bg-white shadow-sm flex space-x-1 p-2 justify-center">
-            <button onclick="switchTab('chat')" class="px-4 py-2 hover:bg-blue-50 rounded">🧠 AI 질문하기</button>
-            <button onclick="switchTab('omr')" class="px-4 py-2 hover:bg-blue-50 rounded">💯 OMR 자동 채점</button>
-            <button id="admin-tab-btn" onclick="switchTab('admin')" class="hidden px-4 py-2 font-bold text-blue-600 hover:bg-blue-50 rounded">⚙️ 원장님 관제실</button>
-        </nav>
-
-        <!-- 본문 영역 -->
-        <main class="flex-grow p-6 flex justify-center">
-            <div class="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
+        <!-- 9구역 라디오 버튼 메뉴 -->
+        <div class="mb-8">
+            <p class="text-sm text-gray-400 mb-3"><i class="fa-solid fa-bullseye text-red-400"></i> 원하는 메뉴를 선택하세요.</p>
+            <div class="flex flex-wrap gap-2">
+                <!-- 원장님 전용 (숨김 처리됨) -->
+                <div id="nav-admin" class="hidden">
+                    <input type="radio" name="main-menu" id="menu-admin" class="hidden menu-radio" value="admin" onclick="switchTab('admin')">
+                    <label for="menu-admin" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        🔒 원장님 전용 관리실
+                    </label>
+                </div>
                 
-                <!-- AI 질문 탭 -->
-                <div id="tab-chat" class="tab-content active">
-                    <h2 class="text-xl font-bold mb-4 border-b pb-2">🧠 지식 검색 AI 튜터</h2>
-                    <div id="chat-history" class="chat-box space-y-4 mb-4 p-4 bg-gray-50 border rounded h-80">
-                        <div class="text-gray-500 text-center text-sm mt-10">궁금한 문제나 개념을 물어보세요! (예: 바탕 7회 독서 4번 정답이 뭐야?)</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="chat-input" class="flex-grow border p-2 rounded" placeholder="질문을 입력하세요...">
-                        <button onclick="sendChat()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">전송</button>
-                    </div>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-chat" class="hidden menu-radio" value="chat" onclick="switchTab('chat')" checked>
+                    <label for="menu-chat" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        💬 24시간 AI 튜터
+                    </label>
                 </div>
-
-                <!-- OMR 자동 채점 탭 -->
-                <div id="tab-omr" class="tab-content">
-                    <h2 class="text-xl font-bold mb-4 border-b pb-2">💯 OMR 자동 채점</h2>
-                    <input type="text" id="omr-task" placeholder="과제명 (예: 미강고 중간고사 대비 1회)" class="w-full border p-2 rounded mb-4">
-                    
-                    <div class="grid grid-cols-5 gap-2 mb-4" id="omr-inputs">
-                        <input type="text" placeholder="1번 답" class="border p-2 rounded text-center omr-ans">
-                        <input type="text" placeholder="2번 답" class="border p-2 rounded text-center omr-ans">
-                        <input type="text" placeholder="3번 답" class="border p-2 rounded text-center omr-ans">
-                        <input type="text" placeholder="4번 답" class="border p-2 rounded text-center omr-ans">
-                        <input type="text" placeholder="5번 답" class="border p-2 rounded text-center omr-ans">
-                    </div>
-                    
-                    <button onclick="submitOMR()" class="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">답안 제출 및 채점</button>
-                    <div id="omr-result" class="mt-6 p-4 rounded bg-gray-50 hidden"></div>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-submit" class="hidden menu-radio" value="submit" onclick="switchTab('ready')">
+                    <label for="menu-submit" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        📄 과제 파일 제출
+                    </label>
                 </div>
-
-                <!-- 원장님 관제실 탭 -->
-                <div id="tab-admin" class="tab-content">
-                    <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-800">⚙️ AI 두뇌 지식 주입 (원장님 전용)</h2>
-                    <div class="border-2 border-dashed border-gray-300 rounded p-10 text-center bg-gray-50">
-                        <p class="mb-4 text-gray-600">학원 자체 교재, 모의고사 해설지 텍스트 파일(.txt)을 올려주세요.</p>
-                        <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-4">
-                        <br>
-                        <button onclick="uploadKnowledge()" class="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900 font-bold">서버에 자료 이식하기</button>
-                    </div>
-                    <p id="admin-msg" class="mt-4 font-bold text-center"></p>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-omr" class="hidden menu-radio" value="omr" onclick="switchTab('omr')">
+                    <label for="menu-omr" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        💯 OMR 자동 채점
+                    </label>
                 </div>
-
+                <div>
+                    <input type="radio" name="main-menu" id="menu-exam" class="hidden menu-radio" value="exam" onclick="switchTab('ready')">
+                    <label for="menu-exam" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        💻 온라인 시험장
+                    </label>
+                </div>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-live" class="hidden menu-radio" value="live" onclick="switchTab('ready')">
+                    <label for="menu-live" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        ⏳ 실시간 모의고사
+                    </label>
+                </div>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-summary" class="hidden menu-radio" value="summary" onclick="switchTab('ready')">
+                    <label for="menu-summary" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        ✍️ AI 요약 첨삭
+                    </label>
+                </div>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-essay" class="hidden menu-radio" value="essay" onclick="switchTab('ready')">
+                    <label for="menu-essay" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        📝 AI 국최 논술 첨삭
+                    </label>
+                </div>
+                <div>
+                    <input type="radio" name="main-menu" id="menu-library" class="hidden menu-radio" value="library" onclick="switchTab('ready')">
+                    <label for="menu-library" class="cursor-pointer inline-block px-4 py-2 bg-darkCard border border-gray-600 rounded-full text-sm hover:border-gray-400 transition">
+                        📁 학원 자료실
+                    </label>
+                </div>
             </div>
-        </main>
+        </div>
+
+        <hr class="border-gray-700 mb-8">
+
+        <!-- ==========================================
+             2-1. 24시간 AI 튜터 (채팅 및 파일 업로드)
+             ========================================== -->
+        <div id="tab-chat" class="tab-content active">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                💬 무엇이든 물어보세요, <span id="chat-greeting-name" class="text-brandBlue">학생</span>!
+            </h2>
+            <p class="text-gray-400 mb-4 text-sm">모르는 문제나 지문은 타이핑하거나 사진 또는 PDF 파일을 첨부해서 올려주세요.</p>
+            
+            <!-- 파일 업로드 UI -->
+            <div class="mb-6">
+                <label class="text-sm text-gray-400 mb-2 block"><i class="fa-solid fa-camera"></i> 질문할 사진이나 PDF 파일 업로드</label>
+                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 bg-darkCard hover:border-gray-400 transition flex items-center justify-center cursor-pointer">
+                    <div class="text-center text-gray-400 flex items-center gap-4">
+                        <button class="bg-gray-700 text-white px-4 py-2 rounded text-sm hover:bg-gray-600 transition"><i class="fa-solid fa-upload"></i> Upload</button>
+                        <span class="text-xs">200MB per file • JPG, PNG, PDF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- '찐' 원장님 토글 -->
+            <div class="mb-4">
+                <label class="inline-flex items-center cursor-pointer bg-darkCard border border-gray-700 px-3 py-1.5 rounded-full text-sm text-gray-300 hover:bg-gray-700 transition">
+                    🚨 '찐' 국최 원장님께 직접 질문하기
+                </label>
+            </div>
+
+            <!-- 채팅창 -->
+            <div class="bg-darkCard border border-gray-700 rounded-lg flex flex-col h-[400px]">
+                <div id="chat-history" class="flex-grow p-4 overflow-y-auto space-y-4">
+                    <!-- 대화 내용이 여기에 표시됩니다 -->
+                </div>
+                <div class="p-3 border-t border-gray-700 bg-[#0e1117] flex items-center gap-2 rounded-b-lg">
+                    <input type="text" id="chat-input" class="flex-grow bg-transparent text-white focus:outline-none px-2" placeholder="궁금한 점을 질문해 주세요." onkeypress="if(event.key==='Enter') sendChat()">
+                    <button onclick="sendChat()" class="text-gray-400 hover:text-white p-2 transition"><i class="fa-solid fa-arrow-up border border-gray-600 rounded p-1"></i></button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             2-2. OMR 자동 채점
+             ========================================== -->
+        <div id="tab-omr" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">💯 OMR 자동 채점 시스템</h2>
+            <div class="bg-darkCard p-6 rounded-lg border border-gray-700 max-w-2xl mx-auto">
+                <div class="mb-4">
+                    <label class="text-sm text-gray-400 mb-2 block"><i class="fa-solid fa-file-signature text-red-400"></i> 과제 이름</label>
+                    <input type="text" id="omr-task" placeholder="예: 미강고 중간고사 대비 1회" class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-brandBlue">
+                </div>
+                
+                <label class="text-sm text-gray-400 mb-2 block mt-6"><i class="fa-solid fa-list-ol text-brandBlue"></i> 정답 입력 (5문항)</label>
+                <div class="grid grid-cols-5 gap-3 mb-6" id="omr-inputs">
+                    <input type="text" placeholder="1번" class="bg-[#0e1117] border border-gray-600 text-white p-3 rounded text-center focus:border-brandBlue focus:outline-none omr-ans">
+                    <input type="text" placeholder="2번" class="bg-[#0e1117] border border-gray-600 text-white p-3 rounded text-center focus:border-brandBlue focus:outline-none omr-ans">
+                    <input type="text" placeholder="3번" class="bg-[#0e1117] border border-gray-600 text-white p-3 rounded text-center focus:border-brandBlue focus:outline-none omr-ans">
+                    <input type="text" placeholder="4번" class="bg-[#0e1117] border border-gray-600 text-white p-3 rounded text-center focus:border-brandBlue focus:outline-none omr-ans">
+                    <input type="text" placeholder="5번" class="bg-[#0e1117] border border-gray-600 text-white p-3 rounded text-center focus:border-brandBlue focus:outline-none omr-ans">
+                </div>
+                
+                <button onclick="submitOMR()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-bold transition">답안 제출 및 채점</button>
+                
+                <!-- 채점 결과 영역 -->
+                <div id="omr-result" class="mt-6 p-4 rounded bg-[#0e1117] border border-gray-600 hidden text-center"></div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             2-3. 원장님 전용 관리실
+             ========================================== -->
+        <div id="tab-admin" class="tab-content">
+            <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                🔒 원장님 전용 관리실
+            </h2>
+            
+            <!-- 관리실 서브 메뉴 -->
+            <div class="flex gap-4 border-b border-gray-700 pb-2 mb-6 text-sm overflow-x-auto whitespace-nowrap">
+                <button class="text-red-400 font-bold border-b-2 border-red-400 pb-2">💯 OMR 세팅</button>
+                <button class="text-gray-400 hover:text-gray-200">🔑 반별 해설지 등록</button>
+                <button class="text-gray-400 hover:text-gray-200">📊 과제/채점 통합현황</button>
+                <button class="text-gray-400 hover:text-gray-200">🙋 질문 내역</button>
+                <button class="text-gray-400 hover:text-gray-200">📚 해설지 누적</button>
+                <button class="text-gray-400 hover:text-gray-200">📂 공개 자료실</button>
+            </div>
+
+            <!-- OMR 세팅 (UI만 구현, 실제 백엔드 연동은 지식 주입으로 대체 적용) -->
+            <div class="bg-darkCard p-6 rounded-lg border border-gray-700 mb-8 max-w-3xl">
+                <h3 class="text-xl font-bold mb-4 text-red-400">💯 반별 OMR 자동 채점 정답 세팅</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-400 mb-2 block">📌 반 선택</label>
+                        <select class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-red-400">
+                            <option>중등부 문해력</option>
+                            <option>고1 미강고</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400 mb-2 block">📄 과제 이름</label>
+                        <input type="text" class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-red-400">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400 mb-2 block">🔑 정답 입력 (쉼표 구분)</label>
+                        <input type="text" class="w-full bg-[#0e1117] border border-gray-600 text-white p-3 rounded focus:outline-none focus:border-red-400">
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 두뇌 지식 주입 (실제 작동부) -->
+            <div class="bg-darkCard p-6 rounded-lg border border-gray-700 max-w-3xl">
+                <h3 class="text-xl font-bold mb-4 text-brandBlue">🧠 통합 AI 지식 베이스 업로드 (RAG)</h3>
+                <div class="border-2 border-dashed border-gray-600 rounded p-10 text-center bg-[#0e1117]">
+                    <p class="mb-4 text-gray-400">학원 자체 교재, 모의고사 해설지 텍스트 파일(.txt)을 올려주세요.</p>
+                    <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-4 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600">
+                    <br>
+                    <button onclick="uploadKnowledge()" class="bg-brandBlue text-white px-6 py-2 rounded hover:bg-blue-600 font-bold transition">서버에 자료 이식하기</button>
+                </div>
+                <p id="admin-msg" class="mt-4 font-bold text-center text-sm"></p>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             2-4. 준비 중 화면
+             ========================================== -->
+        <div id="tab-ready" class="tab-content">
+            <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                <i class="fa-solid fa-person-digging text-4xl mb-4"></i>
+                <h2 class="text-xl">해당 기능은 현재 백엔드 연동 준비 중입니다.</h2>
+            </div>
+        </div>
+
     </div>
 
     <script>
         // ★★★ 원장님 전용 렌더(Render) 클라우드 파이썬 서버 주소 ★★★
-        const API_URL = "https://korean-ai-tutor.onrender.com";
+        const API_URL = "https://korean-ai-tutor.onrender.com"; // 정확한 주소로 변경 필요
         
         let currentUser = null;
 
         async function login() {
-            const sClass = document.getElementById('login-class').value.trim();
+            const sClass = document.getElementById('login-class').value;
             const sName = document.getElementById('login-name').value.trim();
             const sPw = document.getElementById('login-pw').value.trim();
 
+            const msgDiv = document.getElementById('login-msg');
+            const errDiv = document.getElementById('login-error');
+            msgDiv.classList.add('hidden');
+            errDiv.classList.add('hidden');
+
             if (!sClass || !sName) {
-                document.getElementById('login-msg').textContent = "소속과 이름을 입력해주세요.";
+                errDiv.textContent = "소속과 이름을 정확히 입력해주세요.";
+                errDiv.classList.remove('hidden');
                 return;
             }
 
@@ -123,20 +329,33 @@
                 
                 if (res.ok && data.success) {
                     currentUser = { class: sClass, name: sName, isAdmin: data.is_admin };
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('app-screen').classList.remove('hidden');
-                    document.getElementById('user-info').textContent = `${sClass} ${sName}님 접속중`;
                     
                     if (data.is_admin) {
-                        document.getElementById('admin-tab-btn').classList.remove('hidden');
-                        alert(data.message);
+                        msgDiv.classList.remove('hidden');
+                        document.getElementById('nav-admin').classList.remove('hidden');
+                        setTimeout(() => enterSystem(sClass, sName), 1500); // 1.5초 후 입장
+                    } else {
+                        enterSystem(sClass, sName);
                     }
                 } else {
-                    document.getElementById('login-msg').textContent = data.detail || "로그인 실패";
+                    errDiv.textContent = data.detail || "인증에 실패했습니다.";
+                    errDiv.classList.remove('hidden');
                 }
             } catch (error) {
-                document.getElementById('login-msg').textContent = "서버 연결에 실패했습니다. 서버가 켜져 있는지 확인해주세요.";
+                errDiv.textContent = "서버 연결에 실패했습니다. (Render 주소를 확인하세요)";
+                errDiv.classList.remove('hidden');
             }
+        }
+
+        function enterSystem(sClass, sName) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('user-info').innerHTML = `<i class="fa-regular fa-circle-user"></i> ${sClass} <b>${sName}</b>`;
+            document.getElementById('chat-greeting-name').textContent = `${sName} 학생`;
+            
+            // 라디오 버튼 기본값(채팅) 선택 트리거
+            document.getElementById('menu-chat').checked = true;
+            switchTab('chat');
         }
 
         function logout() {
@@ -144,6 +363,8 @@
             document.getElementById('app-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('login-pw').value = '';
+            document.getElementById('nav-admin').classList.add('hidden');
+            document.getElementById('login-msg').classList.add('hidden');
         }
 
         function switchTab(tabId) {
@@ -157,7 +378,13 @@
             if (!prompt) return;
 
             const chatHistory = document.getElementById('chat-history');
-            chatHistory.innerHTML += `<div class="text-right"><span class="bg-blue-100 p-2 rounded inline-block">${prompt}</span></div>`;
+            // 사용자 말풍선
+            chatHistory.innerHTML += `
+                <div class="flex justify-end">
+                    <div class="bg-gray-700 text-white px-4 py-2 rounded-lg rounded-br-none max-w-[80%] text-sm">
+                        ${prompt}
+                    </div>
+                </div>`;
             input.value = '';
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
@@ -170,10 +397,17 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    chatHistory.innerHTML += `<div class="text-left"><span class="bg-gray-200 p-2 rounded inline-block whitespace-pre-wrap">${data.reply}</span></div>`;
+                    // AI 말풍선
+                    chatHistory.innerHTML += `
+                        <div class="flex justify-start">
+                            <div class="bg-darkCard border border-gray-600 text-gray-200 px-4 py-3 rounded-lg rounded-bl-none max-w-[85%] text-sm whitespace-pre-wrap leading-relaxed shadow-sm">
+                                <span class="font-bold text-brandBlue mb-1 block"><i class="fa-solid fa-robot"></i> AI 국최</span>
+                                ${data.reply}
+                            </div>
+                        </div>`;
                 }
             } catch (error) {
-                chatHistory.innerHTML += `<div class="text-left"><span class="bg-red-100 p-2 rounded inline-block text-red-600">서버 연결 오류가 발생했습니다.</span></div>`;
+                chatHistory.innerHTML += `<div class="text-center text-red-500 text-xs mt-2">서버 통신 오류가 발생했습니다.</div>`;
             }
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
@@ -183,7 +417,13 @@
             const inputs = document.querySelectorAll('.omr-ans');
             const answers = Array.from(inputs).map(inp => inp.value);
 
-            if (!taskName) return alert('과제명을 입력해주세요.');
+            const resultDiv = document.getElementById('omr-result');
+            
+            if (!taskName) {
+                resultDiv.innerHTML = `<span class="text-red-400">과제명을 입력해주세요.</span>`;
+                resultDiv.classList.remove('hidden');
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/api/omr/submit`, {
@@ -198,34 +438,43 @@
                 });
                 
                 const data = await res.json();
-                const resultDiv = document.getElementById('omr-result');
                 resultDiv.classList.remove('hidden');
 
                 if (res.ok && data.success) {
-                    let html = `<h3 class="text-lg font-bold">채점 결과: ${data.score}점</h3>`;
+                    let html = `<h3 class="text-xl font-bold mb-2">채점 결과: <span class="text-brandBlue">${data.score}점</span></h3>`;
                     if (data.score === 100) {
-                        html += `<p class="text-green-600 font-bold mb-2">🎉 완벽합니다! 만점입니다!</p>`;
+                        html += `<p class="text-brandGreen font-bold mb-2">🎉 완벽합니다! 만점입니다!</p>`;
                         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                     } else {
-                        html += `<p class="text-red-500 mb-2">틀린 문항: ${data.wrongs.join(', ')}</p>`;
+                        html += `<p class="text-red-400 mb-2">틀린 문항: ${data.wrongs.join(', ')}</p>`;
                     }
                     resultDiv.innerHTML = html;
                 } else {
-                    resultDiv.innerHTML = `<p class="text-red-500">${data.detail || '채점 실패'}</p>`;
+                    resultDiv.innerHTML = `<p class="text-red-400">${data.detail || '채점 실패 (서버에 정답이 세팅되어 있는지 확인하세요)'}</p>`;
                 }
             } catch (error) {
-                alert("서버 오류가 발생했습니다.");
+                resultDiv.innerHTML = `<span class="text-red-400">서버 오류가 발생했습니다.</span>`;
+                resultDiv.classList.remove('hidden');
             }
         }
 
         async function uploadKnowledge() {
             const fileInput = document.getElementById('knowledge-files');
-            if (fileInput.files.length === 0) return alert('파일을 선택해주세요.');
+            const msgDiv = document.getElementById('admin-msg');
+            
+            if (fileInput.files.length === 0) {
+                msgDiv.className = "mt-4 font-bold text-center text-red-400 text-sm";
+                msgDiv.textContent = "파일을 선택해주세요.";
+                return;
+            }
 
             const formData = new FormData();
             for (const file of fileInput.files) {
                 formData.append('files', file);
             }
+
+            msgDiv.className = "mt-4 font-bold text-center text-gray-400 text-sm";
+            msgDiv.textContent = "서버로 지식을 전송 중입니다...";
 
             try {
                 const res = await fetch(`${API_URL}/api/admin/knowledge/bulk`, {
@@ -235,15 +484,15 @@
                 const data = await res.json();
                 
                 if (res.ok && data.success) {
-                    document.getElementById('admin-msg').className = "mt-4 font-bold text-center text-green-600";
-                    document.getElementById('admin-msg').textContent = data.message;
+                    msgDiv.className = "mt-4 font-bold text-center text-brandGreen text-sm";
+                    msgDiv.textContent = "✅ " + data.message;
                     fileInput.value = '';
                 } else {
                     throw new Error(data.detail);
                 }
             } catch (error) {
-                document.getElementById('admin-msg').className = "mt-4 font-bold text-center text-red-600";
-                document.getElementById('admin-msg').textContent = "업로드 실패: " + error.message;
+                msgDiv.className = "mt-4 font-bold text-center text-red-400 text-sm";
+                msgDiv.textContent = "❌ 업로드 실패: " + error.message;
             }
         }
     </script>
