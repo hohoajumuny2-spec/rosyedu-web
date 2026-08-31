@@ -3,214 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로지에듀 최준용 국어</title>
+    <title>로지에듀 최준용 국어 - AI 튜터 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* 기본 여백 제거 및 폰트 설정 */
-        body, html {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-            background-color: #fff;
-            color: #1d1d1f;
-            word-break: keep-all;
-        }
-
-        a { text-decoration: none; }
-        
-        /* 반투명 상단 네비게이션 바 */
-        .global-nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: 48px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-        }
-
-        .global-nav a {
-            color: #f5f5f7;
-            font-size: 12px;
-            font-weight: 400;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-
-        .global-nav a:hover { opacity: 1; }
-
-        /* 로고 스타일 강조 */
-        .global-nav .logo {
-            font-weight: 700;
-            font-size: 14px;
-            margin-right: 20px;
-            opacity: 1;
-        }
-
-        /* 공통 섹션 스타일 */
-        .section {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding-top: 120px;
-            box-sizing: border-box;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            overflow: hidden;
-        }
-
-        /* 텍스트 요소 */
-        .title {
-            font-size: 56px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: -0.01em;
-        }
-
-        .subtitle {
-            font-size: 28px;
-            font-weight: 400;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-
-        .links a {
-            font-size: 21px;
-            color: #06c;
-            margin: 0 15px;
-        }
-
-        .links a:hover { text-decoration: underline; }
-
-        /* 다크 테마 / 라이트 테마 */
-        .theme-dark { background-color: #000; color: #f5f5f7; }
-        .theme-light { background-color: #fbfbfd; color: #1d1d1f; }
-
-        /* 메인 대형 배너 영역 */
-        .hero {
-            height: 700px;
-            margin-top: 48px;
-        }
-
-        /* 2단 그리드 영역 */
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            padding: 12px;
-            background-color: #fff;
-        }
-
-        .grid-item {
-            height: 580px;
-            padding-top: 50px;
-        }
-
-        /* 페이드인 애니메이션 */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 1s cubic-bezier(0.25, 1, 0.5, 1), transform 1s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* 모바일 반응형 처리 */
-        @media (max-width: 768px) {
-            .grid-container { grid-template-columns: 1fr; }
-            .title { font-size: 40px; }
-            .subtitle { font-size: 21px; }
-            .global-nav { gap: 15px; }
-            .global-nav .logo { display: none; /* 모바일에서는 공간 확보를 위해 로고 숨김 */ }
-        }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f3f4f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .chat-box { max-height: 400px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
-    <!-- 상단 네비게이션 -->
-    <nav class="global-nav">
-        <a href="#" class="logo">로지에듀 최준용 국어</a>
-        <a href="#">소개</a>
-        <a href="#">강사진</a>
-        <a href="#">커리큘럼</a>
-        <a href="#">합격후기</a>
-        <a href="#">상담예약</a>
-    </nav>
-
-    <!-- 첫 번째 대형 배너 -->
-    <section class="section hero theme-dark">
-        <div class="fade-in">
-            <h1 class="title">국최 24h</h1>
-            <p class="subtitle">수능 국어의 본질을 완벽하게 꿰뚫다.</p>
-            <div class="links">
-                <a href="#">더 알아보기 &gt;</a>
-                <a href="#">수강 신청 &gt;</a>
+    <!-- 1. 로그인 화면 -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-md w-96">
+            <h1 class="text-2xl font-bold text-center text-blue-800 mb-6">로지에듀 최준용 국어</h1>
+            <div class="space-y-4">
+                <input type="text" id="login-class" placeholder="소속 (예: 고1 미강고, 논술)" class="w-full border p-2 rounded">
+                <input type="text" id="login-name" placeholder="이름 (예: 홍길동, 최준용)" class="w-full border p-2 rounded">
+                <input type="password" id="login-pw" placeholder="관리자 비밀번호 (원장님만 입력)" class="w-full border p-2 rounded">
+                <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 font-bold">입장하기</button>
             </div>
-        </div>
-    </section>
-
-    <!-- 두 번째 대형 배너 -->
-    <section class="section hero theme-light">
-        <div class="fade-in">
-            <h1 class="title">완벽한 내신 대비</h1>
-            <p class="subtitle">학교별 맞춤 전략으로 1등급을 완성하세요.</p>
-            <div class="links">
-                <a href="#">커리큘럼 보기 &gt;</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- 하단 2단 그리드 배너 -->
-    <div class="grid-container">
-        <!-- 왼쪽 배너 -->
-        <div class="section grid-item theme-light">
-            <div class="fade-in">
-                <h2 class="title" style="font-size: 32px;">예비 고1 특강</h2>
-                <p class="subtitle" style="font-size: 19px;">기초부터 탄탄하게 다지는 첫걸음.</p>
-                <div class="links">
-                    <a href="#" style="font-size: 17px;">자세히 보기 &gt;</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 오른쪽 배너 -->
-        <div class="section grid-item theme-dark">
-            <div class="fade-in">
-                <h2 class="title" style="font-size: 32px;">파이널 모의고사</h2>
-                <p class="subtitle" style="font-size: 19px;">실전 감각을 극대화하는 마지막 훈련.</p>
-                <div class="links">
-                    <a href="#" style="font-size: 17px;">자세히 보기 &gt;</a>
-                </div>
-            </div>
+            <p id="login-msg" class="text-red-500 text-sm mt-2 text-center"></p>
         </div>
     </div>
 
-    <!-- 스크롤 애니메이션 자바스크립트 -->
+    <!-- 2. 메인 시스템 화면 -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col">
+        <!-- 상단 네비게이션 -->
+        <header class="bg-blue-800 text-white p-4 flex justify-between items-center shadow-md">
+            <h1 class="text-xl font-bold">로지에듀 24시 국최 AI</h1>
+            <div>
+                <span id="user-info" class="mr-4 font-semibold"></span>
+                <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded text-sm hover:bg-red-600">로그아웃</button>
+            </div>
+        </header>
+
+        <!-- 탭 메뉴 -->
+        <nav class="bg-white shadow-sm flex space-x-1 p-2 justify-center">
+            <button onclick="switchTab('chat')" class="px-4 py-2 hover:bg-blue-50 rounded">🧠 AI 질문하기</button>
+            <button onclick="switchTab('omr')" class="px-4 py-2 hover:bg-blue-50 rounded">💯 OMR 자동 채점</button>
+            <button id="admin-tab-btn" onclick="switchTab('admin')" class="hidden px-4 py-2 font-bold text-blue-600 hover:bg-blue-50 rounded">⚙️ 원장님 관제실</button>
+        </nav>
+
+        <!-- 본문 영역 -->
+        <main class="flex-grow p-6 flex justify-center">
+            <div class="w-full max-w-4xl bg-white shadow-lg rounded-lg p-6">
+                
+                <!-- AI 질문 탭 -->
+                <div id="tab-chat" class="tab-content active">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2">🧠 지식 검색 AI 튜터</h2>
+                    <div id="chat-history" class="chat-box space-y-4 mb-4 p-4 bg-gray-50 border rounded h-80">
+                        <div class="text-gray-500 text-center text-sm mt-10">궁금한 문제나 개념을 물어보세요! (예: 바탕 7회 독서 4번 정답이 뭐야?)</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" class="flex-grow border p-2 rounded" placeholder="질문을 입력하세요...">
+                        <button onclick="sendChat()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">전송</button>
+                    </div>
+                </div>
+
+                <!-- OMR 자동 채점 탭 -->
+                <div id="tab-omr" class="tab-content">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2">💯 OMR 자동 채점</h2>
+                    <input type="text" id="omr-task" placeholder="과제명 (예: 미강고 중간고사 대비 1회)" class="w-full border p-2 rounded mb-4">
+                    
+                    <div class="grid grid-cols-5 gap-2 mb-4" id="omr-inputs">
+                        <input type="text" placeholder="1번 답" class="border p-2 rounded text-center omr-ans">
+                        <input type="text" placeholder="2번 답" class="border p-2 rounded text-center omr-ans">
+                        <input type="text" placeholder="3번 답" class="border p-2 rounded text-center omr-ans">
+                        <input type="text" placeholder="4번 답" class="border p-2 rounded text-center omr-ans">
+                        <input type="text" placeholder="5번 답" class="border p-2 rounded text-center omr-ans">
+                    </div>
+                    
+                    <button onclick="submitOMR()" class="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">답안 제출 및 채점</button>
+                    <div id="omr-result" class="mt-6 p-4 rounded bg-gray-50 hidden"></div>
+                </div>
+
+                <!-- 원장님 관제실 탭 -->
+                <div id="tab-admin" class="tab-content">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-800">⚙️ AI 두뇌 지식 주입 (원장님 전용)</h2>
+                    <div class="border-2 border-dashed border-gray-300 rounded p-10 text-center bg-gray-50">
+                        <p class="mb-4 text-gray-600">학원 자체 교재, 모의고사 해설지 텍스트 파일(.txt)을 올려주세요.</p>
+                        <input type="file" id="knowledge-files" multiple accept=".txt" class="mb-4">
+                        <br>
+                        <button onclick="uploadKnowledge()" class="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900 font-bold">서버에 자료 이식하기</button>
+                    </div>
+                    <p id="admin-msg" class="mt-4 font-bold text-center"></p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
+        // ★★★ 원장님 전용 렌더(Render) 클라우드 파이썬 서버 주소 ★★★
+        const API_URL = "https://korean-ai-tutor.onrender.com";
+        
+        let currentUser = null;
+
+        async function login() {
+            const sClass = document.getElementById('login-class').value.trim();
+            const sName = document.getElementById('login-name').value.trim();
+            const sPw = document.getElementById('login-pw').value.trim();
+
+            if (!sClass || !sName) {
+                document.getElementById('login-msg').textContent = "소속과 이름을 입력해주세요.";
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/api/auth`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ student_class: sClass, student_name: sName, admin_password: sPw })
                 });
-            }, {
-                threshold: 0.1
-            });
+                
+                const data = await res.json();
+                
+                if (res.ok && data.success) {
+                    currentUser = { class: sClass, name: sName, isAdmin: data.is_admin };
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.remove('hidden');
+                    document.getElementById('user-info').textContent = `${sClass} ${sName}님 접속중`;
+                    
+                    if (data.is_admin) {
+                        document.getElementById('admin-tab-btn').classList.remove('hidden');
+                        alert(data.message);
+                    }
+                } else {
+                    document.getElementById('login-msg').textContent = data.detail || "로그인 실패";
+                }
+            } catch (error) {
+                document.getElementById('login-msg').textContent = "서버 연결에 실패했습니다. 서버가 켜져 있는지 확인해주세요.";
+            }
+        }
 
-            const fadeElements = document.querySelectorAll('.fade-in');
-            fadeElements.forEach(el => observer.observe(el));
-        });
+        function logout() {
+            currentUser = null;
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-pw').value = '';
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            const chatHistory = document.getElementById('chat-history');
+            chatHistory.innerHTML += `<div class="text-right"><span class="bg-blue-100 p-2 rounded inline-block">${prompt}</span></div>`;
+            input.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const res = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ student_class: currentUser.class, student_name: currentUser.name, prompt: prompt })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    chatHistory.innerHTML += `<div class="text-left"><span class="bg-gray-200 p-2 rounded inline-block whitespace-pre-wrap">${data.reply}</span></div>`;
+                }
+            } catch (error) {
+                chatHistory.innerHTML += `<div class="text-left"><span class="bg-red-100 p-2 rounded inline-block text-red-600">서버 연결 오류가 발생했습니다.</span></div>`;
+            }
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        async function submitOMR() {
+            const taskName = document.getElementById('omr-task').value.trim();
+            const inputs = document.querySelectorAll('.omr-ans');
+            const answers = Array.from(inputs).map(inp => inp.value);
+
+            if (!taskName) return alert('과제명을 입력해주세요.');
+
+            try {
+                const res = await fetch(`${API_URL}/api/omr/submit`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        student_class: currentUser.class,
+                        student_name: currentUser.name,
+                        task_name: taskName,
+                        answers: answers
+                    })
+                });
+                
+                const data = await res.json();
+                const resultDiv = document.getElementById('omr-result');
+                resultDiv.classList.remove('hidden');
+
+                if (res.ok && data.success) {
+                    let html = `<h3 class="text-lg font-bold">채점 결과: ${data.score}점</h3>`;
+                    if (data.score === 100) {
+                        html += `<p class="text-green-600 font-bold mb-2">🎉 완벽합니다! 만점입니다!</p>`;
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    } else {
+                        html += `<p class="text-red-500 mb-2">틀린 문항: ${data.wrongs.join(', ')}</p>`;
+                    }
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `<p class="text-red-500">${data.detail || '채점 실패'}</p>`;
+                }
+            } catch (error) {
+                alert("서버 오류가 발생했습니다.");
+            }
+        }
+
+        async function uploadKnowledge() {
+            const fileInput = document.getElementById('knowledge-files');
+            if (fileInput.files.length === 0) return alert('파일을 선택해주세요.');
+
+            const formData = new FormData();
+            for (const file of fileInput.files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/knowledge/bulk`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (res.ok && data.success) {
+                    document.getElementById('admin-msg').className = "mt-4 font-bold text-center text-green-600";
+                    document.getElementById('admin-msg').textContent = data.message;
+                    fileInput.value = '';
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                document.getElementById('admin-msg').className = "mt-4 font-bold text-center text-red-600";
+                document.getElementById('admin-msg').textContent = "업로드 실패: " + error.message;
+            }
+        }
     </script>
-
 </body>
 </html>
