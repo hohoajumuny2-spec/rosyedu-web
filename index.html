@@ -180,6 +180,7 @@
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded transition">👥 학생 관리</button>
                         <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">💻 모의고사 세팅</button>
                         <button onclick="switchAdminTab('admin-report')" id="btn-admin-report" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition">📊 성적 장부</button>
+                        <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-gray-400 hover:text-white font-bold px-4 py-2 rounded transition border border-yellow-600/30">🪄 문제 출제기(통합)</button>
                     </div>
 
                     <div id="admin-users" class="admin-tab-content active">
@@ -227,11 +228,18 @@
                             </table>
                         </div>
                     </div>
+                    
+                    <!-- 💡 새롭게 추가된 문제 출제기 전용 탭 -->
+                    <div id="admin-generator" class="admin-tab-content">
+                        <div class="bg-gray-900 border border-gray-700 p-1 rounded-lg w-full h-[750px]">
+                            <iframe src="https://korean-ai-tutor-mwtk5vuwynggkjxfez8iuu.streamlit.app/?embed=true" class="w-full h-full rounded" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
-
 
     <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-xl w-full max-w-md relative shadow-2xl">
@@ -281,12 +289,13 @@
             document.getElementById('dashboard-home').classList.add('hidden'); document.getElementById('program-view').classList.remove('hidden');
             document.querySelectorAll('.prog-content').forEach(el => el.classList.add('hidden'));
             const target = document.getElementById('prog-' + progId); if(target) target.classList.remove('hidden');
-            if (progId === 'admin') { switchAdminTab('admin-users'); }
+            if (progId === 'admin') { switchAdminTab('admin-generator'); }
         }
         function closeProgram() { document.getElementById('program-view').classList.add('hidden'); document.getElementById('dashboard-home').classList.remove('hidden'); }
 
         function switchAdminTab(tabId) {
-            const btns = ['admin-users', 'admin-ai', 'admin-exam', 'admin-report'];
+            // 💡 문제 출제기(admin-generator) 탭 추가 연동
+            const btns = ['admin-users', 'admin-exam', 'admin-report', 'admin-generator'];
             btns.forEach(id => {
                 const btn = document.getElementById('btn-' + id); if(btn) btn.className = btn.className.replace('bg-gray-800 text-white', 'text-gray-400 hover:text-white');
                 const content = document.getElementById(id); if(content) content.classList.remove('active');
@@ -429,12 +438,18 @@
                 
                 document.getElementById(loadingId).remove();
                 
+                // 💡 서버가 성공했을 때 처리
                 if (data.success) {
                     chatHistory.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-[#2a3441] text-gray-200 px-5 py-4 rounded-xl rounded-tl-none max-w-[85%] text-sm font-medium leading-relaxed border border-gray-700"><span class="text-blue-400 font-bold block mb-2"><i class="fa-solid fa-robot mr-1"></i> AI 국최</span>${data.reply.replace(/\n/g, '<br>')}</div></div>`;
+                } 
+                // 💡 서버에 에러(NoneType 등)가 났을 때 삼키지 않고 띄워주도록 수정!
+                else {
+                    const errorMsg = data.reply || data.detail || "알 수 없는 오류가 발생했습니다.";
+                    chatHistory.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-red-900/30 text-red-200 px-5 py-4 rounded-xl rounded-tl-none max-w-[85%] text-sm font-medium leading-relaxed border border-red-800"><span class="text-red-400 font-bold block mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 시스템 알림</span>${errorMsg.replace(/\n/g, '<br>')}</div></div>`;
                 }
             } catch (error) { 
                 document.getElementById(loadingId).remove();
-                chatHistory.innerHTML += `<div class="text-center text-red-400 text-xs mt-2 mb-4">서버 통신 오류</div>`; 
+                chatHistory.innerHTML += `<div class="text-center text-red-400 text-xs mt-2 mb-4">서버 통신 연결 오류가 발생했습니다.</div>`; 
             }
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
@@ -453,7 +468,7 @@
                 const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ student_class: currentUser.class, student_name: currentUser.name, prompt: prefix + text }) });
                 const data = await res.json();
                 if (data.success) resultDiv.innerHTML = data.reply.replace(/\n/g, '<br>');
-                else resultDiv.innerHTML = "첨삭 처리 중 오류가 발생했습니다.";
+                else resultDiv.innerHTML = `<span class="text-red-400">오류 발생: ${data.reply || data.detail}</span>`; // 오류 메시지 노출 추가
             } catch (error) { resultDiv.innerHTML = "서버 통신 오류가 발생했습니다."; }
         }
 
