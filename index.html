@@ -17,8 +17,7 @@
         ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
-        .admin-tab-content, .prog-content { display: none; }
-        .active-tab { display: block; animation: fadeIn 0.3s ease-out forwards; }
+        .active-tab { animation: fadeIn 0.3s ease-out forwards; }
         
         /* OMR 라디오 버튼 스타일 */
         .omr-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #4b5563; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; transition: all 0.2s; }
@@ -52,10 +51,11 @@
 
     <!-- 🌟 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-28 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
-        <div id="dashboard-home" class="active-tab">
+        <div id="dashboard-home">
             <h2 class="text-3xl font-bold mb-8">스마트 학습실</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- 메뉴 카드들 -->
+                
+                <!-- 학생용 메뉴 -->
                 <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-14 h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-robot"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
@@ -80,6 +80,7 @@
                     <p class="text-gray-400 text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
 
+                <!-- 원장님용 메뉴 -->
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-14 h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-gears"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -88,14 +89,14 @@
             </div>
         </div>
 
+        <!-- 💡 각 프로그램 화면들 (초기 상태 모두 hidden 적용) -->
         <div id="program-view" class="hidden fade-in">
             <button onclick="closeProgram()" class="mb-6 text-gray-400 hover:text-white font-bold flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> 메뉴로 돌아가기</button>
 
             <!-- 💬 24시간 AI 국최 -->
-            <div id="prog-chat" class="prog-content w-full max-w-6xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800 shadow-2xl">
+            <div id="prog-chat" class="prog-content hidden w-full max-w-6xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h2 class="text-3xl font-bold text-blue-400 mb-6"><i class="fa-solid fa-robot mr-2"></i>24시간 AI 국최</h2>
                 <div id="chat-history" class="h-[65vh] overflow-y-auto mb-6 space-y-6 bg-[#151922] p-6 rounded-xl border border-gray-700 text-lg leading-loose">
-                    <!-- 환영 인사 기본 내장 -->
                     <div class="text-left mb-6">
                         <span class="bg-gray-800 px-6 py-5 rounded-2xl text-white text-lg inline-block leading-loose shadow-lg border border-gray-700">
                             <span class="block mb-3 font-bold text-blue-400 text-xl"><i class="fa-solid fa-robot mr-2"></i>국최</span>
@@ -115,7 +116,7 @@
             </div>
 
             <!-- 📝 과제 제출 (학생용) -->
-            <div id="prog-homework" class="prog-content w-full max-w-4xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
+            <div id="prog-homework" class="prog-content hidden w-full max-w-4xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
                 <h2 class="text-3xl font-bold text-emerald-400 mb-6"><i class="fa-solid fa-file-signature mr-2"></i>과제 제출 및 정답 확인</h2>
                 <div id="student-hw-list" class="space-y-4 mb-8"></div>
                 <div id="hw-submit-area" class="hidden bg-[#151922] border border-gray-700 p-6 rounded-xl">
@@ -127,22 +128,22 @@
             </div>
 
             <!-- 📂 게시판 (자료실) -->
-            <div id="prog-board" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
+            <div id="prog-board" class="prog-content hidden w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
                 <h2 class="text-3xl font-bold text-gray-200 mb-6"><i class="fa-solid fa-folder-open mr-2"></i>학원 자료실</h2>
                 <div id="board-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
             <!-- ⏳ 실시간 모의고사 목록 (학생용) -->
-            <div id="prog-exam-list" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
+            <div id="prog-exam-list" class="prog-content hidden w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
                 <h2 class="text-3xl font-bold text-yellow-500 mb-6"><i class="fa-solid fa-stopwatch mr-2"></i>진행 중인 모의고사</h2>
                 <div id="student-exam-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- ⏳ 실시간 모의고사장 (타이머 & OMR) -->
-            <div id="prog-exam-room" class="prog-content w-full max-w-7xl mx-auto h-[80vh] flex gap-6">
+            <!-- ⏳ 실시간 모의고사장 본게임 (타이머 & OMR) -->
+            <div id="prog-exam-room" class="prog-content hidden w-full max-w-7xl mx-auto h-[80vh] flex gap-6">
                 <div class="w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-4 flex flex-col h-full shadow-2xl">
                     <h2 id="room-exam-title" class="text-2xl font-bold text-white mb-4 pl-2">시험지</h2>
-                    <iframe id="exam-pdf-viewer" class="w-full flex-grow rounded-lg border border-gray-700 bg-white" src=""></iframe>
+                    <iframe id="exam-pdf-viewer" class="w-full flex-grow rounded-lg border border-gray-700 bg-white hidden" src=""></iframe>
                     <textarea id="exam-raw-viewer" class="hidden w-full flex-grow rounded-lg border border-gray-700 bg-[#151922] text-white p-4 font-mono text-sm leading-relaxed" readonly></textarea>
                 </div>
                 <div class="w-1/3 bg-[#1e2430] rounded-xl border border-gray-800 p-8 flex flex-col h-full shadow-2xl relative">
@@ -156,13 +157,14 @@
             </div>
 
             <!-- ⚙️ 시스템 통합 관리 모드 (원장님) -->
-            <div id="prog-admin" class="prog-content w-full max-w-7xl mx-auto">
+            <div id="prog-admin" class="prog-content hidden w-full max-w-7xl mx-auto">
                 <div class="bg-[#1e2430] border border-gray-800 p-8 rounded-xl shadow-xl">
                     <div class="flex overflow-x-auto gap-4 border-b border-gray-700 pb-4 mb-8 whitespace-nowrap">
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded transition">👥 장부 관리</button>
+                        <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600/50 px-4 py-2 rounded transition">📚 AI 자료 학습</button>
                         <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600/50 px-4 py-2 rounded transition">🪄 정밀 문제 출제</button>
-                        <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600/50 px-4 py-2 rounded transition">⏳ 모의고사 방 관리</button>
-                        <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-emerald-400 font-bold border border-emerald-600/50 px-4 py-2 rounded transition">📝 과제/자료실 관리</button>
+                        <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600/50 px-4 py-2 rounded transition">⏳ 모의고사 오픈</button>
+                        <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600/50 px-4 py-2 rounded transition">📝 과제/자료실 등록</button>
                     </div>
 
                     <!-- 장부 탭 -->
@@ -180,8 +182,19 @@
                         </div>
                     </div>
 
-                    <!-- 🪄 정밀 문제 생성 엔진 (스트리밍 + 시각적 파일) -->
-                    <div id="admin-generator" class="admin-tab-content">
+                    <!-- AI 자료 학습 탭 -->
+                    <div id="admin-knowledge" class="admin-tab-content hidden text-gray-300">
+                        <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
+                            <h3 class="text-lg font-bold mb-2 text-emerald-400"><i class="fa-solid fa-brain mr-2"></i>원장님 자료 AI 다중 학습 (PDF/이미지)</h3>
+                            <input type="text" id="kb-title" placeholder="자료 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3">
+                            <textarea id="kb-content" class="w-full h-32 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4" placeholder="AI가 학습할 내용을 붙여넣거나, 아래에 여러 개의 파일을 첨부하세요."></textarea>
+                            <input type="file" id="kb-files" multiple accept=".pdf, .jpg, .png" class="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-gray-700 file:text-white mb-6">
+                            <button id="btn-knowledge" onclick="uploadKnowledge()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-lg w-full transition">AI 두뇌에 대량 저장 및 학습</button>
+                        </div>
+                    </div>
+
+                    <!-- 🪄 정밀 문제 생성 엔진 -->
+                    <div id="admin-generator" class="admin-tab-content hidden text-gray-300">
                         <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
                             <h3 class="text-xl font-bold mb-6 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>AI 정밀 문제 생성 엔진</h3>
                             <div class="bg-[#1e2430] p-4 rounded border border-gray-700 mb-4">
@@ -208,11 +221,13 @@
                                 <label class="text-sm font-bold text-gray-400 block mb-2"><i class="fa-solid fa-file-import mr-2"></i>참고용 다중 파일 첨부</label>
                                 <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="hidden" onchange="updateGenFileVisuals()">
                                 <button onclick="document.getElementById('gen-files').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm transition">파일 찾아보기</button>
-                                <div id="gen-files-visual" class="flex flex-wrap gap-2 mt-3"></div> <!-- 💡 시각적 파일 목록 -->
+                                <div id="gen-files-visual" class="flex flex-wrap gap-2 mt-3"></div>
                             </div>
                             <button onclick="generateStreamQuestions()" id="btn-generate" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg transition mb-6 shadow-lg shadow-yellow-600/20"><i class="fa-solid fa-bolt mr-2"></i>AI 정밀 출제 실시간 가동</button>
                             <div id="gen-result-area" class="hidden">
                                 <h4 class="text-lg font-bold text-emerald-400 mb-2">실시간 생성 과정 (편집 가능)</h4>
+                                <input type="text" id="gen-title" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3" placeholder="시험 제목 (배포용)">
+                                <input type="text" id="gen-target" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3" value="전체">
                                 <textarea id="gen-result-text" class="w-full h-96 bg-[#1e2430] border border-gray-600 text-white p-4 rounded mb-4 font-mono text-sm leading-relaxed"></textarea>
                                 <div class="flex gap-4">
                                     <button onclick="deployFromGenerator()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-lg transition"><i class="fa-solid fa-share-from-square mr-2"></i>이 텍스트 그대로 모의고사 방 개설하기</button>
@@ -223,7 +238,7 @@
                     </div>
 
                     <!-- ⏳ 다중 모의고사 방 관리 (원장님 OMR UI) -->
-                    <div id="admin-exam" class="admin-tab-content text-gray-300">
+                    <div id="admin-exam" class="admin-tab-content hidden text-gray-300">
                         <div class="grid grid-cols-2 gap-8">
                             <div class="bg-[#151922] p-8 border border-gray-700 rounded-lg">
                                 <h3 class="text-2xl font-bold mb-6 text-white"><i class="fa-solid fa-plus-circle mr-2 text-indigo-400"></i>새 모의고사 방 개설</h3>
@@ -248,7 +263,7 @@
                     </div>
 
                     <!-- 📝 과제 및 게시판 관리 -->
-                    <div id="admin-hw" class="admin-tab-content text-gray-300">
+                    <div id="admin-hw" class="admin-tab-content hidden text-gray-300">
                         <div class="grid grid-cols-2 gap-8">
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
                                 <h3 class="text-xl font-bold mb-4 text-emerald-400"><i class="fa-solid fa-pen-to-square mr-2"></i>신규 과제 등록</h3>
@@ -295,7 +310,7 @@
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null;
 
-        // 세션 유지 로직
+        // 세션 유지 및 즉시 통과
         window.addEventListener('DOMContentLoaded', () => { 
             fetch(`${API_URL}/api/health`).catch(()=>{}); 
             const savedUser = localStorage.getItem('logyedu_user');
@@ -311,27 +326,54 @@
         function showModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('auth-modal').classList.add('hidden'); }
         function goHome() { document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('home-view').classList.remove('hidden'); }
+        
         function goToDashboard() {
             if(!currentUser) return showModal();
             document.getElementById('home-view').classList.add('hidden'); 
             document.getElementById('dashboard-screen').classList.remove('hidden'); 
             closeProgram();
         }
+
+        // 💡 탭 스위치 로직 완벽 수정 (hidden 클래스를 명확히 토글)
         function openProgram(progId) {
-            document.getElementById('dashboard-home').classList.add('hidden'); document.getElementById('program-view').classList.remove('hidden');
-            document.querySelectorAll('.prog-content').forEach(el => el.classList.replace('active-tab', 'hidden'));
-            document.getElementById('prog-' + progId).classList.replace('hidden', 'active-tab');
+            document.getElementById('dashboard-home').classList.add('hidden'); 
+            document.getElementById('program-view').classList.remove('hidden');
+            
+            // 모든 프로그램을 확실하게 숨김 처리
+            document.querySelectorAll('.prog-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('active-tab');
+            });
+            
+            // 선택한 프로그램만 열기
+            const target = document.getElementById('prog-' + progId);
+            if(target) {
+                target.classList.remove('hidden');
+                target.classList.add('active-tab');
+            }
+            
             if (progId === 'admin') switchAdminTab('admin-users');
         }
-        function closeProgram() { document.getElementById('program-view').classList.add('hidden'); document.getElementById('dashboard-home').classList.add('active-tab'); }
+
+        function closeProgram() { 
+            document.getElementById('program-view').classList.add('hidden'); 
+            document.getElementById('dashboard-home').classList.remove('hidden'); 
+        }
         
         function switchAdminTab(tabId) {
-            ['admin-users', 'admin-generator', 'admin-exam', 'admin-hw'].forEach(id => {
-                document.getElementById('btn-'+id).classList.replace('bg-gray-800', 'border');
-                document.getElementById(id).classList.replace('active-tab', 'hidden');
+            ['admin-users', 'admin-knowledge', 'admin-generator', 'admin-exam', 'admin-hw'].forEach(id => {
+                const btn = document.getElementById('btn-'+id);
+                if(btn) { btn.classList.remove('bg-gray-800'); btn.classList.add('border'); }
+                const tab = document.getElementById(id);
+                if(tab) { tab.classList.add('hidden'); tab.classList.remove('active-tab'); }
             });
-            document.getElementById('btn-'+tabId).classList.replace('border', 'bg-gray-800');
-            document.getElementById(tabId).classList.replace('hidden', 'active-tab');
+            
+            const activeBtn = document.getElementById('btn-'+tabId);
+            if(activeBtn) { activeBtn.classList.remove('border'); activeBtn.classList.add('bg-gray-800'); }
+            
+            const activeTab = document.getElementById(tabId);
+            if(activeTab) { activeTab.classList.remove('hidden'); activeTab.classList.add('active-tab'); }
+            
             if(tabId === 'admin-users') fetchReports();
             if(tabId === 'admin-exam') loadAdminExams();
         }
@@ -356,14 +398,12 @@
         }
         function logout() { localStorage.removeItem('logyedu_user'); location.reload(); }
 
-        // 💡 채팅 파일 비주얼 업데이트
         function updateChatFileLabel() {
             const files = document.getElementById('chat-file').files;
             const label = document.getElementById('chat-file-label');
             label.innerText = files.length > 0 ? `첨부됨: ${files[0].name}` + (files.length>1? ` 외 ${files.length-1}개`:'') : "";
         }
 
-        // 💡 24시간 AI 국최 통신 (멀티파트 폼데이터 전송 지원)
         async function sendChat() {
             const input = document.getElementById('chat-input');
             const prompt = input.value; if(!prompt) return;
@@ -396,7 +436,6 @@
             history.scrollTop = history.scrollHeight;
         }
 
-        // 💡 정밀 출제 시각적 파일 리스트
         function updateGenFileVisuals() {
             const files = document.getElementById('gen-files').files;
             const container = document.getElementById('gen-files-visual');
@@ -406,9 +445,7 @@
             }
         }
 
-        // 💡 정밀 생성 실시간 스트리밍
         async function generateStreamQuestions() {
-            if (!document.getElementById('gen-title').value) return alert("시험 제목을 적어주세요.");
             const btn = document.getElementById('btn-generate');
             btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>실시간 문제 생성 중...";
             
@@ -442,7 +479,6 @@
             btn.disabled = false; btn.innerHTML = "<i class='fa-solid fa-bolt mr-2'></i>AI 정밀 출제 실시간 가동";
         }
 
-        // 💡 생성된 문제를 모의고사 방으로 쏘아주기 (모달 대신 바로 생성)
         async function deployFromGenerator() {
             const title = document.getElementById('gen-title').value;
             const target = document.getElementById('gen-target').value;
@@ -451,13 +487,12 @@
             try {
                 const res = await fetch(`${API_URL}/api/admin/exam`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ title: title, time_limit: 45, answer_key: "텍스트 자체내장", raw_text: raw }) // 임시 시간 45분
+                    body: JSON.stringify({ title: title, time_limit: 45, answer_key: "텍스트 자체내장", raw_text: raw }) 
                 });
-                alert("생성된 문제가 모의고사 방에 배포되었습니다! (제한시간 기본 45분)");
+                alert("생성된 문제가 모의고사 방에 배포되었습니다!");
             } catch(e) { alert("서버 오류"); }
         }
 
-        // 💡 원장님 모의고사 OMR 세팅 (동적 서클 UI 생성)
         let adminOmrAnswers = [];
         function buildAdminOMR() {
             const count = parseInt(document.getElementById('rt-qcount').value) || 0;
@@ -507,7 +542,7 @@
                 const container = document.getElementById('admin-exam-list'); container.innerHTML = '';
                 if(data.success && data.exams.length > 0) {
                     data.exams.forEach(e => {
-                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-4 rounded border border-gray-600"><div><span class="font-bold text-white text-lg">${e.title}</span><span class="ml-3 text-sm text-yellow-400"><i class="fa-solid fa-clock mr-1"></i>${e.time_limit || '설정안됨'}분</span></div><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition">삭제</button></div>`;
+                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-4 rounded border border-gray-600"><div><span class="font-bold text-white text-lg">${e.title}</span><span class="ml-3 text-sm text-yellow-400"><i class="fa-solid fa-clock mr-1"></i>${e.time_limit || '-'}분</span></div><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition">삭제</button></div>`;
                     });
                 } else container.innerHTML = "<p class='text-sm text-gray-500'>열려있는 모의고사가 없습니다.</p>";
             } catch(e) {}
@@ -518,7 +553,6 @@
             try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){}
         }
 
-        // 💡 학생 모의고사 관련
         async function loadStudentExams() {
             try {
                 const res = await fetch(`${API_URL}/api/exams`);
@@ -539,12 +573,10 @@
             currentExamTitle = title;
             document.getElementById('room-exam-title').innerText = title;
             
-            // PDF가 있으면 뷰어, 없으면 텍스트(정밀출제) 표시
             if(pdfUrl) { document.getElementById('exam-pdf-viewer').classList.remove('hidden'); document.getElementById('exam-pdf-viewer').src = API_URL + pdfUrl; document.getElementById('exam-raw-viewer').classList.add('hidden'); }
             else if(rawText) { document.getElementById('exam-pdf-viewer').classList.add('hidden'); document.getElementById('exam-raw-viewer').classList.remove('hidden'); document.getElementById('exam-raw-viewer').value = rawText; }
 
-            // OMR 생성
-            const ansLen = ansKey ? ansKey.split(',').length : 10; // 임시 10문항
+            const ansLen = ansKey ? ansKey.split(',').length : 10; 
             studentOmrAnswers = Array(ansLen).fill("");
             let omrHtml = '<div class="space-y-4">';
             for(let i=0; i<ansLen; i++) {
@@ -555,7 +587,6 @@
             omrHtml += '</div>';
             document.getElementById('exam-omr-container').innerHTML = omrHtml;
 
-            // 타이머
             examRemainingSeconds = (time || 45) * 60;
             updateTimerDisplay(); clearInterval(examTimerInterval);
             examTimerInterval = setInterval(() => {
@@ -591,14 +622,11 @@
             } catch(e) { alert("서버 오류"); }
         }
 
-        // ==========================================
-        // 💡 과제 및 게시판 시스템
-        // ==========================================
         async function createHomework() {
             const t = document.getElementById('hw-title').value; const d = document.getElementById('hw-desc').value; const a = document.getElementById('hw-ans-text').value;
             const f = document.getElementById('hw-ans-file').files[0];
             if(!t) return alert("과제명을 입력하세요.");
-            const fd = new FormData(); formData.append("title", t); formData.append("desc", d); formData.append("answer_text", a); if(f) formData.append("answer_file", f);
+            const fd = new FormData(); fd.append("title", t); fd.append("desc", d); fd.append("answer_text", a); if(f) fd.append("answer_file", f);
             try { await fetch(`${API_URL}/api/admin/homework`, {method:'POST', body:fd}); alert("과제 등록 성공"); } catch(e){}
         }
 
@@ -688,6 +716,30 @@
                     });
                 }
             } catch(e) {}
+        }
+
+        async function uploadKnowledge() {
+            const t = document.getElementById('kb-title').value; 
+            const c = document.getElementById('kb-content').value;
+            const files = document.getElementById('kb-files').files;
+            if(!t) return alert("자료 제목을 입력해주세요.");
+            if(!c && files.length === 0) return alert("학습시킬 텍스트나 파일을 첨부해주세요.");
+            
+            const btn = document.getElementById('btn-knowledge');
+            btn.disabled = true; btn.innerText = "분석 중... ⏳";
+            const formData = new FormData();
+            formData.append("title", t); formData.append("content", c);
+            for(let i=0; i<files.length; i++) formData.append("files", files[i]);
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/knowledge`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.success) { 
+                    alert("학습 완료!"); 
+                    document.getElementById('kb-title').value=''; document.getElementById('kb-content').value=''; document.getElementById('kb-files').value='';
+                } else alert("학습 실패: " + data.detail);
+            } catch(e) { alert("서버 연결 실패"); }
+            btn.disabled = false; btn.innerText = "AI 두뇌에 대량 저장 및 학습";
         }
     </script>
 </body>
