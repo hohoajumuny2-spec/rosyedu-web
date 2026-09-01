@@ -1,189 +1,276 @@
-import os
-import json
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
-import firebase_admin
-from firebase_admin import credentials, firestore
-import google.generativeai as genai
-from datetime import datetime
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로지에듀 최준용 국어 - AI 스마트 플랫폼</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #1a1e29; color: #ffffff; overflow-x: hidden; scroll-behavior: smooth; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1e29; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
+        .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
+        .admin-tab-content { display: none; }
+        .admin-tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
 
-app = FastAPI()
+    <nav class="fixed top-0 w-full flex justify-between items-center px-8 py-6 z-50 bg-[#1a1e29]/90 border-b border-gray-800">
+        <div class="text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
+        <div class="flex items-center gap-4 text-sm font-medium">
+            <div id="auth-nav">
+                <button onclick="showModal('login')" class="hover:text-blue-400 transition"><i class="fa-solid fa-lock mr-1"></i> 로그인</button>
+            </div>
+            <div id="user-nav" class="hidden items-center gap-4">
+                <span id="header-user-info" class="text-blue-400 font-bold"></span>
+                <button onclick="goToDashboard()" class="text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1 rounded">학습실 입장</button>
+                <button onclick="logout()" class="hover:text-white underline">로그아웃</button>
+            </div>
+        </div>
+    </nav>
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    <div id="home-view" class="w-full flex-grow flex items-center justify-center min-h-screen pt-20">
+        <div class="text-center z-10 fade-in">
+            <h1 class="text-5xl font-bold text-white mb-6">우리는 언제나<br><span class="text-blue-500">'올바름'</span>을 찾아냈습니다</h1>
+            <button onclick="showModal('login')" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded font-bold text-lg">스마트 학습실 입장하기</button>
+        </div>
+    </div>
 
-# DB 세팅
-firebase_key_str = os.environ.get("FIREBASE_KEY")
-db = None
-if firebase_key_str:
-    try:
-        cred_dict = json.loads(firebase_key_str)
-        cred = credentials.Certificate(cred_dict)
-        if not firebase_admin._apps:
-            firebase_admin.initialize_app(cred)
-        db = firestore.client()
-    except Exception as e:
-        print("Firebase Error:", e)
+    <!-- 대시보드 뷰 -->
+    <div id="dashboard-screen" class="hidden flex-grow pt-28 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
+        <div id="dashboard-home">
+            <h2 class="text-3xl font-bold mb-8">스마트 학습실</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div onclick="openProgram('chat')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-14 h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-robot"></i></div>
+                    <h3 class="text-xl font-bold mb-2">24시간 AI 튜터</h3>
+                    <p class="text-gray-400 text-sm">질의응답을 언제든 자유롭게 진행합니다.</p>
+                </div>
+                <div onclick="openProgram('omr')" class="bg-[#151922] border border-gray-700 p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-14 h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-check-double"></i></div>
+                    <h3 class="text-xl font-bold mb-2">OMR 자동 채점</h3>
+                    <p class="text-gray-400 text-sm">과제 정답을 마킹하고 채점받습니다.</p>
+                </div>
+                <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-8 rounded-2xl cursor-pointer app-card flex-col items-start relative">
+                    <div class="w-14 h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-gears"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-white">시스템 관리</h3>
+                    <p class="text-red-300 text-sm">문제 출제 및 통합 시스템을 관리합니다.</p>
+                </div>
+            </div>
+        </div>
 
-# AI 세팅 (키 이름 상관없이 작동)
-gemini_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-model = None
-if gemini_key:
-    genai.configure(api_key=gemini_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+        <div id="program-view" class="hidden fade-in">
+            <button onclick="closeProgram()" class="mb-8 text-gray-400 hover:text-white font-bold flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> 돌아가기</button>
 
-class AuthRequest(BaseModel):
-    student_class: str
-    student_name: str
-    admin_password: str = ""
+            <!-- 채팅 -->
+            <div id="prog-chat" class="prog-content hidden w-full max-w-4xl mx-auto bg-[#1e2430] p-6 rounded-xl border border-gray-800">
+                <h2 class="text-2xl font-bold text-blue-400 mb-6"><i class="fa-solid fa-robot mr-2"></i>AI 튜터</h2>
+                <div id="chat-history" class="h-96 overflow-y-auto mb-4 space-y-4 bg-[#151922] p-4 rounded border border-gray-700"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input" class="flex-grow bg-[#151922] border border-gray-600 text-white p-3 rounded" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter') sendChat()">
+                    <button onclick="sendChat()" class="bg-blue-600 px-6 rounded text-white"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
 
-class ChatRequest(BaseModel):
-    student_class: str
-    student_name: str
-    prompt: str
+            <!-- OMR -->
+            <div id="prog-omr" class="prog-content hidden w-full max-w-4xl mx-auto bg-[#1e2430] p-6 rounded-xl border border-gray-800">
+                <h2 class="text-2xl font-bold text-indigo-400 mb-6">OMR 자동 채점</h2>
+                <input type="text" id="omr-task" placeholder="과제명" class="w-full bg-[#151922] border border-gray-600 text-white p-4 rounded mb-4">
+                <div class="grid grid-cols-5 gap-3 mb-6">
+                    <input type="text" placeholder="1" class="w-full bg-[#151922] border border-gray-600 p-4 text-center rounded omr-ans">
+                    <input type="text" placeholder="2" class="w-full bg-[#151922] border border-gray-600 p-4 text-center rounded omr-ans">
+                    <input type="text" placeholder="3" class="w-full bg-[#151922] border border-gray-600 p-4 text-center rounded omr-ans">
+                    <input type="text" placeholder="4" class="w-full bg-[#151922] border border-gray-600 p-4 text-center rounded omr-ans">
+                    <input type="text" placeholder="5" class="w-full bg-[#151922] border border-gray-600 p-4 text-center rounded omr-ans">
+                </div>
+                <button onclick="submitOMR()" class="w-full bg-indigo-600 py-4 font-bold rounded-lg text-white">채점 제출</button>
+                <div id="omr-result" class="mt-6"></div>
+            </div>
 
-class OMRRequest(BaseModel):
-    student_class: str
-    student_name: str
-    task_name: str
-    answers: list
+            <!-- 관리자 모드 -->
+            <div id="prog-admin" class="prog-content hidden w-full max-w-5xl mx-auto">
+                <div class="bg-[#1e2430] border border-gray-800 p-8 rounded-xl shadow-xl">
+                    <div class="flex gap-4 border-b border-gray-700 pb-4 mb-8">
+                        <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">학생 관리</button>
+                        <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600/50 px-4 py-2 rounded">🪄 네이티브 문제 출제기</button>
+                    </div>
 
-class DeployExamRequest(BaseModel):
-    title: str
-    target_class: str
-    raw_text: str
+                    <div id="admin-users" class="admin-tab-content active text-gray-300">
+                        학생 목록은 서버 콘솔에서 확인 가능하도록 세팅 중입니다.
+                    </div>
 
-@app.get("/api/health")
-def health_check(): return {"status": "ok"}
+                    <!-- 💡 완전 통합된 네이티브 출제기 -->
+                    <div id="admin-generator" class="admin-tab-content">
+                        <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
+                            <h3 class="text-xl font-bold mb-6 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>AI 문제 생성 엔진</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div><label class="text-sm font-bold text-gray-400 block mb-2">시험 제목</label><input type="text" id="gen-title" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white" placeholder="예: 미강고 1회"></div>
+                                <div><label class="text-sm font-bold text-gray-400 block mb-2">대상 반</label><input type="text" id="gen-class" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white" value="전체"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div><label class="text-sm font-bold text-gray-400 block mb-2">출제 모드</label><select id="gen-mode" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white"><option value="신규 문제 창조">신규 지문 기반</option><option value="기출 변형">기출 변형</option></select></div>
+                                <div><label class="text-sm font-bold text-gray-400 block mb-2">문제 수</label><input type="number" id="gen-count" value="3" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white"></div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="text-sm font-bold text-gray-400 block mb-2">기준 텍스트</label>
+                                <textarea id="gen-text" class="w-full h-32 bg-[#1e2430] border border-gray-600 p-3 rounded text-white" placeholder="지문이나 기출문제를 입력하세요..."></textarea>
+                            </div>
+                            <div class="mb-6">
+                                <label class="text-sm font-bold text-gray-400 block mb-2">첨부 파일 (PDF/이미지)</label>
+                                <input type="file" id="gen-file" multiple class="text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                            </div>
 
-@app.post("/api/auth")
-def authenticate(req: AuthRequest):
-    if req.admin_password == "1234": return {"success": True, "is_admin": True}
-    if db is None: raise HTTPException(status_code=500, detail="DB 오류")
-    doc = db.collection("students").document(req.student_name).get()
-    if doc.exists and doc.to_dict().get("student_class") == req.student_class:
-        return {"success": True, "is_admin": False}
-    return {"success": False, "detail": "명부 불일치"}
+                            <button onclick="generateQuestions()" id="btn-generate" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg transition mb-6">🚀 AI 문제 생성 시작</button>
 
-@app.post("/api/chat")
-def chat_with_ai(req: ChatRequest):
-    if model is None: return {"success": False, "reply": "AI 연결 오류"}
-    try:
-        res = model.generate_content(req.prompt)
-        return {"success": True, "reply": res.text}
-    except Exception as e:
-        return {"success": False, "reply": str(e)}
+                            <div id="gen-result-area" class="hidden">
+                                <h4 class="text-lg font-bold mb-3 text-emerald-400">생성된 문제 (직접 수정 가능)</h4>
+                                <textarea id="gen-result-text" class="w-full h-96 bg-[#1e2430] border border-gray-600 text-white p-4 rounded mb-4 font-mono text-sm leading-relaxed"></textarea>
+                                <button onclick="deployGeneratedExam()" id="btn-deploy" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-lg transition">✅ 위 내용으로 온라인 시험장 즉시 배포</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-@app.get("/api/admin/students")
-def get_students():
-    if db is None: return {"success": False, "students": []}
-    return {"success": True, "students": [{"student_name": d.id, "student_class": d.to_dict().get("student_class", "")} for d in db.collection("students").stream()]}
+    <!-- 로그인 모달 -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-xl w-full max-w-md">
+            <button onclick="closeModal()" class="float-right text-gray-400 text-xl">X</button>
+            <h2 id="modal-title" class="text-2xl font-bold mb-6 text-center">로그인</h2>
+            <div id="login-form" class="space-y-4">
+                <input type="text" id="login-class" placeholder="소속 반" class="w-full bg-[#151922] border border-gray-600 p-3 rounded text-white">
+                <input type="text" id="login-name" placeholder="이름" class="w-full bg-[#151922] border border-gray-600 p-3 rounded text-white">
+                <input type="password" id="login-pw" placeholder="원장님 스텔스 키" class="w-full bg-[#151922] border border-gray-700 p-3 rounded text-white">
+                <button id="login-btn" onclick="login()" class="w-full bg-blue-600 py-4 rounded text-white font-bold">로그인</button>
+            </div>
+            <div id="signup-form" class="hidden text-center text-gray-400 mt-4">원장님께 등록을 요청해 주세요!</div>
+        </div>
+    </div>
 
-@app.get("/api/admin/reports")
-def get_reports():
-    if db is None: return {"success": False, "reports": []}
-    return {"success": True, "reports": [d.to_dict() for d in db.collection("reports").order_by("submitted_at", direction=firestore.Query.DESCENDING).limit(50).stream()]}
+    <script>
+        const API_URL = "https://korean-ai-tutor.onrender.com"; 
+        let currentUser = null;
 
-@app.post("/api/omr/submit")
-def submit_omr(req: OMRRequest):
-    if db is None: return {"success": False, "detail": "DB 오류"}
-    score = 100
-    wrongs = []
-    for i, ans in enumerate(req.answers):
-        if not ans.strip():
-            score -= 20; wrongs.append(i+1)
-    if score < 0: score = 0
-    db.collection("reports").add({
-        "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "student_name": req.student_name, "student_class": req.student_class,
-        "task_name": req.task_name, "type": "OMR 채점", "score": score, "wrongs": wrongs
-    })
-    return {"success": True, "score": score, "wrongs": wrongs}
+        function showModal(type) { document.getElementById('auth-modal').classList.remove('hidden'); type === 'login' ? document.getElementById('login-form').classList.remove('hidden') : document.getElementById('login-form').classList.add('hidden'); type === 'signup' ? document.getElementById('signup-form').classList.remove('hidden') : document.getElementById('signup-form').classList.add('hidden'); }
+        function closeModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+        function goHome() { document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('home-view').classList.remove('hidden'); }
+        function goToDashboard() {
+            if(!currentUser) return showModal('login');
+            document.getElementById('home-view').classList.add('hidden'); document.getElementById('dashboard-screen').classList.remove('hidden'); closeProgram();
+        }
+        function openProgram(progId) {
+            document.getElementById('dashboard-home').classList.add('hidden'); document.getElementById('program-view').classList.remove('hidden');
+            document.querySelectorAll('.prog-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('prog-' + progId).classList.remove('hidden');
+            if (progId === 'admin') switchAdminTab('admin-generator');
+        }
+        function closeProgram() { document.getElementById('program-view').classList.add('hidden'); document.getElementById('dashboard-home').classList.remove('hidden'); }
+        function switchAdminTab(tabId) {
+            ['admin-users', 'admin-generator'].forEach(id => {
+                document.getElementById('btn-'+id).classList.replace('bg-gray-800', 'border');
+                document.getElementById(id).classList.remove('active');
+            });
+            document.getElementById('btn-'+tabId).classList.replace('border', 'bg-gray-800');
+            document.getElementById(tabId).classList.add('active');
+        }
 
-# 💡 새롭게 추가된 네이티브 문제 출제 엔진
-@app.post("/api/admin/generate")
-async def generate_questions(
-    q_mode: str = Form(...),
-    q_style: str = Form(...),
-    q_type: str = Form(...),
-    total_q_count: int = Form(...),
-    q_text: str = Form(""),
-    files: Optional[List[UploadFile]] = File(None)
-):
-    if model is None: return {"success": False, "detail": "AI 연결 안 됨"}
-    try:
-        prompt = f"""
-        로지에듀 국어학원 수석 출제 위원입니다. 오류 없는 문제를 출제하세요.
-        - 모드: {q_mode} / 대상: {q_style} / 유형: {q_type} / 총 문항 수: {total_q_count}문제
-        - 규칙: 별표(*) 사용 금지. 5지 선다는 무조건 [1], [2] 포맷 사용.
-        - 출력형식:
-        ===지문===
-        (지문 내용)
-        ===문항===
-        1. 발문...
-        [1] 보기1
-        ===해설===
-        정답: 1
-        난이도: 중난이도
-        유형: 5지 선다형
-        해설: ...
-        
-        [입력 자료]
-        {q_text}
-        """
-        contents = [prompt]
-        if files:
-            for f in files:
-                if f.filename:
-                    contents.append({"mime_type": f.content_type or "application/pdf", "data": await f.read()})
-        
-        response = model.generate_content(contents)
-        return {"success": True, "result": response.text}
-    except Exception as e:
-        return {"success": False, "detail": str(e)}
+        async function login() {
+            const sClass = document.getElementById('login-class').value; const sName = document.getElementById('login-name').value; const sPw = document.getElementById('login-pw').value;
+            try {
+                const res = await fetch(`${API_URL}/api/auth`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ student_class: sClass, student_name: sName, admin_password: sPw }) });
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = { class: sClass, name: sName, isAdmin: data.is_admin };
+                    closeModal(); document.getElementById('auth-nav').classList.add('hidden'); document.getElementById('user-nav').classList.remove('hidden'); document.getElementById('user-nav').classList.add('flex');
+                    if (data.is_admin) { document.getElementById('header-user-info').innerText = `원장님`; document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').classList.add('flex'); }
+                    goToDashboard();
+                } else alert(data.detail);
+            } catch(e) { alert("서버 연결 실패"); }
+        }
+        function logout() { currentUser = null; location.reload(); }
 
-# 💡 생성된 문제를 DB 시험장으로 쏘아주는 파서
-@app.post("/api/admin/deploy_exam")
-def deploy_generated_exam(req: DeployExamRequest):
-    if db is None: return {"success": False, "detail": "DB 연결 오류"}
-    
-    raw = req.raw_text.replace("**", "").replace("[1]", "①").replace("[2]", "②").replace("[3]", "③").replace("[4]", "④").replace("[5]", "⑤")
-    blocks = raw.split("===지문===")
-    
-    q_arr, ans_arr, diff_arr, type_arr, a_arr = [], [], [], [], []
-    for b in blocks:
-        if not b.strip(): continue
-        parts = b.split("===문항===")
-        if len(parts) > 0:
-            passage = parts[0].strip()
-            for q_block in parts[1:]:
-                if "===해설===" in q_block:
-                    qs = q_block.split("===해설===")
-                    q_str, a_str = qs[0].strip(), qs[1].strip()
-                    ans, diff, typ = "", "중난이도", "단답형"
-                    for line in a_str.split('\n'):
-                        if line.startswith("정답:"): ans = line.replace("정답:", "").strip()
-                        if line.startswith("난이도:"): diff = line.replace("난이도:", "").strip()
-                        if line.startswith("유형:"): typ = line.replace("유형:", "").strip()
-                    
-                    q_arr.append(f"{passage}\n\n{q_str}")
-                    ans_arr.append(ans)
-                    diff_arr.append(diff)
-                    type_arr.append(typ)
-                    a_arr.append(f"▶️ 정답 및 해설\n{a_str}")
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const prompt = input.value; if(!prompt) return;
+            const history = document.getElementById('chat-history');
+            history.innerHTML += `<div class="text-right mb-2"><span class="bg-blue-600 px-4 py-2 rounded-lg text-white text-sm inline-block">${prompt}</span></div>`;
+            input.value = '';
+            
+            try {
+                const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ student_class: currentUser.class, student_name: currentUser.name, prompt: prompt }) });
+                const data = await res.json();
+                history.innerHTML += `<div class="text-left mb-2"><span class="bg-gray-700 px-4 py-2 rounded-lg text-white text-sm inline-block">${data.reply.replace(/\n/g, '<br>')}</span></div>`;
+            } catch(e) { history.innerHTML += `<div class="text-red-400">오류 발생</div>`; }
+            history.scrollTop = history.scrollHeight;
+        }
 
-    db.collection("online_exams").document(req.title).set({
-        "제목": req.title, "대상반": req.target_class,
-        "문제지": "\n\n".join(q_arr), "해설지": "\n\n".join(a_arr),
-        "문항수": len(q_arr), "문항배열": q_arr, "정답배열": ans_arr,
-        "난이도배열": diff_arr, "유형배열": type_arr,
-        "출제일시": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
-    return {"success": True}
+        async function submitOMR() {
+            const task = document.getElementById('omr-task').value;
+            const answers = Array.from(document.querySelectorAll('.omr-ans')).map(i => i.value);
+            try {
+                const res = await fetch(`${API_URL}/api/omr/submit`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ student_class: currentUser.class, student_name: currentUser.name, task_name: task, answers: answers }) });
+                const data = await res.json();
+                document.getElementById('omr-result').innerHTML = `<p class="text-indigo-400 font-bold text-xl">점수: ${data.score}점</p>`;
+            } catch(e) { alert("서버 오류"); }
+        }
+
+        // 💡 네이티브 출제 엔진 호출 로직
+        async function generateQuestions() {
+            if (!document.getElementById('gen-title').value) return alert("시험 제목을 적어주세요.");
+            const btn = document.getElementById('btn-generate');
+            btn.disabled = true; btn.innerText = "AI 두뇌 가동 중... (10~20초)";
+
+            const formData = new FormData();
+            formData.append("q_mode", document.getElementById('gen-mode').value);
+            formData.append("q_style", "수능/내신형");
+            formData.append("q_type", "5지 선다 및 단답형");
+            formData.append("total_q_count", document.getElementById('gen-count').value);
+            formData.append("q_text", document.getElementById('gen-text').value);
+            
+            const files = document.getElementById('gen-file').files;
+            for (let i = 0; i < files.length; i++) formData.append("files", files[i]);
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/generate`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('gen-result-area').classList.remove('hidden');
+                    document.getElementById('gen-result-text').value = data.result;
+                    alert("출제가 완료되었습니다! 텍스트를 수정하거나 바로 배포하세요.");
+                } else alert("오류: " + data.detail);
+            } catch (e) { alert("서버 연결 실패"); }
+            btn.disabled = false; btn.innerText = "🚀 AI 문제 생성 시작";
+        }
+
+        async function deployGeneratedExam() {
+            const btn = document.getElementById('btn-deploy');
+            btn.disabled = true; btn.innerText = "배포 중...";
+            try {
+                const res = await fetch(`${API_URL}/api/admin/deploy_exam`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        title: document.getElementById('gen-title').value,
+                        target_class: document.getElementById('gen-class').value,
+                        raw_text: document.getElementById('gen-result-text').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) alert("온라인 시험장으로 완벽하게 배포되었습니다!");
+                else alert("배포 오류: " + data.detail);
+            } catch (e) { alert("서버 오류"); }
+            btn.disabled = false; btn.innerText = "✅ 위 내용으로 온라인 시험장 즉시 배포";
+        }
+    </script>
+</body>
+</html>
