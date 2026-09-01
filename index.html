@@ -17,7 +17,8 @@
         ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
-        .active-tab { animation: fadeIn 0.3s ease-out forwards; }
+        .admin-tab-content, .prog-content { display: none; }
+        .active-tab { display: block; animation: fadeIn 0.3s ease-out forwards; }
         
         /* OMR 라디오 버튼 스타일 */
         .omr-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #4b5563; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; transition: all 0.2s; }
@@ -51,11 +52,10 @@
 
     <!-- 🌟 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-28 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
-        <div id="dashboard-home">
+        <div id="dashboard-home" class="active-tab">
             <h2 class="text-3xl font-bold mb-8">스마트 학습실</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
-                <!-- 학생용 메뉴 -->
+                <!-- 메뉴 카드들 -->
                 <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-14 h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-robot"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
@@ -80,7 +80,6 @@
                     <p class="text-gray-400 text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
 
-                <!-- 원장님용 메뉴 -->
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-14 h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-gears"></i></div>
                     <h3 class="text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -89,14 +88,14 @@
             </div>
         </div>
 
-        <!-- 💡 각 프로그램 화면들 (초기 상태 모두 hidden 적용) -->
         <div id="program-view" class="hidden fade-in">
             <button onclick="closeProgram()" class="mb-6 text-gray-400 hover:text-white font-bold flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> 메뉴로 돌아가기</button>
 
             <!-- 💬 24시간 AI 국최 -->
-            <div id="prog-chat" class="prog-content hidden w-full max-w-6xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800 shadow-2xl">
+            <div id="prog-chat" class="prog-content w-full max-w-6xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h2 class="text-3xl font-bold text-blue-400 mb-6"><i class="fa-solid fa-robot mr-2"></i>24시간 AI 국최</h2>
                 <div id="chat-history" class="h-[65vh] overflow-y-auto mb-6 space-y-6 bg-[#151922] p-6 rounded-xl border border-gray-700 text-lg leading-loose">
+                    <!-- 환영 인사 기본 내장 -->
                     <div class="text-left mb-6">
                         <span class="bg-gray-800 px-6 py-5 rounded-2xl text-white text-lg inline-block leading-loose shadow-lg border border-gray-700">
                             <span class="block mb-3 font-bold text-blue-400 text-xl"><i class="fa-solid fa-robot mr-2"></i>국최</span>
@@ -116,7 +115,7 @@
             </div>
 
             <!-- 📝 과제 제출 (학생용) -->
-            <div id="prog-homework" class="prog-content hidden w-full max-w-4xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
+            <div id="prog-homework" class="prog-content w-full max-w-4xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
                 <h2 class="text-3xl font-bold text-emerald-400 mb-6"><i class="fa-solid fa-file-signature mr-2"></i>과제 제출 및 정답 확인</h2>
                 <div id="student-hw-list" class="space-y-4 mb-8"></div>
                 <div id="hw-submit-area" class="hidden bg-[#151922] border border-gray-700 p-6 rounded-xl">
@@ -128,42 +127,44 @@
             </div>
 
             <!-- 📂 게시판 (자료실) -->
-            <div id="prog-board" class="prog-content hidden w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
+            <div id="prog-board" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
                 <h2 class="text-3xl font-bold text-gray-200 mb-6"><i class="fa-solid fa-folder-open mr-2"></i>학원 자료실</h2>
                 <div id="board-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
             <!-- ⏳ 실시간 모의고사 목록 (학생용) -->
-            <div id="prog-exam-list" class="prog-content hidden w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
+            <div id="prog-exam-list" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-8 rounded-xl border border-gray-800">
                 <h2 class="text-3xl font-bold text-yellow-500 mb-6"><i class="fa-solid fa-stopwatch mr-2"></i>진행 중인 모의고사</h2>
                 <div id="student-exam-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- ⏳ 실시간 모의고사장 본게임 (타이머 & OMR) -->
-            <div id="prog-exam-room" class="prog-content hidden w-full max-w-7xl mx-auto h-[80vh] flex gap-6">
-                <div class="w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-4 flex flex-col h-full shadow-2xl">
-                    <h2 id="room-exam-title" class="text-2xl font-bold text-white mb-4 pl-2">시험지</h2>
-                    <iframe id="exam-pdf-viewer" class="w-full flex-grow rounded-lg border border-gray-700 bg-white hidden" src=""></iframe>
-                    <textarea id="exam-raw-viewer" class="hidden w-full flex-grow rounded-lg border border-gray-700 bg-[#151922] text-white p-4 font-mono text-sm leading-relaxed" readonly></textarea>
-                </div>
-                <div class="w-1/3 bg-[#1e2430] rounded-xl border border-gray-800 p-8 flex flex-col h-full shadow-2xl relative">
-                    <div class="text-center mb-6 border-b border-gray-700 pb-6">
-                        <p class="text-gray-400 font-bold mb-2">남은 시간</p>
-                        <p id="exam-timer" class="text-6xl font-black text-emerald-400 font-mono tracking-wider">00:00</p>
+            <!-- 💡 에러의 원인이었던 모의고사장 레이아웃 겹침 완벽 수정 -->
+            <div id="prog-exam-room" class="prog-content w-full max-w-7xl mx-auto h-[80vh]">
+                <div class="flex gap-6 h-full w-full">
+                    <div class="w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-4 flex flex-col h-full shadow-2xl">
+                        <h2 id="room-exam-title" class="text-2xl font-bold text-white mb-4 pl-2">시험지</h2>
+                        <iframe id="exam-pdf-viewer" class="w-full flex-grow rounded-lg border border-gray-700 bg-white hidden" src=""></iframe>
+                        <textarea id="exam-raw-viewer" class="hidden w-full flex-grow rounded-lg border border-gray-700 bg-[#151922] text-white p-4 font-mono text-sm leading-relaxed" readonly></textarea>
                     </div>
-                    <div class="flex-grow overflow-y-auto mb-6 pr-2 space-y-4" id="exam-omr-container"></div>
-                    <button onclick="submitRealtimeExam()" class="bg-indigo-600 hover:bg-indigo-700 w-full py-5 rounded-xl text-white font-bold text-xl transition shadow-lg">OMR 최종 제출</button>
+                    <div class="w-1/3 bg-[#1e2430] rounded-xl border border-gray-800 p-8 flex flex-col h-full shadow-2xl relative">
+                        <div class="text-center mb-6 border-b border-gray-700 pb-6">
+                            <p class="text-gray-400 font-bold mb-2">남은 시간</p>
+                            <p id="exam-timer" class="text-6xl font-black text-emerald-400 font-mono tracking-wider">00:00</p>
+                        </div>
+                        <div class="flex-grow overflow-y-auto mb-6 pr-2 space-y-4" id="exam-omr-container"></div>
+                        <button onclick="submitRealtimeExam()" class="bg-indigo-600 hover:bg-indigo-700 w-full py-5 rounded-xl text-white font-bold text-xl transition shadow-lg">OMR 최종 제출</button>
+                    </div>
                 </div>
             </div>
 
             <!-- ⚙️ 시스템 통합 관리 모드 (원장님) -->
-            <div id="prog-admin" class="prog-content hidden w-full max-w-7xl mx-auto">
+            <div id="prog-admin" class="prog-content w-full max-w-7xl mx-auto">
                 <div class="bg-[#1e2430] border border-gray-800 p-8 rounded-xl shadow-xl">
                     <div class="flex overflow-x-auto gap-4 border-b border-gray-700 pb-4 mb-8 whitespace-nowrap">
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded transition">👥 장부 관리</button>
                         <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600/50 px-4 py-2 rounded transition">📚 AI 자료 학습</button>
                         <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600/50 px-4 py-2 rounded transition">🪄 정밀 문제 출제</button>
-                        <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600/50 px-4 py-2 rounded transition">⏳ 모의고사 오픈</button>
+                        <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600/50 px-4 py-2 rounded transition">⏳ 모의고사 방 관리</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600/50 px-4 py-2 rounded transition">📝 과제/자료실 등록</button>
                     </div>
 
@@ -221,7 +222,7 @@
                                 <label class="text-sm font-bold text-gray-400 block mb-2"><i class="fa-solid fa-file-import mr-2"></i>참고용 다중 파일 첨부</label>
                                 <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="hidden" onchange="updateGenFileVisuals()">
                                 <button onclick="document.getElementById('gen-files').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm transition">파일 찾아보기</button>
-                                <div id="gen-files-visual" class="flex flex-wrap gap-2 mt-3"></div>
+                                <div id="gen-files-visual" class="flex flex-wrap gap-2 mt-3"></div> <!-- 💡 시각적 파일 목록 -->
                             </div>
                             <button onclick="generateStreamQuestions()" id="btn-generate" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg transition mb-6 shadow-lg shadow-yellow-600/20"><i class="fa-solid fa-bolt mr-2"></i>AI 정밀 출제 실시간 가동</button>
                             <div id="gen-result-area" class="hidden">
@@ -292,7 +293,7 @@
     <!-- 로그인 모달 -->
     <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <button onclick="closeModal()" class="float-right text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="closeModal()" class="float-right text-gray-400 hover:text-white text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
             <h2 id="modal-title" class="text-3xl font-black mb-8 text-center text-white">로그인</h2>
             <div id="login-form" class="space-y-4">
                 <div class="bg-[#151922] p-4 rounded-xl border border-gray-700">
@@ -310,7 +311,6 @@
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null;
 
-        // 세션 유지 및 즉시 통과
         window.addEventListener('DOMContentLoaded', () => { 
             fetch(`${API_URL}/api/health`).catch(()=>{}); 
             const savedUser = localStorage.getItem('logyedu_user');
@@ -326,7 +326,6 @@
         function showModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('auth-modal').classList.add('hidden'); }
         function goHome() { document.getElementById('dashboard-screen').classList.add('hidden'); document.getElementById('home-view').classList.remove('hidden'); }
-        
         function goToDashboard() {
             if(!currentUser) return showModal();
             document.getElementById('home-view').classList.add('hidden'); 
@@ -334,30 +333,24 @@
             closeProgram();
         }
 
-        // 💡 탭 스위치 로직 완벽 수정 (hidden 클래스를 명확히 토글)
+        // 💡 탭 스위치 로직 완벽 수정 (hidden 대신 inline style 제어로 충돌 방지)
         function openProgram(progId) {
-            document.getElementById('dashboard-home').classList.add('hidden'); 
-            document.getElementById('program-view').classList.remove('hidden');
+            document.getElementById('dashboard-home').style.display = 'none';
+            document.getElementById('program-view').style.display = 'block';
             
-            // 모든 프로그램을 확실하게 숨김 처리
             document.querySelectorAll('.prog-content').forEach(el => {
-                el.classList.add('hidden');
-                el.classList.remove('active-tab');
+                el.style.display = 'none';
             });
             
-            // 선택한 프로그램만 열기
             const target = document.getElementById('prog-' + progId);
-            if(target) {
-                target.classList.remove('hidden');
-                target.classList.add('active-tab');
-            }
+            if(target) target.style.display = 'block';
             
             if (progId === 'admin') switchAdminTab('admin-users');
         }
 
         function closeProgram() { 
-            document.getElementById('program-view').classList.add('hidden'); 
-            document.getElementById('dashboard-home').classList.remove('hidden'); 
+            document.getElementById('program-view').style.display = 'none'; 
+            document.getElementById('dashboard-home').style.display = 'block'; 
         }
         
         function switchAdminTab(tabId) {
@@ -365,14 +358,14 @@
                 const btn = document.getElementById('btn-'+id);
                 if(btn) { btn.classList.remove('bg-gray-800'); btn.classList.add('border'); }
                 const tab = document.getElementById(id);
-                if(tab) { tab.classList.add('hidden'); tab.classList.remove('active-tab'); }
+                if(tab) tab.style.display = 'none';
             });
             
             const activeBtn = document.getElementById('btn-'+tabId);
             if(activeBtn) { activeBtn.classList.remove('border'); activeBtn.classList.add('bg-gray-800'); }
             
             const activeTab = document.getElementById(tabId);
-            if(activeTab) { activeTab.classList.remove('hidden'); activeTab.classList.add('active-tab'); }
+            if(activeTab) { activeTab.style.display = 'block'; activeTab.classList.add('active-tab'); }
             
             if(tabId === 'admin-users') fetchReports();
             if(tabId === 'admin-exam') loadAdminExams();
@@ -446,6 +439,7 @@
         }
 
         async function generateStreamQuestions() {
+            if (!document.getElementById('gen-title').value) return alert("시험 제목을 적어주세요.");
             const btn = document.getElementById('btn-generate');
             btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>실시간 문제 생성 중...";
             
