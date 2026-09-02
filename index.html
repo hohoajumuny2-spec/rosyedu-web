@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- 💡 PDF 뷰어 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 
@@ -37,13 +39,13 @@
         
         #pdf-render-wrapper { position: relative; overflow: auto; width: 100%; height: 100%; touch-action: pan-x pan-y pinch-zoom; background: #525659; }
         #pdf-inner-container { position: relative; margin: 0 auto; background: transparent; }
-        #pdf-draw-canvas { position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
     <div id="toast-container"></div>
 
+    <!-- 상단 네비게이션 -->
     <nav class="fixed top-0 w-full flex justify-between items-center px-4 md:px-8 py-4 md:py-6 z-50 bg-[#1a1e29]/90 border-b border-gray-800">
         <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
         <div class="flex items-center gap-3 md:gap-4 text-xs md:text-sm font-medium">
@@ -59,6 +61,7 @@
         </div>
     </nav>
 
+    <!-- 홈 화면 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center justify-center min-h-screen pt-20 px-4">
         <div class="text-center z-10 fade-in">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all">
@@ -113,7 +116,6 @@
                     <p class="text-gray-400 text-xs md:text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
 
-                <!-- 원장님용 메뉴 -->
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6"><i class="fa-solid fa-gears"></i></div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -206,20 +208,18 @@
                 <div id="student-exam-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- 💡 모의고사 본게임 (목표/타이머/알림 완벽 적용) -->
+            <!-- 💡 모의고사 본게임 (전체화면, Lazy 로딩 탑재) -->
             <div id="prog-exam-room" class="prog-content w-full max-w-7xl mx-auto h-[88vh] lg:h-[85vh] relative">
                 
-                <!-- 💡 [시험 시작 전] 준비 및 세팅 모달 오버레이 -->
+                <!-- [시험 시작 전] 준비 및 세팅 모달 오버레이 -->
                 <div id="exam-prep-overlay" class="absolute inset-0 bg-[#1a1e29] z-40 flex items-center justify-center p-4">
                     <div class="bg-[#1e2430] border border-gray-700 p-6 lg:p-10 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-full">
                         <h2 id="prep-exam-title" class="text-2xl lg:text-3xl font-black text-white mb-4 border-b border-gray-700 pb-4">시험 제목</h2>
-                        
                         <div class="overflow-y-auto pr-2">
                             <div class="bg-blue-900/30 border border-blue-500/50 p-4 rounded-xl mb-6">
                                 <h4 class="text-blue-400 font-bold text-sm mb-2"><i class="fa-solid fa-bullhorn mr-2"></i>원장님의 시험 목표 공지</h4>
                                 <p id="prep-objective-text" class="text-blue-100 text-sm md:text-base leading-relaxed">공지사항이 없습니다.</p>
                             </div>
-                            
                             <div class="mb-6">
                                 <label class="block text-sm font-bold text-yellow-400 mb-2">나의 목표 점수</label>
                                 <div class="flex items-center bg-[#151922] border border-gray-600 rounded-xl overflow-hidden">
@@ -227,48 +227,44 @@
                                     <span class="text-gray-400 pr-4 font-bold">점</span>
                                 </div>
                             </div>
-                            
                             <div class="mb-6 bg-[#151922] p-4 rounded-xl border border-gray-600">
                                 <div class="flex justify-between items-center mb-3">
                                     <label class="text-sm font-bold text-emerald-400">⏱️ 나의 시험 구간(시간) 세팅</label>
                                     <button onclick="addStudentSection()" class="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700">구간 추가</button>
                                 </div>
-                                <p class="text-xs text-gray-400 mb-3">* 원장님이 세팅한 기본 시간이 제공됩니다. 본인의 페이스에 맞게 마음대로 추가하거나 삭제, 시간을 변경할 수 있습니다.</p>
+                                <p class="text-xs text-gray-400 mb-3">* 원장님이 세팅한 기본 시간이 제공됩니다. 본인의 페이스에 맞게 마음대로 변경할 수 있습니다.</p>
                                 <div id="prep-sections-board" class="space-y-2"></div>
                             </div>
                         </div>
-
                         <button onclick="startExamReal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 lg:py-5 rounded-xl text-xl mt-4 shadow-lg transition">시험 시작하기</button>
                     </div>
                 </div>
 
-                <!-- 💡 [시험 진행 중] 레이아웃 -->
+                <!-- [시험 진행 중] 레이아웃 -->
                 <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full w-full">
-                    <!-- 좌측/상단: 시험지 뷰어 -->
-                    <div class="w-full lg:w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-2 lg:p-4 flex flex-col h-[55vh] lg:h-full shadow-2xl relative">
+                    
+                    <!-- 💡 좌측/상단: 시험지 뷰어 (전체화면 지원 id 추가) -->
+                    <div id="pdf-viewer-section" class="w-full lg:w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-2 lg:p-4 flex flex-col h-[55vh] lg:h-full shadow-2xl relative transition-all duration-300">
                         <div class="flex justify-between items-center mb-2 pl-2">
                             <h2 id="room-exam-title-active" class="text-lg lg:text-xl font-bold text-white truncate w-1/2">시험지</h2>
                             <div class="flex gap-2">
-                                <button onclick="toggleDrawMode()" id="btn-draw" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-sm font-bold transition"><i class="fa-solid fa-pen mr-1"></i>필기 모드</button>
+                                <!-- 💡 전체화면 버튼 추가 -->
+                                <button onclick="toggleFullscreen()" id="btn-fullscreen" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-sm font-bold transition"><i class="fa-solid fa-expand"></i> 전체화면</button>
+                                <button onclick="toggleDrawMode()" id="btn-draw" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-sm font-bold transition"><i class="fa-solid fa-pen mr-1"></i>필기 켜기</button>
                                 <button onclick="clearCanvas()" id="btn-clear" class="hidden bg-red-900/80 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-eraser"></i></button>
                             </div>
                         </div>
                         
                         <div id="pdf-render-wrapper" class="relative flex-grow rounded-lg border border-gray-700 overflow-y-auto">
-                            <!-- 💡 로딩 지연 방지창 -->
+                            <!-- 💡 무한 로딩 방지 비동기 렌더링 컨테이너 -->
                             <div id="pdf-loading" class="text-center text-gray-400 mt-20"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>시험지 로딩 중...</div>
-                            <div id="pdf-inner-container">
-                                <canvas id="pdf-draw-canvas" class="hidden"></canvas>
-                            </div>
-                            <textarea id="exam-raw-viewer" class="hidden w-full h-full bg-[#151922] text-white p-4 font-mono text-sm leading-relaxed outline-none resize-none" readonly></textarea>
+                            <div id="pdf-inner-container"></div>
                         </div>
                         <p id="draw-hint" class="text-[10px] lg:text-xs text-yellow-400 mt-1 hidden text-center">* 손가락 1개는 필기, 2개는 화면 스크롤/확대입니다.</p>
                     </div>
 
                     <!-- 우측/하단: 타이머 및 OMR -->
                     <div class="w-full lg:w-1/3 bg-[#1e2430] rounded-xl border border-gray-800 p-4 lg:p-6 flex flex-col h-[33vh] lg:h-full shadow-2xl relative overflow-hidden">
-                        
-                        <!-- 💡 고도화된 타이머 헤더 -->
                         <div class="flex flex-col gap-2 mb-4 pb-4 border-b border-gray-700">
                             <div class="flex justify-between items-center text-xs lg:text-sm font-bold">
                                 <span class="text-yellow-400">목표: <span id="active-target-score">100</span>점</span>
@@ -286,7 +282,6 @@
                         </div>
                         
                         <div id="exam-omr-container" class="grid grid-cols-2 lg:grid-cols-1 gap-2 flex-grow overflow-y-auto mb-4 pr-1"></div>
-                        
                         <div id="exam-result-report" class="hidden flex-grow overflow-y-auto mb-4 pr-1"></div>
                         
                         <div id="report-action-buttons" class="hidden flex gap-2">
@@ -380,6 +375,7 @@
                                     <label><input type="checkbox" value="5지 선다형" checked> 5지 선다</label>
                                     <label><input type="checkbox" value="2지 선다형"> 2지 선다</label>
                                     <label><input type="checkbox" value="O/X 문제"> O/X</label>
+                                    <label><input type="checkbox" value="단답형"> 단답형</label>
                                     <label><input type="checkbox" value="서술형"> 서술형</label>
                                 </div>
                             </div>
@@ -426,7 +422,7 @@
                         </div>
                     </div>
 
-                    <!-- 💡 모의고사 오픈 (관리자 일괄 프리셋 버튼 추가) -->
+                    <!-- 💡 모의고사 오픈 (일괄 프리셋 버튼 유지) -->
                     <div id="admin-exam" class="admin-tab-content">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
@@ -435,9 +431,8 @@
                                 <input type="text" id="rt-objective" placeholder="이번 시험 목표 공지사항 (학생들에게 보입니다)" class="w-full bg-blue-900/30 border border-blue-500/50 p-3 rounded text-blue-100 mb-4 text-sm outline-none">
                                 
                                 <div class="mb-4 bg-[#1e2430] p-4 rounded border border-gray-600">
-                                    <label class="text-sm font-bold text-yellow-400 block mb-2">⏱️ 일괄 구간 설정 (타이머)</label>
+                                    <label class="text-sm font-bold text-yellow-400 block mb-2">⏱️ 구간 타이머 (기본 세팅)</label>
                                     <div id="admin-section-board" class="space-y-1 mb-2"></div>
-                                    <!-- 💡 일괄 설정 프리셋 버튼 -->
                                     <div class="flex gap-2 mb-2 overflow-x-auto whitespace-nowrap pb-1">
                                         <button onclick="addAdminSection('공통(독서)', 35)" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 독서(35분)</button>
                                         <button onclick="addAdminSection('공통(문학)', 25)" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 문학(25분)</button>
@@ -507,7 +502,7 @@
         </div>
     </div>
 
-    <!-- 모달창들 (로그인, 수정) 생략/유지 -->
+    <!-- 모달창들 (로그인, 수정) -->
     <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-sm shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">학생 정보 수정</h3>
@@ -536,6 +531,7 @@
         </div>
     </div>
 
+    <!-- 이용 가이드 모달 -->
     <div id="guide-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-6 md:p-8 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('guide-modal')" class="float-right text-gray-400 text-xl outline-none"><i class="fa-solid fa-xmark"></i></button>
@@ -614,22 +610,31 @@
             container.appendChild(toast);
             setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
         }
-
-        // 💡 맑은 효과음 재생 함수 (Web Audio API 사용, 파일 필요 없음)
         function playBeep() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, ctx.currentTime); 
-                gain.gain.setValueAtTime(0.5, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.5);
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime); 
+                gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
             } catch(e) {}
+        }
+
+        // 💡 전체화면 토글 기능 추가
+        function toggleFullscreen() {
+            const viewer = document.getElementById('pdf-viewer-section');
+            const btn = document.getElementById('btn-fullscreen');
+            
+            if(viewer.classList.contains('fixed')) {
+                viewer.classList.remove('fixed', 'inset-0', 'z-[120]', 'p-4', 'bg-[#1a1e29]');
+                viewer.classList.add('w-full', 'lg:w-2/3', 'rounded-xl', 'border', 'border-gray-800', 'p-2', 'lg:p-4');
+                btn.innerHTML = '<i class="fa-solid fa-expand"></i> 전체화면';
+            } else {
+                viewer.classList.remove('w-full', 'lg:w-2/3', 'rounded-xl', 'border', 'border-gray-800', 'p-2', 'lg:p-4');
+                viewer.classList.add('fixed', 'inset-0', 'z-[120]', 'p-4', 'bg-[#1a1e29]');
+                btn.innerHTML = '<i class="fa-solid fa-compress"></i> 축소하기';
+            }
         }
 
         function openProgram(progId) {
@@ -647,8 +652,12 @@
             document.getElementById('dashboard-home').style.display = 'block'; 
             clearInterval(examTimerInterval);
             isDrawing = false; 
-            document.getElementById('pdf-inner-container').innerHTML = '<canvas id="pdf-draw-canvas" class="hidden"></canvas>';
+            document.getElementById('pdf-inner-container').innerHTML = '';
             document.getElementById('exam-prep-overlay').style.display = 'none';
+            
+            // 전체화면 해제
+            const viewer = document.getElementById('pdf-viewer-section');
+            if(viewer && viewer.classList.contains('fixed')) toggleFullscreen();
         }
         
         function switchAdminTab(tabId) {
@@ -682,402 +691,55 @@
         function logout() { localStorage.removeItem('logyedu_user'); location.reload(); }
 
         // =====================================
-        // 💡 관리자용 구간 세팅
+        // 관리자 (장부, 엑셀, 지식, 삭제 등)
         // =====================================
-        let adminExamSections = [];
-        
-        function addAdminSection(presetName=null, presetTime=null) {
-            const name = presetName || document.getElementById('sec-name').value; 
-            const time = presetTime || parseInt(document.getElementById('sec-time').value); 
-            if(!name || !time) return;
-            
-            adminExamSections.push({name: name, time: time}); 
-            
-            if(!presetName) {
-                document.getElementById('sec-name').value = ''; 
-                document.getElementById('sec-time').value = ''; 
-            }
-            renderAdminSections();
+        function downloadExcelTemplate() {
+            const ws = XLSX.utils.json_to_sheet([{ school: "미강고", grade: "1학년", name: "홍길동" }]);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "학생명단"); XLSX.writeFile(wb, "로지에듀_학생일괄등록양식.xlsx");
         }
-        
-        function renderAdminSections() {
-            const board = document.getElementById('admin-section-board'); board.innerHTML = ""; let total = 0;
-            adminExamSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<span class="bg-yellow-900/50 text-yellow-200 px-2 py-1 rounded text-xs mr-2 mb-1 inline-block">${s.name}(${s.time}분) <button onclick="adminExamSections.splice(${idx},1); renderAdminSections()" class="text-red-400 ml-1">X</button></span>`; });
-            if(total > 0) board.innerHTML += `<div class="text-xs text-emerald-400 mt-1 font-bold">총 ${total}분</div>`;
-        }
-
-        let adminExamQuestions = [];
-        function buildAdminOMR() {
-            const count = parseInt(document.getElementById('rt-qcount').value) || 0; const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2}));
-            for(let i=0; i<count; i++) {
-                let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`;
-                for(let j=1; j<=5; j++) row += `<div class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</div>`;
-                row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs"></div></div>`;
-                board.innerHTML += row;
-            }
-        }
-        function setAdminOmr(rowIdx, ans) {
-            adminExamQuestions[rowIdx].ans = ans; const circles = document.getElementById(`a-omr-row-${rowIdx}`).children;
-            for(let i=0; i<5; i++) { circles[i].classList.remove('active'); if(i+1 === ans) circles[i].classList.add('active'); }
-        }
-
-        async function setRealtimeExam() {
-            const title = document.getElementById('rt-title').value; 
-            const objective = document.getElementById('rt-objective').value; 
-            const videoUrl = document.getElementById('rt-video').value; const expText = document.getElementById('rt-exp').value; const fileInput = document.getElementById('rt-pdf');
-            if(!title || adminExamSections.length===0 || adminExamQuestions.length===0 || fileInput.files.length===0) return alert("필수 항목 입력");
-            const formData = new FormData(); 
-            formData.append("title", title); 
-            formData.append("objective", objective);
-            formData.append("exam_data", JSON.stringify({ sections: adminExamSections, questions: adminExamQuestions })); 
-            formData.append("video_url", videoUrl); formData.append("explanation_text", expText); formData.append("file", fileInput.files[0]);
-            try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', body: formData }); alert("개설 완료"); loadAdminExams(); } catch(e) {}
-        }
-        async function loadAdminExams() {
+        async function addSingleStudent() {
+            const s = document.getElementById('add-school').value.trim(); const g = document.getElementById('add-grade').value.trim(); const n = document.getElementById('add-name').value.trim();
+            if(!s || !g || !n) return alert("모두 입력하세요.");
             try {
-                const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('admin-exam-list'); container.innerHTML = '';
-                if(data.success && data.exams.length > 0) { data.exams.forEach(e => { container.innerHTML += `<div class="flex justify-between bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${e.title}</span><button onclick="deleteExam('${e.title}')" class="text-red-400">삭제</button></div>`; }); }
+                const res = await fetch(`${API_URL}/api/admin/student`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({school: s, grade: g, name: n}) });
+                const data = await res.json(); if(data.success) { alert("등록 성공!"); loadAdminStudents(); }
             } catch(e) {}
         }
-        async function deleteExam(title) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){} }
-
-        // =====================================
-        // 💡 PDF.js 렌더링 (지연 방지 최적화)
-        // =====================================
-        let pdfDoc = null; let isDrawing = false; let currentPdfCanvasRefs = [];
-        
-        async function renderPDF(url) {
-            document.getElementById('pdf-loading').style.display = 'block';
-            const innerContainer = document.getElementById('pdf-inner-container');
-            innerContainer.innerHTML = ''; currentPdfCanvasRefs = [];
-            
+        function uploadExcel() {
+            const file = document.getElementById('excel-file').files[0]; if(!file) return alert("파일 선택 요망");
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                try {
+                    const res = await fetch(`${API_URL}/api/admin/student/bulk`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({students: jsonData}) });
+                    const rData = await res.json(); if(rData.success) { alert("일괄 등록 성공!"); loadAdminStudents(); fetchReports(); }
+                } catch(err) {}
+            }; reader.readAsArrayBuffer(file);
+        }
+        async function loadAdminStudents() {
             try {
-                const loadingTask = pdfjsLib.getDocument(url);
-                pdfDoc = await loadingTask.promise;
-                document.getElementById('pdf-loading').style.display = 'none';
-
-                let totalHeight = 0;
-                const wrapperWidth = document.getElementById('pdf-render-wrapper').clientWidth;
-
-                const drawCanvas = document.createElement('canvas');
-                drawCanvas.id = 'pdf-draw-canvas';
-                drawCanvas.className = 'absolute top-0 left-0 z-10 hidden';
-                drawCanvas.width = wrapperWidth;
-                innerContainer.appendChild(drawCanvas);
-                
-                // 💡 빠른 로딩을 위한 비동기 루프 최적화 (화면 멈춤 방지)
-                for(let i=1; i<=pdfDoc.numPages; i++) {
-                    const page = await pdfDoc.getPage(i);
-                    const viewport = page.getViewport({scale: 1.2}); 
-                    const scale = wrapperWidth / viewport.width;
-                    const scaledViewport = page.getViewport({scale: scale});
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = scaledViewport.width; canvas.height = scaledViewport.height;
-                    canvas.className = 'bg-white mb-2 shadow block';
-                    
-                    const ctx = canvas.getContext('2d');
-                    await page.render({canvasContext: ctx, viewport: scaledViewport}).promise;
-                    
-                    innerContainer.insertBefore(canvas, drawCanvas); 
-                    
-                    totalHeight += scaledViewport.height + 8;
-                    drawCanvas.height = totalHeight;
-                    
-                    // 브라우저 렉 방지용
-                    await new Promise(r => setTimeout(r, 10)); 
-                }
-                
-                setupDrawingLogic(drawCanvas);
-
-            } catch(err) {
-                document.getElementById('pdf-loading').innerHTML = 'PDF 렌더링 오류가 발생했습니다.<br>다시 시도해주세요.';
-            }
-        }
-
-        function setupDrawingLogic(canvas) {
-            const ctx = canvas.getContext('2d');
-            let drawing = false;
-
-            canvas.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1 && isDrawing) {
-                    drawing = true; e.preventDefault();
-                    const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
-                    ctx.beginPath(); ctx.moveTo((e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY);
-                }
-            }, {passive: false});
-            canvas.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1 && drawing && isDrawing) {
-                    e.preventDefault();
-                    const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
-                    ctx.lineTo((e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.stroke();
-                }
-            }, {passive: false});
-            canvas.addEventListener('touchend', () => { drawing = false; });
-
-            canvas.addEventListener('mousedown', (e) => {
-                if(!isDrawing) return; drawing = true;
-                const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
-                ctx.beginPath(); ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-            });
-            canvas.addEventListener('mousemove', (e) => {
-                if(drawing && isDrawing) {
-                    const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
-                    ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.stroke();
-                }
-            });
-            canvas.addEventListener('mouseup', () => { drawing = false; });
-            canvas.addEventListener('mouseout', () => { drawing = false; });
-        }
-
-        function toggleDrawMode() {
-            isDrawing = !isDrawing;
-            const drawCanvas = document.getElementById('pdf-draw-canvas');
-            const btn = document.getElementById('btn-draw');
-            const clearBtn = document.getElementById('btn-clear');
-            const hint = document.getElementById('draw-hint');
-            
-            if(isDrawing) {
-                if(drawCanvas) drawCanvas.style.display = 'block';
-                btn.classList.replace('bg-gray-700', 'bg-blue-600');
-                btn.innerHTML = '<i class="fa-solid fa-pen"></i> 필기 중';
-                clearBtn.style.display = 'inline-block';
-                hint.style.display = 'block';
-                document.getElementById('pdf-render-wrapper').style.touchAction = 'pan-x pan-y pinch-zoom';
-            } else {
-                if(drawCanvas) drawCanvas.style.display = 'none';
-                btn.classList.replace('bg-blue-600', 'bg-gray-700');
-                btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i>필기 켜기';
-                clearBtn.style.display = 'none';
-                hint.style.display = 'none';
-            }
-        }
-        function clearCanvas() { const c = document.getElementById('pdf-draw-canvas'); if(c) { c.getContext('2d').clearRect(0, 0, c.width, c.height); } }
-
-        // =====================================
-        // 💡 초정밀 모의고사 구동 엔진 (목표, 타이머 제어, 학생 구간)
-        // =====================================
-        let examTimerInterval; 
-        let studentOmrAnswers = []; 
-        let currentExamTitle = ""; 
-        let currentExamData = null; 
-        
-        let studentSections = [];
-        let currSecIdx = 0;
-        let secAllocated = 0;
-        let secSpent = 0;
-        let totalSavedSec = 0;
-        let isExamActive = false;
-        let isExamPaused = false;
-
-        async function loadStudentExams() {
-            try {
-                const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('student-exam-list'); container.innerHTML = '';
-                if(data.success && data.exams.length > 0) {
-                    data.exams.forEach(e => {
-                        const examDataStr = (e.exam_data || "").replace(/"/g, '&quot;');
-                        const objStr = (e.objective || "").replace(/"/g, '&quot;').replace(/'/g, '\\\'');
-                        // 💡 prepExamRoom으로 정확히 연결
-                        container.innerHTML += `<div onclick="prepExamRoom('${e.title}', '${e.pdf_url}', '${examDataStr}', '${objStr}')" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`;
+                const res = await fetch(`${API_URL}/api/admin/students`); const data = await res.json();
+                const container = document.getElementById('admin-student-list'); container.innerHTML = '';
+                if(data.success && data.students.length > 0) {
+                    data.students.forEach(s => {
+                        container.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded border border-gray-700 hover:border-blue-500 cursor-pointer mb-2" onclick="fetchReports('${s.student_name}')"><div class="flex items-center gap-2"><input type="checkbox" class="student-checkbox" value="${s.student_name}" onclick="event.stopPropagation()"><span class="text-xs text-gray-300 pointer-events-none">${s.school} ${s.grade} <strong class="text-white">${s.student_name}</strong></span></div><button onclick="event.stopPropagation(); openEditStudent('${s.student_name}', '${s.school}', '${s.grade}')" class="text-[10px] bg-blue-900/50 hover:bg-blue-600 px-2 py-1 rounded">수정</button></div>`;
                     });
                 }
             } catch(e) {}
         }
-
-        // 💡 1단계: 대기실(Prep) 세팅
-        function prepExamRoom(title, pdfUrl, examDataStr, objectiveStr) {
-            openProgram('exam-room');
-            currentExamTitle = title;
-            document.getElementById('room-exam-title').innerText = title;
-            document.getElementById('room-exam-title-active').innerText = title;
-            
-            document.getElementById('exam-result-report').style.display = 'none';
-            document.getElementById('btn-submit-exam').style.display = 'none';
-            document.getElementById('report-action-buttons').style.display = 'none';
-            
-            currentExamData = JSON.parse(examDataStr.replace(/&quot;/g, '"'));
-            const objective = objectiveStr.replace(/&quot;/g, '"');
-            
-            document.getElementById('prep-exam-title').innerText = title;
-            document.getElementById('prep-objective-text').innerText = objective || "공지사항이 없습니다.";
-            document.getElementById('prep-target-score').value = '';
-            
-            studentSections = JSON.parse(JSON.stringify(currentExamData.sections));
-            renderStudentPrepSections();
-            
-            document.getElementById('exam-prep-overlay').style.display = 'flex';
-            
-            if(pdfUrl) renderPDF(API_URL + pdfUrl);
+        async function deleteSelectedStudents() {
+            const checkedBoxes = document.querySelectorAll('.student-checkbox:checked'); const names = Array.from(checkedBoxes).map(cb => cb.value);
+            if(names.length === 0) return alert("선택하세요."); if(!confirm(`영구 삭제할까요?`)) return;
+            try { await fetch(`${API_URL}/api/admin/student/delete_bulk`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({names: names}) }); loadAdminStudents(); } catch(e) {}
         }
-
-        function renderStudentPrepSections() {
-            const board = document.getElementById('prep-sections-board');
-            board.innerHTML = "";
-            let total = 0;
-            studentSections.forEach((s, idx) => {
-                total += s.time;
-                board.innerHTML += `
-                <div class="flex items-center gap-2 mb-2 bg-[#1e2430] p-2 rounded">
-                    <input type="text" value="${s.name}" onchange="studentSections[${idx}].name=this.value" class="w-1/2 bg-transparent text-white text-sm outline-none border-b border-gray-600">
-                    <input type="number" value="${s.time}" onchange="studentSections[${idx}].time=parseInt(this.value)" class="w-1/4 bg-transparent text-emerald-400 font-bold text-center outline-none border-b border-gray-600">분
-                    <button onclick="studentSections.splice(${idx},1); renderStudentPrepSections()" class="text-red-400 ml-auto"><i class="fa-solid fa-trash"></i></button>
-                </div>`;
-            });
-            board.innerHTML += `<div class="text-right text-emerald-400 text-sm font-bold mt-2">총 예정 시간: ${total}분</div>`;
+        function openEditStudent(name, school, grade) {
+            document.getElementById('edit-old-name').value = name; document.getElementById('edit-name').value = name; document.getElementById('edit-school').value = school; document.getElementById('edit-grade').value = grade; document.getElementById('edit-student-modal').style.display = 'flex';
         }
-
-        function addStudentSection() {
-            studentSections.push({name: "새 구간", time: 10});
-            renderStudentPrepSections();
+        async function submitEditStudent() {
+            const o = document.getElementById('edit-old-name').value; const n = document.getElementById('edit-name').value.trim(); const s = document.getElementById('edit-school').value.trim(); const g = document.getElementById('edit-grade').value.trim();
+            if(!n || !s || !g) return;
+            try { await fetch(`${API_URL}/api/admin/student/update`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_name: o, new_name: n, school: s, grade: g}) }); closeModal('edit-student-modal'); loadAdminStudents(); fetchReports(); } catch(e) {}
         }
-
-        // 💡 2단계: 진짜 시험 시작
-        function startExamReal() {
-            const targetScore = document.getElementById('prep-target-score').value;
-            if(!targetScore) return alert("나의 목표 점수를 입력해주세요!");
-            if(studentSections.length === 0) return alert("구간이 하나 이상 있어야 합니다.");
-            
-            document.getElementById('active-target-score').innerText = targetScore;
-            
-            const questions = currentExamData.questions; 
-            studentOmrAnswers = Array(questions.length).fill("");
-            let omrHtml = '<div class="space-y-2">';
-            questions.forEach((q, i) => {
-                omrHtml += `<div class="flex items-center gap-2 bg-[#151922] p-1.5 rounded border border-gray-700"><span class="text-gray-400 font-bold text-xs w-4 text-right">${i+1}</span><div class="flex gap-1" id="s-omr-row-${i}">`;
-                for(let j=1; j<=5; j++) { omrHtml += `<div class="omr-circle bg-[#1e2430] w-6 h-6 text-[10px]" onclick="setStudentOmr(${i}, ${j})">${j}</div>`; }
-                omrHtml += `</div><span class="text-[10px] text-yellow-400 font-bold ml-auto">(${q.score})</span></div>`;
-            });
-            omrHtml += '</div>';
-            document.getElementById('exam-omr-container').innerHTML = omrHtml;
-
-            document.getElementById('exam-prep-overlay').style.display = 'none';
-
-            currSecIdx = 0; secSpent = 0; totalSavedSec = 0; isExamActive = true; isExamPaused = false;
-            
-            loadCurrentSection();
-            clearInterval(examTimerInterval);
-            examTimerInterval = setInterval(engineTick, 1000);
-            
-            // 첫 시작 시 오디오 활성화를 위한 무음 재생 트릭
-            playBeep(); 
-        }
-
-        function loadCurrentSection() {
-            if(currSecIdx >= studentSections.length) {
-                document.getElementById('active-section-name').innerText = "시험 완료";
-                document.getElementById('active-section-timer').innerText = "00:00";
-                document.getElementById('active-overtime-label').style.display = 'none';
-                document.getElementById('btn-next-section').style.display = 'none';
-                document.getElementById('btn-pause').style.display = 'none';
-                document.getElementById('btn-submit-exam').style.display = 'block';
-                isExamActive = false;
-                return;
-            }
-            secAllocated = studentSections[currSecIdx].time * 60;
-            secSpent = 0;
-            document.getElementById('active-section-name').innerText = `[${currSecIdx+1}/${studentSections.length}] ${studentSections[currSecIdx].name}`;
-            
-            const btnNext = document.getElementById('btn-next-section');
-            btnNext.style.display = 'block';
-            if(currSecIdx === studentSections.length - 1) {
-                btnNext.innerHTML = '시험 종료 및 제출 <i class="fa-solid fa-check ml-1"></i>';
-                btnNext.classList.replace('bg-blue-600', 'bg-indigo-600');
-            } else {
-                btnNext.innerHTML = '다음 구간 <i class="fa-solid fa-forward ml-1"></i>';
-                btnNext.classList.replace('bg-indigo-600', 'bg-blue-600');
-            }
-            document.getElementById('btn-pause').style.display = 'block';
-            updateEngineUI();
-        }
-
-        function togglePauseExam() {
-            if(!isExamActive) return;
-            isExamPaused = !isExamPaused;
-            const btn = document.getElementById('btn-pause');
-            if(isExamPaused) {
-                btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i>재개하기';
-                btn.classList.replace('bg-gray-700', 'bg-yellow-600');
-            } else {
-                btn.innerHTML = '<i class="fa-solid fa-pause mr-1"></i>일시정지';
-                btn.classList.replace('bg-yellow-600', 'bg-gray-700');
-            }
-        }
-
-        function nextExamSection() {
-            if(!isExamActive) return;
-            if(secSpent < secAllocated) totalSavedSec += (secAllocated - secSpent);
-            
-            if(currSecIdx === studentSections.length - 1) submitRealtimeExam();
-            else { currSecIdx++; loadCurrentSection(); }
-        }
-
-        function engineTick() {
-            if(!isExamActive || isExamPaused) return;
-            secSpent++;
-            if(secSpent === secAllocated) {
-                playBeep();
-                showToast(`⏰ [${studentSections[currSecIdx].name}] 구간 목표 시간 종료!`);
-            }
-            updateEngineUI();
-        }
-
-        function updateEngineUI() {
-            let diff = secAllocated - secSpent;
-            const timerEl = document.getElementById('active-section-timer');
-            const overLabel = document.getElementById('active-overtime-label');
-            
-            if(diff >= 0) {
-                timerEl.classList.replace('text-red-500', 'text-emerald-400');
-                overLabel.style.display = 'none';
-            } else {
-                diff = Math.abs(diff);
-                timerEl.classList.replace('text-emerald-400', 'text-red-500');
-                overLabel.style.display = 'block';
-            }
-            
-            const m = Math.floor(diff / 60).toString().padStart(2, '0'); 
-            const s = (diff % 60).toString().padStart(2, '0');
-            timerEl.innerText = (secAllocated - secSpent < 0 ? "+" : "") + `${m}:${s}`;
-
-            const sm = Math.floor(totalSavedSec / 60).toString().padStart(2, '0'); 
-            const ss = (totalSavedSec % 60).toString().padStart(2, '0');
-            document.getElementById('active-saved-time').innerText = `${sm}:${ss}`;
-        }
-
-        async function submitRealtimeExam() {
-            clearInterval(examTimerInterval);
-            isExamActive = false;
-            try {
-                const res = await fetch(`${API_URL}/api/exam/submit`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ school: currentUser.school, grade: currentUser.grade, student_name: currentUser.name, title: currentExamTitle, answers: studentOmrAnswers }) });
-                const data = await res.json();
-                if(data.success) { 
-                    document.getElementById('exam-omr-container').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'none';
-                    document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-next-section').style.display = 'none';
-                    const reportEl = document.getElementById('exam-result-report'); reportEl.style.display = 'block'; document.getElementById('report-action-buttons').style.display = 'flex';
-                    let html = `<div class="bg-gray-800 p-4 rounded-xl border border-emerald-500 shadow-lg text-white fade-in"><h3 class="text-xl font-black text-center mb-4 text-emerald-400">📊 분석 리포트</h3><div class="text-center mb-6"><span class="text-4xl lg:text-5xl font-black">${data.score}</span>점</div><div class="bg-[#151922] p-3 rounded-lg mb-4 border border-gray-700"><h4 class="font-bold text-yellow-400 mb-2 text-sm">오답 분석</h4><div class="space-y-1 text-xs"><div class="flex justify-between"><span>A(80%↑)</span><span class="text-red-400">${data.wrong_by_diff.A}틀림</span></div><div class="flex justify-between"><span>B(65~79%)</span><span class="text-red-400">${data.wrong_by_diff.B}틀림</span></div><div class="flex justify-between"><span>C(45~64%)</span><span class="text-red-400">${data.wrong_by_diff.C}틀림</span></div><div class="flex justify-between"><span>D(20~44%)</span><span class="text-gray-400">${data.wrong_by_diff.D}틀림</span></div><div class="flex justify-between"><span>E(킬러)</span><span class="text-gray-400">${data.wrong_by_diff.E}틀림</span></div></div></div><div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500 mb-4"><h4 class="font-bold text-indigo-300 mb-2 text-sm">나의 잠재력</h4><p class="text-xs text-indigo-100 mb-1">A,B 실수 제외 시 👉 <span class="text-sm font-black bg-indigo-600 px-1 rounded">${data.potential_ab}점</span></p><p class="text-xs text-indigo-100">기본기(C) 정복 시 👉 <span class="text-sm font-black bg-indigo-500 px-1 rounded">${data.potential_abc}점</span></p></div>`;
-                    if(data.video_url || data.explanation_text) {
-                        html += `<div class="border-t border-gray-700 pt-4"><h4 class="text-sm font-bold text-white mb-2 text-purple-400">해설 자료</h4>`;
-                        if(data.video_url) html += `<a href="${data.video_url}" target="_blank" class="block bg-red-600 text-center py-2 rounded text-white font-bold mb-2 text-xs"><i class="fa-brands fa-youtube mr-1"></i>강의 시청</a>`;
-                        if(data.explanation_text) html += `<div class="bg-gray-900 p-3 rounded border border-gray-700 text-xs text-gray-300 whitespace-pre-wrap">${data.explanation_text}</div>`;
-                        html += `</div>`;
-                    }
-                    html += `</div>`; reportEl.innerHTML = html;
-                    
-                    isDrawing = false; const drawCanvas = document.getElementById('pdf-draw-canvas'); if(drawCanvas) drawCanvas.style.display = 'none';
-                    document.getElementById('btn-draw').classList.replace('bg-blue-600', 'bg-gray-700'); document.getElementById('btn-draw').innerHTML = '<i class="fa-solid fa-pen"></i>';
-                    document.getElementById('btn-clear').style.display = 'none'; document.getElementById('draw-hint').style.display = 'none';
-                }
-            } catch(e) { alert("서버 오류"); }
-        }
-
-        // ==========================================
-        // 파일 드래그 앤 드롭 업로드 및 기타 모듈들 
-        // ==========================================
-        function setStudentOmr(rowIdx, ans) {
-            studentOmrAnswers[rowIdx] = ans; const circles = document.getElementById(`s-omr-row-${rowIdx}`).children;
-            for(let i=0; i<5; i++) { circles[i].classList.remove('active'); if(i+1 === ans) circles[i].classList.add('active'); }
-        }
-        
         async function fetchReports(filterName = null) {
             try {
                 const res = await fetch(`${API_URL}/api/admin/reports`); const data = await res.json();
@@ -1118,68 +780,392 @@
             printWindow.document.write(`<html><head><title>AI 첨삭 결과</title><style>body{font-family:sans-serif;padding:30px;line-height:1.6;} span{color:#ef4444;font-weight:bold;}</style></head><body>${content}<script>setTimeout(()=>window.print(), 1000);<\/script></body></html>`);
             printWindow.document.close();
         }
-        async function createLecture() {
-            const t = document.getElementById('lec-title').value; const d = document.getElementById('lec-desc').value; const u = document.getElementById('lec-url').value;
-            if(!t || !u) return;
-            try { await fetch(`${API_URL}/api/admin/lecture`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: t, desc: d, video_url: u }) }); loadAdminLectures(); } catch(e) {}
+
+        let adminExamSections = [];
+        function addAdminSection(presetName=null, presetTime=null) {
+            const name = presetName || document.getElementById('sec-name').value; const time = presetTime || parseInt(document.getElementById('sec-time').value); if(!name || !time) return;
+            adminExamSections.push({name: name, time: time}); 
+            if(!presetName) { document.getElementById('sec-name').value = ''; document.getElementById('sec-time').value = ''; }
+            renderAdminSections();
         }
-        async function loadAdminLectures() {
-            try {
-                const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json();
-                const container = document.getElementById('admin-lecture-list'); container.innerHTML = '';
-                if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2"><span class="text-white text-sm truncate">${l.title}</span><button onclick="deleteLecture('${l.id}')" class="bg-red-900/50 text-white px-2 py-1 rounded text-xs">삭제</button></div>`; }); }
-            } catch(e) {}
-        }
-        async function deleteLecture(id) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/lecture/${id}`, {method:'DELETE'}); loadAdminLectures(); } catch(e){} }
-        async function loadLectures() {
-            try {
-                const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json();
-                const container = document.getElementById('student-lecture-list'); container.innerHTML = '';
-                if(data.success && data.lectures.length > 0) {
-                    data.lectures.forEach(l => { container.innerHTML += `<div class="bg-[#151922] p-6 rounded-lg border border-gray-700 flex flex-col"><h3 class="text-lg font-bold text-white mb-2">${l.title}</h3><p class="text-xs text-gray-400 mb-4 flex-grow">${l.desc}</p><a href="${l.video_url}" target="_blank" class="bg-purple-600 py-3 rounded text-center text-white font-bold"><i class="fa-solid fa-play mr-2"></i>시청</a></div>`; });
-                }
-            } catch(e){}
+        function renderAdminSections() {
+            const board = document.getElementById('admin-section-board'); board.innerHTML = ""; let total = 0;
+            adminExamSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<span class="bg-yellow-900/50 text-yellow-200 px-2 py-1 rounded text-xs mr-2 mb-1 inline-block">${s.name}(${s.time}분) <button onclick="adminExamSections.splice(${idx},1); renderAdminSections()" class="text-red-400 ml-1">X</button></span>`; });
+            if(total > 0) board.innerHTML += `<div class="text-xs text-emerald-400 mt-1 font-bold">총 ${total}분</div>`;
         }
 
-        async function createHomework() {
-            const t = document.getElementById('hw-title').value; const d = document.getElementById('hw-desc').value; const a = document.getElementById('hw-ans-text').value; const f = document.getElementById('hw-ans-file').files[0];
-            if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); fd.append("answer_text", a); if(f) fd.append("answer_file", f);
-            try { await fetch(`${API_URL}/api/admin/homework`, {method:'POST', body:fd}); alert("배포 완료"); } catch(e){}
+        let adminExamQuestions = [];
+        function buildAdminOMR() {
+            const count = parseInt(document.getElementById('rt-qcount').value) || 0; const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2}));
+            for(let i=0; i<count; i++) {
+                let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`;
+                for(let j=1; j<=5; j++) row += `<div class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</div>`;
+                row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs"></div></div>`;
+                board.innerHTML += row;
+            }
         }
-        async function loadHomeworks() {
+        function setAdminOmr(rowIdx, ans) {
+            adminExamQuestions[rowIdx].ans = ans; const circles = document.getElementById(`a-omr-row-${rowIdx}`).children;
+            for(let i=0; i<5; i++) { circles[i].classList.remove('active'); if(i+1 === ans) circles[i].classList.add('active'); }
+        }
+
+        async function setRealtimeExam() {
+            const title = document.getElementById('rt-title').value; const objective = document.getElementById('rt-objective').value; const videoUrl = document.getElementById('rt-video').value; const expText = document.getElementById('rt-exp').value; const fileInput = document.getElementById('rt-pdf');
+            if(!title || adminExamSections.length===0 || adminExamQuestions.length===0 || fileInput.files.length===0) return alert("필수 항목 입력");
+            const formData = new FormData(); formData.append("title", title); formData.append("objective", objective); formData.append("exam_data", JSON.stringify({ sections: adminExamSections, questions: adminExamQuestions })); formData.append("video_url", videoUrl); formData.append("explanation_text", expText); formData.append("file", fileInput.files[0]);
+            try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', body: formData }); alert("개설 완료"); loadAdminExams(); } catch(e) {}
+        }
+        async function loadAdminExams() {
             try {
-                const res = await fetch(`${API_URL}/api/homeworks`); const data = await res.json(); const container = document.getElementById('student-hw-list'); container.innerHTML = '';
-                if(data.success && data.homeworks.length > 0) { data.homeworks.forEach(h => { container.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 flex justify-between items-center text-sm"><div><h3 class="font-bold text-white">${h.title}</h3></div><button onclick="openSubmitHomework('${h.title}')" class="bg-emerald-600 px-3 py-1 rounded text-white">제출</button></div>`; }); }
-            } catch(e){}
+                const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('admin-exam-list'); container.innerHTML = '';
+                if(data.success && data.exams.length > 0) { data.exams.forEach(e => { container.innerHTML += `<div class="flex justify-between bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${e.title}</span><button onclick="deleteExam('${e.title}')" class="text-red-400">삭제</button></div>`; }); }
+            } catch(e) {}
         }
+        async function deleteExam(title) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){} }
+
+        // =====================================
+        // 💡 PDF.js 지연 로딩 (무한 로딩/멈춤 해결) 및 필기
+        // =====================================
+        let pdfDoc = null; let isDrawing = false;
+        
+        async function renderPDF(url) {
+            document.getElementById('pdf-loading').style.display = 'block';
+            const innerContainer = document.getElementById('pdf-inner-container');
+            innerContainer.innerHTML = ''; 
+            
+            try {
+                pdfDoc = await pdfjsLib.getDocument(url).promise;
+                document.getElementById('pdf-loading').style.display = 'none';
+
+                const wrapperWidth = document.getElementById('pdf-render-wrapper').clientWidth;
+
+                // Intersection Observer 설정 (스크롤 시 지연 렌더링)
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const pageNum = parseInt(entry.target.dataset.pageNo);
+                            if (entry.target.dataset.rendered === "false") {
+                                renderPage(pageNum, entry.target, wrapperWidth);
+                            }
+                        }
+                    });
+                }, { root: document.getElementById('pdf-render-wrapper'), rootMargin: '800px 0px' });
+
+                for(let i=1; i<=pdfDoc.numPages; i++) {
+                    const pageContainer = document.createElement('div');
+                    pageContainer.className = 'relative mb-4 w-full pdf-page-container bg-white shadow';
+                    pageContainer.dataset.pageNo = i;
+                    pageContainer.dataset.rendered = "false";
+                    pageContainer.style.minHeight = "800px"; // 임시 높이
+                    
+                    // 💡 각 페이지별로 필기용 캔버스를 독립적으로 씌움 (모바일 램 초과 방지)
+                    const drawCanvas = document.createElement('canvas');
+                    drawCanvas.className = 'absolute top-0 left-0 w-full h-full z-10 pdf-draw-canvas cursor-crosshair';
+                    drawCanvas.style.display = isDrawing ? 'block' : 'none';
+                    pageContainer.appendChild(drawCanvas);
+                    setupDrawingLogic(drawCanvas);
+
+                    innerContainer.appendChild(pageContainer);
+                    observer.observe(pageContainer);
+                }
+            } catch(err) {
+                document.getElementById('pdf-loading').innerHTML = 'PDF 로딩 오류. 다시 시도해주세요.';
+            }
+        }
+
+        async function renderPage(num, container, wrapperWidth) {
+            container.dataset.rendered = "true";
+            try {
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({scale: 1.5}); // 고화질
+                const scale = wrapperWidth / viewport.width;
+                const scaledViewport = page.getViewport({scale: scale});
+
+                container.style.minHeight = scaledViewport.height + "px";
+
+                const canvas = document.createElement('canvas');
+                canvas.width = scaledViewport.width; 
+                canvas.height = scaledViewport.height;
+                canvas.className = 'w-full block';
+                
+                const ctx = canvas.getContext('2d');
+                await page.render({canvasContext: ctx, viewport: scaledViewport}).promise;
+                
+                // 해당 페이지의 드로잉 캔버스 사이즈 맞추기
+                const drawCanvas = container.querySelector('.pdf-draw-canvas');
+                drawCanvas.width = scaledViewport.width;
+                drawCanvas.height = scaledViewport.height;
+
+                container.insertBefore(canvas, drawCanvas);
+            } catch (e) {
+                container.dataset.rendered = "false"; 
+            }
+        }
+
+        function setupDrawingLogic(canvas) {
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1 && isDrawing) {
+                    drawing = true; e.preventDefault();
+                    const rect = canvas.getBoundingClientRect(); 
+                    const scaleX = canvas.width / rect.width; 
+                    const scaleY = canvas.height / rect.height;
+                    ctx.beginPath(); 
+                    ctx.moveTo((e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY);
+                }
+            }, {passive: false});
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && drawing && isDrawing) {
+                    e.preventDefault();
+                    const rect = canvas.getBoundingClientRect(); 
+                    const scaleX = canvas.width / rect.width; 
+                    const scaleY = canvas.height / rect.height;
+                    ctx.lineTo((e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY); 
+                    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.stroke();
+                }
+            }, {passive: false});
+
+            canvas.addEventListener('touchend', () => { drawing = false; });
+
+            canvas.addEventListener('mousedown', (e) => {
+                if(!isDrawing) return; drawing = true;
+                const rect = canvas.getBoundingClientRect(); 
+                const scaleX = canvas.width / rect.width; 
+                const scaleY = canvas.height / rect.height;
+                ctx.beginPath(); ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if(drawing && isDrawing) {
+                    const rect = canvas.getBoundingClientRect(); 
+                    const scaleX = canvas.width / rect.width; 
+                    const scaleY = canvas.height / rect.height;
+                    ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY); 
+                    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.stroke();
+                }
+            });
+            canvas.addEventListener('mouseup', () => { drawing = false; });
+            canvas.addEventListener('mouseout', () => { drawing = false; });
+        }
+
+        function toggleDrawMode() {
+            isDrawing = !isDrawing;
+            const drawCanvases = document.querySelectorAll('.pdf-draw-canvas');
+            const btn = document.getElementById('btn-draw');
+            const clearBtn = document.getElementById('btn-clear');
+            const hint = document.getElementById('draw-hint');
+            
+            drawCanvases.forEach(c => c.style.display = isDrawing ? 'block' : 'none');
+            
+            if(isDrawing) {
+                btn.classList.replace('bg-gray-700', 'bg-blue-600');
+                btn.innerHTML = '<i class="fa-solid fa-pen"></i> 필기 중';
+                clearBtn.style.display = 'inline-block';
+                hint.style.display = 'block';
+                document.getElementById('pdf-render-wrapper').style.touchAction = 'pan-x pan-y pinch-zoom';
+            } else {
+                btn.classList.replace('bg-blue-600', 'bg-gray-700');
+                btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i>필기 켜기';
+                clearBtn.style.display = 'none';
+                hint.style.display = 'none';
+            }
+        }
+
+        function clearCanvas() { 
+            const drawCanvases = document.querySelectorAll('.pdf-draw-canvas');
+            drawCanvases.forEach(c => {
+                c.getContext('2d').clearRect(0, 0, c.width, c.height);
+            });
+        }
+
+        // =====================================
+        // 💡 실시간 모의고사 (학생 뷰 및 로직)
+        // =====================================
+        async function loadStudentExams() {
+            try {
+                const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('student-exam-list'); container.innerHTML = '';
+                if(data.success && data.exams.length > 0) {
+                    data.exams.forEach(e => {
+                        const examDataStr = (e.exam_data || "").replace(/"/g, '&quot;');
+                        const objStr = (e.objective || "").replace(/"/g, '&quot;').replace(/'/g, '\\\'');
+                        container.innerHTML += `<div onclick="prepExamRoom('${e.title}', '${e.pdf_url}', '${examDataStr}', '${objStr}')" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`;
+                    });
+                }
+            } catch(e) {}
+        }
+
+        let examTimerInterval; 
+        let studentOmrAnswers = []; 
+        let currentExamTitle = ""; 
+        let currentExamData = null; 
+        let studentSections = [];
+        let currSecIdx = 0; let secAllocated = 0; let secSpent = 0; let totalSavedSec = 0;
+        let isExamActive = false; let isExamPaused = false;
+
+        function prepExamRoom(title, pdfUrl, examDataStr, objectiveStr) {
+            openProgram('exam-room');
+            currentExamTitle = title;
+            document.getElementById('room-exam-title-active').innerText = title;
+            document.getElementById('exam-result-report').style.display = 'none';
+            document.getElementById('btn-submit-exam').style.display = 'none';
+            document.getElementById('report-action-buttons').style.display = 'none';
+            
+            currentExamData = JSON.parse(examDataStr.replace(/&quot;/g, '"'));
+            const objective = objectiveStr.replace(/&quot;/g, '"');
+            
+            document.getElementById('prep-exam-title').innerText = title;
+            document.getElementById('prep-objective-text').innerText = objective || "공지사항이 없습니다.";
+            document.getElementById('prep-target-score').value = '';
+            
+            studentSections = JSON.parse(JSON.stringify(currentExamData.sections));
+            renderStudentPrepSections();
+            
+            document.getElementById('exam-prep-overlay').style.display = 'flex';
+            
+            if(pdfUrl) renderPDF(API_URL + pdfUrl);
+        }
+
+        function renderStudentPrepSections() {
+            const board = document.getElementById('prep-sections-board');
+            board.innerHTML = ""; let total = 0;
+            studentSections.forEach((s, idx) => {
+                total += s.time;
+                board.innerHTML += `
+                <div class="flex items-center gap-2 mb-2 bg-[#1e2430] p-2 rounded">
+                    <input type="text" value="${s.name}" onchange="studentSections[${idx}].name=this.value" class="w-1/2 bg-transparent text-white text-sm outline-none border-b border-gray-600">
+                    <input type="number" value="${s.time}" onchange="studentSections[${idx}].time=parseInt(this.value)" class="w-1/4 bg-transparent text-emerald-400 font-bold text-center outline-none border-b border-gray-600">분
+                    <button onclick="studentSections.splice(${idx},1); renderStudentPrepSections()" class="text-red-400 ml-auto"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+            });
+            board.innerHTML += `<div class="text-right text-emerald-400 text-sm font-bold mt-2">총 예정 시간: ${total}분</div>`;
+        }
+
+        function addStudentSection() { studentSections.push({name: "새 구간", time: 10}); renderStudentPrepSections(); }
+
+        function startExamReal() {
+            const targetScore = document.getElementById('prep-target-score').value;
+            if(!targetScore) return alert("나의 목표 점수를 입력해주세요!");
+            if(studentSections.length === 0) return alert("구간이 하나 이상 있어야 합니다.");
+            
+            document.getElementById('active-target-score').innerText = targetScore;
+            
+            const questions = currentExamData.questions; 
+            studentOmrAnswers = Array(questions.length).fill("");
+            let omrHtml = '<div class="space-y-2">';
+            questions.forEach((q, i) => {
+                omrHtml += `<div class="flex items-center gap-2 bg-[#151922] p-1.5 rounded border border-gray-700"><span class="text-gray-400 font-bold text-xs w-4 text-right">${i+1}</span><div class="flex gap-1" id="s-omr-row-${i}">`;
+                for(let j=1; j<=5; j++) { omrHtml += `<div class="omr-circle bg-[#1e2430] w-6 h-6 text-[10px]" onclick="setStudentOmr(${i}, ${j})">${j}</div>`; }
+                omrHtml += `</div><span class="text-[10px] text-yellow-400 font-bold ml-auto">(${q.score})</span></div>`;
+            });
+            omrHtml += '</div>';
+            document.getElementById('exam-omr-container').innerHTML = omrHtml;
+
+            document.getElementById('exam-prep-overlay').style.display = 'none';
+
+            currSecIdx = 0; secSpent = 0; totalSavedSec = 0; isExamActive = true; isExamPaused = false;
+            
+            loadCurrentSection();
+            clearInterval(examTimerInterval);
+            examTimerInterval = setInterval(engineTick, 1000);
+            
+            playBeep(); 
+        }
+
+        function loadCurrentSection() {
+            if(currSecIdx >= studentSections.length) {
+                document.getElementById('active-section-name').innerText = "시험 완료"; document.getElementById('active-section-timer').innerText = "00:00";
+                document.getElementById('active-overtime-label').style.display = 'none'; document.getElementById('btn-next-section').style.display = 'none';
+                document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'block';
+                isExamActive = false; return;
+            }
+            secAllocated = studentSections[currSecIdx].time * 60; secSpent = 0;
+            document.getElementById('active-section-name').innerText = `[${currSecIdx+1}/${studentSections.length}] ${studentSections[currSecIdx].name}`;
+            const btnNext = document.getElementById('btn-next-section'); btnNext.style.display = 'block';
+            if(currSecIdx === studentSections.length - 1) { btnNext.innerHTML = '종료 및 제출 <i class="fa-solid fa-check ml-1"></i>'; btnNext.classList.replace('bg-blue-600', 'bg-indigo-600'); } 
+            else { btnNext.innerHTML = '다음 구간 <i class="fa-solid fa-forward ml-1"></i>'; btnNext.classList.replace('bg-indigo-600', 'bg-blue-600'); }
+            document.getElementById('btn-pause').style.display = 'block';
+            updateEngineUI();
+        }
+
+        function togglePauseExam() {
+            if(!isExamActive) return; isExamPaused = !isExamPaused; const btn = document.getElementById('btn-pause');
+            if(isExamPaused) { btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i>재개하기'; btn.classList.replace('bg-gray-700', 'bg-yellow-600'); } 
+            else { btn.innerHTML = '<i class="fa-solid fa-pause mr-1"></i>일시정지'; btn.classList.replace('bg-yellow-600', 'bg-gray-700'); }
+        }
+
+        function nextExamSection() {
+            if(!isExamActive) return; if(secSpent < secAllocated) totalSavedSec += (secAllocated - secSpent);
+            if(currSecIdx === studentSections.length - 1) submitRealtimeExam(); else { currSecIdx++; loadCurrentSection(); }
+        }
+
+        function engineTick() {
+            if(!isExamActive || isExamPaused) return; secSpent++;
+            if(secSpent === secAllocated) { playBeep(); showToast(`⏰ [${studentSections[currSecIdx].name}] 목표 시간 종료!`); }
+            updateEngineUI();
+        }
+
+        function updateEngineUI() {
+            let diff = secAllocated - secSpent; const timerEl = document.getElementById('active-section-timer'); const overLabel = document.getElementById('active-overtime-label');
+            if(diff >= 0) { timerEl.classList.replace('text-red-500', 'text-emerald-400'); overLabel.style.display = 'none'; } 
+            else { diff = Math.abs(diff); timerEl.classList.replace('text-emerald-400', 'text-red-500'); overLabel.style.display = 'block'; }
+            const m = Math.floor(diff / 60).toString().padStart(2, '0'); const s = (diff % 60).toString().padStart(2, '0');
+            timerEl.innerText = (secAllocated - secSpent < 0 ? "+" : "") + `${m}:${s}`;
+            const sm = Math.floor(totalSavedSec / 60).toString().padStart(2, '0'); const ss = (totalSavedSec % 60).toString().padStart(2, '0');
+            document.getElementById('active-saved-time').innerText = `${sm}:${ss}`;
+        }
+
+        async function submitRealtimeExam() {
+            clearInterval(examTimerInterval); isExamActive = false;
+            try {
+                const res = await fetch(`${API_URL}/api/exam/submit`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ school: currentUser.school, grade: currentUser.grade, student_name: currentUser.name, title: currentExamTitle, answers: studentOmrAnswers }) });
+                const data = await res.json();
+                if(data.success) { 
+                    document.getElementById('exam-omr-container').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'none'; document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-next-section').style.display = 'none';
+                    const reportEl = document.getElementById('exam-result-report'); reportEl.style.display = 'block'; document.getElementById('report-action-buttons').style.display = 'flex';
+                    let html = `<div class="bg-gray-800 p-4 rounded-xl border border-emerald-500 shadow-lg text-white fade-in"><h3 class="text-xl font-black text-center mb-4 text-emerald-400">📊 분석 리포트</h3><div class="text-center mb-6"><span class="text-4xl lg:text-5xl font-black">${data.score}</span>점</div><div class="bg-[#151922] p-3 rounded-lg mb-4 border border-gray-700"><h4 class="font-bold text-yellow-400 mb-2 text-sm">오답 분석</h4><div class="space-y-1 text-xs"><div class="flex justify-between"><span>A(80%↑)</span><span class="text-red-400">${data.wrong_by_diff.A}틀림</span></div><div class="flex justify-between"><span>B(65~79%)</span><span class="text-red-400">${data.wrong_by_diff.B}틀림</span></div><div class="flex justify-between"><span>C(45~64%)</span><span class="text-red-400">${data.wrong_by_diff.C}틀림</span></div><div class="flex justify-between"><span>D(20~44%)</span><span class="text-gray-400">${data.wrong_by_diff.D}틀림</span></div><div class="flex justify-between"><span>E(킬러)</span><span class="text-gray-400">${data.wrong_by_diff.E}틀림</span></div></div></div><div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500 mb-4"><h4 class="font-bold text-indigo-300 mb-2 text-sm">나의 잠재력</h4><p class="text-xs text-indigo-100 mb-1">A,B 실수 제외 시 👉 <span class="text-sm font-black bg-indigo-600 px-1 rounded">${data.potential_ab}점</span></p><p class="text-xs text-indigo-100">기본기(C) 정복 시 👉 <span class="text-sm font-black bg-indigo-500 px-1 rounded">${data.potential_abc}점</span></p></div>`;
+                    if(data.video_url || data.explanation_text) {
+                        html += `<div class="border-t border-gray-700 pt-4"><h4 class="text-sm font-bold text-white mb-2 text-purple-400">해설 자료</h4>`;
+                        if(data.video_url) html += `<a href="${data.video_url}" target="_blank" class="block bg-red-600 text-center py-2 rounded text-white font-bold mb-2 text-xs"><i class="fa-brands fa-youtube mr-1"></i>강의 시청</a>`;
+                        if(data.explanation_text) html += `<div class="bg-gray-900 p-3 rounded border border-gray-700 text-xs text-gray-300 whitespace-pre-wrap">${data.explanation_text}</div>`;
+                        html += `</div>`;
+                    }
+                    html += `</div>`; reportEl.innerHTML = html;
+                    
+                    isDrawing = false; const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); drawCanvases.forEach(c => c.style.display = 'none');
+                    document.getElementById('btn-draw').classList.replace('bg-blue-600', 'bg-gray-700'); document.getElementById('btn-draw').innerHTML = '<i class="fa-solid fa-pen"></i>';
+                    document.getElementById('btn-clear').style.display = 'none'; document.getElementById('draw-hint').style.display = 'none';
+                }
+            } catch(e) { alert("서버 오류"); }
+        }
+
+        function printReportCard() {
+            const content = document.getElementById('exam-result-report').innerHTML;
+            const printWindow = window.open('', '', 'width=800,height=900');
+            printWindow.document.write(`<html><head><title>성적표 출력</title><script src="https://cdn.tailwindcss.com"><\/script><style>body{background:white;color:black;padding:20px;}</style></head><body>${content.replace(/text-white|text-gray-300|bg-gray-800/g, '')}<script>setTimeout(()=>window.print(), 500);<\/script></body></html>`); printWindow.document.close();
+        }
+
+        // ==========================================
+        // 강의 관리, AI 국최, 과제/게시판 모듈 생략 (기존 코드와 완벽 동일)
+        // ==========================================
+        // ... (나머지 기타 기능들은 기존 코드와 100% 동일하게 유지) ...
+        async function createLecture() { const t = document.getElementById('lec-title').value; const d = document.getElementById('lec-desc').value; const u = document.getElementById('lec-url').value; if(!t || !u) return; try { await fetch(`${API_URL}/api/admin/lecture`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: t, desc: d, video_url: u }) }); loadAdminLectures(); } catch(e) {} }
+        async function loadAdminLectures() { try { const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('admin-lecture-list'); container.innerHTML = ''; if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2"><span class="text-white text-sm truncate">${l.title}</span><button onclick="deleteLecture('${l.id}')" class="bg-red-900/50 text-white px-2 py-1 rounded text-xs">삭제</button></div>`; }); } } catch(e) {} }
+        async function deleteLecture(id) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/lecture/${id}`, {method:'DELETE'}); loadAdminLectures(); } catch(e){} }
+        async function loadLectures() { try { const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('student-lecture-list'); container.innerHTML = ''; if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="bg-[#151922] p-6 rounded-lg border border-gray-700 flex flex-col"><h3 class="text-lg font-bold text-white mb-2">${l.title}</h3><p class="text-xs text-gray-400 mb-4 flex-grow">${l.desc}</p><a href="${l.video_url}" target="_blank" class="bg-purple-600 py-3 rounded text-center text-white font-bold"><i class="fa-solid fa-play mr-2"></i>시청</a></div>`; }); } } catch(e){} }
+        async function sendChat() { const input = document.getElementById('chat-input'); const prompt = input.value; if(!prompt) return; const history = document.getElementById('chat-history'); const files = document.getElementById('chat-file').files; let fileBadge = files.length > 0 ? `<br><span class="text-[10px] text-emerald-400 mt-1 inline-block"><i class="fa-solid fa-paperclip"></i> 파일 첨부됨</span>` : ""; history.innerHTML += `<div class="text-right mb-4"><span class="bg-blue-600 px-4 py-2 rounded-xl text-white text-sm inline-block shadow-lg">${prompt}${fileBadge}</span></div>`; input.value = ''; document.getElementById('chat-file').value = ''; updateFileName('chat-file', 'chat-file-label'); const loadId = "load-" + Date.now(); history.innerHTML += `<div id="${loadId}" class="text-left mb-4"><span class="bg-[#2a3441] px-4 py-2 rounded-xl text-blue-300 text-sm font-bold inline-block border border-gray-600">고민 중...</span></div>`; history.scrollTop = history.scrollHeight; const formData = new FormData(); formData.append("school", currentUser.school); formData.append("grade", currentUser.grade); formData.append("student_name", currentUser.name); formData.append("prompt", prompt); for(let i=0; i<files.length; i++) formData.append("files", files[i]); try { const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', body: formData }); const data = await res.json(); document.getElementById(loadId).remove(); if(data.success) history.innerHTML += `<div class="text-left mb-4"><span class="bg-gray-800 px-4 py-3 rounded-xl text-white text-sm inline-block leading-relaxed border border-gray-700">${data.reply.replace(/\n/g, '<br>')}</span></div>`; } catch(e) {} history.scrollTop = history.scrollHeight; }
+        function updateGenFileVisuals() { const files = document.getElementById('gen-files').files; const container = document.getElementById('gen-files-visual'); container.innerHTML = ""; for(let i=0; i<files.length; i++) container.innerHTML += `<span class="bg-gray-800 text-emerald-400 text-[10px] px-2 py-1 rounded"><i class="fa-solid fa-check mr-1"></i>${files[i].name}</span>`; }
+        async function generateStreamQuestions() { const formData = new FormData(); formData.append("q_mode", "신규 출제"); formData.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb => cb.value).join(', ')); formData.append("cnt_killer", document.getElementById('c-killer').value); formData.append("cnt_semi", document.getElementById('c-semi').value); formData.append("cnt_high", document.getElementById('c-high').value); formData.append("cnt_mid", document.getElementById('c-mid').value); formData.append("cnt_low", document.getElementById('c-low').value); formData.append("q_text", document.getElementById('gen-text').value); const files = document.getElementById('gen-files').files; for (let i = 0; i < files.length; i++) formData.append("files", files[i]); document.getElementById('gen-result-area').style.display = 'block'; const resultBox = document.getElementById('gen-result-text'); resultBox.value = ""; try { const res = await fetch(`${API_URL}/api/admin/generate_stream`, { method: 'POST', body: formData }); const reader = res.body.getReader(); const decoder = new TextDecoder("utf-8"); while(true) { const {done, value} = await reader.read(); if(done) break; resultBox.value += decoder.decode(value, {stream: true}); resultBox.scrollTop = resultBox.scrollHeight; } } catch (e) {} }
+        async function deployFromGenerator() { const title = document.getElementById('rt-title').value || "자동생성_모의고사"; const raw = document.getElementById('gen-result-text').value; try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: title, time_limit: 45, answer_key: "텍스트 자체내장", raw_text: raw }) }); alert("배포 완료"); } catch(e) {} }
+        function printGeneratedPDF() { const text = document.getElementById('gen-result-text').value; const printWindow = window.open('', '', 'width=800,height=900'); printWindow.document.write(`<html><head><title>문제 출력</title></head><body style="font-family:sans-serif;padding:30px;"><pre style="white-space:pre-wrap;font-size:16px;">${text}</pre><script>window.print();<\/script></body></html>`); printWindow.document.close(); }
+        async function createHomework() { const t = document.getElementById('hw-title').value; const d = document.getElementById('hw-desc').value; const a = document.getElementById('hw-ans-text').value; const f = document.getElementById('hw-ans-file').files[0]; if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); fd.append("answer_text", a); if(f) fd.append("answer_file", f); try { await fetch(`${API_URL}/api/admin/homework`, {method:'POST', body:fd}); alert("배포 완료"); } catch(e){} }
+        async function loadHomeworks() { try { const res = await fetch(`${API_URL}/api/homeworks`); const data = await res.json(); const container = document.getElementById('student-hw-list'); container.innerHTML = ''; if(data.success && data.homeworks.length > 0) { data.homeworks.forEach(h => { container.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 flex justify-between items-center text-sm"><div><h3 class="font-bold text-white">${h.title}</h3></div><button onclick="openSubmitHomework('${h.title}')" class="bg-emerald-600 px-3 py-1 rounded text-white">제출</button></div>`; }); } } catch(e){} }
         function openSubmitHomework(title) { document.getElementById('hw-submit-area').style.display = 'block'; document.getElementById('hw-target-title').innerText = title; document.getElementById('hw-result-area').style.display = 'none'; }
-        async function submitHomework() {
-            const title = document.getElementById('hw-target-title').innerText; const file = document.getElementById('hw-file').files[0]; if(!file) return alert("파일 첨부 요망");
-            const fd = new FormData(); fd.append("school", currentUser.school); fd.append("grade", currentUser.grade); fd.append("student_name", currentUser.name); fd.append("title", title); fd.append("file", file);
-            try {
-                const res = await fetch(`${API_URL}/api/homework/submit`, {method:'POST', body:fd}); const data = await res.json();
-                if(data.success) { alert("제출 완료!"); const rArea = document.getElementById('hw-result-area'); rArea.style.display = 'block'; let html = `<p class="whitespace-pre-wrap text-sm">${data.answer_text}</p>`; if(data.answer_file) html += `<a href="${API_URL}${data.answer_file}" target="_blank" class="block mt-2 text-blue-400 underline">해설 다운로드</a>`; rArea.innerHTML = html; }
-            } catch(e){}
-        }
-        async function createBoard() {
-            const t = document.getElementById('bd-title').value; const d = document.getElementById('bd-desc').value; const f = document.getElementById('bd-file').files[0]; if(!t) return;
-            const fd = new FormData(); fd.append("title", t); fd.append("desc", d); if(f) fd.append("file", f);
-            try { await fetch(`${API_URL}/api/admin/board`, {method:'POST', body:fd}); alert("등록 완료"); } catch(e){}
-        }
-        async function loadBoard() {
-            try {
-                const res = await fetch(`${API_URL}/api/board`); const data = await res.json(); const c = document.getElementById('board-list'); c.innerHTML = '';
-                if(data.success && data.posts.length > 0) { data.posts.forEach(p => { let fLink = p.file_url ? `<a href="${API_URL}${p.file_url}" target="_blank" class="text-blue-400 text-xs mt-2 block">다운로드</a>` : ''; c.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 text-sm"><h3 class="font-bold text-gray-200">${p.title}</h3><p class="text-xs text-gray-400 mt-1">${p.desc}</p>${fLink}</div>`; }); }
-            } catch(e){}
-        }
-        async function uploadKnowledge() {
-            const t = document.getElementById('kb-title').value; const c = document.getElementById('kb-content').value; const files = document.getElementById('kb-files').files;
-            if(!t) return alert("제목 필수"); if(!c && files.length === 0) return;
-            const btn = document.getElementById('btn-knowledge'); btn.disabled = true; btn.innerText = "분석 중...";
-            const formData = new FormData(); formData.append("title", t); formData.append("content", c); for(let i=0; i<files.length; i++) formData.append("files", files[i]);
-            try { const res = await fetch(`${API_URL}/api/admin/knowledge`, { method: 'POST', body: formData }); const data = await res.json(); if(data.success) { alert("학습 완료!"); document.getElementById('kb-title').value=''; document.getElementById('kb-content').value=''; } } catch(e) {}
-            btn.disabled = false; btn.innerText = "저장 및 학습";
-        }
+        async function submitHomework() { const title = document.getElementById('hw-target-title').innerText; const file = document.getElementById('hw-file').files[0]; if(!file) return alert("파일 첨부 요망"); const fd = new FormData(); fd.append("school", currentUser.school); fd.append("grade", currentUser.grade); fd.append("student_name", currentUser.name); fd.append("title", title); fd.append("file", file); try { const res = await fetch(`${API_URL}/api/homework/submit`, {method:'POST', body:fd}); const data = await res.json(); if(data.success) { alert("제출 완료!"); const rArea = document.getElementById('hw-result-area'); rArea.style.display = 'block'; let html = `<p class="whitespace-pre-wrap text-sm">${data.answer_text}</p>`; if(data.answer_file) html += `<a href="${API_URL}${data.answer_file}" target="_blank" class="block mt-2 text-blue-400 underline">해설 다운로드</a>`; rArea.innerHTML = html; } } catch(e){} }
+        async function createBoard() { const t = document.getElementById('bd-title').value; const d = document.getElementById('bd-desc').value; const f = document.getElementById('bd-file').files[0]; if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); if(f) fd.append("file", f); try { await fetch(`${API_URL}/api/admin/board`, {method:'POST', body:fd}); alert("등록 완료"); } catch(e){} }
+        async function loadBoard() { try { const res = await fetch(`${API_URL}/api/board`); const data = await res.json(); const c = document.getElementById('board-list'); c.innerHTML = ''; if(data.success && data.posts.length > 0) { data.posts.forEach(p => { let fLink = p.file_url ? `<a href="${API_URL}${p.file_url}" target="_blank" class="text-blue-400 text-xs mt-2 block">다운로드</a>` : ''; c.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 text-sm"><h3 class="font-bold text-gray-200">${p.title}</h3><p class="text-xs text-gray-400 mt-1">${p.desc}</p>${fLink}</div>`; }); } } catch(e){} }
+        async function uploadKnowledge() { const t = document.getElementById('kb-title').value; const c = document.getElementById('kb-content').value; const files = document.getElementById('kb-files').files; if(!t) return alert("제목 필수"); if(!c && files.length === 0) return; const btn = document.getElementById('btn-knowledge'); btn.disabled = true; btn.innerText = "분석 중..."; const formData = new FormData(); formData.append("title", t); formData.append("content", c); for(let i=0; i<files.length; i++) formData.append("files", files[i]); try { const res = await fetch(`${API_URL}/api/admin/knowledge`, { method: 'POST', body: formData }); const data = await res.json(); if(data.success) { alert("학습 완료!"); document.getElementById('kb-title').value=''; document.getElementById('kb-content').value=''; } } catch(e) {} btn.disabled = false; btn.innerText = "저장 및 학습"; }
     </script>
 </body>
 </html>
