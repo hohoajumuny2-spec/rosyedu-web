@@ -31,7 +31,8 @@
         .toast { background-color: #ef4444; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.5); opacity: 0; transition: opacity 0.5s; display: flex; align-items: center; gap: 10px; }
         .toast.show { opacity: 1; }
         
-        .drop-zone { border: 2px dashed #4b5563; border-radius: 0.75rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background-color: #1e2430; }
+        /* 💡 드롭존 클릭 보장 스타일 추가 */
+        .drop-zone { border: 2px dashed #4b5563; border-radius: 0.75rem; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background-color: #1e2430; display: block; }
         .drop-zone:hover, .drop-zone.dragover { border-color: #3b82f6; background-color: #1e293b; }
         .drop-zone i { font-size: 2.5rem; color: #6b7280; margin-bottom: 1rem; transition: color 0.3s; }
         
@@ -138,8 +139,10 @@
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <input type="file" id="chat-file" class="hidden" multiple accept="image/*,.pdf" onchange="updateFileName('chat-file', 'chat-file-label')">
+                    <!-- 💡 첨부파일 레이블 방식 통일 -->
                     <label for="chat-file" class="cursor-pointer bg-gray-700 hover:bg-gray-600 p-3 rounded-xl text-white transition"><i class="fa-solid fa-paperclip"></i></label>
+                    <input type="file" id="chat-file" class="hidden" multiple accept="image/*,.pdf" onchange="updateFileName('chat-file', 'chat-file-label')">
+                    
                     <div class="flex-grow flex flex-col relative">
                         <input type="text" id="chat-input" class="w-full bg-[#151922] border border-gray-600 text-white p-3 rounded-xl text-sm md:text-lg outline-none" placeholder="질문 입력..." onkeypress="if(event.key==='Enter') sendChat()">
                         <span id="chat-file-label" class="absolute -top-5 left-1 text-[10px] text-emerald-400 font-bold whitespace-nowrap"></span>
@@ -155,12 +158,15 @@
                     <p class="text-gray-400 text-xs md:text-sm mb-4">공책에 쓴 글이나 PDF 문서를 드래그해서 올려주세요. AI 국최가 글씨를 판독하고 직접 빨간펜으로 첨삭해 드립니다.</p>
                     <label class="block text-sm font-bold text-white mb-2">논제 또는 주제 (필수)</label>
                     <input type="text" id="essay-topic" placeholder="예: 화자의 태도를 요약하시오." class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded-xl text-white mb-6 outline-none focus:border-pink-500">
-                    <div id="dz-essay" class="drop-zone mb-6 py-6">
+                    
+                    <!-- 💡 네이티브 Label 구조 적용 -->
+                    <label for="essay-file" id="dz-essay" class="drop-zone mb-6 py-6 block cursor-pointer">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
-                        <p class="text-base text-gray-300 font-bold mb-1">파일 업로드 (클릭 또는 드래그)</p>
+                        <p class="text-base text-gray-300 font-bold mb-1">클릭하여 파일 선택 (또는 드래그)</p>
                         <p class="text-xs text-gray-500" id="dz-essay-label">지원 형식: JPG, PNG, PDF</p>
                         <input type="file" id="essay-file" accept="image/*,.pdf" class="hidden" onchange="updateFileName('essay-file', 'dz-essay-label')">
-                    </div>
+                    </label>
+                    
                     <button id="btn-submit-essay" onclick="submitEssayGrade()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-xl text-lg transition shadow-lg shadow-pink-600/30">AI 첨삭 시작하기</button>
                 </div>
                 <div id="essay-result-area" class="hidden bg-white p-4 md:p-8 rounded-xl shadow-lg fade-in text-black">
@@ -184,12 +190,14 @@
                 <div id="student-hw-list" class="space-y-4 mb-6"></div>
                 <div id="hw-submit-area" class="hidden bg-[#151922] border border-gray-700 p-6 rounded-xl">
                     <h3 class="text-xl font-bold text-white mb-4" id="hw-target-title">과제명</h3>
-                    <div id="dz-hw-submit" class="drop-zone mb-4 py-4">
+                    
+                    <label for="hw-file" id="dz-hw-submit" class="drop-zone mb-4 py-4 block cursor-pointer">
                         <i class="fa-solid fa-file-arrow-up text-2xl"></i>
-                        <p class="text-sm text-gray-300 font-bold mb-1">파일 드래그 앤 드롭</p>
+                        <p class="text-sm text-gray-300 font-bold mb-1">클릭하여 파일 선택 (또는 드래그)</p>
                         <p class="text-xs text-gray-500" id="dz-hw-submit-label">JPG, PNG, PDF</p>
                         <input type="file" id="hw-file" class="hidden" onchange="updateFileName('hw-file', 'dz-hw-submit-label')">
-                    </div>
+                    </label>
+                    
                     <button onclick="submitHomework()" class="bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg w-full">제출하고 정답 보기</button>
                     <div id="hw-result-area" class="hidden mt-6 p-4 bg-gray-800 rounded-lg border border-emerald-600 text-white"></div>
                 </div>
@@ -207,10 +215,8 @@
                 <div id="student-exam-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
-            <!-- 💡 모의고사 본게임 (전체화면 지원) -->
+            <!-- 💡 모의고사 본게임 -->
             <div id="prog-exam-room" class="prog-content w-full max-w-7xl mx-auto h-[88vh] lg:h-[85vh] relative">
-                
-                <!-- [시험 시작 전] 준비 및 세팅 모달 오버레이 -->
                 <div id="exam-prep-overlay" class="absolute inset-0 bg-[#1a1e29] z-40 flex items-center justify-center p-4">
                     <div class="bg-[#1e2430] border border-gray-700 p-6 lg:p-10 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-full">
                         <h2 id="prep-exam-title" class="text-2xl lg:text-3xl font-black text-white mb-4 border-b border-gray-700 pb-4">시험 제목</h2>
@@ -239,9 +245,7 @@
                     </div>
                 </div>
 
-                <!-- [시험 진행 중] 레이아웃 -->
                 <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full w-full">
-                    
                     <div id="pdf-viewer-section" class="w-full lg:w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-2 lg:p-4 flex flex-col h-[55vh] lg:h-full shadow-2xl relative transition-all duration-300">
                         <div class="flex justify-between items-center mb-2 pl-2">
                             <h2 id="room-exam-title-active" class="text-lg lg:text-xl font-bold text-white truncate w-1/2">시험지</h2>
@@ -300,14 +304,15 @@
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600/50 px-3 md:px-4 py-2 rounded">📝 과제/자료</button>
                     </div>
 
+                    <!-- 장부 관리 -->
                     <div id="admin-users" class="admin-tab-content">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div class="col-span-1 space-y-6">
                                 <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
                                     <h3 class="text-lg font-bold mb-4 text-emerald-400"><i class="fa-solid fa-user-plus mr-2"></i>학생 개별 등록</h3>
-                                    <input type="text" id="add-school" placeholder="학교" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm mb-2">
-                                    <input type="text" id="add-grade" placeholder="학년" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm mb-2">
-                                    <input type="text" id="add-name" placeholder="이름" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm mb-4">
+                                    <input type="text" id="add-school" placeholder="학교" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm mb-2 outline-none">
+                                    <input type="text" id="add-grade" placeholder="학년" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm mb-2 outline-none">
+                                    <input type="text" id="add-name" placeholder="이름" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm mb-4 outline-none">
                                     <button onclick="addSingleStudent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded w-full font-bold text-sm transition">개별 추가하기</button>
                                 </div>
                                 <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
@@ -315,18 +320,21 @@
                                         <span><i class="fa-solid fa-file-excel mr-2"></i>엑셀 일괄 등록</span>
                                         <button onclick="downloadExcelTemplate()" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs"><i class="fa-solid fa-download mr-1"></i>양식</button>
                                     </h3>
-                                    <div id="dz-excel" class="drop-zone mb-4 py-4">
-                                        <i class="fa-solid fa-file-csv text-2xl mb-1"></i><p class="text-xs text-gray-400" id="dz-excel-label">엑셀 파일 드래그</p>
+                                    
+                                    <label for="excel-file" id="dz-excel" class="drop-zone mb-4 py-4 block cursor-pointer">
+                                        <i class="fa-solid fa-file-csv text-2xl mb-1"></i>
+                                        <p class="text-xs text-gray-400" id="dz-excel-label">클릭하여 선택 또는 드래그</p>
                                         <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="hidden" onchange="updateFileName('excel-file', 'dz-excel-label')">
-                                    </div>
+                                    </label>
+                                    
                                     <button onclick="uploadExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full font-bold text-sm">업로드</button>
                                 </div>
                                 <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg max-h-72 flex flex-col">
                                     <h3 class="text-lg font-bold mb-4 text-white flex justify-between items-center">
                                         <span><i class="fa-solid fa-users mr-2"></i>명단 관리</span>
                                         <div class="flex gap-2">
-                                            <button onclick="deleteSelectedStudents()" class="bg-red-600 px-2 py-1 text-xs rounded text-white">삭제</button>
-                                            <button onclick="loadAdminStudents()" class="bg-gray-700 px-2 py-1 text-xs rounded">새로고침</button>
+                                            <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 px-2 py-1 text-xs rounded text-white transition">선택 삭제</button>
+                                            <button onclick="loadAdminStudents()" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 text-xs rounded transition">새로고침</button>
                                         </div>
                                     </h3>
                                     <div id="admin-student-list" class="space-y-2 overflow-y-auto flex-grow pr-2"></div>
@@ -344,21 +352,25 @@
                         </div>
                     </div>
 
+                    <!-- 지식 학습 -->
                     <div id="admin-knowledge" class="admin-tab-content">
                         <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
                             <h3 class="text-lg font-bold mb-2 text-emerald-400"><i class="fa-solid fa-brain mr-2"></i>원장님 자료 AI 다중 학습</h3>
-                            <input type="text" id="kb-title" placeholder="자료 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3">
-                            <textarea id="kb-content" class="w-full h-32 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4" placeholder="텍스트를 붙여넣거나 파일을 첨부하세요."></textarea>
-                            <div id="dz-kb" class="drop-zone mb-6">
+                            <input type="text" id="kb-title" placeholder="자료 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 outline-none">
+                            <textarea id="kb-content" class="w-full h-32 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="텍스트를 붙여넣거나 파일을 첨부하세요."></textarea>
+                            
+                            <label for="kb-files" id="dz-kb" class="drop-zone mb-6 block cursor-pointer">
                                 <i class="fa-solid fa-folder-tree"></i>
-                                <p class="text-base text-gray-300 font-bold mb-1">다중 파일 드래그 앤 드롭</p>
-                                <p class="text-xs text-gray-500" id="dz-kb-label">PDF, JPG, PNG 파일 여러 개 동시 선택 가능</p>
+                                <p class="text-base text-gray-300 font-bold mb-1">클릭하여 파일 선택 (다중 가능)</p>
+                                <p class="text-xs text-gray-500" id="dz-kb-label">PDF, JPG, PNG 지원</p>
                                 <input type="file" id="kb-files" multiple accept=".pdf, .jpg, .png" class="hidden" onchange="updateFileName('kb-files', 'dz-kb-label')">
-                            </div>
+                            </label>
+                            
                             <button id="btn-knowledge" onclick="uploadKnowledge()" class="bg-emerald-600 py-4 rounded-lg w-full font-bold text-white">저장 및 학습</button>
                         </div>
                     </div>
 
+                    <!-- 정밀 출제 -->
                     <div id="admin-generator" class="admin-tab-content">
                         <div class="bg-[#151922] border border-gray-700 p-6 rounded-lg">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
@@ -372,18 +384,20 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-5 gap-2 mb-4 text-center">
-                                <div><label class="text-xs text-red-400 block mb-1">킬러</label><input type="number" id="c-killer" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white"></div>
-                                <div><label class="text-xs text-orange-400 block mb-1">준킬러</label><input type="number" id="c-semi" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white"></div>
-                                <div><label class="text-xs text-yellow-400 block mb-1">상</label><input type="number" id="c-high" value="1" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white"></div>
-                                <div><label class="text-xs text-emerald-400 block mb-1">중</label><input type="number" id="c-mid" value="2" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white"></div>
-                                <div><label class="text-xs text-blue-400 block mb-1">하</label><input type="number" id="c-low" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white"></div>
+                                <div><label class="text-xs text-red-400 block mb-1">킬러</label><input type="number" id="c-killer" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none"></div>
+                                <div><label class="text-xs text-orange-400 block mb-1">준킬러</label><input type="number" id="c-semi" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none"></div>
+                                <div><label class="text-xs text-yellow-400 block mb-1">상</label><input type="number" id="c-high" value="1" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none"></div>
+                                <div><label class="text-xs text-emerald-400 block mb-1">중</label><input type="number" id="c-mid" value="2" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none"></div>
+                                <div><label class="text-xs text-blue-400 block mb-1">하</label><input type="number" id="c-low" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none"></div>
                             </div>
-                            <textarea id="gen-text" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4" placeholder="기준 지문 입력 (특정 문항만 원할 시 지시사항 포함)"></textarea>
+                            <textarea id="gen-text" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="기준 지문 입력 (특정 문항 추출 시 여기에 지시하세요)"></textarea>
                             <div class="mb-6 bg-[#1e2430] p-4 border border-gray-700 rounded-lg">
-                                <div id="dz-gen" class="drop-zone py-3">
-                                    <p class="text-sm text-gray-300 font-bold" id="dz-gen-label">참고 파일 드래그</p>
+                                
+                                <label for="gen-files" id="dz-gen" class="drop-zone py-3 block cursor-pointer">
+                                    <p class="text-sm text-gray-300 font-bold" id="dz-gen-label">클릭하여 참고 파일 선택</p>
                                     <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="hidden" onchange="updateGenFileVisuals()">
-                                </div>
+                                </label>
+                                
                                 <div id="gen-files-visual" class="flex flex-wrap gap-2 mt-2"></div>
                             </div>
                             <button onclick="generateStreamQuestions()" id="btn-generate" class="w-full bg-yellow-600 py-3 rounded-lg font-bold text-white mb-4">AI 정밀 출제</button>
@@ -397,66 +411,70 @@
                         </div>
                     </div>
 
-                    <div id="admin-lecture" class="admin-tab-content">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
-                                <h3 class="text-xl font-bold mb-4 text-purple-400">새 해설 강의 등록</h3>
-                                <input type="text" id="lec-title" placeholder="강의 제목" class="w-full bg-[#1e2430] p-3 rounded text-white mb-3">
-                                <textarea id="lec-desc" placeholder="강의 설명" class="w-full h-20 bg-[#1e2430] p-3 rounded text-white mb-3"></textarea>
-                                <input type="text" id="lec-url" placeholder="유튜브 URL" class="w-full bg-[#1e2430] p-3 rounded text-white mb-4 text-blue-400">
-                                <button onclick="createLecture()" class="w-full bg-purple-600 py-3 rounded-lg text-white font-bold">등록하기</button>
-                            </div>
-                            <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg h-[400px] lg:h-[600px] overflow-y-auto">
-                                <h3 class="text-lg font-bold mb-4 text-white">등록된 강의 목록</h3>
-                                <div id="admin-lecture-list" class="space-y-3"></div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <!-- 💡 모의고사 오픈 방 -->
                     <div id="admin-exam" class="admin-tab-content">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
                                 <h3 class="text-xl font-bold mb-4 text-white">새 모의고사 방 개설</h3>
-                                <input type="text" id="rt-title" placeholder="시험 제목" class="w-full bg-[#1e2430] p-3 rounded text-white mb-2">
-                                <input type="text" id="rt-objective" placeholder="이번 시험 목표 공지사항 (학생들에게 보입니다)" class="w-full bg-blue-900/30 border border-blue-500/50 p-3 rounded text-blue-100 mb-4 text-sm outline-none">
+                                <input type="text" id="rt-title" placeholder="시험 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-2 outline-none focus:border-blue-500">
+                                <input type="text" id="rt-objective" placeholder="이번 시험 목표 공지사항 (학생들에게 보입니다)" class="w-full bg-blue-900/30 border border-blue-500/50 p-3 rounded text-blue-100 mb-4 text-sm outline-none focus:border-blue-400">
                                 
                                 <div class="mb-4 bg-[#1e2430] p-4 rounded border border-gray-600">
                                     <label class="text-sm font-bold text-yellow-400 block mb-2">⏱️ 구간 타이머 (기본 세팅)</label>
                                     <div id="admin-section-board" class="space-y-1 mb-2"></div>
                                     <div class="flex gap-2 mb-2 overflow-x-auto whitespace-nowrap pb-1">
-                                        <button onclick="addAdminSection('공통(독서)', 35)" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 독서(35분)</button>
-                                        <button onclick="addAdminSection('공통(문학)', 25)" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 문학(25분)</button>
-                                        <button onclick="addAdminSection('선택과목', 15)" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 선택(15분)</button>
-                                        <button onclick="addAdminSection('마킹/검토', 5)" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 마킹(5분)</button>
+                                        <button onclick="addAdminSection('공통(독서)', 35)" type="button" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 독서(35분)</button>
+                                        <button onclick="addAdminSection('공통(문학)', 25)" type="button" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 문학(25분)</button>
+                                        <button onclick="addAdminSection('선택과목', 15)" type="button" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 선택(15분)</button>
+                                        <button onclick="addAdminSection('마킹/검토', 5)" type="button" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 text-xs rounded transition">+ 마킹(5분)</button>
                                     </div>
                                     <div class="flex gap-2">
-                                        <input type="text" id="sec-name" placeholder="직접입력(예: 문법)" class="w-1/2 bg-gray-800 p-2 rounded text-white text-xs">
-                                        <input type="number" id="sec-time" placeholder="분" class="w-1/4 bg-gray-800 p-2 rounded text-white text-xs text-center">
-                                        <button onclick="addAdminSection()" class="w-1/4 bg-yellow-600 text-white text-xs rounded font-bold">추가</button>
+                                        <input type="text" id="sec-name" placeholder="직접입력(예: 문법)" class="w-1/2 bg-gray-800 p-2 rounded text-white text-xs outline-none focus:border-blue-500 border border-transparent">
+                                        <input type="number" id="sec-time" placeholder="분" class="w-1/4 bg-gray-800 p-2 rounded text-white text-xs text-center outline-none focus:border-blue-500 border border-transparent">
+                                        <button onclick="addAdminSection()" type="button" class="w-1/4 bg-yellow-600 hover:bg-yellow-700 text-white text-xs rounded font-bold transition">추가</button>
                                     </div>
                                 </div>
                                 <div class="mb-4">
-                                    <div id="dz-exam" class="drop-zone py-3">
-                                        <p class="text-sm text-gray-300 font-bold" id="dz-exam-label">학생용 PDF 시험지 드래그</p>
+                                    <!-- 💡 확실하게 클릭되도록 Label과 cursor-pointer 적용 -->
+                                    <label for="rt-pdf" id="dz-exam" class="drop-zone py-4 block cursor-pointer">
+                                        <i class="fa-solid fa-file-pdf text-2xl mb-1 text-gray-500"></i>
+                                        <p class="text-sm text-gray-300 font-bold" id="dz-exam-label">클릭하여 PDF 선택 (또는 드래그)</p>
                                         <input type="file" id="rt-pdf" accept=".pdf" class="hidden" onchange="updateFileName('rt-pdf', 'dz-exam-label')">
-                                    </div>
+                                    </label>
                                 </div>
                                 <div class="mb-4 border-t border-gray-700 pt-4">
-                                    <input type="text" id="rt-video" placeholder="해설 강의 URL" class="w-full bg-[#1e2430] p-2 rounded text-white mb-2 text-sm">
-                                    <textarea id="rt-exp" placeholder="상세 해설지 텍스트" class="w-full h-16 bg-[#1e2430] p-2 rounded text-white text-sm"></textarea>
+                                    <input type="text" id="rt-video" placeholder="해설 강의 URL" class="w-full bg-[#1e2430] border border-gray-600 p-2 rounded text-white mb-2 text-sm outline-none">
+                                    <textarea id="rt-exp" placeholder="상세 해설지 텍스트" class="w-full h-16 bg-[#1e2430] border border-gray-600 p-2 rounded text-white text-sm outline-none"></textarea>
                                 </div>
                                 <div class="mb-4 bg-[#1e2430] p-4 rounded border border-gray-600">
                                     <div class="flex gap-2 mb-2">
-                                        <input type="number" id="rt-qcount" placeholder="문항수" class="w-2/3 bg-gray-800 p-2 rounded text-white text-sm">
-                                        <button onclick="buildAdminOMR()" class="w-1/3 bg-gray-600 text-white rounded font-bold text-sm">OMR 생성</button>
+                                        <input type="number" id="rt-qcount" placeholder="문항수 (입력 필수)" class="w-2/3 bg-gray-800 border border-gray-600 p-2 rounded text-white text-sm outline-none">
+                                        <button onclick="buildAdminOMR()" type="button" class="w-1/3 bg-gray-600 hover:bg-gray-500 text-white rounded font-bold text-sm transition">OMR 생성</button>
                                     </div>
                                     <div id="admin-omr-board" class="space-y-3 h-48 overflow-y-auto pr-1"></div>
                                 </div>
-                                <button onclick="setRealtimeExam()" class="w-full bg-indigo-600 py-3 rounded-lg text-white font-bold">오픈하기</button>
+                                <button onclick="setRealtimeExam()" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg text-white font-bold transition">오픈하기</button>
                             </div>
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] lg:h-[800px] overflow-y-auto">
-                                <h3 class="text-lg font-bold mb-4 text-white">열려있는 모의고사 방</h3>
+                                <h3 class="text-lg font-bold mb-4 text-white flex justify-between">열려있는 모의고사 방 <button onclick="loadAdminExams()" class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition">새로고침</button></h3>
                                 <div id="admin-exam-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 해설 강의 및 게시판 -->
+                    <div id="admin-lecture" class="admin-tab-content text-gray-300">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="bg-[#151922] p-8 border border-gray-700 rounded-lg">
+                                <h3 class="text-2xl font-bold mb-6 text-purple-400"><i class="fa-solid fa-video mr-2"></i>새 해설 강의 등록</h3>
+                                <input type="text" id="lec-title" placeholder="강의 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none">
+                                <textarea id="lec-desc" placeholder="강의 설명" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none"></textarea>
+                                <input type="text" id="lec-url" placeholder="유튜브 URL" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-6 text-blue-400 outline-none">
+                                <button onclick="createLecture()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl transition">강의 등록하기</button>
+                            </div>
+                            <div class="bg-[#151922] p-8 border border-gray-700 rounded-lg h-[600px] overflow-y-auto">
+                                <h3 class="text-xl font-bold mb-6 text-white flex justify-between">등록된 해설 강의 <button onclick="loadAdminLectures()" class="text-xs bg-gray-700 px-2 py-1 rounded transition hover:bg-gray-600">새로고침</button></h3>
+                                <div id="admin-lecture-list" class="space-y-4"></div>
                             </div>
                         </div>
                     </div>
@@ -465,24 +483,28 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
                                 <h3 class="text-xl font-bold mb-4 text-emerald-400">신규 과제 등록</h3>
-                                <input type="text" id="hw-title" placeholder="과제명" class="w-full bg-[#1e2430] p-3 rounded text-white mb-3">
-                                <textarea id="hw-desc" placeholder="과제 설명" class="w-full h-16 bg-[#1e2430] p-3 rounded text-white mb-3"></textarea>
-                                <textarea id="hw-ans-text" placeholder="정답 텍스트" class="w-full h-16 bg-[#1e2430] p-3 rounded text-white mb-3"></textarea>
-                                <div id="dz-hw-ans" class="drop-zone py-3 mb-4">
-                                    <p class="text-sm text-gray-300" id="dz-hw-ans-label">해설 파일 드래그</p>
+                                <input type="text" id="hw-title" placeholder="과제명" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 outline-none">
+                                <textarea id="hw-desc" placeholder="과제 설명" class="w-full h-16 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 outline-none"></textarea>
+                                <textarea id="hw-ans-text" placeholder="정답 텍스트" class="w-full h-16 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 outline-none"></textarea>
+                                
+                                <label for="hw-ans-file" id="dz-hw-ans" class="drop-zone py-3 mb-4 block cursor-pointer">
+                                    <p class="text-sm text-gray-300" id="dz-hw-ans-label">클릭하여 해설 파일 선택</p>
                                     <input type="file" id="hw-ans-file" class="hidden" onchange="updateFileName('hw-ans-file', 'dz-hw-ans-label')">
-                                </div>
-                                <button onclick="createHomework()" class="w-full bg-emerald-600 py-3 rounded text-white font-bold">배포</button>
+                                </label>
+                                
+                                <button onclick="createHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 rounded text-white font-bold transition">배포</button>
                             </div>
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
                                 <h3 class="text-xl font-bold mb-4 text-gray-200">게시판 자료 등록</h3>
-                                <input type="text" id="bd-title" placeholder="게시글 제목" class="w-full bg-[#1e2430] p-3 rounded text-white mb-3">
-                                <textarea id="bd-desc" placeholder="내용" class="w-full h-24 bg-[#1e2430] p-3 rounded text-white mb-3"></textarea>
-                                <div id="dz-bd" class="drop-zone py-3 mb-4">
-                                    <p class="text-sm text-gray-300" id="dz-bd-label">자료 파일 드래그</p>
+                                <input type="text" id="bd-title" placeholder="게시글 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 outline-none">
+                                <textarea id="bd-desc" placeholder="내용" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 outline-none"></textarea>
+                                
+                                <label for="bd-file" id="dz-bd" class="drop-zone py-3 mb-4 block cursor-pointer">
+                                    <p class="text-sm text-gray-300" id="dz-bd-label">클릭하여 자료 파일 선택</p>
                                     <input type="file" id="bd-file" class="hidden" onchange="updateFileName('bd-file', 'dz-bd-label')">
-                                </div>
-                                <button onclick="createBoard()" class="w-full bg-gray-600 py-3 rounded text-white font-bold">올리기</button>
+                                </label>
+                                
+                                <button onclick="createBoard()" class="w-full bg-gray-600 hover:bg-gray-500 py-3 rounded text-white font-bold transition">올리기</button>
                             </div>
                         </div>
                     </div>
@@ -491,14 +513,14 @@
         </div>
     </div>
 
-    <!-- 모달창 -->
+    <!-- 모달창들 (로그인, 수정) -->
     <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-sm shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">학생 정보 수정</h3>
             <input type="hidden" id="edit-old-name">
-            <input type="text" id="edit-school" class="w-full bg-[#151922] p-3 rounded text-white mb-3 outline-none">
-            <input type="text" id="edit-grade" class="w-full bg-[#151922] p-3 rounded text-white mb-3 outline-none">
-            <input type="text" id="edit-name" class="w-full bg-[#151922] p-3 rounded text-white mb-5 outline-none">
+            <input type="text" id="edit-school" class="w-full bg-[#151922] border border-gray-600 p-3 rounded text-white mb-3 outline-none">
+            <input type="text" id="edit-grade" class="w-full bg-[#151922] border border-gray-600 p-3 rounded text-white mb-3 outline-none">
+            <input type="text" id="edit-name" class="w-full bg-[#151922] border border-gray-600 p-3 rounded text-white mb-5 outline-none">
             <div class="flex gap-2">
                 <button onclick="submitEditStudent()" class="flex-1 bg-blue-600 py-3 rounded font-bold text-white">저장</button>
                 <button onclick="closeModal('edit-student-modal')" class="flex-1 bg-gray-600 py-3 rounded font-bold text-white">취소</button>
@@ -516,7 +538,7 @@
                 <input type="text" id="login-name" placeholder="이름 (원장님은 본인 이름)" class="w-full bg-transparent border-b border-gray-600 p-3 text-white outline-none">
             </div>
             <input type="password" id="login-pw" placeholder="원장님 전용 스텔스 키 (학생은 비움)" class="w-full bg-[#151922] border border-gray-700 p-4 rounded-xl text-white outline-none w-full mb-4">
-            <button id="login-btn" onclick="login()" class="w-full bg-blue-600 py-4 rounded-xl text-white font-bold text-xl">입장하기</button>
+            <button id="login-btn" onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl text-white font-bold text-xl transition">입장하기</button>
         </div>
     </div>
 
@@ -538,6 +560,7 @@
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null;
 
+        // 💡 드래그 앤 드롭 유지 및 <label> 클릭 충돌 방지
         function setupDragAndDrop(dropZoneId, inputId) {
             const dropZone = document.getElementById(dropZoneId);
             const input = document.getElementById(inputId);
@@ -548,7 +571,6 @@
                 e.preventDefault(); dropZone.classList.remove('dragover');
                 if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change')); }
             });
-            dropZone.addEventListener('click', () => input.click());
         }
 
         function updateFileName(inputId, labelId) {
@@ -559,7 +581,7 @@
                 label.innerText = files.length === 1 ? files[0].name : `${files[0].name} 외 ${files.length - 1}개 첨부`;
                 label.classList.replace('text-gray-500', 'text-emerald-400');
             } else {
-                label.innerText = "파일을 드래그하거나 클릭하세요";
+                label.innerText = "클릭하여 파일 선택 (또는 드래그)";
                 label.classList.replace('text-emerald-400', 'text-gray-500');
             }
         }
@@ -664,11 +686,7 @@
             if(!nm && !pw) return alert("이름을 입력해주세요!");
             document.getElementById('login-btn').innerText = "인증 중...";
             
-            const formData = new FormData();
-            formData.append("school", sch); formData.append("grade", gr); formData.append("student_name", nm); formData.append("admin_password", pw);
-
             try {
-                // 로그인 시 JSON -> fetch FormData 전송 통일
                 const res = await fetch(`${API_URL}/api/auth`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ school: sch, grade: gr, student_name: nm, admin_password: pw }) });
                 const data = await res.json();
                 if (data.success) {
@@ -682,7 +700,7 @@
         function logout() { localStorage.removeItem('logyedu_user'); location.reload(); }
 
         // =====================================
-        // 관리자 (장부, 엑셀, 지식, 삭제 등)
+        // 💡 관리자 (장부, 엑셀, 지식, 삭제 등)
         // =====================================
         function downloadExcelTemplate() {
             const ws = XLSX.utils.json_to_sheet([{ school: "미강고", grade: "1학년", name: "홍길동" }]);
@@ -804,7 +822,81 @@
         }
 
         // =====================================
-        // 💡 PDF.js 지연 로딩 (무한 로딩/멈춤 완전 해결 및 비동기 처리)
+        // 💡 관리자용 구간 세팅 및 OMR (오류 보강)
+        // =====================================
+        let adminExamSections = [];
+        
+        function addAdminSection(presetName, presetTime) {
+            const name = typeof presetName === 'string' ? presetName : document.getElementById('sec-name').value.trim();
+            const timeStr = typeof presetTime === 'number' ? presetTime : document.getElementById('sec-time').value;
+            const time = parseInt(timeStr);
+            
+            if(!name || isNaN(time) || time <= 0) {
+                alert("구간명과 시간을 올바르게 입력해주세요!");
+                return;
+            }
+            
+            adminExamSections.push({name: name, time: time}); 
+            
+            if(typeof presetName !== 'string') {
+                document.getElementById('sec-name').value = ''; 
+                document.getElementById('sec-time').value = ''; 
+            }
+            renderAdminSections();
+        }
+        
+        function renderAdminSections() {
+            const board = document.getElementById('admin-section-board'); board.innerHTML = ""; let total = 0;
+            adminExamSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<span class="bg-yellow-900/50 text-yellow-200 px-2 py-1 rounded text-xs mr-2 mb-1 inline-block">${s.name}(${s.time}분) <button type="button" onclick="adminExamSections.splice(${idx},1); renderAdminSections()" class="text-red-400 ml-1">X</button></span>`; });
+            if(total > 0) board.innerHTML += `<div class="text-xs text-emerald-400 mt-1 font-bold">총 ${total}분</div>`;
+        }
+
+        let adminExamQuestions = [];
+        function buildAdminOMR() {
+            const countStr = document.getElementById('rt-qcount').value;
+            const count = parseInt(countStr);
+            if(isNaN(count) || count <= 0) return alert("문항수를 먼저 입력해주세요!");
+            
+            const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2}));
+            for(let i=0; i<count; i++) {
+                let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`;
+                for(let j=1; j<=5; j++) row += `<div class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</div>`;
+                row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs outline-none"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs outline-none"></div></div>`;
+                board.innerHTML += row;
+            }
+        }
+        function setAdminOmr(rowIdx, ans) {
+            adminExamQuestions[rowIdx].ans = ans; const circles = document.getElementById(`a-omr-row-${rowIdx}`).children;
+            for(let i=0; i<5; i++) { circles[i].classList.remove('active'); if(i+1 === ans) circles[i].classList.add('active'); }
+        }
+
+        async function setRealtimeExam() {
+            const title = document.getElementById('rt-title').value; 
+            const objective = document.getElementById('rt-objective').value; 
+            const videoUrl = document.getElementById('rt-video').value; const expText = document.getElementById('rt-exp').value; const fileInput = document.getElementById('rt-pdf');
+            if(!title) return alert("시험 제목을 입력해주세요!");
+            if(adminExamSections.length===0) return alert("구간(타이머)을 최소 1개 이상 추가해주세요!");
+            if(adminExamQuestions.length===0) return alert("OMR 생성 버튼을 누르고 정답을 마킹해주세요!");
+            if(adminExamQuestions.some(q=>q.ans==="")) return alert("모든 문항의 정답을 마킹해주세요!");
+            if(fileInput.files.length===0) return alert("학생들이 풀 PDF 시험지를 첨부해주세요!");
+
+            const formData = new FormData(); 
+            formData.append("title", title); 
+            formData.append("objective", objective);
+            formData.append("exam_data", JSON.stringify({ sections: adminExamSections, questions: adminExamQuestions })); 
+            formData.append("video_url", videoUrl); formData.append("explanation_text", expText); formData.append("file", fileInput.files[0]);
+            try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', body: formData }); alert("개설 완료"); loadAdminExams(); } catch(e) { alert("통신 오류"); }
+        }
+        async function loadAdminExams() {
+            try {
+                const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('admin-exam-list'); container.innerHTML = '';
+                if(data.success && data.exams.length > 0) { data.exams.forEach(e => { container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${e.title}</span><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition">삭제</button></div>`; }); }
+            } catch(e) {}
+        }
+        async function deleteExam(title) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){} }
+
+        // =====================================
+        // 💡 PDF.js 지연 로딩 및 실시간 모의고사
         // =====================================
         let pdfDoc = null; let isDrawing = false;
         
@@ -819,7 +911,6 @@
 
                 const wrapperWidth = document.getElementById('pdf-render-wrapper').clientWidth;
 
-                // 💡 화면 멈춤을 방지하기 위한 Intersection Observer (사용자가 스크롤해서 볼 때만 렌더링)
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
@@ -831,7 +922,6 @@
                     });
                 }, { root: document.getElementById('pdf-render-wrapper'), rootMargin: '800px 0px' });
 
-                // 껍데기(Container)만 먼저 순식간에 만들기
                 for(let i=1; i<=pdfDoc.numPages; i++) {
                     const pageContainer = document.createElement('div');
                     pageContainer.className = 'relative mb-4 w-full pdf-page-container bg-white shadow';
@@ -847,9 +937,8 @@
 
                     innerContainer.appendChild(pageContainer);
                     
-                    // 1번 페이지는 즉시 렌더링
                     if (i === 1) renderPage(1, pageContainer, wrapperWidth);
-                    else observer.observe(pageContainer); // 나머지는 스크롤 감지
+                    else observer.observe(pageContainer); 
                 }
             } catch(err) {
                 document.getElementById('pdf-loading').innerHTML = 'PDF 로딩 오류. 다시 시도해주세요.';
@@ -952,24 +1041,189 @@
             const drawCanvases = document.querySelectorAll('.pdf-draw-canvas');
             drawCanvases.forEach(c => { c.getContext('2d').clearRect(0, 0, c.width, c.height); });
         }
-        
+
+        // =====================================
+        // 모의고사 진행 엔진
+        // =====================================
+        async function loadStudentExams() {
+            try {
+                const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('student-exam-list'); container.innerHTML = '';
+                if(data.success && data.exams.length > 0) {
+                    data.exams.forEach(e => {
+                        const examDataStr = (e.exam_data || "").replace(/"/g, '&quot;');
+                        const objStr = (e.objective || "").replace(/"/g, '&quot;').replace(/'/g, '\\\'');
+                        container.innerHTML += `<div onclick="prepExamRoom('${e.title}', '${e.pdf_url}', '${examDataStr}', '${objStr}')" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`;
+                    });
+                } else container.innerHTML = "<p class='text-sm text-gray-500'>현재 진행 중인 모의고사가 없습니다.</p>";
+            } catch(e) {}
+        }
+
+        let examTimerInterval; 
+        let studentOmrAnswers = []; 
+        let currentExamTitle = ""; 
+        let currentExamData = null; 
+        let studentSections = [];
+        let currSecIdx = 0; let secAllocated = 0; let secSpent = 0; let totalSavedSec = 0;
+        let isExamActive = false; let isExamPaused = false;
+        let examAlerts = []; 
+
+        function prepExamRoom(title, pdfUrl, examDataStr, objectiveStr) {
+            openProgram('exam-room');
+            currentExamTitle = title;
+            document.getElementById('room-exam-title-active').innerText = title;
+            document.getElementById('exam-result-report').style.display = 'none';
+            document.getElementById('btn-submit-exam').style.display = 'none';
+            document.getElementById('report-action-buttons').style.display = 'none';
+            
+            currentExamData = JSON.parse(examDataStr.replace(/&quot;/g, '"'));
+            const objective = objectiveStr.replace(/&quot;/g, '"');
+            
+            document.getElementById('prep-exam-title').innerText = title;
+            document.getElementById('prep-objective-text').innerText = objective || "공지사항이 없습니다.";
+            document.getElementById('prep-target-score').value = '';
+            
+            studentSections = JSON.parse(JSON.stringify(currentExamData.sections));
+            renderStudentPrepSections();
+            
+            document.getElementById('exam-prep-overlay').style.display = 'flex';
+            
+            if(pdfUrl) renderPDF(API_URL + pdfUrl);
+        }
+
+        function renderStudentPrepSections() {
+            const board = document.getElementById('prep-sections-board');
+            board.innerHTML = ""; let total = 0;
+            studentSections.forEach((s, idx) => {
+                total += s.time;
+                board.innerHTML += `
+                <div class="flex items-center gap-2 mb-2 bg-[#1e2430] p-2 rounded">
+                    <input type="text" value="${s.name}" onchange="studentSections[${idx}].name=this.value" class="w-1/2 bg-transparent text-white text-sm outline-none border-b border-gray-600">
+                    <input type="number" value="${s.time}" onchange="studentSections[${idx}].time=parseInt(this.value)" class="w-1/4 bg-transparent text-emerald-400 font-bold text-center outline-none border-b border-gray-600">분
+                    <button onclick="studentSections.splice(${idx},1); renderStudentPrepSections()" class="text-red-400 ml-auto"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+            });
+            board.innerHTML += `<div class="text-right text-emerald-400 text-sm font-bold mt-2">총 예정 시간: ${total}분</div>`;
+        }
+
+        function addStudentSection() { studentSections.push({name: "새 구간", time: 10}); renderStudentPrepSections(); }
+
+        function startExamReal() {
+            const targetScore = document.getElementById('prep-target-score').value;
+            if(!targetScore) return alert("나의 목표 점수를 입력해주세요!");
+            if(studentSections.length === 0) return alert("구간이 하나 이상 있어야 합니다.");
+            
+            document.getElementById('active-target-score').innerText = targetScore;
+            
+            const questions = currentExamData.questions; 
+            studentOmrAnswers = Array(questions.length).fill("");
+            let omrHtml = '<div class="space-y-2">';
+            questions.forEach((q, i) => {
+                omrHtml += `<div class="flex items-center gap-2 bg-[#151922] p-1.5 rounded border border-gray-700"><span class="text-gray-400 font-bold text-xs w-4 text-right">${i+1}</span><div class="flex gap-1" id="s-omr-row-${i}">`;
+                for(let j=1; j<=5; j++) { omrHtml += `<div class="omr-circle bg-[#1e2430] w-6 h-6 text-[10px]" onclick="setStudentOmr(${i}, ${j})">${j}</div>`; }
+                omrHtml += `</div><span class="text-[10px] text-yellow-400 font-bold ml-auto pr-1">(${q.score}점)</span></div>`;
+            });
+            omrHtml += '</div>';
+            document.getElementById('exam-omr-container').innerHTML = omrHtml;
+
+            document.getElementById('exam-prep-overlay').style.display = 'none';
+
+            currSecIdx = 0; secSpent = 0; totalSavedSec = 0; isExamActive = true; isExamPaused = false;
+            
+            loadCurrentSection();
+            clearInterval(examTimerInterval);
+            examTimerInterval = setInterval(engineTick, 1000);
+            
+            playBeep(); 
+        }
+
+        function loadCurrentSection() {
+            if(currSecIdx >= studentSections.length) {
+                document.getElementById('active-section-name').innerText = "시험 완료"; document.getElementById('active-section-timer').innerText = "00:00";
+                document.getElementById('active-overtime-label').style.display = 'none'; document.getElementById('btn-next-section').style.display = 'none';
+                document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'block';
+                isExamActive = false; return;
+            }
+            secAllocated = studentSections[currSecIdx].time * 60; secSpent = 0;
+            document.getElementById('active-section-name').innerText = `[${currSecIdx+1}/${studentSections.length}] ${studentSections[currSecIdx].name}`;
+            const btnNext = document.getElementById('btn-next-section'); btnNext.style.display = 'block';
+            if(currSecIdx === studentSections.length - 1) { btnNext.innerHTML = '종료 및 제출 <i class="fa-solid fa-check ml-1"></i>'; btnNext.classList.replace('bg-blue-600', 'bg-indigo-600'); } 
+            else { btnNext.innerHTML = '다음 구간 <i class="fa-solid fa-forward ml-1"></i>'; btnNext.classList.replace('bg-indigo-600', 'bg-blue-600'); }
+            document.getElementById('btn-pause').style.display = 'block';
+            updateEngineUI();
+        }
+
+        function togglePauseExam() {
+            if(!isExamActive) return; isExamPaused = !isExamPaused; const btn = document.getElementById('btn-pause');
+            if(isExamPaused) { btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i>재개하기'; btn.classList.replace('bg-gray-700', 'bg-yellow-600'); } 
+            else { btn.innerHTML = '<i class="fa-solid fa-pause mr-1"></i>일시정지'; btn.classList.replace('bg-yellow-600', 'bg-gray-700'); }
+        }
+
+        function nextExamSection() {
+            if(!isExamActive) return; if(secSpent < secAllocated) totalSavedSec += (secAllocated - secSpent);
+            if(currSecIdx === studentSections.length - 1) submitRealtimeExam(); else { currSecIdx++; loadCurrentSection(); }
+        }
+
+        function engineTick() {
+            if(!isExamActive || isExamPaused) return; secSpent++;
+            if(secSpent === secAllocated) { playBeep(); showToast(`⏰ [${studentSections[currSecIdx].name}] 목표 시간 종료!`); }
+            updateEngineUI();
+        }
+
+        function updateEngineUI() {
+            let diff = secAllocated - secSpent; const timerEl = document.getElementById('active-section-timer'); const overLabel = document.getElementById('active-overtime-label');
+            if(diff >= 0) { timerEl.classList.replace('text-red-500', 'text-emerald-400'); overLabel.style.display = 'none'; } 
+            else { diff = Math.abs(diff); timerEl.classList.replace('text-emerald-400', 'text-red-500'); overLabel.style.display = 'block'; }
+            const m = Math.floor(diff / 60).toString().padStart(2, '0'); const s = (diff % 60).toString().padStart(2, '0');
+            timerEl.innerText = (secAllocated - secSpent < 0 ? "+" : "") + `${m}:${s}`;
+            const sm = Math.floor(totalSavedSec / 60).toString().padStart(2, '0'); const ss = (totalSavedSec % 60).toString().padStart(2, '0');
+            document.getElementById('active-saved-time').innerText = `${sm}:${ss}`;
+        }
+
+        async function submitRealtimeExam() {
+            clearInterval(examTimerInterval); isExamActive = false;
+            try {
+                const res = await fetch(`${API_URL}/api/exam/submit`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ school: currentUser.school, grade: currentUser.grade, student_name: currentUser.name, title: currentExamTitle, answers: studentOmrAnswers }) });
+                const data = await res.json();
+                if(data.success) { 
+                    document.getElementById('exam-omr-container').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'none'; document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-next-section').style.display = 'none';
+                    const reportEl = document.getElementById('exam-result-report'); reportEl.style.display = 'block'; document.getElementById('report-action-buttons').style.display = 'flex';
+                    let html = `<div class="bg-gray-800 p-4 rounded-xl border border-emerald-500 shadow-lg text-white fade-in"><h3 class="text-xl font-black text-center mb-4 text-emerald-400">📊 분석 리포트</h3><div class="text-center mb-6"><span class="text-4xl lg:text-5xl font-black">${data.score}</span>점</div><div class="bg-[#151922] p-3 rounded-lg mb-4 border border-gray-700"><h4 class="font-bold text-yellow-400 mb-2 text-sm">오답 분석</h4><div class="space-y-1 text-xs"><div class="flex justify-between"><span>A(80%↑)</span><span class="text-red-400">${data.wrong_by_diff.A}개 틀림</span></div><div class="flex justify-between"><span>B(65~79%)</span><span class="text-red-400">${data.wrong_by_diff.B}개 틀림</span></div><div class="flex justify-between"><span>C(45~64%)</span><span class="text-red-400">${data.wrong_by_diff.C}개 틀림</span></div><div class="flex justify-between"><span>D(20~44%)</span><span class="text-gray-400">${data.wrong_by_diff.D}개 틀림</span></div><div class="flex justify-between"><span>E(킬러)</span><span class="text-gray-400">${data.wrong_by_diff.E}개 틀림</span></div></div></div><div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500 mb-4"><h4 class="font-bold text-indigo-300 mb-2 text-sm">나의 잠재력</h4><p class="text-xs text-indigo-100 mb-1">A,B 실수 제외 시 👉 <span class="text-sm font-black bg-indigo-600 px-1 rounded">${data.potential_ab}점</span></p><p class="text-xs text-indigo-100">기본기(C) 정복 시 👉 <span class="text-sm font-black bg-indigo-500 px-1 rounded">${data.potential_abc}점</span></p></div>`;
+                    if(data.video_url || data.explanation_text) {
+                        html += `<div class="border-t border-gray-700 pt-4"><h4 class="text-sm font-bold text-white mb-2 text-purple-400">해설 자료</h4>`;
+                        if(data.video_url) html += `<a href="${data.video_url}" target="_blank" class="block bg-red-600 text-center py-2 rounded text-white font-bold mb-2 text-xs"><i class="fa-brands fa-youtube mr-1"></i>강의 시청</a>`;
+                        if(data.explanation_text) html += `<div class="bg-gray-900 p-3 rounded border border-gray-700 text-xs text-gray-300 whitespace-pre-wrap">${data.explanation_text}</div>`;
+                        html += `</div>`;
+                    }
+                    html += `</div>`; reportEl.innerHTML = html;
+                    
+                    isDrawing = false; const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); drawCanvases.forEach(c => c.style.display = 'none');
+                    document.getElementById('btn-draw').classList.replace('bg-red-600', 'bg-blue-600'); document.getElementById('btn-draw').innerHTML = '<i class="fa-solid fa-pen mr-1"></i>필기 켜기';
+                    document.getElementById('btn-clear').style.display = 'none'; document.getElementById('draw-hint').style.display = 'none';
+                }
+            } catch(e) { alert("서버 오류"); }
+        }
+
         // ==========================================
-        // 나머지 기타 기능들 생략 (유지)
+        // 기타 모듈 (과제/게시판/출제) 생략 없이 유지
         // ==========================================
         async function createLecture() { const t = document.getElementById('lec-title').value; const d = document.getElementById('lec-desc').value; const u = document.getElementById('lec-url').value; if(!t || !u) return; try { await fetch(`${API_URL}/api/admin/lecture`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: t, desc: d, video_url: u }) }); loadAdminLectures(); } catch(e) {} }
         async function loadAdminLectures() { try { const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('admin-lecture-list'); container.innerHTML = ''; if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2"><span class="text-white text-sm truncate">${l.title}</span><button onclick="deleteLecture('${l.id}')" class="bg-red-900/50 text-white px-2 py-1 rounded text-xs">삭제</button></div>`; }); } } catch(e) {} }
         async function deleteLecture(id) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/lecture/${id}`, {method:'DELETE'}); loadAdminLectures(); } catch(e){} }
         async function loadLectures() { try { const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('student-lecture-list'); container.innerHTML = ''; if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="bg-[#151922] p-6 rounded-lg border border-gray-700 flex flex-col"><h3 class="text-lg font-bold text-white mb-2">${l.title}</h3><p class="text-xs text-gray-400 mb-4 flex-grow">${l.desc}</p><a href="${l.video_url}" target="_blank" class="bg-purple-600 py-3 rounded text-center text-white font-bold"><i class="fa-solid fa-play mr-2"></i>시청</a></div>`; }); } } catch(e){} }
+
         function updateGenFileVisuals() { const files = document.getElementById('gen-files').files; const container = document.getElementById('gen-files-visual'); container.innerHTML = ""; for(let i=0; i<files.length; i++) container.innerHTML += `<span class="bg-gray-800 text-emerald-400 text-[10px] px-2 py-1 rounded"><i class="fa-solid fa-check mr-1"></i>${files[i].name}</span>`; }
         async function generateStreamQuestions() { const formData = new FormData(); formData.append("q_mode", "신규 출제"); formData.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb => cb.value).join(', ')); formData.append("cnt_killer", document.getElementById('c-killer').value); formData.append("cnt_semi", document.getElementById('c-semi').value); formData.append("cnt_high", document.getElementById('c-high').value); formData.append("cnt_mid", document.getElementById('c-mid').value); formData.append("cnt_low", document.getElementById('c-low').value); formData.append("q_text", document.getElementById('gen-text').value); const files = document.getElementById('gen-files').files; for (let i = 0; i < files.length; i++) formData.append("files", files[i]); document.getElementById('gen-result-area').style.display = 'block'; const resultBox = document.getElementById('gen-result-text'); resultBox.value = ""; try { const res = await fetch(`${API_URL}/api/admin/generate_stream`, { method: 'POST', body: formData }); const reader = res.body.getReader(); const decoder = new TextDecoder("utf-8"); while(true) { const {done, value} = await reader.read(); if(done) break; resultBox.value += decoder.decode(value, {stream: true}); resultBox.scrollTop = resultBox.scrollHeight; } } catch (e) {} }
         async function deployFromGenerator() { const title = document.getElementById('rt-title').value || "자동생성_모의고사"; const raw = document.getElementById('gen-result-text').value; try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: title, time_limit: 45, answer_key: "텍스트 자체내장", raw_text: raw }) }); alert("배포 완료"); } catch(e) {} }
         function printGeneratedPDF() { const text = document.getElementById('gen-result-text').value; const printWindow = window.open('', '', 'width=800,height=900'); printWindow.document.write(`<html><head><title>문제 출력</title></head><body style="font-family:sans-serif;padding:30px;"><pre style="white-space:pre-wrap;font-size:16px;">${text}</pre><script>window.print();<\/script></body></html>`); printWindow.document.close(); }
+
         async function createHomework() { const t = document.getElementById('hw-title').value; const d = document.getElementById('hw-desc').value; const a = document.getElementById('hw-ans-text').value; const f = document.getElementById('hw-ans-file').files[0]; if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); fd.append("answer_text", a); if(f) fd.append("answer_file", f); try { await fetch(`${API_URL}/api/admin/homework`, {method:'POST', body:fd}); alert("배포 완료"); } catch(e){} }
         async function loadHomeworks() { try { const res = await fetch(`${API_URL}/api/homeworks`); const data = await res.json(); const container = document.getElementById('student-hw-list'); container.innerHTML = ''; if(data.success && data.homeworks.length > 0) { data.homeworks.forEach(h => { container.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 flex justify-between items-center text-sm"><div><h3 class="font-bold text-white">${h.title}</h3></div><button onclick="openSubmitHomework('${h.title}')" class="bg-emerald-600 px-3 py-1 rounded text-white">제출</button></div>`; }); } } catch(e){} }
         function openSubmitHomework(title) { document.getElementById('hw-submit-area').style.display = 'block'; document.getElementById('hw-target-title').innerText = title; document.getElementById('hw-result-area').style.display = 'none'; }
         async function submitHomework() { const title = document.getElementById('hw-target-title').innerText; const file = document.getElementById('hw-file').files[0]; if(!file) return alert("파일 첨부 요망"); const fd = new FormData(); fd.append("school", currentUser.school); fd.append("grade", currentUser.grade); fd.append("student_name", currentUser.name); fd.append("title", title); fd.append("file", file); try { const res = await fetch(`${API_URL}/api/homework/submit`, {method:'POST', body:fd}); const data = await res.json(); if(data.success) { alert("제출 완료!"); const rArea = document.getElementById('hw-result-area'); rArea.style.display = 'block'; let html = `<p class="whitespace-pre-wrap text-sm">${data.answer_text}</p>`; if(data.answer_file) html += `<a href="${API_URL}${data.answer_file}" target="_blank" class="block mt-2 text-blue-400 underline">해설 다운로드</a>`; rArea.innerHTML = html; } } catch(e){} }
+
         async function createBoard() { const t = document.getElementById('bd-title').value; const d = document.getElementById('bd-desc').value; const f = document.getElementById('bd-file').files[0]; if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); if(f) fd.append("file", f); try { await fetch(`${API_URL}/api/admin/board`, {method:'POST', body:fd}); alert("등록 완료"); } catch(e){} }
         async function loadBoard() { try { const res = await fetch(`${API_URL}/api/board`); const data = await res.json(); const c = document.getElementById('board-list'); c.innerHTML = ''; if(data.success && data.posts.length > 0) { data.posts.forEach(p => { let fLink = p.file_url ? `<a href="${API_URL}${p.file_url}" target="_blank" class="text-blue-400 text-xs mt-2 block">다운로드</a>` : ''; c.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 text-sm"><h3 class="font-bold text-gray-200">${p.title}</h3><p class="text-xs text-gray-400 mt-1">${p.desc}</p>${fLink}</div>`; }); } } catch(e){} }
+
         async function uploadKnowledge() { const t = document.getElementById('kb-title').value; const c = document.getElementById('kb-content').value; const files = document.getElementById('kb-files').files; if(!t) return alert("제목 필수"); if(!c && files.length === 0) return; const btn = document.getElementById('btn-knowledge'); btn.disabled = true; btn.innerText = "분석 중..."; const formData = new FormData(); formData.append("title", t); formData.append("content", c); for(let i=0; i<files.length; i++) formData.append("files", files[i]); try { const res = await fetch(`${API_URL}/api/admin/knowledge`, { method: 'POST', body: formData }); const data = await res.json(); if(data.success) { alert("학습 완료!"); document.getElementById('kb-title').value=''; document.getElementById('kb-content').value=''; } } catch(e) {} btn.disabled = false; btn.innerText = "저장 및 학습"; }
     </script>
 </body>
