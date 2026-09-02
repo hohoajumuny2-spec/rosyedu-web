@@ -45,7 +45,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- 쌍둥이 문제 생성 팝업 -->
     <div id="twin-modal" class="hidden fixed inset-0 z-[120] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -58,7 +57,6 @@
         </div>
     </div>
 
-    <!-- 상단 네비게이션 -->
     <nav class="fixed top-0 w-full flex justify-between items-center px-4 md:px-8 py-4 md:py-6 z-50 bg-[#1a1e29]/90 border-b border-gray-800">
         <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
         <div class="flex items-center gap-3 md:gap-4 text-xs md:text-sm font-medium">
@@ -74,7 +72,6 @@
         </div>
     </nav>
 
-    <!-- 홈 화면 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center justify-center min-h-screen pt-20 px-4">
         <div class="text-center z-10 fade-in">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all">
@@ -129,7 +126,6 @@
                     <p class="text-gray-400 text-xs md:text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
 
-                <!-- 원장님용 메뉴 -->
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6"><i class="fa-solid fa-gears"></i></div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -258,7 +254,7 @@
                 </div>
 
                 <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full w-full relative">
-                    <!-- 💡 라이브 방송용 토스트 -->
+                    <!-- 라이브 방송용 토스트 -->
                     <div id="live-toast-container"></div>
                     
                     <div id="pdf-viewer-section" class="w-full lg:w-2/3 bg-[#1e2430] rounded-xl border border-gray-800 p-2 lg:p-4 flex flex-col h-[55vh] lg:h-full shadow-2xl relative transition-all duration-300">
@@ -273,6 +269,7 @@
                         </div>
                         
                         <div id="pdf-render-wrapper" class="relative flex-grow rounded-lg border border-gray-700 overflow-y-auto">
+                            <!-- 💡 로딩 지연 방지 및 오류 안내창 개선 -->
                             <div id="pdf-loading" class="text-center text-gray-400 mt-20"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>시험지 로딩 중...</div>
                             <div id="pdf-inner-container"></div>
                         </div>
@@ -281,10 +278,10 @@
 
                     <div class="w-full lg:w-1/3 bg-[#1e2430] rounded-xl border border-gray-800 p-4 lg:p-6 flex flex-col h-[33vh] lg:h-full shadow-2xl relative overflow-hidden">
                         
-                        <!-- 💡 원장님 라이브 방송용 메시지 입력기 (원장님 화면에서만 보임) -->
+                        <!-- 원장님 라이브 방송용 메시지 입력기 -->
                         <div id="live-admin-controls" class="hidden flex gap-2 mb-4 border-b border-gray-700 pb-4">
                             <input type="text" id="live-msg-input" placeholder="학생들에게 라이브 메시지 전송..." class="w-full bg-[#151922] border border-gray-600 p-2 rounded text-white text-sm outline-none">
-                            <button onclick="sendLiveMessage()" class="bg-red-600 text-white px-3 rounded font-bold text-sm"><i class="fa-solid fa-paper-plane"></i></button>
+                            <button onclick="sendLiveMessage()" class="bg-red-600 hover:bg-red-700 text-white px-4 rounded font-bold text-sm transition"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                         
                         <div class="flex flex-col gap-2 mb-4 pb-4 border-b border-gray-700" id="timer-ui-container">
@@ -433,7 +430,7 @@
                         </div>
                     </div>
 
-                    <!-- 💡 모의고사 오픈 (특정 학생 지정 기능 추가) -->
+                    <!-- 💡 모의고사 오픈 (지정 학생 모의고사 개설 유지) -->
                     <div id="admin-exam" class="admin-tab-content">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg">
@@ -441,15 +438,12 @@
                                 <input type="text" id="rt-title" placeholder="시험 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-2 outline-none focus:border-blue-500">
                                 <input type="text" id="rt-objective" placeholder="이번 시험 목표 공지사항 (학생들에게 보입니다)" class="w-full bg-blue-900/30 border border-blue-500/50 p-3 rounded text-blue-100 mb-4 text-sm outline-none focus:border-blue-400">
                                 
-                                <!-- 💡 응시 대상 지정 (전체 또는 다중 선택) -->
                                 <div class="mb-4 bg-[#1e2430] p-4 rounded border border-gray-600">
                                     <label class="text-sm font-bold text-emerald-400 block mb-2"><i class="fa-solid fa-users mr-1"></i>응시 대상 지정</label>
                                     <label class="flex items-center text-sm text-gray-300 mb-2 cursor-pointer">
                                         <input type="checkbox" id="rt-student-all" checked onchange="toggleExamStudents()" class="w-4 h-4 mr-2 accent-emerald-500"> 전체 학생 응시
                                     </label>
-                                    <div id="rt-student-list-container" class="hidden h-24 overflow-y-auto bg-gray-800 p-2 rounded border border-gray-600 space-y-1">
-                                        <!-- 자바스크립트로 명단 채움 -->
-                                    </div>
+                                    <div id="rt-student-list-container" class="hidden h-24 overflow-y-auto bg-gray-800 p-2 rounded border border-gray-600 space-y-1"></div>
                                 </div>
 
                                 <div class="mb-4 bg-[#1e2430] p-4 rounded border border-gray-600">
@@ -488,7 +482,6 @@
                                 <button onclick="setRealtimeExam()" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg text-white font-bold transition">오픈하기</button>
                             </div>
                             
-                            <!-- 💡 열려있는 모의고사 방 (라이브 버튼 추가) -->
                             <div class="bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] lg:h-[800px] overflow-y-auto">
                                 <h3 class="text-lg font-bold mb-4 text-white flex justify-between">열려있는 모의고사 방 <button onclick="loadAdminExams()" class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition">새로고침</button></h3>
                                 <div id="admin-exam-list" class="space-y-3"></div>
@@ -547,7 +540,7 @@
         </div>
     </div>
 
-    <!-- 모달창들 (로그인, 수정, 가이드 유지) -->
+    <!-- 모달창들 유지 -->
     <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-sm shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">학생 정보 수정</h3>
@@ -593,8 +586,93 @@
     <script>
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null;
-        let wsLive = null; // 💡 라이브 방송용 웹소켓
+        let wsLive = null; 
 
+        // 💡 1. 텔레그램-웹소켓 프로토콜 통신 호환 오류 수정 (wss 강제 적용)
+        function connectLiveExam(roomTitle) {
+            if(wsLive) wsLive.close();
+            
+            // 💡 수정됨: 프론트엔드 도메인이 아닌, 실제 백엔드(API_URL)로 웹소켓 연결
+            let wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            let wsHost = API_URL.replace('https://', '').replace('http://', '');
+            const wsUrl = `${wsProtocol}${wsHost}/ws/exam/${encodeURIComponent(roomTitle)}`;
+            
+            wsLive = new WebSocket(wsUrl);
+            
+            wsLive.onmessage = (event) => {
+                if (currentUser.isAdmin) return; 
+                
+                const data = JSON.parse(event.data);
+                if (data.type === 'msg') {
+                    showLiveToast(data.text);
+                    playBeep();
+                } 
+                else if (data.type === 'clear') {
+                    const canvases = document.querySelectorAll('.live-admin-canvas');
+                    canvases.forEach(c => c.getContext('2d').clearRect(0, 0, c.width, c.height));
+                }
+                else if (data.type === 'draw') {
+                    document.getElementById('live-indicator').classList.remove('hidden');
+                    const canvas = document.getElementById(`live-canvas-page-${data.page}`);
+                    if(!canvas) return; 
+                    const ctx = canvas.getContext('2d');
+                    const realX = data.x * canvas.width;
+                    const realY = data.y * canvas.height;
+
+                    if (data.action === 'start') {
+                        ctx.beginPath();
+                        ctx.moveTo(realX, realY);
+                    } else if (data.action === 'move') {
+                        ctx.lineTo(realX, realY);
+                        ctx.strokeStyle = '#ef4444'; 
+                        ctx.lineWidth = 4 * (window.devicePixelRatio || 2); 
+                        ctx.stroke();
+                    }
+                }
+            };
+            
+            // 에러 시 팝업 방지용 (조용히 무시)
+            wsLive.onerror = (error) => { console.warn("Live Connection Error"); };
+        }
+
+        function sendLiveMessage() {
+            if(!wsLive || wsLive.readyState !== WebSocket.OPEN) return alert("라이브 연결이 끊어졌습니다.");
+            const input = document.getElementById('live-msg-input');
+            if(!input.value.trim()) return;
+            wsLive.send(JSON.stringify({ type: 'msg', text: input.value }));
+            input.value = '';
+            alert("전송 완료");
+        }
+
+        // 💡 2. 모의고사 로딩 시 PDF Url 값이 빈값/undefined 인 경우 예외 처리
+        function startAdminLive(title, pdfUrl) {
+            openProgram('exam-room');
+            currentExamTitle = title;
+            document.getElementById('room-exam-title-active').innerText = title + " [라이브 방송 중 🔴]";
+            document.getElementById('exam-prep-overlay').style.display = 'none';
+            document.getElementById('exam-result-report').style.display = 'none';
+            document.getElementById('btn-submit-exam').style.display = 'none';
+            document.getElementById('report-action-buttons').style.display = 'none';
+            document.getElementById('timer-ui-container').style.display = 'none'; 
+            document.getElementById('exam-omr-container').style.display = 'none'; 
+            document.getElementById('live-admin-controls').classList.remove('hidden');
+            document.getElementById('live-admin-controls').classList.add('flex');
+            
+            isDrawing = false;
+            
+            // PDF 파일이 실제로 첨부되지 않은 옛날 문서를 클릭했을 때 에러가 나지 않도록 차단
+            if(pdfUrl && pdfUrl !== 'undefined' && pdfUrl !== 'null' && pdfUrl.trim() !== '') {
+                renderPDF(API_URL + pdfUrl, title);
+            } else {
+                document.getElementById('pdf-loading').innerHTML = '<i class="fa-solid fa-file-circle-xmark text-3xl mb-3"></i><br>이 모의고사에는 첨부된 PDF가 없습니다.';
+                document.getElementById('pdf-loading').style.display = 'block';
+            }
+            
+            connectLiveExam(title);
+        }
+
+        // ... (이하 기존 코드 유지 및 기타 기능들)
+        
         function setupDragAndDrop(dropZoneId, inputId) {
             const dropZone = document.getElementById(dropZoneId);
             const input = document.getElementById(inputId);
@@ -613,28 +691,43 @@
             if(!label) return;
             if(files.length > 0) {
                 let html = '<div class="flex flex-wrap gap-2 justify-center mt-2">';
-                for(let i=0; i<files.length; i++) html += `<span class="bg-blue-900/50 border border-blue-500 text-blue-200 text-xs px-2 py-1 rounded inline-flex items-center"><i class="fa-solid fa-file mr-1"></i><span class="truncate max-w-[150px]">${files[i].name}</span></span>`;
-                html += '</div>'; label.innerHTML = html;
-            } else { label.innerText = "클릭하여 파일 선택 (또는 드래그)"; label.className = "text-sm text-gray-400 mt-2 block font-bold"; }
+                for(let i=0; i<files.length; i++) {
+                    html += `<span class="bg-blue-900/50 border border-blue-500 text-blue-200 text-xs px-2 py-1 rounded inline-flex items-center"><i class="fa-solid fa-file mr-1"></i><span class="truncate max-w-[150px]">${files[i].name}</span></span>`;
+                }
+                html += '</div>';
+                label.innerHTML = html;
+            } else {
+                label.innerText = "클릭하여 파일 선택 (또는 드래그)";
+                label.className = "text-sm text-gray-400 mt-2 block font-bold";
+            }
         }
 
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash.replace('#', '');
+            
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('dashboard-screen').style.display = 'none';
             document.getElementById('program-view').style.display = 'none';
             document.querySelectorAll('.prog-content').forEach(el => el.style.display = 'none');
 
-            if (!hash || hash === 'home') document.getElementById('home-view').style.display = 'flex';
-            else if (hash === 'dashboard') {
+            if (!hash || hash === 'home') {
+                document.getElementById('home-view').style.display = 'flex';
+            } else if (hash === 'dashboard') {
                 if(!currentUser) { window.location.hash = 'home'; return showModal('login'); }
-                document.getElementById('dashboard-screen').style.display = 'block'; document.getElementById('dashboard-home').style.display = 'block';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                document.getElementById('dashboard-home').style.display = 'block';
                 closeExamRoomStrict();
             } else if (hash.startsWith('prog-')) {
                 if(!currentUser) { window.location.hash = 'home'; return showModal('login'); }
-                document.getElementById('dashboard-screen').style.display = 'block'; document.getElementById('dashboard-home').style.display = 'none'; document.getElementById('program-view').style.display = 'block';
+                
+                document.getElementById('dashboard-screen').style.display = 'block';
+                document.getElementById('dashboard-home').style.display = 'none';
+                document.getElementById('program-view').style.display = 'block';
+                
                 const progId = hash.replace('prog-', '');
-                const target = document.getElementById('prog-' + progId); if(target) target.style.display = 'block';
+                const target = document.getElementById('prog-' + progId);
+                if(target) target.style.display = 'block';
+                
                 if (progId === 'admin') switchAdminTab('admin-users');
                 if (progId === 'exam-room') document.getElementById('prog-exam-room').style.display = 'block';
             }
@@ -650,11 +743,16 @@
             const savedUser = localStorage.getItem('logyedu_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                document.getElementById('auth-nav').style.display = 'none'; document.getElementById('user-nav').classList.remove('hidden'); document.getElementById('user-nav').classList.add('flex');
+                document.getElementById('auth-nav').style.display = 'none';
+                document.getElementById('user-nav').classList.remove('hidden'); document.getElementById('user-nav').classList.add('flex');
                 document.getElementById('header-user-info').innerText = currentUser.isAdmin ? '원장님' : `${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
                 if(currentUser.isAdmin) { document.getElementById('card-admin').style.display = 'flex'; }
-                if (!window.location.hash || window.location.hash === '#home') window.location.hash = 'dashboard'; else window.dispatchEvent(new Event('hashchange'));
-            } else { if (window.location.hash !== '' && window.location.hash !== '#home') window.location.hash = 'home'; }
+                
+                if (!window.location.hash || window.location.hash === '#home') window.location.hash = 'dashboard';
+                else window.dispatchEvent(new Event('hashchange'));
+            } else {
+                if (window.location.hash !== '' && window.location.hash !== '#home') window.location.hash = 'home';
+            }
         });
 
         function showModal(id) { 
@@ -664,12 +762,17 @@
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function goHome() { window.location.hash = 'home'; }
-        function goToDashboard() { if(!currentUser) return showModal('login'); window.location.hash = 'dashboard'; }
+        function goToDashboard() {
+            if(!currentUser) return showModal('login');
+            window.location.hash = 'dashboard';
+        }
         function showToast(message) {
-            const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = 'toast show'; toast.innerHTML = `<i class="fa-solid fa-bell"></i> ${message}`; container.appendChild(toast); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div'); toast.className = 'toast show'; toast.innerHTML = `<i class="fa-solid fa-bell"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
         }
 
-        // 💡 라이브 방송용 토스트 (가운데 위 큰 배너)
         function showLiveToast(message) {
             const container = document.getElementById('live-toast-container');
             const toast = document.createElement('div');
@@ -680,32 +783,46 @@
         }
 
         function toggleFullscreen() {
-            const viewer = document.getElementById('pdf-viewer-section'); const btn = document.getElementById('btn-fullscreen');
+            const viewer = document.getElementById('pdf-viewer-section');
+            const btn = document.getElementById('btn-fullscreen');
+            
             if(viewer.classList.contains('fixed')) {
-                viewer.classList.remove('fixed', 'inset-0', 'z-[120]', 'p-4', 'bg-[#1a1e29]'); viewer.classList.add('w-full', 'lg:w-2/3', 'rounded-xl', 'border', 'border-gray-800', 'p-2', 'lg:p-4');
+                viewer.classList.remove('fixed', 'inset-0', 'z-[120]', 'p-4', 'bg-[#1a1e29]');
+                viewer.classList.add('w-full', 'lg:w-2/3', 'rounded-xl', 'border', 'border-gray-800', 'p-2', 'lg:p-4');
                 btn.innerHTML = '<i class="fa-solid fa-expand"></i> 전체화면';
             } else {
-                viewer.classList.remove('w-full', 'lg:w-2/3', 'rounded-xl', 'border', 'border-gray-800', 'p-2', 'lg:p-4'); viewer.classList.add('fixed', 'inset-0', 'z-[120]', 'p-4', 'bg-[#1a1e29]');
+                viewer.classList.remove('w-full', 'lg:w-2/3', 'rounded-xl', 'border', 'border-gray-800', 'p-2', 'lg:p-4');
+                viewer.classList.add('fixed', 'inset-0', 'z-[120]', 'p-4', 'bg-[#1a1e29]');
                 btn.innerHTML = '<i class="fa-solid fa-compress"></i> 축소하기';
             }
         }
 
         function playBeep() {
-            try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime); gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5); } catch(e) {}
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime); 
+                gain.gain.setValueAtTime(0.5, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+            } catch(e) {}
         }
 
-        function openProgram(progId) { window.location.hash = 'prog-' + progId; }
+        function openProgram(progId) {
+            window.location.hash = 'prog-' + progId;
+        }
 
         function closeExamRoomStrict() {
             clearInterval(examTimerInterval); isDrawing = false; document.getElementById('pdf-inner-container').innerHTML = ''; document.getElementById('exam-prep-overlay').style.display = 'none';
             const viewer = document.getElementById('pdf-viewer-section'); if(viewer && viewer.classList.contains('fixed')) toggleFullscreen();
             
-            // 💡 웹소켓 종료
             if(wsLive) { wsLive.close(); wsLive = null; }
             document.getElementById('live-indicator').classList.add('hidden');
         }
 
-        function closeProgram() { window.location.hash = 'dashboard'; closeExamRoomStrict(); }
+        function closeProgram() { 
+            window.location.hash = 'dashboard';
+        }
         
         function switchAdminTab(tabId) {
             ['admin-users', 'admin-knowledge', 'admin-generator', 'admin-exam', 'admin-lecture', 'admin-hw'].forEach(id => {
@@ -714,6 +831,7 @@
             });
             const activeBtn = document.getElementById('btn-'+tabId); if(activeBtn) { activeBtn.classList.remove('border'); activeBtn.classList.add('bg-gray-800'); }
             const activeTab = document.getElementById(tabId); if(activeTab) activeTab.style.display = 'block';
+            
             if(tabId === 'admin-users') { fetchReports(); loadAdminStudents(); }
             if(tabId === 'admin-exam') { loadAdminExams(); fetchStudentsForExamCreation(); }
             if(tabId === 'admin-lecture') loadAdminLectures();
@@ -728,7 +846,8 @@
                 const res = await fetch(`${API_URL}/api/auth`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ school: sch, grade: gr, student_name: nm, admin_password: pw }) });
                 const data = await res.json();
                 if (data.success) {
-                    currentUser = { school: sch, grade: gr, name: nm, isAdmin: data.is_admin }; localStorage.setItem('logyedu_user', JSON.stringify(currentUser)); 
+                    currentUser = { school: sch, grade: gr, name: nm, isAdmin: data.is_admin };
+                    localStorage.setItem('logyedu_user', JSON.stringify(currentUser)); 
                     closeModal('auth-modal'); location.reload();
                 } else alert("인증 실패: " + data.detail);
             } catch(e) { alert("서버 오류"); }
@@ -737,7 +856,7 @@
         function logout() { localStorage.removeItem('logyedu_user'); location.reload(); }
 
         // =====================================
-        // 관리자 (장부, 엑셀, 지식, 삭제 등)
+        // 관리자 기능
         // =====================================
         function downloadExcelTemplate() { const ws = XLSX.utils.json_to_sheet([{ school: "미강고", grade: "1학년", name: "홍길동" }]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "학생명단"); XLSX.writeFile(wb, "로지에듀_학생일괄등록양식.xlsx"); }
         async function addSingleStudent() { const s = document.getElementById('add-school').value.trim(); const g = document.getElementById('add-grade').value.trim(); const n = document.getElementById('add-name').value.trim(); if(!s || !g || !n) return alert("모두 입력하세요."); try { const res = await fetch(`${API_URL}/api/admin/student`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({school: s, grade: g, name: n}) }); const data = await res.json(); if(data.success) { alert("등록 성공!"); document.getElementById('add-school').value=''; document.getElementById('add-grade').value=''; document.getElementById('add-name').value=''; loadAdminStudents(); } } catch(e) {} }
@@ -776,13 +895,14 @@
             history.innerHTML += `<div class="text-right mb-4"><span class="bg-blue-600 px-4 py-2 rounded-xl text-white text-sm inline-block shadow-lg">${prompt}${fileBadge}</span></div>`;
             input.value = ''; document.getElementById('chat-file').value = ''; updateFileName('chat-file', 'chat-file-label');
             const loadId = "load-" + Date.now(); history.innerHTML += `<div id="${loadId}" class="text-left mb-4"><span class="bg-[#2a3441] px-4 py-3 rounded-xl text-blue-300 text-sm font-bold inline-block border border-gray-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i>답변을 생성 중입니다...</span></div>`; history.scrollTop = history.scrollHeight;
-            const formData = new FormData(); formData.append("school", currentUser.school); formData.append("grade", currentUser.grade); formData.append("student_name", currentUser.name); formData.append("prompt", prompt); for(let i=0; i<files.length; i++) formData.append("files", files[i]);
+            const formData = new FormData(); formData.append("school", currentUser.school); formData.append("grade", currentUser.grade); formData.append("student_name", currentUser.name); formData.append("prompt", prompt);
+            for(let i=0; i<files.length; i++) formData.append("files", files[i]);
             try {
                 const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', body: formData }); const data = await res.json();
                 document.getElementById(loadId).remove();
                 if(data.success) { history.innerHTML += `<div class="text-left mb-4"><span class="bg-gray-800 px-4 py-3 rounded-xl text-white text-sm inline-block leading-relaxed border border-gray-700"><span class="block mb-2 font-bold text-blue-400"><i class="fa-solid fa-robot mr-1"></i>국최</span>${data.reply.replace(/\n/g, '<br>')}</span></div>`; } 
                 else { history.innerHTML += `<div class="text-left mb-4"><span class="bg-red-900/30 px-4 py-3 rounded-xl text-red-200 text-sm inline-block border border-red-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${data.reply}</span></div>`; }
-            } catch(e) { document.getElementById(loadId).remove(); history.innerHTML += `<div class="text-left mb-4"><span class="bg-red-900/30 px-4 py-3 rounded-xl text-red-200 text-sm inline-block border border-red-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>서버 연결 지연 또는 통신 오류입니다.</span></div>`; }
+            } catch(e) { document.getElementById(loadId).remove(); history.innerHTML += `<div class="text-left mb-4"><span class="bg-red-900/30 px-4 py-3 rounded-xl text-red-200 text-sm inline-block border border-red-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i>서버 통신 오류입니다.</span></div>`; }
             history.scrollTop = history.scrollHeight;
         }
 
@@ -800,9 +920,6 @@
         }
         function printEssayReport() { const content = document.getElementById('essay-feedback').innerHTML; const printWindow = window.open('', '', 'width=800,height=900'); printWindow.document.write(`<html><head><title>AI 첨삭 결과</title><style>body{font-family:sans-serif;padding:30px;line-height:1.6;} span{color:#ef4444;font-weight:bold;}</style></head><body>${content}<script>setTimeout(()=>window.print(), 1000);<\/script></body></html>`); printWindow.document.close(); }
 
-        // =====================================
-        // 💡 관리자용 구간 세팅 및 지정 학생 모의고사 개설
-        // =====================================
         async function fetchStudentsForExamCreation() {
             try {
                 const res = await fetch(`${API_URL}/api/admin/students`); const data = await res.json();
@@ -814,8 +931,7 @@
         }
         
         function toggleExamStudents() {
-            const isAll = document.getElementById('rt-student-all').checked;
-            const container = document.getElementById('rt-student-list-container');
+            const isAll = document.getElementById('rt-student-all').checked; const container = document.getElementById('rt-student-list-container');
             if(isAll) container.classList.add('hidden'); else container.classList.remove('hidden');
         }
 
@@ -853,21 +969,18 @@
         }
 
         async function setRealtimeExam() {
-            const title = document.getElementById('rt-title').value; const objective = document.getElementById('rt-objective').value; const videoUrl = document.getElementById('rt-video').value; const expText = document.getElementById('rt-exp').value; const fileInput = document.getElementById('rt-pdf');
+            const title = document.getElementById('rt-title').value; const objective = document.getElementById('rt-objective').value; 
+            const videoUrl = document.getElementById('rt-video').value; const expText = document.getElementById('rt-exp').value; const fileInput = document.getElementById('rt-pdf');
             if(!title) return alert("시험 제목을 입력해주세요!"); if(adminExamSections.length===0) return alert("구간(타이머)을 최소 1개 이상 추가해주세요!"); if(adminExamQuestions.length===0 || adminExamQuestions.some(q=>q.ans==="")) return alert("모든 문항의 정답을 마킹해주세요!"); if(fileInput.files.length===0) return alert("학생들이 풀 PDF 시험지를 첨부해주세요!");
 
-            // 💡 특정 학생 필터링 추출
             let allowed = "all";
             if(!document.getElementById('rt-student-all').checked) {
                 const cbs = document.querySelectorAll('.exam-target-student:checked');
                 if(cbs.length === 0) return alert("응시 대상을 최소 1명 이상 선택하세요.");
                 allowed = Array.from(cbs).map(cb => cb.value).join(",");
             }
-
-            const formData = new FormData(); 
-            formData.append("title", title); formData.append("objective", objective); formData.append("allowed_students", allowed);
-            formData.append("exam_data", JSON.stringify({ sections: adminExamSections, questions: adminExamQuestions })); 
-            formData.append("video_url", videoUrl); formData.append("explanation_text", expText); formData.append("file", fileInput.files[0]);
+            const formData = new FormData(); formData.append("title", title); formData.append("objective", objective); formData.append("allowed_students", allowed);
+            formData.append("exam_data", JSON.stringify({ sections: adminExamSections, questions: adminExamQuestions })); formData.append("video_url", videoUrl); formData.append("explanation_text", expText); formData.append("file", fileInput.files[0]);
             try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', body: formData }); alert("개설 완료"); loadAdminExams(); } catch(e) { alert("통신 오류"); }
         }
 
@@ -875,27 +988,27 @@
             try {
                 const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('admin-exam-list'); container.innerHTML = '';
                 if(data.success && data.exams.length > 0) { data.exams.forEach(e => { 
-                    // 💡 라이브 방송 진입 버튼 추가
-                    container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${e.title}</span><div class="flex gap-2"><button onclick="startAdminLive('${e.title}', '${e.pdf_url}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition text-xs font-bold"><i class="fa-solid fa-satellite-dish mr-1"></i>라이브 감독</button><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition text-xs">삭제</button></div></div>`; 
+                    const pdfStr = e.pdf_url ? e.pdf_url : '';
+                    container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${e.title}</span><div class="flex gap-2"><button onclick="startAdminLive('${e.title}', '${pdfStr}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition text-xs font-bold"><i class="fa-solid fa-satellite-dish mr-1"></i>라이브 감독</button><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition text-xs">삭제</button></div></div>`; 
                 }); }
             } catch(e) {}
         }
         async function deleteExam(title) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){} }
 
         // =====================================
-        // 💡 PDF.js 렌더링 및 웹소켓 연동 필기 로직
+        // 💡 PDF.js 지연 로딩 (에러 핸들링 수정본)
         // =====================================
         let pdfDoc = null; let isDrawing = false;
         
         async function renderPDF(url, roomTitle = null) {
             document.getElementById('pdf-loading').style.display = 'block';
+            document.getElementById('pdf-loading').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>시험지 로딩 중...';
             const innerContainer = document.getElementById('pdf-inner-container');
             innerContainer.innerHTML = ''; 
             
             try {
                 pdfDoc = await pdfjsLib.getDocument(url).promise;
                 document.getElementById('pdf-loading').style.display = 'none';
-
                 const wrapperWidth = document.getElementById('pdf-render-wrapper').clientWidth;
 
                 const observer = new IntersectionObserver((entries) => {
@@ -914,14 +1027,12 @@
                     pageContainer.dataset.rendered = "false";
                     pageContainer.style.minHeight = "800px"; 
                     
-                    // 학생/원장 본인 필기용
                     const drawCanvas = document.createElement('canvas');
                     drawCanvas.className = 'absolute top-0 left-0 w-full h-full z-10 pdf-draw-canvas cursor-crosshair';
                     drawCanvas.style.display = isDrawing ? 'block' : 'none';
                     pageContainer.appendChild(drawCanvas);
                     setupDrawingLogic(drawCanvas, roomTitle, i);
 
-                    // 💡 원장님 라이브 수신 전용 캔버스 (학생 화면에서만 보임)
                     if (!currentUser.isAdmin && roomTitle) {
                         const liveCanvas = document.createElement('canvas');
                         liveCanvas.className = 'absolute top-0 left-0 w-full h-full z-20 pointer-events-none live-admin-canvas';
@@ -933,7 +1044,7 @@
                     if (i === 1) renderPage(1, pageContainer, wrapperWidth, roomTitle);
                     else observer.observe(pageContainer); 
                 }
-            } catch(err) { document.getElementById('pdf-loading').innerHTML = 'PDF 로딩 오류.'; }
+            } catch(err) { document.getElementById('pdf-loading').innerHTML = '<i class="fa-solid fa-file-circle-xmark text-3xl mb-3"></i><br>PDF 렌더링 오류. 다시 시도해주세요.'; }
         }
 
         async function renderPage(num, container, wrapperWidth, roomTitle) {
@@ -970,67 +1081,44 @@
             const ctx = canvas.getContext('2d');
             let drawing = false;
 
-            // 💡 웹소켓 필기 발송 함수 (원장님만 발송)
             const sendDrawData = (action, x, y) => {
                 if (currentUser.isAdmin && wsLive && wsLive.readyState === WebSocket.OPEN) {
                     const rect = canvas.getBoundingClientRect();
-                    const relX = x / rect.width; const relY = y / rect.height; // 비율로 전송하여 모든 기기 호환
+                    const relX = x / rect.width; const relY = y / rect.height; 
                     wsLive.send(JSON.stringify({ type: 'draw', page: pageNum, action: action, x: relX, y: relY }));
                 }
             };
 
-            const getTouchPos = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-            };
+            const getTouchPos = (e) => { const rect = canvas.getBoundingClientRect(); return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top }; };
 
             canvas.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 1 && isDrawing) {
                     drawing = true; e.preventDefault();
-                    const pos = getTouchPos(e);
-                    const scaleX = canvas.width / canvas.getBoundingClientRect().width; 
-                    const scaleY = canvas.height / canvas.getBoundingClientRect().height;
-                    ctx.beginPath(); ctx.moveTo(pos.x * scaleX, pos.y * scaleY);
-                    sendDrawData('start', pos.x, pos.y);
+                    const pos = getTouchPos(e); const scaleX = canvas.width / canvas.getBoundingClientRect().width; const scaleY = canvas.height / canvas.getBoundingClientRect().height;
+                    ctx.beginPath(); ctx.moveTo(pos.x * scaleX, pos.y * scaleY); sendDrawData('start', pos.x, pos.y);
                 }
             }, {passive: false});
 
             canvas.addEventListener('touchmove', (e) => {
                 if (e.touches.length === 1 && drawing && isDrawing) {
                     e.preventDefault();
-                    const pos = getTouchPos(e);
-                    const scaleX = canvas.width / canvas.getBoundingClientRect().width; 
-                    const scaleY = canvas.height / canvas.getBoundingClientRect().height;
-                    ctx.lineTo(pos.x * scaleX, pos.y * scaleY); 
-                    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3 * (window.devicePixelRatio || 2); ctx.stroke();
-                    sendDrawData('move', pos.x, pos.y);
+                    const pos = getTouchPos(e); const scaleX = canvas.width / canvas.getBoundingClientRect().width; const scaleY = canvas.height / canvas.getBoundingClientRect().height;
+                    ctx.lineTo(pos.x * scaleX, pos.y * scaleY); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3 * (window.devicePixelRatio || 2); ctx.stroke(); sendDrawData('move', pos.x, pos.y);
                 }
             }, {passive: false});
 
             canvas.addEventListener('touchend', () => { if(drawing){ drawing = false; sendDrawData('end', 0, 0); }});
 
-            const getMousePos = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            };
+            const getMousePos = (e) => { const rect = canvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; };
 
             canvas.addEventListener('mousedown', (e) => {
-                if(!isDrawing) return; drawing = true;
-                const pos = getMousePos(e);
-                const scaleX = canvas.width / canvas.getBoundingClientRect().width; 
-                const scaleY = canvas.height / canvas.getBoundingClientRect().height;
-                ctx.beginPath(); ctx.moveTo(pos.x * scaleX, pos.y * scaleY);
-                sendDrawData('start', pos.x, pos.y);
+                if(!isDrawing) return; drawing = true; const pos = getMousePos(e); const scaleX = canvas.width / canvas.getBoundingClientRect().width; const scaleY = canvas.height / canvas.getBoundingClientRect().height;
+                ctx.beginPath(); ctx.moveTo(pos.x * scaleX, pos.y * scaleY); sendDrawData('start', pos.x, pos.y);
             });
             
             canvas.addEventListener('mousemove', (e) => {
-                if(drawing && isDrawing) {
-                    const pos = getMousePos(e);
-                    const scaleX = canvas.width / canvas.getBoundingClientRect().width; 
-                    const scaleY = canvas.height / canvas.getBoundingClientRect().height;
-                    ctx.lineTo(pos.x * scaleX, pos.y * scaleY); 
-                    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3 * (window.devicePixelRatio || 2); ctx.stroke();
-                    sendDrawData('move', pos.x, pos.y);
+                if(drawing && isDrawing) { const pos = getMousePos(e); const scaleX = canvas.width / canvas.getBoundingClientRect().width; const scaleY = canvas.height / canvas.getBoundingClientRect().height;
+                    ctx.lineTo(pos.x * scaleX, pos.y * scaleY); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3 * (window.devicePixelRatio || 2); ctx.stroke(); sendDrawData('move', pos.x, pos.y);
                 }
             });
             
@@ -1039,123 +1127,26 @@
         }
 
         function toggleDrawMode() {
-            isDrawing = !isDrawing;
-            const drawCanvases = document.querySelectorAll('.pdf-draw-canvas');
-            const btn = document.getElementById('btn-draw');
-            const clearBtn = document.getElementById('btn-clear');
-            const hint = document.getElementById('draw-hint');
-            
+            isDrawing = !isDrawing; const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); const btn = document.getElementById('btn-draw'); const clearBtn = document.getElementById('btn-clear'); const hint = document.getElementById('draw-hint');
             drawCanvases.forEach(c => c.style.display = isDrawing ? 'block' : 'none');
-            
-            if(isDrawing) {
-                btn.classList.replace('bg-blue-600', 'bg-red-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 끄기';
-                clearBtn.style.display = 'inline-block'; hint.style.display = 'block';
-                document.getElementById('pdf-render-wrapper').style.touchAction = 'pan-x pan-y pinch-zoom';
-            } else {
-                btn.classList.replace('bg-red-600', 'bg-blue-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 켜기';
-                clearBtn.style.display = 'none'; hint.style.display = 'none';
-            }
+            if(isDrawing) { btn.classList.replace('bg-blue-600', 'bg-red-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 끄기'; clearBtn.style.display = 'inline-block'; hint.style.display = 'block'; document.getElementById('pdf-render-wrapper').style.touchAction = 'pan-x pan-y pinch-zoom'; } 
+            else { btn.classList.replace('bg-red-600', 'bg-blue-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 켜기'; clearBtn.style.display = 'none'; hint.style.display = 'none'; }
         }
 
         function clearCanvas() { 
-            const drawCanvases = document.querySelectorAll('.pdf-draw-canvas');
-            drawCanvases.forEach(c => { c.getContext('2d').clearRect(0, 0, c.width, c.height); });
+            const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); drawCanvases.forEach(c => { c.getContext('2d').clearRect(0, 0, c.width, c.height); });
             if (currentUser.isAdmin && wsLive) wsLive.send(JSON.stringify({ type: 'clear' }));
         }
 
-        // =====================================
-        // 💡 웹소켓 통신 (라이브룸 및 메시지 수신)
-        // =====================================
-        function connectLiveExam(roomTitle) {
-            if(wsLive) wsLive.close();
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${wsProtocol}//${window.location.host}/ws/exam/${encodeURIComponent(roomTitle)}`;
-            wsLive = new WebSocket(wsUrl);
-            
-            // 💡 라이브 지시 수신 (학생 관점)
-            wsLive.onmessage = (event) => {
-                if (currentUser.isAdmin) return; // 원장님은 수신 무시
-                
-                const data = JSON.parse(event.data);
-                
-                if (data.type === 'msg') {
-                    // 화면 정중앙에 내려오는 강력한 메시지
-                    showLiveToast(data.text);
-                    playBeep();
-                } 
-                else if (data.type === 'clear') {
-                    const canvases = document.querySelectorAll('.live-admin-canvas');
-                    canvases.forEach(c => c.getContext('2d').clearRect(0, 0, c.width, c.height));
-                }
-                else if (data.type === 'draw') {
-                    document.getElementById('live-indicator').classList.remove('hidden');
-                    
-                    const canvas = document.getElementById(`live-canvas-page-${data.page}`);
-                    if(!canvas) return; // 페이지가 로딩 안 됐으면 무시
-                    const ctx = canvas.getContext('2d');
-                    
-                    // 상대 좌표를 실제 해상도 픽셀로 복원
-                    const realX = data.x * canvas.width;
-                    const realY = data.y * canvas.height;
-
-                    if (data.action === 'start') {
-                        ctx.beginPath();
-                        ctx.moveTo(realX, realY);
-                    } else if (data.action === 'move') {
-                        ctx.lineTo(realX, realY);
-                        ctx.strokeStyle = '#ef4444'; // 빨간펜
-                        ctx.lineWidth = 4 * (window.devicePixelRatio || 2); // 강조를 위해 약간 더 두껍게
-                        ctx.stroke();
-                    }
-                }
-            };
-        }
-
-        // 💡 원장님 라이브 메시지 발송
-        function sendLiveMessage() {
-            if(!wsLive || wsLive.readyState !== WebSocket.OPEN) return alert("라이브 연결이 끊어졌습니다.");
-            const input = document.getElementById('live-msg-input');
-            if(!input.value.trim()) return;
-            wsLive.send(JSON.stringify({ type: 'msg', text: input.value }));
-            input.value = '';
-            alert("전송 완료");
-        }
-
-        // 💡 원장님 라이브 모드 진입
-        function startAdminLive(title, pdfUrl) {
-            openProgram('exam-room');
-            currentExamTitle = title;
-            document.getElementById('room-exam-title-active').innerText = title + " [라이브 방송 중 🔴]";
-            document.getElementById('exam-prep-overlay').style.display = 'none';
-            document.getElementById('exam-result-report').style.display = 'none';
-            document.getElementById('btn-submit-exam').style.display = 'none';
-            document.getElementById('report-action-buttons').style.display = 'none';
-            document.getElementById('timer-ui-container').style.display = 'none'; // 원장님은 타이머 무필요
-            document.getElementById('exam-omr-container').style.display = 'none'; 
-            
-            // 💡 원장님 전용 메시지 박스 오픈
-            document.getElementById('live-admin-controls').classList.remove('hidden');
-            document.getElementById('live-admin-controls').classList.add('flex');
-            
-            isDrawing = false;
-            if(pdfUrl) renderPDF(API_URL + pdfUrl, title);
-            connectLiveExam(title);
-        }
-
-        // =====================================
-        // 💡 실시간 모의고사 (학생 입장, 필터링 연동)
-        // =====================================
         async function loadStudentExams() {
             try {
                 const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('student-exam-list'); container.innerHTML = '';
                 if(data.success && data.exams.length > 0) {
                     data.exams.forEach(e => {
-                        // 💡 응시 대상 필터 (전체 혹은 내 이름)
                         if (e.allowed_students && !e.allowed_students.includes("all") && !e.allowed_students.includes(currentUser.name)) return;
-
-                        const examDataStr = (e.exam_data || "").replace(/"/g, '&quot;');
-                        const objStr = (e.objective || "").replace(/"/g, '&quot;').replace(/'/g, '\\\'');
-                        container.innerHTML += `<div onclick="prepExamRoom('${e.title}', '${e.pdf_url}', '${examDataStr}', '${objStr}')" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`;
+                        const examDataStr = (e.exam_data || "").replace(/"/g, '&quot;'); const objStr = (e.objective || "").replace(/"/g, '&quot;').replace(/'/g, '\\\'');
+                        const pdfStr = e.pdf_url ? e.pdf_url : '';
+                        container.innerHTML += `<div onclick="prepExamRoom('${e.title}', '${pdfStr}', '${examDataStr}', '${objStr}')" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`;
                     });
                 } 
                 if(container.innerHTML === '') container.innerHTML = "<p class='text-sm text-gray-500'>현재 배정된 모의고사가 없습니다.</p>";
@@ -1167,37 +1158,22 @@
         let isExamActive = false; let isExamPaused = false;
 
         function prepExamRoom(title, pdfUrl, examDataStr, objectiveStr) {
-            openProgram('exam-room');
-            currentExamTitle = title;
-            document.getElementById('room-exam-title-active').innerText = title;
-            document.getElementById('exam-result-report').style.display = 'none';
-            document.getElementById('btn-submit-exam').style.display = 'none';
-            document.getElementById('report-action-buttons').style.display = 'none';
-            document.getElementById('timer-ui-container').style.display = 'flex'; 
-            document.getElementById('exam-omr-container').style.display = 'grid'; 
-            document.getElementById('live-admin-controls').classList.add('hidden');
+            openProgram('exam-room'); currentExamTitle = title; document.getElementById('room-exam-title-active').innerText = title;
+            document.getElementById('exam-result-report').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'none'; document.getElementById('report-action-buttons').style.display = 'none';
+            document.getElementById('timer-ui-container').style.display = 'flex'; document.getElementById('exam-omr-container').style.display = 'grid'; document.getElementById('live-admin-controls').classList.add('hidden');
             
-            currentExamData = JSON.parse(examDataStr.replace(/&quot;/g, '"'));
-            const objective = objectiveStr.replace(/&quot;/g, '"');
-            
-            document.getElementById('prep-exam-title').innerText = title;
-            document.getElementById('prep-objective-text').innerText = objective || "공지사항이 없습니다.";
-            document.getElementById('prep-target-score').value = '';
-            
-            studentSections = JSON.parse(JSON.stringify(currentExamData.sections));
-            renderStudentPrepSections();
+            currentExamData = JSON.parse(examDataStr.replace(/&quot;/g, '"')); const objective = objectiveStr.replace(/&quot;/g, '"');
+            document.getElementById('prep-exam-title').innerText = title; document.getElementById('prep-objective-text').innerText = objective || "공지사항이 없습니다."; document.getElementById('prep-target-score').value = '';
+            studentSections = JSON.parse(JSON.stringify(currentExamData.sections)); renderStudentPrepSections();
             document.getElementById('exam-prep-overlay').style.display = 'flex';
             
-            if(pdfUrl) renderPDF(API_URL + pdfUrl, title);
+            if(pdfUrl && pdfUrl.trim() !== '') renderPDF(API_URL + pdfUrl, title);
+            else document.getElementById('pdf-loading').innerHTML = '<i class="fa-solid fa-file-circle-xmark text-3xl mb-3"></i><br>첨부된 PDF 시험지가 없습니다.';
         }
 
         function renderStudentPrepSections() {
-            const board = document.getElementById('prep-sections-board');
-            board.innerHTML = ""; let total = 0;
-            studentSections.forEach((s, idx) => {
-                total += s.time;
-                board.innerHTML += `<div class="flex items-center gap-2 mb-2 bg-[#1e2430] p-2 rounded"><input type="text" value="${s.name}" onchange="studentSections[${idx}].name=this.value" class="w-1/2 bg-transparent text-white text-sm outline-none border-b border-gray-600"><input type="number" value="${s.time}" onchange="studentSections[${idx}].time=parseInt(this.value)" class="w-1/4 bg-transparent text-emerald-400 font-bold text-center outline-none border-b border-gray-600">분<button type="button" onclick="studentSections.splice(${idx},1); renderStudentPrepSections()" class="text-red-400 ml-auto"><i class="fa-solid fa-trash"></i></button></div>`;
-            });
+            const board = document.getElementById('prep-sections-board'); board.innerHTML = ""; let total = 0;
+            studentSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<div class="flex items-center gap-2 mb-2 bg-[#1e2430] p-2 rounded"><input type="text" value="${s.name}" onchange="studentSections[${idx}].name=this.value" class="w-1/2 bg-transparent text-white text-sm outline-none border-b border-gray-600"><input type="number" value="${s.time}" onchange="studentSections[${idx}].time=parseInt(this.value)" class="w-1/4 bg-transparent text-emerald-400 font-bold text-center outline-none border-b border-gray-600">분<button type="button" onclick="studentSections.splice(${idx},1); renderStudentPrepSections()" class="text-red-400 ml-auto"><i class="fa-solid fa-trash"></i></button></div>`; });
             board.innerHTML += `<div class="text-right text-emerald-400 text-sm font-bold mt-2">총 예정 시간: ${total}분</div>`;
         }
 
@@ -1205,27 +1181,20 @@
 
         function startExamReal() {
             const targetScore = document.getElementById('prep-target-score').value;
-            if(!targetScore) return alert("나의 목표 점수를 입력해주세요!");
-            if(studentSections.length === 0) return alert("구간이 하나 이상 있어야 합니다.");
-            
+            if(!targetScore) return alert("나의 목표 점수를 입력해주세요!"); if(studentSections.length === 0) return alert("구간이 하나 이상 있어야 합니다.");
             document.getElementById('active-target-score').innerText = targetScore;
-            const questions = currentExamData.questions; studentOmrAnswers = Array(questions.length).fill("");
-            let omrHtml = '<div class="space-y-2">';
+            
+            const questions = currentExamData.questions; studentOmrAnswers = Array(questions.length).fill(""); let omrHtml = '<div class="space-y-2">';
             questions.forEach((q, i) => {
                 omrHtml += `<div class="flex items-center gap-2 bg-[#151922] p-1.5 rounded border border-gray-700"><span class="text-gray-400 font-bold text-xs w-4 text-right">${i+1}</span><div class="flex gap-1" id="s-omr-row-${i}">`;
                 for(let j=1; j<=5; j++) { omrHtml += `<button type="button" class="omr-circle bg-[#1e2430] w-6 h-6 text-[10px]" onclick="setStudentOmr(${i}, ${j})">${j}</button>`; }
                 omrHtml += `</div><span class="text-[10px] text-yellow-400 font-bold ml-auto pr-1">(${q.score}점)</span></div>`;
             });
-            omrHtml += '</div>'; document.getElementById('exam-omr-container').innerHTML = omrHtml;
-            document.getElementById('exam-prep-overlay').style.display = 'none';
+            omrHtml += '</div>'; document.getElementById('exam-omr-container').innerHTML = omrHtml; document.getElementById('exam-prep-overlay').style.display = 'none';
 
             currSecIdx = 0; secSpent = 0; totalSavedSec = 0; isExamActive = true; isExamPaused = false;
-            
-            // 💡 웹소켓 연동 시작
             connectLiveExam(currentExamTitle);
-            
-            loadCurrentSection();
-            clearInterval(examTimerInterval); examTimerInterval = setInterval(engineTick, 1000);
+            loadCurrentSection(); clearInterval(examTimerInterval); examTimerInterval = setInterval(engineTick, 1000);
             playBeep(); 
         }
 
@@ -1285,26 +1254,15 @@
                     const reportEl = document.getElementById('exam-result-report'); reportEl.style.display = 'block'; document.getElementById('report-action-buttons').style.display = 'flex';
                     
                     let html = `<div class="bg-gray-800 p-4 rounded-xl border border-emerald-500 shadow-lg text-white fade-in"><h3 class="text-xl font-black text-center mb-4 text-emerald-400">📊 분석 리포트</h3><div class="text-center mb-6"><span class="text-4xl lg:text-5xl font-black">${data.score}</span>점</div><div class="bg-[#151922] p-3 rounded-lg mb-4 border border-gray-700"><h4 class="font-bold text-yellow-400 mb-2 text-sm">오답 분석</h4><div class="space-y-2 text-xs">`;
-                    
-                    // 💡 오답 클리닉 (쌍둥이 문제) 연동
                     const getWrongItemsStr = (diffCode) => {
-                        let btns = "";
-                        data.wrongs.forEach((qNum) => {
-                            if(currentExamData.questions[qNum-1].diff === diffCode) {
-                                btns += `<button onclick="generateTwin('${diffCode}', ${currentExamData.questions[qNum-1].score})" class="bg-gray-700 hover:bg-blue-600 text-[10px] px-2 py-1 rounded ml-1 transition"><i class="fa-solid fa-clone mr-1"></i>${qNum}번 유사문항</button>`;
-                            }
-                        });
-                        return btns;
+                        let btns = ""; data.wrongs.forEach((qNum) => { if(currentExamData.questions[qNum-1].diff === diffCode) { btns += `<button onclick="generateTwin('${diffCode}', ${currentExamData.questions[qNum-1].score})" class="bg-gray-700 hover:bg-blue-600 text-[10px] px-2 py-1 rounded ml-1 transition"><i class="fa-solid fa-clone mr-1"></i>${qNum}번 유사문항</button>`; } }); return btns;
                     };
-
                     html += `<div class="flex flex-col mb-2"><span>A(80%↑): <span class="text-red-400">${data.wrong_by_diff.A}개 틀림</span></span><div class="mt-1">${getWrongItemsStr('A')}</div></div>`;
                     html += `<div class="flex flex-col mb-2 border-t border-gray-700 pt-2"><span>B(65~79%): <span class="text-red-400">${data.wrong_by_diff.B}개 틀림</span></span><div class="mt-1">${getWrongItemsStr('B')}</div></div>`;
                     html += `<div class="flex flex-col mb-2 border-t border-gray-700 pt-2"><span>C(45~64%): <span class="text-red-400">${data.wrong_by_diff.C}개 틀림</span></span><div class="mt-1">${getWrongItemsStr('C')}</div></div>`;
                     html += `<div class="flex flex-col mb-2 border-t border-gray-700 pt-2"><span>D(20~44%): <span class="text-gray-400">${data.wrong_by_diff.D}개 틀림</span></span><div class="mt-1">${getWrongItemsStr('D')}</div></div>`;
                     html += `<div class="flex flex-col border-t border-gray-700 pt-2"><span>E(킬러): <span class="text-gray-400">${data.wrong_by_diff.E}개 틀림</span></span><div class="mt-1">${getWrongItemsStr('E')}</div></div>`;
-                    html += `</div></div>`;
-
-                    html += `<div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500 mb-4"><h4 class="font-bold text-indigo-300 mb-2 text-sm">나의 잠재력</h4><p class="text-xs text-indigo-100 mb-1">A,B 실수 제외 시 👉 <span class="text-sm font-black bg-indigo-600 px-1 rounded">${data.potential_ab}점</span></p><p class="text-xs text-indigo-100">기본기(C) 정복 시 👉 <span class="text-sm font-black bg-indigo-500 px-1 rounded">${data.potential_abc}점</span></p></div>`;
+                    html += `</div></div><div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500 mb-4"><h4 class="font-bold text-indigo-300 mb-2 text-sm">나의 잠재력</h4><p class="text-xs text-indigo-100 mb-1">A,B 실수 제외 시 👉 <span class="text-sm font-black bg-indigo-600 px-1 rounded">${data.potential_ab}점</span></p><p class="text-xs text-indigo-100">기본기(C) 정복 시 👉 <span class="text-sm font-black bg-indigo-500 px-1 rounded">${data.potential_abc}점</span></p></div>`;
                     if(data.video_url || data.explanation_text) {
                         html += `<div class="border-t border-gray-700 pt-4"><h4 class="text-sm font-bold text-white mb-2 text-purple-400">해설 자료</h4>`;
                         if(data.video_url) html += `<a href="${data.video_url}" target="_blank" class="block bg-red-600 text-center py-2 rounded text-white font-bold mb-2 text-xs"><i class="fa-brands fa-youtube mr-1"></i>강의 시청</a>`;
@@ -1320,7 +1278,6 @@
             } catch(e) { alert("서버 오류"); }
         }
 
-        // 💡 쌍둥이 오답 클리닉 호출 로직
         async function generateTwin(diff, score) {
             document.getElementById('twin-modal').style.display = 'flex';
             const twinContent = document.getElementById('twin-content');
@@ -1328,13 +1285,12 @@
             try {
                 const res = await fetch(`${API_URL}/api/exam/twin`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ diff: diff, score: score }) });
                 const data = await res.json();
-                if(data.success) twinContent.innerHTML = data.twin_data;
-                else twinContent.innerHTML = "오류가 발생했습니다.";
+                if(data.success) twinContent.innerHTML = data.twin_data; else twinContent.innerHTML = "오류가 발생했습니다.";
             } catch(e) { twinContent.innerHTML = "통신 오류"; }
         }
 
         // ==========================================
-        // 기타 모듈 유지
+        // 기타 모듈 (과제/게시판/출제) 생략 없이 유지
         // ==========================================
         async function createHomework() { const t = document.getElementById('hw-title').value; const d = document.getElementById('hw-desc').value; const a = document.getElementById('hw-ans-text').value; const f = document.getElementById('hw-ans-file').files[0]; if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); fd.append("answer_text", a); if(f) fd.append("answer_file", f); try { await fetch(`${API_URL}/api/admin/homework`, {method:'POST', body:fd}); alert("배포 완료"); } catch(e){} }
         async function loadHomeworks() { try { const res = await fetch(`${API_URL}/api/homeworks`); const data = await res.json(); const container = document.getElementById('student-hw-list'); container.innerHTML = ''; if(data.success && data.homeworks.length > 0) { data.homeworks.forEach(h => { container.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 flex justify-between items-center text-sm"><div><h3 class="font-bold text-white">${h.title}</h3></div><button onclick="openSubmitHomework('${h.title}')" class="bg-emerald-600 px-3 py-1 rounded text-white">제출</button></div>`; }); } } catch(e){} }
@@ -1343,6 +1299,10 @@
         async function createBoard() { const t = document.getElementById('bd-title').value; const d = document.getElementById('bd-desc').value; const f = document.getElementById('bd-file').files[0]; if(!t) return; const fd = new FormData(); fd.append("title", t); fd.append("desc", d); if(f) fd.append("file", f); try { await fetch(`${API_URL}/api/admin/board`, {method:'POST', body:fd}); alert("등록 완료"); } catch(e){} }
         async function loadBoard() { try { const res = await fetch(`${API_URL}/api/board`); const data = await res.json(); const c = document.getElementById('board-list'); c.innerHTML = ''; if(data.success && data.posts.length > 0) { data.posts.forEach(p => { let fLink = p.file_url ? `<a href="${API_URL}${p.file_url}" target="_blank" class="text-blue-400 text-xs mt-2 block">다운로드</a>` : ''; c.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 text-sm"><h3 class="font-bold text-gray-200">${p.title}</h3><p class="text-xs text-gray-400 mt-1">${p.desc}</p>${fLink}</div>`; }); } } catch(e){} }
         async function uploadKnowledge() { const t = document.getElementById('kb-title').value; const c = document.getElementById('kb-content').value; const files = document.getElementById('kb-files').files; if(!t) return alert("제목 필수"); if(!c && files.length === 0) return; const btn = document.getElementById('btn-knowledge'); btn.disabled = true; btn.innerText = "분석 중..."; const formData = new FormData(); formData.append("title", t); formData.append("content", c); for(let i=0; i<files.length; i++) formData.append("files", files[i]); try { const res = await fetch(`${API_URL}/api/admin/knowledge`, { method: 'POST', body: formData }); const data = await res.json(); if(data.success) { alert("학습 완료!"); document.getElementById('kb-title').value=''; document.getElementById('kb-content').value=''; } } catch(e) {} btn.disabled = false; btn.innerText = "저장 및 학습"; }
+        function updateGenFileVisuals() { const files = document.getElementById('gen-files').files; const container = document.getElementById('gen-files-visual'); container.innerHTML = ""; for(let i=0; i<files.length; i++) container.innerHTML += `<span class="bg-gray-800 text-emerald-400 text-[10px] px-2 py-1 rounded"><i class="fa-solid fa-check mr-1"></i>${files[i].name}</span>`; }
+        async function generateStreamQuestions() { const formData = new FormData(); formData.append("q_mode", "신규 출제"); formData.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb => cb.value).join(', ')); formData.append("cnt_killer", document.getElementById('c-killer').value); formData.append("cnt_semi", document.getElementById('c-semi').value); formData.append("cnt_high", document.getElementById('c-high').value); formData.append("cnt_mid", document.getElementById('c-mid').value); formData.append("cnt_low", document.getElementById('c-low').value); formData.append("q_text", document.getElementById('gen-text').value); const files = document.getElementById('gen-files').files; for (let i = 0; i < files.length; i++) formData.append("files", files[i]); document.getElementById('gen-result-area').style.display = 'block'; const resultBox = document.getElementById('gen-result-text'); resultBox.value = ""; try { const res = await fetch(`${API_URL}/api/admin/generate_stream`, { method: 'POST', body: formData }); const reader = res.body.getReader(); const decoder = new TextDecoder("utf-8"); while(true) { const {done, value} = await reader.read(); if(done) break; resultBox.value += decoder.decode(value, {stream: true}); resultBox.scrollTop = resultBox.scrollHeight; } } catch (e) {} }
+        async function deployFromGenerator() { const title = document.getElementById('rt-title').value || "자동생성_모의고사"; const raw = document.getElementById('gen-result-text').value; try { await fetch(`${API_URL}/api/admin/exam`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: title, time_limit: 45, answer_key: "텍스트 자체내장", raw_text: raw }) }); alert("배포 완료"); } catch(e) {} }
+        function printGeneratedPDF() { const text = document.getElementById('gen-result-text').value; const printWindow = window.open('', '', 'width=800,height=900'); printWindow.document.write(`<html><head><title>문제 출력</title></head><body style="font-family:sans-serif;padding:30px;"><pre style="white-space:pre-wrap;font-size:16px;">${text}</pre><script>window.print();<\/script></body></html>`); printWindow.document.close(); }
     </script>
 </body>
 </html>
