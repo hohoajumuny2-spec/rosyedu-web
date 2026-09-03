@@ -1,0 +1,21 @@
+{
+  "name": "로지에듀 최준용 국어 AI 튜터",
+  "short_name": "로지에듀",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a1e29",
+  "theme_color": "#1a1e29",
+  "description": "대치동 최준용 국어학원 스마트 AI 플랫폼",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
