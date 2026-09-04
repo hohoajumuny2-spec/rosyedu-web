@@ -194,7 +194,6 @@
         </div>
     </div>
 
-    <!-- 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 md:pt-28 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8">스마트 학습실</h2>
@@ -538,7 +537,7 @@
                                 
                                 <label for="kb-files" id="dz-kb" class="drop-zone py-3 block cursor-pointer">
                                     <i class="fa-solid fa-folder-tree text-3xl mb-2 text-gray-500"></i>
-                                    <div id="dz-kb-label" class="text-sm text-gray-400 block font-bold">클릭하여 파일 선택 (다중 가능)</div>
+                                    <div id="dz-kb-label" class="text-sm text-gray-400 mt-2 block font-bold">클릭하여 파일 선택 (다중 가능)</div>
                                     <input type="file" id="kb-files" multiple accept=".pdf, .jpg, .png" class="hidden" onchange="handleFileSelect(event, kbFiles, 'kb-files-visual')">
                                 </label>
                                 <div id="kb-files-visual" class="mt-2 mb-4 flex flex-wrap gap-2 justify-center"></div>
@@ -776,7 +775,7 @@
         function renderAccumulatedFiles(array, containerId) {
             const container = document.getElementById(containerId); if(!container) return;
             container.innerHTML = '';
-            array.forEach((f) => {
+            array.forEach((f, idx) => {
                 const safeName = f.name.replace(/'/g, "\\'");
                 container.innerHTML += `<span class="bg-indigo-900/50 border border-indigo-500 text-indigo-100 text-xs px-3 py-1.5 rounded-lg inline-flex items-center shadow-md m-1 animate-fadeIn">
                     <i class="fa-solid fa-file-circle-check mr-2 text-indigo-300"></i><span class="truncate max-w-[150px] font-bold">${f.name}</span>
@@ -972,7 +971,6 @@
 
         async function deleteGeneratedQuestion(id) { if(!confirm("해당 출제 기록을 삭제하시겠습니까?")) return; showLoader("기록 삭제 중..."); try { await fetch(`${API_URL}/api/admin/questions/${id}`, {method: 'DELETE'}); loadGeneratedQuestions(); } catch(e){} hideLoader(); }
 
-        // 💡 출제 이관 버튼 (모의고사로 직행 및 텍스트 자동 복사 적용)
         function deployFromGenerator() {
             const title = document.getElementById('gen-title').value.trim();
             const content = document.getElementById('gen-result-text').value.trim();
@@ -1129,7 +1127,8 @@
         async function submitEssayGrade() { const topic = document.getElementById('essay-topic').value.trim(); const fileInput = document.getElementById('essay-file'); const file = fileInput.files[0]; if(!topic || !file) return alert("논제와 파일을 모두 첨부해주세요."); const btn = document.getElementById('btn-submit-essay'); btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>AI 튜터가 첨삭 중입니다... (10초~20초 소요)"; const formData = new FormData(); formData.append("school", currentUser.school); formData.append("grade", currentUser.grade); formData.append("student_name", currentUser.name); formData.append("topic", topic); formData.append("file", file); try { const res = await fetch(`${API_URL}/api/essay/grade`, { method: 'POST', body: formData }); const data = await res.json(); if(data.success) { document.getElementById('essay-result-area').style.display = 'block'; document.getElementById('essay-feedback').innerHTML = data.feedback; } else { alert("첨삭 오류: " + data.detail); } } catch(e) { alert("서버 통신 오류가 발생했습니다."); } btn.disabled = false; btn.innerText = "AI 첨삭 다시하기"; }
         function printEssayReport() { const content = document.getElementById('essay-feedback').innerHTML; const printWindow = window.open('', '', 'width=800,height=900'); printWindow.document.write(`<html><head><title>AI 첨삭 결과</title><style>body{font-family:sans-serif;padding:30px;line-height:1.6;} span{color:#ef4444;font-weight:bold;}</style></head><body>${content}<script>setTimeout(()=>window.print(), 1000);<\/script></body></html>`); printWindow.document.close(); }
 
-        // 💡 실시간 모의고사 목록 호출 (안전 치환 적용)
+        // 💡 1. 모의고사 목록 안전 파싱(인덱스 배열 방식 도입 완료)
+        let studentExamsList = [];
         async function loadStudentExams() { 
             try { 
                 const res = await fetch(`${API_URL}/api/exams`); 
@@ -1137,24 +1136,17 @@
                 const container = document.getElementById('student-exam-list'); 
                 container.innerHTML = ''; 
                 if(data.success && data.exams.length > 0) { 
-                    data.exams.forEach(e => { 
-                        // 원장님이 학생뷰를 볼때는 스킵하지 않음
+                    studentExamsList = data.exams; // 배열에 안전하게 저장
+                    data.exams.forEach((e, idx) => { 
                         if (!currentUser.isAdmin && e.allowed_students && !e.allowed_students.includes("all") && !e.allowed_students.includes(currentUser.name)) return; 
-                        
-                        // 💡 따옴표 및 줄바꿈으로 인한 onclick 구문 파괴 방지
-                        const safeTitle = encodeURIComponent(e.title || ""); 
-                        const safePdf = encodeURIComponent(e.pdf_url || ""); 
-                        const safeExamData = encodeURIComponent(e.exam_data || ""); 
-                        const safeObj = encodeURIComponent(e.objective || ""); 
-                        
-                        container.innerHTML += `<div onclick="prepExamRoom(decodeURIComponent('${safeTitle}'), decodeURIComponent('${safePdf}'), decodeURIComponent('${safeExamData}'), decodeURIComponent('${safeObj}'))" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`; 
+                        // 인덱스 번호만 버튼에 넘김 (어떤 텍스트 오류도 원천 차단)
+                        container.innerHTML += `<div onclick="enterExamRoom(${idx})" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`; 
                     }); 
                 } 
                 if(container.innerHTML === '') container.innerHTML = "<p class='text-sm text-gray-500'>현재 배정된 모의고사가 없습니다.</p>"; 
             } catch(e) {} 
         }
 
-        // 💡 관리자 모의고사 목록 (안전 치환 적용)
         async function loadAdminExams() { 
             try { 
                 const res = await fetch(`${API_URL}/api/exams`); 
@@ -1162,13 +1154,70 @@
                 const container = document.getElementById('admin-exam-list'); 
                 container.innerHTML = ''; 
                 if(data.success && data.exams.length > 0) { 
-                    data.exams.forEach(e => { 
-                        const safeTitle = encodeURIComponent(e.title || "");
-                        const safePdf = encodeURIComponent(e.pdf_url || "");
-                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span class="truncate">${e.title}</span><div class="flex gap-2"><button onclick="startAdminLive(decodeURIComponent('${safeTitle}'), decodeURIComponent('${safePdf}'))" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition text-xs font-bold whitespace-nowrap"><i class="fa-solid fa-satellite-dish mr-1"></i>라이브 감독</button><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition text-xs">삭제</button></div></div>`; 
+                    studentExamsList = data.exams; // 관리자 모드에서도 동일한 배열 공유
+                    data.exams.forEach((e, idx) => { 
+                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span class="truncate">${e.title}</span><div class="flex gap-2"><button onclick="startAdminLiveByIndex(${idx})" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition text-xs font-bold whitespace-nowrap"><i class="fa-solid fa-satellite-dish mr-1"></i>라이브 감독</button><button onclick="deleteExamByIndex(${idx})" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition text-xs">삭제</button></div></div>`; 
                     }); 
                 } 
             } catch(e) {} 
+        }
+
+        // 💡 2. 입장 버튼 작동 (안전 금고 데이터 참조)
+        function enterExamRoom(idx) {
+            const e = studentExamsList[idx];
+            const title = e.title || "";
+            const pdfUrl = e.pdf_url || "";
+            const examDataStr = e.exam_data || "{}";
+            const objectiveStr = e.objective || "";
+
+            openProgram('exam-room'); 
+            currentExamTitle = title; 
+            document.getElementById('room-exam-title-active').innerText = title; 
+            document.getElementById('exam-result-report').style.display = 'none'; 
+            document.getElementById('btn-submit-exam').style.display = 'none'; 
+            document.getElementById('report-action-buttons').style.display = 'none'; 
+            document.getElementById('timer-ui-container').style.display = 'flex'; 
+            document.getElementById('exam-omr-container').style.display = 'grid'; 
+            document.getElementById('live-admin-controls').classList.add('hidden'); 
+            
+            try {
+                currentExamData = JSON.parse(examDataStr);
+            } catch(err) {
+                currentExamData = { sections: [], questions: [] };
+            }
+            
+            document.getElementById('prep-exam-title').innerText = title; 
+            document.getElementById('prep-objective-text').innerText = objectiveStr || "공지사항이 없습니다."; 
+            document.getElementById('prep-target-score').value = ''; 
+            
+            studentSections = JSON.parse(JSON.stringify(currentExamData.sections || [])); 
+            renderStudentPrepSections(); 
+            document.getElementById('exam-prep-overlay').style.display = 'flex'; 
+            
+            if(pdfUrl && pdfUrl.trim() !== '') { 
+                const safePdfUrl = encodeURI(API_URL + pdfUrl); 
+                renderPDF(safePdfUrl, title); 
+            } else { 
+                document.getElementById('pdf-loading').innerHTML = '<i class="fa-solid fa-file-circle-xmark text-3xl mb-3 text-red-500"></i><br><span class="text-red-400 font-bold">PDF 파일을 찾을 수 없습니다.</span><br><span class="text-xs text-gray-400 mt-2 block">서버 업데이트로 인해 임시 보관된 시험지가 삭제되었을 수 있습니다.<br>원장님께서 모의고사를 다시 개설해주셔야 합니다.</span>'; 
+                document.getElementById('pdf-loading').style.display = 'block'; 
+            } 
+        }
+
+        // 관리자용 라이브 감독 시작 함수
+        function startAdminLiveByIndex(idx) {
+            const e = studentExamsList[idx];
+            startAdminLive(e.title, e.pdf_url);
+        }
+
+        // 안전한 시험 삭제 함수
+        async function deleteExamByIndex(idx) { 
+            const title = studentExamsList[idx].title;
+            if(confirm("해당 모의고사를 삭제하시겠습니까?")) {
+                try { 
+                    await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); 
+                    loadAdminExams(); 
+                } catch(e){} 
+            }
         }
 
         function connectLiveExam(roomTitle) {
@@ -1196,19 +1245,7 @@
         function toggleExamStudents() { const isAll = document.getElementById('rt-student-all').checked; const container = document.getElementById('rt-student-list-container'); if(isAll) container.classList.add('hidden'); else container.classList.remove('hidden'); }
         let adminExamSections = []; function addAdminSection(presetName, presetTime) { const name = typeof presetName === 'string' ? presetName : document.getElementById('sec-name').value.trim(); const timeStr = typeof presetTime === 'number' ? presetTime : document.getElementById('sec-time').value; const time = parseInt(timeStr); if(!name || isNaN(time) || time <= 0) { alert("구간명과 시간을 올바르게 입력해주세요!"); return; } adminExamSections.push({name: name, time: time}); if(typeof presetName !== 'string') { document.getElementById('sec-name').value = ''; document.getElementById('sec-time').value = ''; } renderAdminSections(); }
         function renderAdminSections() { const board = document.getElementById('admin-section-board'); board.innerHTML = ""; let total = 0; adminExamSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<span class="bg-yellow-900/50 text-yellow-200 px-2 py-1 rounded text-xs mr-2 mb-1 inline-block">${s.name}(${s.time}분) <button type="button" onclick="adminExamSections.splice(${idx},1); renderAdminSections()" class="text-red-400 ml-1">X</button></span>`; }); if(total > 0) board.innerHTML += `<div class="text-xs text-emerald-400 mt-1 font-bold">총 ${total}분</div>`; }
-        let adminExamQuestions = []; 
-        function buildAdminOMR() { 
-            const countStr = document.getElementById('rt-qcount').value; const count = parseInt(countStr); 
-            if(isNaN(count) || count <= 0) return alert("문항수를 먼저 입력해주세요!"); 
-            const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; 
-            adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2})); 
-            for(let i=0; i<count; i++) { 
-                let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`; 
-                for(let j=1; j<=5; j++) row += `<button type="button" class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</button>`; 
-                row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs outline-none"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs outline-none"></div></div>`; 
-                board.innerHTML += row; 
-            } 
-        }
+        let adminExamQuestions = []; function buildAdminOMR() { const countStr = document.getElementById('rt-qcount').value; const count = parseInt(countStr); if(isNaN(count) || count <= 0) return alert("문항수를 먼저 입력해주세요!"); const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2})); for(let i=0; i<count; i++) { let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`; for(let j=1; j<=5; j++) row += `<button type="button" class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</button>`; row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs outline-none"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs outline-none"></div></div>`; board.innerHTML += row; } }
         function setAdminOmr(rowIdx, ans) { adminExamQuestions[rowIdx].ans = ans; const circles = document.getElementById(`a-omr-row-${rowIdx}`).children; for(let i=0; i<5; i++) { circles[i].classList.remove('active'); if(i+1 === ans) circles[i].classList.add('active'); } }
         
         async function setRealtimeExam() { 
@@ -1232,8 +1269,6 @@
             
             hideLoader();
         }
-
-        async function deleteExam(title) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){} }
 
         let pdfDoc = null; let isDrawing = false;
         async function renderPDF(url, roomTitle = null) {
@@ -1262,6 +1297,11 @@
         function toggleDrawMode() { isDrawing = !isDrawing; const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); const btn = document.getElementById('btn-draw'); const clearBtn = document.getElementById('btn-clear'); const hint = document.getElementById('draw-hint'); drawCanvases.forEach(c => c.style.display = isDrawing ? 'block' : 'none'); if(isDrawing) { btn.classList.replace('bg-blue-600', 'bg-red-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 끄기'; clearBtn.style.display = 'inline-block'; hint.style.display = 'block'; document.getElementById('pdf-render-wrapper').style.touchAction = 'pan-x pan-y pinch-zoom'; } else { btn.classList.replace('bg-red-600', 'bg-blue-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 켜기'; clearBtn.style.display = 'none'; hint.style.display = 'none'; } }
         function clearCanvas() { const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); drawCanvases.forEach(c => { c.getContext('2d').clearRect(0, 0, c.width, c.height); }); if (currentUser.isAdmin && wsLive) wsLive.send(JSON.stringify({ type: 'clear' })); }
 
+        let examTimerInterval; let studentOmrAnswers = []; let currentExamTitle = ""; let currentExamData = null; let studentSections = []; let currSecIdx = 0; let secAllocated = 0; let secSpent = 0; let totalSavedSec = 0; let isExamActive = false; let isExamPaused = false;
+        
+        function renderStudentPrepSections() { const board = document.getElementById('prep-sections-board'); board.innerHTML = ""; let total = 0; studentSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<div class="flex items-center gap-2 mb-2 bg-[#1e2430] p-2 rounded"><input type="text" value="${s.name}" onchange="studentSections[${idx}].name=this.value" class="w-1/2 bg-transparent text-white text-sm outline-none border-b border-gray-600"><input type="number" value="${s.time}" onchange="studentSections[${idx}].time=parseInt(this.value)" class="w-1/4 bg-transparent text-emerald-400 font-bold text-center outline-none border-b border-gray-600">분<button type="button" onclick="studentSections.splice(${idx},1); renderStudentPrepSections()" class="text-red-400 ml-auto"><i class="fa-solid fa-trash"></i></button></div>`; }); board.innerHTML += `<div class="text-right text-emerald-400 text-sm font-bold mt-2">총 예정 시간: ${total}분</div>`; }
+        function addStudentSection() { studentSections.push({name: "새 구간", time: 10}); renderStudentPrepSections(); }
+        
         function startExamReal() { 
             const targetScore = document.getElementById('prep-target-score').value; 
             if(!targetScore) return alert("나의 목표 점수를 입력해주세요!"); 
@@ -1287,6 +1327,7 @@
             document.getElementById('exam-prep-overlay').style.display = 'none'; 
             currSecIdx = 0; secSpent = 0; totalSavedSec = 0; isExamActive = true; isExamPaused = false; connectLiveExam(currentExamTitle); loadCurrentSection(); clearInterval(examTimerInterval); examTimerInterval = setInterval(engineTick, 1000); playBeep(); 
         }
+        
         function loadCurrentSection() { if(currSecIdx >= studentSections.length) { document.getElementById('active-section-name').innerText = "시험 완료"; document.getElementById('active-section-timer').innerText = "00:00"; document.getElementById('active-overtime-label').style.display = 'none'; document.getElementById('btn-next-section').style.display = 'none'; document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-submit-exam').style.display = 'block'; isExamActive = false; return; } secAllocated = studentSections[currSecIdx].time * 60; secSpent = 0; document.getElementById('active-section-name').innerText = `[${currSecIdx+1}/${studentSections.length}] ${studentSections[currSecIdx].name}`; const btnNext = document.getElementById('btn-next-section'); btnNext.style.display = 'block'; if(currSecIdx === studentSections.length - 1) { btnNext.innerHTML = '종료 및 제출 <i class="fa-solid fa-check ml-1"></i>'; btnNext.classList.replace('bg-blue-600', 'bg-indigo-600'); } else { btnNext.innerHTML = '다음 구간 <i class="fa-solid fa-forward ml-1"></i>'; btnNext.classList.replace('bg-indigo-600', 'bg-blue-600'); } document.getElementById('btn-pause').style.display = 'block'; updateEngineUI(); }
         function togglePauseExam() { if(!isExamActive) return; isExamPaused = !isExamPaused; const btn = document.getElementById('btn-pause'); if(isExamPaused) { btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i>재개하기'; btn.classList.replace('bg-gray-700', 'bg-yellow-600'); } else { btn.innerHTML = '<i class="fa-solid fa-pause mr-1"></i>일시정지'; btn.classList.replace('bg-yellow-600', 'bg-gray-700'); } }
         function nextExamSection() { if(!isExamActive) return; if(secSpent < secAllocated) totalSavedSec += (secAllocated - secSpent); else { let overTime = secSpent - secAllocated; if (totalSavedSec >= overTime) totalSavedSec -= overTime; else totalSavedSec = 0; } if(currSecIdx === studentSections.length - 1) submitRealtimeExam(); else { currSecIdx++; loadCurrentSection(); } }
@@ -1324,18 +1365,98 @@
                 } 
             } catch(e) { alert("서버 오류"); } 
         }
-        
-        async function generateTwin(diff, score) { document.getElementById('twin-modal').style.display = 'flex'; const twinContent = document.getElementById('twin-content'); twinContent.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i><br>AI 국최가 쌍둥이 문제를 실시간으로 창조하고 있습니다...</div>'; try { const res = await fetch(`${API_URL}/api/exam/twin`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ diff: diff, score: score }) }); const data = await res.json(); if(data.success) twinContent.innerHTML = data.twin_data; else twinContent.innerHTML = "오류가 발생했습니다."; } catch(e) { twinContent.innerHTML = "통신 오류"; } }
 
-        async function createLecture() { const t = document.getElementById('lec-title').value; const d = document.getElementById('lec-desc').value; const u = document.getElementById('lec-url').value; if(!t || !u) return; try { await fetch(`${API_URL}/api/admin/lecture`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title: t, desc: d, video_url: u }) }); loadAdminLectures(); } catch(e) {} }
-        async function loadAdminLectures() { try { const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('admin-lecture-list'); container.innerHTML = ''; if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2"><span class="text-white text-sm truncate">${l.title}</span><button onclick="deleteLecture('${l.id}')" class="bg-red-900/50 text-white px-2 py-1 rounded text-xs">삭제</button></div>`; }); } } catch(e) {} }
-        async function deleteLecture(id) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/lecture/${id}`, {method:'DELETE'}); loadAdminLectures(); } catch(e){} }
-        async function loadLectures() { try { const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('student-lecture-list'); container.innerHTML = ''; if(data.success && data.lectures.length > 0) { data.lectures.forEach(l => { container.innerHTML += `<div class="bg-[#151922] p-6 rounded-lg border border-gray-700 flex flex-col"><h3 class="text-lg font-bold text-white mb-2">${l.title}</h3><p class="text-xs text-gray-400 mb-4 flex-grow">${l.desc}</p><a href="${l.video_url}" target="_blank" class="bg-purple-600 py-3 rounded text-center text-white font-bold"><i class="fa-solid fa-play mr-2"></i>시청</a></div>`; }); } } catch(e){} }
+        // 💡 3. 과제, 게시판, 강의 등 배열 인덱스(안전 참조) 방식으로 100% 교체 완료
+        let studentHwList = [];
+        async function loadHomeworks() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/homeworks`); const data = await res.json(); const container = document.getElementById('student-hw-list'); container.innerHTML = ''; 
+                if(data.success && data.homeworks.length > 0) { 
+                    studentHwList = data.homeworks;
+                    data.homeworks.forEach((h, idx) => { 
+                        container.innerHTML += `<div class="bg-[#151922] p-4 rounded-lg border border-gray-700 flex justify-between items-center text-sm"><div><h3 class="font-bold text-white">${h.title}</h3></div><button onclick="openSubmitHomeworkByIndex(${idx})" class="bg-emerald-600 px-3 py-1 rounded text-white">제출</button></div>`; 
+                    }); 
+                } 
+            } catch(e){} 
+        }
+        async function loadAdminHWList() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/homeworks`); const data = await res.json(); const container = document.getElementById('admin-hw-view-list'); container.innerHTML = ''; 
+                if(data.success && data.homeworks.length > 0) { 
+                    studentHwList = data.homeworks;
+                    data.homeworks.forEach((h, idx) => { 
+                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${h.title}</span><button onclick="deleteHomeworkByIndex(${idx})" class="text-red-400 bg-red-900/30 px-2 py-1 rounded text-[10px] hover:bg-red-600 hover:text-white transition">삭제</button></div>`; 
+                    }); 
+                } else { container.innerHTML = "<p class='text-sm text-gray-500'>등록된 과제가 없습니다.</p>"; } 
+            } catch(e){} 
+        }
+        function openSubmitHomeworkByIndex(idx) {
+            const title = studentHwList[idx].title;
+            document.getElementById('hw-submit-area').style.display = 'block'; 
+            document.getElementById('hw-target-title').innerText = title; 
+            document.getElementById('hw-result-area').style.display = 'none';
+        }
+        async function deleteHomeworkByIndex(idx) {
+            const id = studentHwList[idx].id;
+            if(confirm("과제를 삭제하시겠습니까?")) try { await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(id)}`, {method:'DELETE'}); loadAdminHWList(); } catch(e){} 
+        }
 
-        function printReportCard() { window.print(); }
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
+        let studentLectureList = [];
+        async function loadLectures() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('student-lecture-list'); container.innerHTML = ''; 
+                if(data.success && data.lectures.length > 0) { 
+                    studentLectureList = data.lectures;
+                    data.lectures.forEach(l => { 
+                        container.innerHTML += `<div class="bg-[#151922] p-6 rounded-lg border border-gray-700 flex flex-col"><h3 class="text-lg font-bold text-white mb-2">${l.title}</h3><p class="text-xs text-gray-400 mb-4 flex-grow">${l.desc}</p><a href="${l.video_url}" target="_blank" class="bg-purple-600 py-3 rounded text-center text-white font-bold"><i class="fa-solid fa-play mr-2"></i>시청</a></div>`; 
+                    }); 
+                } 
+            } catch(e){} 
+        }
+        async function loadAdminLectures() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/lectures`); const data = await res.json(); const container = document.getElementById('admin-lecture-list'); container.innerHTML = ''; 
+                if(data.success && data.lectures.length > 0) { 
+                    studentLectureList = data.lectures;
+                    data.lectures.forEach((l, idx) => { 
+                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2"><span class="text-white text-sm truncate">${l.title}</span><button onclick="deleteLectureByIndex(${idx})" class="bg-red-900/50 text-white px-2 py-1 rounded text-xs">삭제</button></div>`; 
+                    }); 
+                } 
+            } catch(e) {} 
+        }
+        async function deleteLectureByIndex(idx) { 
+            const id = studentLectureList[idx].id;
+            if(confirm("해당 강의를 삭제하시겠습니까?")) try { await fetch(`${API_URL}/api/admin/lecture/${id}`, {method:'DELETE'}); loadAdminLectures(); } catch(e){} 
+        }
+
+        let boardList = [];
+        async function loadBoard() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/board`); const data = await res.json(); const c = document.getElementById('board-list'); c.innerHTML = ''; 
+                if(data.success && data.posts.length > 0) { 
+                    boardList = data.posts;
+                    data.posts.forEach((p, idx) => { 
+                        let fLink = p.file_url ? `<a href="${API_URL}${p.file_url}" target="_blank" class="text-blue-400 text-xs mt-2 block inline-block">첨부파일 다운로드</a>` : ''; 
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700 text-sm"><div class="flex justify-between mb-2"><h3 class="font-bold text-emerald-400 text-lg">${p.title}</h3>${currentUser.isAdmin ? `<button onclick="deleteBoardPostByIndex(${idx});" class="text-[10px] bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded transition">삭제</button>`:''}</div><p class="text-gray-300 whitespace-pre-wrap leading-relaxed">${p.desc}</p>${fLink}</div>`; 
+                    }); 
+                } else { c.innerHTML = "<p class='text-gray-500'>등록된 공지사항이 없습니다.</p>"; } 
+            } catch(e){} 
+        }
+        async function loadAdminBoardList() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/board`); const data = await res.json(); const container = document.getElementById('admin-board-view-list'); container.innerHTML = ''; 
+                if(data.success && data.posts.length > 0) { 
+                    boardList = data.posts;
+                    data.posts.forEach((p, idx) => { 
+                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${p.title}</span><button onclick="deleteBoardPostByIndex(${idx})" class="text-red-400 bg-red-900/30 px-2 py-1 rounded text-[10px] hover:bg-red-600 hover:text-white transition">삭제</button></div>`; 
+                    }); 
+                } else { container.innerHTML = "<p class='text-sm text-gray-500'>등록된 공지사항이 없습니다.</p>"; } 
+            } catch(e){} 
+        }
+        async function deleteBoardPostByIndex(idx) { 
+            const id = boardList[idx].id;
+            if(confirm("공지사항을 삭제하시겠습니까?")) try { await fetch(`${API_URL}/api/admin/board/${id}`, {method:'DELETE'}); loadAdminBoardList(); loadBoard(); } catch(e){} 
+        }
     </script>
 </body>
 </html>
