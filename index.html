@@ -118,7 +118,6 @@
                 </div>
                 <div id="user-nav" class="hidden items-center gap-3">
                     <span id="header-user-info" class="text-blue-400 font-bold text-xs md:text-sm"></span>
-                    <!-- 💡 마이페이지 버튼 추가 -->
                     <button onclick="openProgram('mypage'); loadMyPage();" class="text-emerald-400 hover:text-emerald-300 font-bold border border-emerald-600 px-3 py-1.5 rounded-lg text-xs transition bg-emerald-900/20" id="btn-mypage-nav" style="display:none;">마이페이지</button>
                     <button onclick="goToDashboard()" class="text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1.5 rounded-lg text-xs transition">학습실</button>
                     <button onclick="logout()" class="text-gray-400 hover:text-white underline text-xs hidden md:inline">로그아웃</button>
@@ -241,7 +240,7 @@
         <div id="program-view" style="display: none;" class="fade-in pt-24 px-4 pb-12 w-full max-w-7xl mx-auto">
             <button onclick="closeProgram()" class="mb-4 text-gray-400 hover:text-white font-bold flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> 돌아가기</button>
 
-            <!-- 💡 마이페이지 화면 신설 -->
+            <!-- 마이페이지 -->
             <div id="prog-mypage" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-4 md:p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h2 class="text-2xl md:text-3xl font-bold text-emerald-400 mb-6 border-b border-gray-700 pb-4"><i class="fa-solid fa-user-graduate mr-2"></i>나의 학습 기록 (마이페이지)</h2>
                 
@@ -476,7 +475,6 @@
             <div id="prog-admin" class="prog-content w-full max-w-7xl mx-auto">
                 <div class="bg-[#1e2430] border border-gray-800 p-4 md:p-8 rounded-xl shadow-xl">
                     <div class="flex overflow-x-auto gap-2 md:gap-4 border-b border-gray-700 pb-4 mb-6 md:mb-8 whitespace-nowrap text-sm">
-                        <!-- 💡 용어 일괄 변경 (장부 -> 학생 명단) -->
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-3 md:px-4 py-2 rounded">👥 학생 명단</button>
                         <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600/50 px-3 md:px-4 py-2 rounded">📚 자료학습</button>
                         <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600/50 px-3 md:px-4 py-2 rounded">🪄 출제</button>
@@ -595,7 +593,6 @@
                                     <textarea id="gen-result-text" class="w-full flex-grow bg-[#1e2430] p-4 rounded mb-4 font-mono text-xs text-white outline-none border border-gray-600 transition-colors duration-300"></textarea>
                                     <div class="flex gap-2 flex-shrink-0">
                                         <button onclick="saveGeneratedQuestion()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-3 rounded-lg text-white font-bold text-xs lg:text-sm shadow-lg transition">보관함에 저장</button>
-                                        <!-- 💡 다이렉트 출제 버튼 개선 -->
                                         <button onclick="deployFromGenerator()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg text-white font-bold text-xs lg:text-sm shadow-lg transition">모의고사 개설로 이동</button>
                                         <button onclick="printGeneratedPDF()" class="bg-gray-200 hover:bg-white py-3 px-4 rounded-lg text-black font-bold text-xs lg:text-sm transition shadow-lg"><i class="fa-solid fa-print mr-1"></i> 2단 인쇄</button>
                                     </div>
@@ -657,7 +654,6 @@
                                         <input type="number" id="rt-qcount" placeholder="문항수 입력" class="w-2/3 bg-gray-800 border border-gray-600 p-2 rounded text-white text-sm outline-none">
                                         <button onclick="buildAdminOMR()" type="button" class="w-1/3 bg-gray-600 hover:bg-gray-500 text-white rounded font-bold text-sm transition py-2">OMR 생성</button>
                                     </div>
-                                    <!-- 💡 OMR 선택 문구 명시 -->
                                     <p class="text-[10px] text-gray-400 mb-2 mt-1">* OMR 생성 없이 문제/해설지로만 자유 배포도 가능합니다.</p>
                                     <div id="admin-omr-board" class="space-y-3 h-48 overflow-y-auto pr-1"></div>
                                 </div>
@@ -728,6 +724,7 @@
         </div>
     </div>
 
+    <!-- 로그인 및 모달 -->
     <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-sm shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-2">학생 정보 수정</h3>
@@ -982,12 +979,10 @@
             if(!title) return alert("출제할 문제집의 제목을 상단에 입력해주세요!");
             if(!content) return alert("출제된 문제가 없습니다.");
             
-            // 모의고사 탭으로 바로 이동
             switchAdminTab('admin-exam');
             document.getElementById('rt-title').value = title;
-            document.getElementById('rt-exp').value = content; // 상세 해설 칸에 출제 데이터 자동 삽입
+            document.getElementById('rt-exp').value = content; 
             
-            // 타이머 없으면 기본 세팅 1개 추가
             if(adminExamSections.length === 0) {
                 addAdminSection('모의고사', 45);
             }
@@ -995,7 +990,6 @@
             alert("✅ 출제된 문제와 정답/해설이 모의고사 개설 창에 자동 복사되었습니다!\n\n1. [2단 인쇄]로 저장해둔 PDF 파일만 첨부해주세요.\n2. 필요시 OMR을 생성하세요 (생략 가능).\n3. 하단의 [오픈하기]를 누르면 즉시 배포됩니다.");
         }
 
-        // 💡 마이페이지 불러오기 로직 신설
         async function loadMyPage() {
             if(!currentUser) return;
             document.getElementById('mypage-info').innerText = `${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
@@ -1072,7 +1066,6 @@
                 document.getElementById('auth-nav').style.display = 'none'; document.getElementById('user-nav').classList.remove('hidden'); document.getElementById('user-nav').classList.add('flex');
                 document.getElementById('header-user-info').innerText = currentUser.isAdmin ? '원장님' : `${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
                 
-                // 💡 마이페이지 버튼 표시 (원장님이 아닐 경우)
                 if(!currentUser.isAdmin) {
                     document.getElementById('btn-mypage-nav').style.display = 'inline-block';
                     document.getElementById('mobile-mypage-btn').style.display = 'block';
@@ -1136,6 +1129,48 @@
         async function submitEssayGrade() { const topic = document.getElementById('essay-topic').value.trim(); const fileInput = document.getElementById('essay-file'); const file = fileInput.files[0]; if(!topic || !file) return alert("논제와 파일을 모두 첨부해주세요."); const btn = document.getElementById('btn-submit-essay'); btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>AI 튜터가 첨삭 중입니다... (10초~20초 소요)"; const formData = new FormData(); formData.append("school", currentUser.school); formData.append("grade", currentUser.grade); formData.append("student_name", currentUser.name); formData.append("topic", topic); formData.append("file", file); try { const res = await fetch(`${API_URL}/api/essay/grade`, { method: 'POST', body: formData }); const data = await res.json(); if(data.success) { document.getElementById('essay-result-area').style.display = 'block'; document.getElementById('essay-feedback').innerHTML = data.feedback; } else { alert("첨삭 오류: " + data.detail); } } catch(e) { alert("서버 통신 오류가 발생했습니다."); } btn.disabled = false; btn.innerText = "AI 첨삭 다시하기"; }
         function printEssayReport() { const content = document.getElementById('essay-feedback').innerHTML; const printWindow = window.open('', '', 'width=800,height=900'); printWindow.document.write(`<html><head><title>AI 첨삭 결과</title><style>body{font-family:sans-serif;padding:30px;line-height:1.6;} span{color:#ef4444;font-weight:bold;}</style></head><body>${content}<script>setTimeout(()=>window.print(), 1000);<\/script></body></html>`); printWindow.document.close(); }
 
+        // 💡 실시간 모의고사 목록 호출 (안전 치환 적용)
+        async function loadStudentExams() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/exams`); 
+                const data = await res.json(); 
+                const container = document.getElementById('student-exam-list'); 
+                container.innerHTML = ''; 
+                if(data.success && data.exams.length > 0) { 
+                    data.exams.forEach(e => { 
+                        // 원장님이 학생뷰를 볼때는 스킵하지 않음
+                        if (!currentUser.isAdmin && e.allowed_students && !e.allowed_students.includes("all") && !e.allowed_students.includes(currentUser.name)) return; 
+                        
+                        // 💡 따옴표 및 줄바꿈으로 인한 onclick 구문 파괴 방지
+                        const safeTitle = encodeURIComponent(e.title || ""); 
+                        const safePdf = encodeURIComponent(e.pdf_url || ""); 
+                        const safeExamData = encodeURIComponent(e.exam_data || ""); 
+                        const safeObj = encodeURIComponent(e.objective || ""); 
+                        
+                        container.innerHTML += `<div onclick="prepExamRoom(decodeURIComponent('${safeTitle}'), decodeURIComponent('${safePdf}'), decodeURIComponent('${safeExamData}'), decodeURIComponent('${safeObj}'))" class="bg-[#1e2430] p-5 rounded-xl cursor-pointer hover:border-yellow-500 border border-gray-700 shadow"><h3 class="text-lg font-bold text-white mb-2">${e.title}</h3><p class="text-xs text-yellow-400">입장하기</p></div>`; 
+                    }); 
+                } 
+                if(container.innerHTML === '') container.innerHTML = "<p class='text-sm text-gray-500'>현재 배정된 모의고사가 없습니다.</p>"; 
+            } catch(e) {} 
+        }
+
+        // 💡 관리자 모의고사 목록 (안전 치환 적용)
+        async function loadAdminExams() { 
+            try { 
+                const res = await fetch(`${API_URL}/api/exams`); 
+                const data = await res.json(); 
+                const container = document.getElementById('admin-exam-list'); 
+                container.innerHTML = ''; 
+                if(data.success && data.exams.length > 0) { 
+                    data.exams.forEach(e => { 
+                        const safeTitle = encodeURIComponent(e.title || "");
+                        const safePdf = encodeURIComponent(e.pdf_url || "");
+                        container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span class="truncate">${e.title}</span><div class="flex gap-2"><button onclick="startAdminLive(decodeURIComponent('${safeTitle}'), decodeURIComponent('${safePdf}'))" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition text-xs font-bold whitespace-nowrap"><i class="fa-solid fa-satellite-dish mr-1"></i>라이브 감독</button><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition text-xs">삭제</button></div></div>`; 
+                    }); 
+                } 
+            } catch(e) {} 
+        }
+
         function connectLiveExam(roomTitle) {
             if(wsLive) wsLive.close(); 
             const wsUrl = `wss://${new URL(API_URL).host}/ws/exam/${encodeURIComponent(roomTitle)}`; 
@@ -1161,15 +1196,25 @@
         function toggleExamStudents() { const isAll = document.getElementById('rt-student-all').checked; const container = document.getElementById('rt-student-list-container'); if(isAll) container.classList.add('hidden'); else container.classList.remove('hidden'); }
         let adminExamSections = []; function addAdminSection(presetName, presetTime) { const name = typeof presetName === 'string' ? presetName : document.getElementById('sec-name').value.trim(); const timeStr = typeof presetTime === 'number' ? presetTime : document.getElementById('sec-time').value; const time = parseInt(timeStr); if(!name || isNaN(time) || time <= 0) { alert("구간명과 시간을 올바르게 입력해주세요!"); return; } adminExamSections.push({name: name, time: time}); if(typeof presetName !== 'string') { document.getElementById('sec-name').value = ''; document.getElementById('sec-time').value = ''; } renderAdminSections(); }
         function renderAdminSections() { const board = document.getElementById('admin-section-board'); board.innerHTML = ""; let total = 0; adminExamSections.forEach((s, idx) => { total += s.time; board.innerHTML += `<span class="bg-yellow-900/50 text-yellow-200 px-2 py-1 rounded text-xs mr-2 mb-1 inline-block">${s.name}(${s.time}분) <button type="button" onclick="adminExamSections.splice(${idx},1); renderAdminSections()" class="text-red-400 ml-1">X</button></span>`; }); if(total > 0) board.innerHTML += `<div class="text-xs text-emerald-400 mt-1 font-bold">총 ${total}분</div>`; }
-        let adminExamQuestions = []; function buildAdminOMR() { const countStr = document.getElementById('rt-qcount').value; const count = parseInt(countStr); if(isNaN(count) || count <= 0) return alert("문항수를 먼저 입력해주세요!"); const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2})); for(let i=0; i<count; i++) { let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`; for(let j=1; j<=5; j++) row += `<button type="button" class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</button>`; row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs outline-none"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs outline-none"></div></div>`; board.innerHTML += row; } }
+        let adminExamQuestions = []; 
+        function buildAdminOMR() { 
+            const countStr = document.getElementById('rt-qcount').value; const count = parseInt(countStr); 
+            if(isNaN(count) || count <= 0) return alert("문항수를 먼저 입력해주세요!"); 
+            const board = document.getElementById('admin-omr-board'); board.innerHTML = ""; 
+            adminExamQuestions = Array(count).fill(null).map(()=>({ans: "", diff: "C", score: 2})); 
+            for(let i=0; i<count; i++) { 
+                let row = `<div class="flex flex-col md:flex-row items-center gap-2 bg-[#151922] p-2 rounded mb-2"><div class="flex items-center gap-2"><span class="w-6 text-right font-bold text-white text-sm">${i+1}.</span><div class="flex gap-1" id="a-omr-row-${i}">`; 
+                for(let j=1; j<=5; j++) row += `<button type="button" class="omr-circle bg-gray-700 w-6 h-6 text-xs" onclick="setAdminOmr(${i}, ${j})">${j}</button>`; 
+                row += `</div></div><div class="flex gap-1 ml-auto"><select onchange="adminExamQuestions[${i}].diff=this.value" class="bg-gray-800 text-white p-1 rounded text-xs outline-none"><option value="A">A</option><option value="B">B</option><option value="C" selected>C</option><option value="D">D</option><option value="E">E</option></select><input type="number" value="2" onchange="adminExamQuestions[${i}].score=parseInt(this.value)" class="bg-gray-800 text-white w-10 text-center rounded text-xs outline-none"></div></div>`; 
+                board.innerHTML += row; 
+            } 
+        }
         function setAdminOmr(rowIdx, ans) { adminExamQuestions[rowIdx].ans = ans; const circles = document.getElementById(`a-omr-row-${rowIdx}`).children; for(let i=0; i<5; i++) { circles[i].classList.remove('active'); if(i+1 === ans) circles[i].classList.add('active'); } }
         
-        // 💡 OMR 선택 입력 로직 완벽 적용 (강제 제한 해제)
         async function setRealtimeExam() { 
             const title = document.getElementById('rt-title').value; const objective = document.getElementById('rt-objective').value; const videoUrl = document.getElementById('rt-video').value; const expText = document.getElementById('rt-exp').value; const fileInput = document.getElementById('rt-pdf'); 
             if(!title) return alert("시험 제목을 입력해주세요!"); 
             if(adminExamSections.length===0) return alert("구간(타이머)을 최소 1개 이상 추가해주세요!"); 
-            // OMR 생성 시 비어있는 마킹만 경고 (OMR 자체가 0개면 무사 통과)
             if(adminExamQuestions.length > 0 && adminExamQuestions.some(q=>q.ans==="")) return alert("OMR 문항을 생성하셨다면 모든 정답을 마킹해주세요!\n(OMR 없이 출제하시려면 OMR 생성 창을 비워두세요.)"); 
             if(fileInput.files.length===0) return alert("학생들이 풀 PDF 시험지를 첨부해주세요!"); 
             let allowed = "all"; if(!document.getElementById('rt-student-all').checked) { const cbs = document.querySelectorAll('.exam-target-student:checked'); if(cbs.length === 0) return alert("응시 대상을 최소 1명 이상 선택하세요."); allowed = Array.from(cbs).map(cb => cb.value).join(","); } 
@@ -1188,7 +1233,6 @@
             hideLoader();
         }
 
-        async function loadAdminExams() { try { const res = await fetch(`${API_URL}/api/exams`); const data = await res.json(); const container = document.getElementById('admin-exam-list'); container.innerHTML = ''; if(data.success && data.exams.length > 0) { data.exams.forEach(e => { const pdfStr = e.pdf_url ? e.pdf_url : ''; container.innerHTML += `<div class="flex justify-between items-center bg-[#1e2430] p-3 rounded mb-2 text-sm text-white"><span>${e.title}</span><div class="flex gap-2"><button onclick="startAdminLive('${e.title}', '${pdfStr}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition text-xs font-bold"><i class="fa-solid fa-satellite-dish mr-1"></i>라이브 감독</button><button onclick="deleteExam('${e.title}')" class="bg-red-900/50 hover:bg-red-600 text-white px-2 py-1 rounded transition text-xs">삭제</button></div></div>`; }); } } catch(e) {} }
         async function deleteExam(title) { if(confirm("삭제?")) try { await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(title)}`, {method:'DELETE'}); loadAdminExams(); } catch(e){} }
 
         let pdfDoc = null; let isDrawing = false;
@@ -1218,7 +1262,6 @@
         function toggleDrawMode() { isDrawing = !isDrawing; const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); const btn = document.getElementById('btn-draw'); const clearBtn = document.getElementById('btn-clear'); const hint = document.getElementById('draw-hint'); drawCanvases.forEach(c => c.style.display = isDrawing ? 'block' : 'none'); if(isDrawing) { btn.classList.replace('bg-blue-600', 'bg-red-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 끄기'; clearBtn.style.display = 'inline-block'; hint.style.display = 'block'; document.getElementById('pdf-render-wrapper').style.touchAction = 'pan-x pan-y pinch-zoom'; } else { btn.classList.replace('bg-red-600', 'bg-blue-600'); btn.innerHTML = '<i class="fa-solid fa-pen mr-1"></i> 필기 켜기'; clearBtn.style.display = 'none'; hint.style.display = 'none'; } }
         function clearCanvas() { const drawCanvases = document.querySelectorAll('.pdf-draw-canvas'); drawCanvases.forEach(c => { c.getContext('2d').clearRect(0, 0, c.width, c.height); }); if (currentUser.isAdmin && wsLive) wsLive.send(JSON.stringify({ type: 'clear' })); }
 
-        // 💡 OMR이 없을 경우 학생 화면 UI 처리
         function startExamReal() { 
             const targetScore = document.getElementById('prep-target-score').value; 
             if(!targetScore) return alert("나의 목표 점수를 입력해주세요!"); 
