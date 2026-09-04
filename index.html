@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>로지에듀 최준용 국어 - AI 스마트 플랫폼</title>
-    <!-- 💡 스마트폰 앱(PWA) 설치를 위한 매니페스트 -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#1a1e29">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- 💡 초고화질 PDF 렌더링 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
     <style>
@@ -37,7 +35,6 @@
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
-    <!-- 💡 글로벌 로딩 화면 -->
     <div id="global-loader" class="hidden fixed inset-0 z-[9999] bg-[#0f172a]/95 backdrop-blur-md flex flex-col items-center justify-center fade-in">
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
@@ -48,7 +45,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- 💡 첫 화면 메인 팝업 -->
     <div id="main-popup" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-md shadow-2xl flex flex-col fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
@@ -65,20 +61,18 @@
         </div>
     </div>
 
-    <!-- 💡 문의사항 모달 -->
     <div id="inquiry-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                 <h3 class="text-2xl font-black text-white"><i class="fa-solid fa-paper-plane text-emerald-400 mr-2"></i>원장님께 문의하기</h3>
                 <button onclick="closeModal('inquiry-modal')" class="text-gray-400 hover:text-white text-2xl outline-none"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-gray-400 mb-4">작성하신 내용은 원장님(텔레그램)께 실시간으로 전달됩니다.</p>
+            <p class="text-xs text-gray-400 mb-4">작성하신 내용은 원장님께 실시간으로 전달됩니다.</p>
             <textarea id="inquiry-content" class="w-full h-32 bg-[#151922] border border-gray-600 p-4 rounded-xl text-white mb-6 outline-none focus:border-emerald-500 transition" placeholder="궁금한 점이나 오류 신고를 자유롭게 적어주세요..."></textarea>
             <button onclick="submitInquiry()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition shadow-lg shadow-emerald-600/30">전송하기</button>
         </div>
     </div>
 
-    <!-- 💡 AI 쌍둥이 오답 클리닉 모달 -->
     <div id="twin-modal" class="hidden fixed inset-0 z-[120] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -91,7 +85,6 @@
         </div>
     </div>
 
-    <!-- 상단 통합 메뉴바 -->
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
@@ -102,7 +95,8 @@
                 <button onclick="openProgram('inquiry'); loadInquiries();" class="hover:text-emerald-400">문의 사항</button>
             </div>
             <div class="flex items-center gap-3">
-                <div id="auth-nav" class="flex gap-2"><button onclick="showModal('login')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs"><i class="fa-solid fa-lock mr-1"></i> 로그인</button></div>
+                <!-- 💡 로그인 버튼에 짝짝이로 묶여있던 이름표(login -> auth) 완벽 수정 -->
+                <div id="auth-nav" class="flex gap-2"><button onclick="showModal('auth')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs"><i class="fa-solid fa-lock mr-1"></i> 로그인</button></div>
                 <div id="user-nav" class="hidden items-center gap-3">
                     <span id="header-user-info" class="text-blue-400 font-bold text-xs md:text-sm"></span>
                     <button onclick="openProgram('mypage'); loadMyPage();" class="text-emerald-400 font-bold border border-emerald-600 px-3 py-1.5 rounded-lg text-xs bg-emerald-900/20" id="btn-mypage-nav" style="display:none;">마이페이지</button>
@@ -124,7 +118,6 @@
         </div>
     </nav>
 
-    <!-- 홈 화면 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center pt-20 px-4 pb-20">
         <div class="text-center z-10 fade-in min-h-[80vh] flex flex-col justify-center items-center w-full">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all"><span class="text-blue-500">'로지는 언제나 올바름'</span>을 찾아냈습니다.<br><span class="text-2xl md:text-4xl lg:text-[2.5rem] mt-6 block text-gray-300 font-bold">그리고 그것이 <span class="text-blue-500">정답</span>이 되는 길을 만들었습니다.</span></h1>
@@ -134,7 +127,6 @@
         </div>
     </div>
 
-    <!-- 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
@@ -152,7 +144,7 @@
                 <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🎬</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">해설 강의실</h3>
-                    <p class="text-purple-200/70 text-xs md:text-sm">원장님의 명쾌한 해설 강의를 수강하세요.</p>
+                    <p class="text-purple-200/70 text-xs md:text-sm">원장님의 명쾌 해설 강의를 수강하세요.</p>
                 </div>
                 <div onclick="openProgram('essay')" class="bg-[#1e2430] border border-pink-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">✍️</div>
@@ -190,7 +182,6 @@
             <!-- 공지사항 -->
             <div id="prog-board" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                 <div class="flex justify-between mb-4"><h2 class="text-2xl font-bold text-gray-200">공지사항</h2><button id="btn-show-board-write" onclick="document.getElementById('board-write-area').style.display='block'" class="hidden bg-emerald-600 px-4 py-2 rounded text-white text-sm">새 공지</button></div>
-                <!-- 💡 다중 파일 박스 적용 -->
                 <div id="board-write-area" class="hidden bg-[#151922] p-4 border border-emerald-500 rounded-xl mb-4"><input type="text" id="bd-title" placeholder="제목" class="w-full bg-[#1e2430] p-2 text-white mb-2"><textarea id="bd-desc" placeholder="내용" class="w-full bg-[#1e2430] p-2 text-white mb-2"></textarea><input type="file" id="bd-file" multiple onchange="handleFileSelect(event, bdFiles, 'bd-file-visual')"><div id="bd-file-visual"></div><button onclick="createBoard()" class="bg-emerald-600 px-4 py-2 rounded text-white mt-2">등록</button></div>
                 <div id="board-list" class="grid grid-cols-1 gap-4"></div>
             </div>
@@ -198,11 +189,11 @@
             <!-- 문의사항 -->
             <div id="prog-inquiry" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                 <h2 class="text-2xl font-bold text-emerald-400 mb-4">문의 사항</h2>
-                <textarea id="inquiry-content-main" class="w-full h-24 bg-[#1e2430] p-4 text-white mb-4 rounded" placeholder="문의 입력 (원장님 텔레그램으로 바로 전송됩니다)"></textarea><button onclick="submitInquiry('main')" class="w-full bg-emerald-600 py-3 rounded text-white font-bold">전송</button>
+                <textarea id="inquiry-content-main" class="w-full h-24 bg-[#1e2430] p-4 text-white mb-4 rounded" placeholder="문의 입력"></textarea><button onclick="submitInquiry('main')" class="w-full bg-emerald-600 py-3 rounded text-white font-bold">전송</button>
                 <div id="inquiry-list" class="mt-4 space-y-2"></div>
             </div>
 
-            <!-- 채팅 (AI 스트리밍 적용) -->
+            <!-- 채팅 -->
             <div id="prog-chat" class="prog-content w-full max-w-6xl mx-auto bg-[#1e2430] p-4 md:p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h2 class="text-2xl md:text-3xl font-bold text-blue-400 mb-4 md:mb-6"><i class="fa-solid fa-robot mr-2"></i>24시간 AI 국최</h2>
                 <div id="chat-history" class="h-[60vh] overflow-y-auto mb-4 bg-[#151922] p-4 rounded-xl border border-gray-700 text-sm md:text-lg leading-relaxed">
@@ -237,7 +228,7 @@
             <div id="prog-homework" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-emerald-400 mb-4">과제 제출</h2><div id="student-hw-list" class="space-y-4"></div><div id="hw-submit-area" class="hidden mt-4"><h3 id="hw-target-title" class="text-white font-bold mb-2"></h3><input type="file" id="hw-file" class="text-white"><button onclick="submitHomework()" class="bg-emerald-600 px-4 py-2 mt-2 text-white">제출</button><div id="hw-result-area" class="hidden mt-4 text-white"></div></div></div>
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
-            <!-- 모의고사 룸 (라이브 웹소켓 + PDF) -->
+            <!-- 모의고사 룸 -->
             <div id="prog-exam-room" class="prog-content w-full h-[85vh] relative">
                 <div id="exam-prep-overlay" class="absolute inset-0 bg-[#1a1e29] z-40 flex items-center justify-center p-4">
                     <div class="bg-[#1e2430] p-8 rounded-xl w-full max-w-2xl"><h2 id="prep-exam-title" class="text-2xl font-bold text-white mb-4"></h2><p id="prep-objective-text" class="text-blue-200 mb-4"></p><input type="number" id="prep-target-score" placeholder="목표 점수" class="w-full bg-[#151922] p-4 text-white mb-4"><div id="prep-sections-board" class="mb-4"></div><button onclick="startExamReal()" class="w-full bg-indigo-600 py-4 text-white font-bold rounded">시작</button></div>
@@ -248,7 +239,7 @@
                 </div>
             </div>
 
-            <!-- 통합 관리 (Admin) -->
+            <!-- 통합 관리 -->
             <div id="prog-admin" class="prog-content w-full mx-auto">
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                     <div class="flex gap-2 mb-6 border-b border-gray-700 pb-4">
@@ -260,7 +251,6 @@
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                     </div>
 
-                    <!-- 장부 -->
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
                         <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white">추가</button></div></div>
                         <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
@@ -278,11 +268,10 @@
                         <div class="bg-[#151922] p-6 rounded h-[600px] flex flex-col"><div id="admin-kb-view-list" class="flex-grow overflow-y-auto text-white space-y-2"></div></div>
                     </div>
 
-                    <!-- 정밀 출제 및 배포 고장수리 완료 구역 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
-                            <input type="text" id="gen-title" placeholder="출제할 문제집의 제목을 입력하세요 (예: 24년 9월 고1 모평 변형)" class="w-full bg-[#1e2430] border border-blue-500 p-3 rounded-lg text-white mb-4 outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
+                            <input type="text" id="gen-title" placeholder="출제할 문제집의 제목을 입력하세요" class="w-full bg-[#1e2430] border border-blue-500 p-3 rounded-lg text-white mb-4 outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
 
                             <div class="bg-[#1e2430] p-4 rounded border border-gray-700 mb-4">
                                 <div class="flex flex-wrap gap-3 text-sm text-white" id="gen-types">
@@ -300,7 +289,7 @@
                                 <div><label class="text-xs text-emerald-400 block mb-1 font-bold">중</label><input type="number" id="c-mid" value="2" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none border border-gray-600 text-center"></div>
                                 <div><label class="text-xs text-blue-400 block mb-1 font-bold">하</label><input type="number" id="c-low" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none border border-gray-600 text-center"></div>
                             </div>
-                            <textarea id="gen-text" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="기준 지문 입력 (특정 문항 추출 시 여기에 지시하세요)"></textarea>
+                            <textarea id="gen-text" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="기준 지문 입력"></textarea>
                             
                             <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="text-white mb-2" onchange="handleFileSelect(event, genFiles, 'gen-files-visual')">
                             <div id="gen-files-visual" class="flex flex-wrap gap-2 mb-4"></div>
@@ -311,7 +300,6 @@
                                 <textarea id="gen-result-text" class="flex-grow bg-[#1e2430] text-white p-3 mb-2 rounded border border-gray-600 outline-none text-xs font-mono"></textarea>
                                 <div class="flex gap-2">
                                     <button id="btn-save-gen" onclick="saveGeneratedQuestion()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition">보관함 저장</button>
-                                    <!-- 💡 수리 완료된 배포 버튼 -->
                                     <button onclick="deployFromGenerator()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 py-2 text-white font-bold rounded text-xs transition">방 개설하기</button>
                                     <button onclick="printGeneratedPDF()" class="bg-gray-200 hover:bg-white py-2 px-4 text-black font-bold rounded text-xs transition">인쇄</button>
                                 </div>
@@ -363,12 +351,7 @@
         let generatedQuestionsData = []; let studentExamsList = [];
         let adminExamSections = []; let adminExamQuestions = [];
 
-        // 💡 PWA 서비스 워커 연결 (설치형 앱 지원)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err));
-            });
-        }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err)); }); }
 
         function showLoader(text = "처리 중입니다...") { document.getElementById('global-loader-text').innerText = text; document.getElementById('global-loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
@@ -399,24 +382,7 @@
         function viewGeneratedQuestion(i) { const q=generatedQuestionsData[i]; if(!q) return; document.getElementById('gen-title').value=q.title; const t=document.getElementById('gen-result-text'); t.value=q.content; t.scrollTop=0; document.getElementById('gen-result-area').style.display='flex'; t.style.backgroundColor='#1e3a8a'; setTimeout(()=>t.style.backgroundColor='#1e2430',400); }
         async function deleteGeneratedQuestion(id) { if(!confirm("삭제?")) return; showLoader("삭제 중..."); try{ await fetch(`${API_URL}/api/admin/questions/${id}`,{method:'DELETE'}); loadGeneratedQuestions(); }catch(e){} hideLoader(); }
         
-        // 💡 100% 수리 완료된 배포 기능 (중복 삭제 및 탭 이동, 값 복사 완벽 연동)
-        function deployFromGenerator() { 
-            const t = document.getElementById('gen-title').value.trim();
-            const c = document.getElementById('gen-result-text').value.trim();
-            if(!t) return alert("제목을 먼저 입력하세요."); 
-            
-            // 탭 이동 및 값 세팅
-            switchAdminTab('admin-exam'); 
-            document.getElementById('rt-title').value = t; 
-            document.getElementById('rt-exp').value = c; 
-            
-            // 모의고사 기본 타이머가 비어있으면 45분으로 하나 채워주기
-            if(adminExamSections.length === 0) {
-                addAdminSection('모의고사', 45); 
-            }
-            
-            alert("제목과 해설지가 방 개설 페이지로 완벽하게 복사되었습니다.\n이제 학생용 PDF만 첨부하고 [오픈하기]를 누르시면 됩니다!"); 
-        }
+        function deployFromGenerator() { const t = document.getElementById('gen-title').value.trim(); const c = document.getElementById('gen-result-text').value.trim(); if(!t) return alert("제목을 먼저 입력하세요."); switchAdminTab('admin-exam'); document.getElementById('rt-title').value = t; document.getElementById('rt-exp').value = c; if(adminExamSections.length === 0) { addAdminSection('모의고사', 45); } alert("제목과 해설지가 방 개설 페이지로 완벽하게 복사되었습니다.\n이제 학생용 PDF만 첨부하고 [오픈하기]를 누르시면 됩니다!"); }
 
         async function loadMyPage() { if(!currentUser) return; document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`; try{ const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0; if(data.success) { data.reports.forEach(r => { if(r.student_name===currentUser.name && r.school===currentUser.school) { cnt++; let sc = r.type==='로그인'?'<span class="text-blue-400">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400">질문완료</span>':(r.type.includes('모의고사')?`<span class="text-yellow-400">${r.score}점</span>`:'<span class="text-emerald-400">제출완료</span>')); c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between"><div class="text-white text-sm">${r.task_name} <span class="text-xs text-gray-500 block">${r.submitted_at} | ${r.type}</span></div><div>${sc}</div></div>`; } }); document.getElementById('mypage-count').innerText=`${cnt}건`; if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>"; } }catch(e){} }
 
@@ -432,14 +398,14 @@
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#',''); document.querySelectorAll('#home-view, #dashboard-screen, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('login'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); }
-            else { if(!currentUser) { window.location.hash='home'; return showModal('login'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('program-view').style.display='block'; const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block'; if(h==='prog-admin') switchAdminTab('admin-users'); }
+            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); }
+            else { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('program-view').style.display='block'; const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block'; if(h==='prog-admin') switchAdminTab('admin-users'); }
         });
 
         window.addEventListener('DOMContentLoaded', () => { 
             fetch(`${API_URL}/api/health`).catch(()=>{}); 
             const u = localStorage.getItem('logyedu_user');
-            if(u) { currentUser=JSON.parse(u); document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name; if(!currentUser.isAdmin) { document.getElementById('btn-mypage-nav').style.display='inline-block'; document.getElementById('mobile-mypage-btn').style.display='block'; } if(currentUser.isAdmin) { document.getElementById('card-admin').style.display='flex'; document.getElementById('btn-show-board-write').style.display='block'; } document.getElementById('mobile-logout-btn').style.display='block'; if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup(); }
+            if(u) { currentUser=JSON.parse(u); document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name; if(!currentUser.isAdmin) { document.getElementById('btn-mypage-nav').style.display='inline-block'; document.getElementById('mobile-mypage-btn').style.display='block'; } if(currentUser.isAdmin) { document.getElementById('card-admin').style.display='flex'; } document.getElementById('mobile-logout-btn').style.display='block'; if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup(); }
         });
 
         function showModal(id) { document.getElementById(id+'-modal').style.display='flex'; }
@@ -468,7 +434,27 @@
             if(id==='admin-generator')loadGeneratedQuestions(); 
         }
 
-        async function login() { const s=document.getElementById('login-school').value.trim(), g=document.getElementById('login-grade').value.trim(), n=document.getElementById('login-name').value.trim(), p=document.getElementById('login-pw').value.trim(); if(!n&&!p) return alert("이름 입력"); showLoader("인증 중..."); try{ const res=await fetch(`${API_URL}/api/auth`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,student_name:n,admin_password:p})}); const data=await res.json(); if(data.success){ currentUser={school:s,grade:g,name:n,isAdmin:data.is_admin}; localStorage.setItem('logyedu_user',JSON.stringify(currentUser)); location.reload(); }else alert(data.detail); }catch(e){} hideLoader(); }
+        async function login() { 
+            const s=document.getElementById('login-school').value.trim(), 
+                  g=document.getElementById('login-grade').value.trim(), 
+                  n=document.getElementById('login-name').value.trim(), 
+                  p=document.getElementById('login-pw').value.trim(); 
+            if(!n&&!p) return alert("이름을 입력해주세요."); 
+            showLoader("인증 중..."); 
+            try { 
+                const res=await fetch(`${API_URL}/api/auth`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,student_name:n,admin_password:p})}); 
+                const data=await res.json(); 
+                if(data.success) { 
+                    currentUser={school:s,grade:g,name:n,isAdmin:data.is_admin}; 
+                    localStorage.setItem('logyedu_user',JSON.stringify(currentUser)); 
+                    location.reload(); 
+                } else alert(data.detail); 
+            } catch(e) {
+                alert("서버 연결 지연. 잠시 후 다시 눌러주세요!");
+            } 
+            hideLoader(); 
+        }
+
         function logout() { localStorage.removeItem('logyedu_user'); location.reload(); }
 
         async function addSingleStudent() { const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value; if(!n) return; showLoader(); await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n})}); loadAdminStudents(); hideLoader(); }
