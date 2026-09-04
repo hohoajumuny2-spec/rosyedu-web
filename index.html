@@ -73,27 +73,48 @@
                 <button onclick="goToDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 md:px-10 md:py-5 rounded-xl font-bold text-lg md:text-xl shadow-lg">스마트 학습실 입장하기</button>
             </div>
         </div>
-        <div id="intro-section" class="w-full max-w-5xl mx-auto mt-10 pt-24 border-t border-gray-800 text-left fade-in">
-            <h2 class="text-3xl md:text-4xl font-black text-blue-400 mb-8"><i class="fa-solid fa-rocket mr-2"></i>스마트 플랫폼 소개</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-300"><div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><h4 class="text-blue-400 font-bold mb-2">24시간 AI 국최</h4></div><div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><h4 class="text-blue-400 font-bold mb-2">실시간 모의고사</h4></div></div>
-        </div>
-        <div id="guide-section" class="w-full max-w-5xl mx-auto mt-24 pt-24 border-t border-gray-800 text-left fade-in">
-            <h2 class="text-3xl md:text-4xl font-black text-emerald-400 mb-8"><i class="fa-solid fa-book-open mr-2"></i>이용 안내</h2>
-            <div class="bg-[#151922] p-6 rounded-xl border border-gray-700 shadow-lg text-gray-300">로그인, PWA 설치, 필기 모드 (1손가락 필기, 2손가락 이동) 등을 지원합니다.</div>
-        </div>
     </div>
 
+    <!-- 💡 대시보드 스마트 학습실 메뉴 디자인 복구 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">24시간 AI 국최</h3></div>
-                <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/50 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">실시간 모의고사</h3></div>
-                <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/50 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">해설 강의실</h3></div>
-                <div onclick="openProgram('essay')" class="bg-[#1e2430] border border-pink-600/50 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">AI 논술/요약 첨삭</h3></div>
-                <div onclick="openProgram('homework'); loadHomeworks();" class="bg-[#1e2430] border border-emerald-600/50 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">과제 제출</h3></div>
-                <div onclick="openProgram('board'); loadBoard();" class="bg-[#1e2430] border border-gray-600 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">공지사항</h3></div>
-                <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 rounded-2xl cursor-pointer app-card"><h3 class="text-lg font-bold text-white mb-2">시스템 통합 관리</h3></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
+                    <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+                </div>
+                <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⏳</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">실시간 모의고사</h3>
+                    <p class="text-yellow-200/70 text-xs md:text-sm">타이머와 OMR 카드가 제공되는 실전 모의고사입니다.</p>
+                </div>
+                <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🎬</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">해설 강의실</h3>
+                    <p class="text-purple-200/70 text-xs md:text-sm">원장님의 명쾌한 해설 강의를 수강하세요.</p>
+                </div>
+                <div onclick="openProgram('essay')" class="bg-[#1e2430] border border-pink-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">✍️</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">AI 논술/요약 첨삭</h3>
+                    <p class="text-pink-200/70 text-xs md:text-sm">손글씨/PDF 논술문을 올리면 AI가 직접 빨간펜 첨삭을 해줍니다.</p>
+                </div>
+                <div onclick="openProgram('homework'); loadHomeworks();" class="bg-[#1e2430] border border-emerald-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">📝</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">과제 제출</h3>
+                    <p class="text-emerald-200/70 text-xs md:text-sm">원장님이 내주신 과제를 제출하고 해설을 확인하세요.</p>
+                </div>
+                <div onclick="openProgram('board'); loadBoard();" class="bg-[#1e2430] border border-gray-600 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-gray-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">📢</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">공지사항</h3>
+                    <p class="text-gray-400 text-xs md:text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
+                </div>
+                <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⚙️</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
+                    <p class="text-red-300 text-xs md:text-sm">출제, 시험/과제 오픈, 학생 명단을 관리합니다.</p>
+                </div>
             </div>
         </div>
 
@@ -121,13 +142,27 @@
                 <div id="inquiry-list" class="mt-4 space-y-2"></div>
             </div>
 
-            <!-- 4. 채팅 -->
-            <div id="prog-chat" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl border border-gray-800">
-                <h2 class="text-2xl font-bold text-blue-400 mb-4">AI 국최</h2>
-                <div id="chat-history" class="h-[60vh] overflow-y-auto mb-4 bg-[#151922] p-4 rounded text-white"></div>
-                <input type="file" id="chat-file" multiple onchange="handleFileSelect(event, chatFiles, 'chat-file-visual')">
-                <div id="chat-file-visual" class="flex gap-2"></div>
-                <div class="flex gap-2 mt-2"><input type="text" id="chat-input" class="flex-grow bg-[#151922] p-3 text-white rounded" onkeypress="if(event.key==='Enter') sendChat()"><button onclick="sendChat()" class="bg-blue-600 px-5 py-3 rounded text-white">전송</button></div>
+            <!-- 💡 4. 채팅 - 초기 멘트 복구 -->
+            <div id="prog-chat" class="prog-content w-full max-w-6xl mx-auto bg-[#1e2430] p-4 md:p-8 rounded-xl border border-gray-800 shadow-2xl">
+                <h2 class="text-2xl md:text-3xl font-bold text-blue-400 mb-4 md:mb-6"><i class="fa-solid fa-robot mr-2"></i>24시간 AI 국최</h2>
+                <div id="chat-history" class="h-[60vh] overflow-y-auto mb-4 bg-[#151922] p-4 rounded-xl border border-gray-700 text-sm md:text-lg leading-relaxed">
+                    <div class="text-left mb-6">
+                        <span class="bg-gray-800 px-4 py-3 md:px-6 md:py-5 rounded-2xl text-white inline-block shadow-lg border border-gray-700">
+                            <span class="block mb-2 font-bold text-blue-400 text-base md:text-xl">🤖 스마트 국최</span>
+                            안녕하세요. 로지에듀 여러분! 저는 스마트 국최입니다. 국어에 대한 질문을 해주세요!
+                        </span>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <div id="chat-file-visual" class="empty:hidden flex flex-wrap gap-2 px-1"></div>
+                    <div class="flex gap-2 items-center w-full">
+                        <label for="chat-file" class="cursor-pointer bg-gray-700 hover:bg-gray-600 p-3 rounded-xl text-white transition flex-shrink-0"><i class="fa-solid fa-paperclip"></i></label>
+                        <input type="file" id="chat-file" class="hidden" multiple accept="image/*,.pdf" onchange="handleFileSelect(event, chatFiles, 'chat-file-visual')">
+                        <input type="text" id="chat-input" class="flex-grow bg-[#151922] border border-gray-600 text-white p-3 rounded-xl text-sm md:text-lg outline-none" placeholder="질문 입력..." onkeypress="if(event.key==='Enter') sendChat()">
+                        <div id="chat-file-label" class="hidden"></div>
+                        <button onclick="sendChat()" class="bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-xl text-white transition flex-shrink-0"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
             </div>
 
             <!-- 5. 에세이 -->
@@ -165,10 +200,17 @@
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                     </div>
 
+                    <!-- 💡 학생 관리 상세 이력보기 (Right Panel 변경) -->
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
                         <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white">추가</button></div></div>
-                        <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2">삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
-                        <div class="col-span-2 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">통계</h3><div id="student-stats-list" class="space-y-2 mb-4"></div><div id="report-list" class="flex-grow overflow-y-auto text-gray-300 text-sm space-y-1"></div></div>
+                        <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
+                        <div class="col-span-2 bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] flex flex-col">
+                            <h3 class="text-lg lg:text-xl font-bold mb-4 text-white flex justify-between items-center border-b border-gray-700 pb-4">
+                                <span id="stats-title-span"><i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계</span>
+                                <button onclick="fetchReports()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs rounded text-white">전체보기</button>
+                            </h3>
+                            <div id="student-detail-container" class="flex-grow flex flex-col overflow-y-auto pr-2 text-white"></div>
+                        </div>
                     </div>
 
                     <div id="admin-knowledge" class="admin-tab-content grid grid-cols-2 gap-4">
@@ -260,10 +302,9 @@
         function viewGeneratedQuestion(i) { const q=generatedQuestionsData[i]; if(!q) return; document.getElementById('gen-title').value=q.title; const t=document.getElementById('gen-result-text'); t.value=q.content; t.scrollTop=0; document.getElementById('gen-result-area').style.display='flex'; t.style.backgroundColor='#1e3a8a'; setTimeout(()=>t.style.backgroundColor='#1e2430',400); }
         async function deleteGeneratedQuestion(id) { if(!confirm("삭제?")) return; showLoader("삭제 중..."); try{ await fetch(`${API_URL}/api/admin/questions/${id}`,{method:'DELETE'}); loadGeneratedQuestions(); }catch(e){} hideLoader(); }
         
-        // 💡 2. 모의고사 이관 기능 (해설지 자동 입력 복구)
         function deployFromGenerator() { const t=document.getElementById('gen-title').value.trim(), c=document.getElementById('gen-result-text').value.trim(); if(!t) return alert("제목 입력"); switchAdminTab('admin-exam'); document.getElementById('rt-title').value=t; document.getElementById('rt-exp').value=c; if(adminExamSections.length===0) addAdminSection('모의고사',45); alert("제목과 해설지가 복사되었습니다.\nPDF를 첨부하고 [오픈하기]를 누르세요."); }
 
-        async function loadMyPage() { if(!currentUser) return; document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`; try{ const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0; if(data.success) { data.reports.forEach(r => { if(r.student_name===currentUser.name && r.school===currentUser.school) { cnt++; let sc = r.type==='로그인'?'<span class="text-blue-400">접속됨</span>':(r.type.includes('모의고사')?`<span class="text-yellow-400">${r.score}점</span>`:'<span class="text-emerald-400">제출완료</span>'); c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between"><div class="text-white text-sm">${r.task_name} <span class="text-xs text-gray-500 block">${r.submitted_at}</span></div><div>${sc}</div></div>`; } }); document.getElementById('mypage-count').innerText=`${cnt}건`; if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>"; } }catch(e){} }
+        async function loadMyPage() { if(!currentUser) return; document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`; try{ const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0; if(data.success) { data.reports.forEach(r => { if(r.student_name===currentUser.name && r.school===currentUser.school) { cnt++; let sc = r.type==='로그인'?'<span class="text-blue-400">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400">질문완료</span>':(r.type.includes('모의고사')?`<span class="text-yellow-400">${r.score}점</span>`:'<span class="text-emerald-400">제출완료</span>')); c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between"><div class="text-white text-sm">${r.task_name} <span class="text-xs text-gray-500 block">${r.submitted_at} | ${r.type}</span></div><div>${sc}</div></div>`; } }); document.getElementById('mypage-count').innerText=`${cnt}건`; if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>"; } }catch(e){} }
 
         function scrollToSection(id) { const e = document.getElementById(id); if(e) window.scrollTo({top: e.offsetTop - 80, behavior: 'smooth'}); if(window.location.hash!=='#home') window.location.hash='home'; }
         function toggleMobileMenu() { const m = document.getElementById('mobile-menu'); m.classList.toggle('hidden'); m.classList.toggle('flex'); }
@@ -306,13 +347,80 @@
         function downloadExcelTemplate() { const ws=XLSX.utils.json_to_sheet([{school:"미강고",grade:"1학년",name:"홍길동"}]); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"학생명단"); XLSX.writeFile(wb,"양식.xlsx"); }
         async function addSingleStudent() { const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value; if(!n) return; showLoader(); await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n})}); loadAdminStudents(); hideLoader(); }
         function uploadExcel() { const f=document.getElementById('excel-file').files[0]; if(!f) return; showLoader(); const r=new FileReader(); r.onload=async e=>{ const d=new Uint8Array(e.target.result); const wb=XLSX.read(d,{type:'array'}); const j=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); await fetch(`${API_URL}/api/admin/student/bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({students:j})}); loadAdminStudents(); hideLoader(); }; r.readAsArrayBuffer(f); }
-        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label><input type="checkbox" class="student-checkbox" value="${s.id}"> ${s.school} ${s.grade} ${s.student_name}</label><button onclick="openEditStudent('${s.id}','${s.student_name}','${s.school}','${s.grade}')" class="bg-blue-600 px-2 rounded text-xs text-white">수정</button></div>`); } }
+        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${s.id}"> ${s.school} ${s.grade} ${s.student_name}</label><div class="w-1/3 text-right"><button onclick="fetchReports('${s.student_name}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1">보기</button><button onclick="openEditStudent('${s.id}','${s.student_name}','${s.school}','${s.grade}')" class="bg-blue-600 px-2 rounded text-xs text-white">수정</button></div></div>`); } }
         async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader(); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
         function openEditStudent(id,n,s,g) { document.getElementById('edit-old-id').value=id; document.getElementById('edit-name').value=n; document.getElementById('edit-school').value=s; document.getElementById('edit-grade').value=g; showModal('edit-student'); }
         async function submitEditStudent() { const id=document.getElementById('edit-old-id').value, n=document.getElementById('edit-name').value, s=document.getElementById('edit-school').value, g=document.getElementById('edit-grade').value; showLoader(); await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g})}); closeModal('edit-student-modal'); loadAdminStudents(); hideLoader(); }
-        async function fetchReports() { const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); const c=document.getElementById('report-list'); c.innerHTML=''; if(data.success) data.reports.forEach(r=>{ let t = r.type==='로그인'?'접속됨':(r.type.includes('모의고사')?r.score+'점':'제출완료'); c.innerHTML+=`<div class="bg-gray-800 p-2 rounded mb-1">[${r.task_name.substring(0,6)}] ${r.student_name} - <span class="text-emerald-400">${t}</span></div>`; }); }
+        
+        // 💡 1. 관리자 탭 - 학생 클릭 시 상세 이력 분리 노출 함수
+        async function fetchReports(filterName = null) { 
+            try {
+                const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); 
+                if(data.success) {
+                    const titleSpan = document.getElementById('stats-title-span');
+                    const detailContainer = document.getElementById('student-detail-container');
 
-        async function sendChat() { const i=document.getElementById('chat-input'); const p=i.value; if(!p) return; const h=document.getElementById('chat-history'); h.innerHTML+=`<div class="text-right mb-4"><span class="bg-blue-600 p-3 rounded-lg text-white inline-block">${p}</span></div>`; i.value=''; const fd=new FormData(); fd.append("prompt",p); chatFiles.forEach(f=>fd.append("files",f)); clearAllFiles('chat-file-visual'); h.innerHTML+=`<div class="text-left mb-4"><span id="msg-${Date.now()}" class="bg-gray-800 p-3 rounded-lg text-white inline-block">답변 중...</span></div>`; try{ const res=await fetch(`${API_URL}/api/chat`,{method:'POST',body:fd}); const reader=res.body.getReader(); const dec=new TextDecoder("utf-8"); let span=document.getElementById(`msg-${Date.now()}`); span.innerHTML=""; while(true){ const {done,value}=await reader.read(); if(done) break; span.innerHTML+=dec.decode(value).replace(/\n/g,'<br>'); h.scrollTop=h.scrollHeight; } }catch(e){} }
+                    if (filterName) {
+                        titleSpan.innerHTML = `<i class="fa-solid fa-user mr-2"></i><span class="text-blue-400">${filterName}</span> 상세 기록`;
+                        let examHtml = '', hwHtml = '', qHtml = '', loginHtml = '';
+                        let examCnt = 0, hwCnt = 0, qCnt = 0, loginCnt = 0;
+
+                        data.reports.forEach(r => {
+                            if (r.student_name === filterName) {
+                                const timeStr = `<span class="text-[10px] text-gray-500 ml-2">${r.submitted_at}</span>`;
+                                if (r.type === '모의고사') {
+                                    examCnt++;
+                                    examHtml += `<div class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"><span>${r.task_name}</span><span class="text-yellow-400 font-bold">${r.score}점</span></div>`;
+                                } else if (r.type === '과제 제출' || r.type === '논술 첨삭') {
+                                    hwCnt++;
+                                    hwHtml += `<div class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"><span>${r.task_name}</span><span class="text-emerald-400 font-bold">제출완료</span></div>`;
+                                } else if (r.type === '질문') {
+                                    qCnt++;
+                                    qHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-sm text-gray-300">Q. ${r.task_name}${timeStr}</div>`;
+                                } else if (r.type === '로그인') {
+                                    loginCnt++;
+                                    loginHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-xs text-blue-300"><i class="fa-solid fa-right-to-bracket mr-1"></i>접속${timeStr}</div>`;
+                                }
+                            }
+                        });
+
+                        detailContainer.innerHTML = `
+                            <div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>
+                            <div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 모의고사 이력 (${examCnt}건)</h4><div class="max-h-32 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>
+                            <div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>
+                            <div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>
+                        `;
+                    } else {
+                        titleSpan.innerHTML = `<i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계`;
+                        let studentData = {};
+                        data.reports.forEach(r => {
+                            const key = `${r.school} ${r.grade} ${r.student_name}`;
+                            if (!studentData[key]) studentData[key] = { examScores: [], hwCount: 0 };
+                            if (r.type === '모의고사') studentData[key].examScores.push(r.score);
+                            else if (r.type === '과제 제출' || r.type === '논술 첨삭') studentData[key].hwCount++;
+                        });
+                        let allHtml = '<div class="space-y-2 mb-4 overflow-y-auto max-h-64 pr-2">';
+                        for (const [name, info] of Object.entries(studentData)) {
+                            let avg = info.examScores.length > 0 ? Math.round(info.examScores.reduce((a, b) => a + b, 0) / info.examScores.length) : 0;
+                            allHtml += `<div class="bg-[#1e2430] p-3 rounded border border-blue-600/50 flex justify-between items-center"><div><div class="font-bold text-white">${name}</div><div class="text-[10px] text-gray-400">모의고사 평균: <span class="text-yellow-400">${avg}점</span></div></div><div class="text-right text-emerald-400 font-black">과제 ${info.hwCount}건</div></div>`;
+                        }
+                        allHtml += '</div><h4 class="text-md font-bold text-gray-400 mb-2 border-t border-gray-700 pt-4">전체 최근 로그</h4><div class="overflow-y-auto flex-grow space-y-1 pr-2">';
+                        data.reports.forEach(r => {
+                            let scoreTxt = r.score;
+                            if(r.type==='로그인') scoreTxt = `<span class="text-blue-400">접속됨</span>`;
+                            else if(r.type==='질문') scoreTxt = `<span class="text-pink-400">질문함</span>`;
+                            else if(r.type==='모의고사') scoreTxt = `<span class="text-yellow-400">${r.score}점</span>`;
+                            else scoreTxt = `<span class="text-emerald-400">제출완료</span>`;
+                            allHtml += `<div class="bg-gray-800 p-2 rounded text-xs flex justify-between text-gray-300"><span><span class="text-indigo-400 font-bold mr-1">[${r.type}]</span>${r.student_name} - ${r.task_name.substring(0,10)}</span> ${scoreTxt}</div>`;
+                        });
+                        allHtml += '</div>';
+                        detailContainer.innerHTML = allHtml;
+                    }
+                }
+            } catch(e) {} 
+        }
+
+        async function sendChat() { const i=document.getElementById('chat-input'); const p=i.value; if(!p) return; const h=document.getElementById('chat-history'); h.innerHTML+=`<div class="text-right mb-4"><span class="bg-blue-600 p-3 rounded-lg text-white inline-block">${p}</span></div>`; i.value=''; const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("prompt",p); chatFiles.forEach(f=>fd.append("files",f)); clearAllFiles('chat-file-visual'); h.innerHTML+=`<div class="text-left mb-4"><span id="msg-${Date.now()}" class="bg-gray-800 p-3 rounded-lg text-white inline-block">답변 중...</span></div>`; try{ const res=await fetch(`${API_URL}/api/chat`,{method:'POST',body:fd}); const reader=res.body.getReader(); const dec=new TextDecoder("utf-8"); let span=document.getElementById(`msg-${Date.now()}`); span.innerHTML=""; while(true){ const {done,value}=await reader.read(); if(done) break; span.innerHTML+=dec.decode(value).replace(/\n/g,'<br>'); h.scrollTop=h.scrollHeight; } }catch(e){} }
         async function submitEssayGrade() { const t=document.getElementById('essay-topic').value, f=document.getElementById('essay-file').files[0]; if(!t||!f) return alert("입력 필요"); showLoader("AI 첨삭 중..."); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("topic",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/essay/grade`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){ document.getElementById('essay-result-area').style.display='block'; document.getElementById('essay-feedback').innerHTML=data.feedback; } }catch(e){} hideLoader(); }
         function printEssayReport() { const w=window.open('',''); w.document.write(`<html><body>${document.getElementById('essay-feedback').innerHTML}<script>setTimeout(()=>window.print(),500);<\/script></body></html>`); w.document.close(); }
 
@@ -332,11 +440,12 @@
         function startAdminLiveByIndex(i) { const e=studentExamsList[i]; startAdminLive(e.title, e.pdf_url); }
         async function deleteExamByIndex(i) { if(confirm("삭제?")) { showLoader(); await fetch(`${API_URL}/api/admin/exam/${encodeURIComponent(studentExamsList[i].title)}`,{method:'DELETE'}); loadAdminExams(); hideLoader(); } }
         
+        // 💡 4. PDF 입장 렌더링 코드 정상화 (API URL 결합)
         function enterExamRoom(idx) {
             const e = studentExamsList[idx]; openProgram('exam-room'); currentExamTitle = e.title; document.getElementById('room-exam-title-active').innerText = e.title; document.getElementById('exam-result-report').style.display='none'; document.getElementById('btn-submit-exam').style.display='none'; document.getElementById('timer-ui-container').style.display='flex'; document.getElementById('exam-omr-container').style.display='grid'; 
             try { currentExamData = JSON.parse(e.exam_data||"{}"); } catch(err){ currentExamData={sections:[], questions:[]}; }
             document.getElementById('prep-exam-title').innerText=e.title; studentSections=JSON.parse(JSON.stringify(currentExamData.sections||[])); renderStudentPrepSections(); document.getElementById('exam-prep-overlay').style.display='flex';
-            if(e.pdf_url) renderPDF(encodeURI(API_URL+e.pdf_url), e.title);
+            if(e.pdf_url) renderPDF(API_URL+e.pdf_url, e.title);
         }
 
         function renderStudentPrepSections() { const b=document.getElementById('prep-sections-board'); b.innerHTML=''; studentSections.forEach((s,i)=>{b.innerHTML+=`<div class="flex mb-1"><input type="text" class="w-1/2 bg-transparent text-white" value="${s.name}"><input type="number" class="w-1/4 bg-transparent text-emerald-400 text-center" value="${s.time}">분</div>`;}); }
@@ -368,7 +477,7 @@
         function clearCanvas() { document.querySelectorAll('.pdf-draw-canvas').forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height)); if(currentUser.isAdmin&&wsLive)wsLive.send(JSON.stringify({type:'clear'})); }
         function connectLiveExam(roomTitle) { if(wsLive) wsLive.close(); wsLive=new WebSocket(`wss://${new URL(API_URL).host}/ws/exam/${encodeURIComponent(roomTitle)}`); wsLive.onmessage=e=>{if(currentUser.isAdmin)return; const d=JSON.parse(e.data); if(d.type==='msg')showLiveToast(d.text); else if(d.type==='clear')document.querySelectorAll('.live-admin-canvas').forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height)); else if(d.type==='draw'){const c=document.getElementById(`live-canvas-page-${d.page}`); if(!c)return; const ctx=c.getContext('2d'); if(d.action==='start'){ctx.beginPath(); ctx.moveTo(d.x*c.width,d.y*c.height);}else if(d.action==='move'){ctx.lineTo(d.x*c.width,d.y*c.height); ctx.strokeStyle='red'; ctx.lineWidth=2; ctx.stroke();} } }; }
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
-        function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderPDF(encodeURI(API_URL+pdfUrl), title); connectLiveExam(title); }
+        function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderPDF(API_URL+pdfUrl, title); connectLiveExam(title); }
         function toggleExamStudents() { document.getElementById('rt-student-list-container').style.display = document.getElementById('rt-student-all').checked ? 'none' : 'block'; }
         function addAdminSection() { const n=document.getElementById('sec-name').value, t=parseInt(document.getElementById('sec-time').value); if(n&&t>0) { adminExamSections.push({name:n,time:t}); document.getElementById('admin-section-board').innerHTML+=`<span class="bg-gray-700 text-white px-2 py-1 mr-1 text-xs">${n}(${t}분)</span>`; } }
         function buildAdminOMR() { const c=parseInt(document.getElementById('rt-qcount').value); if(c>0) { adminExamQuestions=Array(c).fill().map(()=>({ans:"",diff:"C",score:2})); document.getElementById('admin-omr-board').innerHTML=`${c}문항 OMR 활성화 완료 (랜덤 정답 임시배정)`; adminExamQuestions.forEach(q=>q.ans="1"); } }
