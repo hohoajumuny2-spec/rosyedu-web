@@ -295,7 +295,8 @@
                             <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="text-white mb-2" onchange="handleFileSelect(event, genFiles, 'gen-files-visual')">
                             <div id="gen-files-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             
-                            <button onclick="generateStreamQuestions()" class="bg-yellow-600 hover:bg-yellow-700 py-3 text-white font-bold mb-4 rounded transition">AI 정밀 출제</button>
+                            <!-- 버튼 클릭 부분 수정 -->
+                            <button onclick="generateStreamQuestions()" class="bg-yellow-600 hover:bg-yellow-700 py-3 text-white font-bold mb-4 rounded transition w-full">AI 정밀 출제</button>
                             
                             <div id="gen-result-area" class="hidden flex-grow flex flex-col">
                                 <textarea id="gen-result-text" class="flex-grow bg-[#1e2430] text-white p-3 mb-2 rounded border border-gray-600 outline-none text-xs font-mono"></textarea>
@@ -483,7 +484,6 @@
 
         let examTimerInterval; let studentOmrAnswers=[]; let currentExamTitle=""; let currentExamData=null; let studentSections=[]; let currSecIdx=0; let secAllocated=0; let secSpent=0; let totalSavedSec=0; let isExamActive=false; let isExamPaused=false;
         
-        // 💡 5. 이미지 시험지 렌더링 코드 완벽 복구 적용
         async function renderExamFile(url, roomTitle) { 
             const ld = document.getElementById('pdf-loading'); const ic = document.getElementById('pdf-inner-container');
             ld.style.display = 'block'; ld.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>시험지 로딩 중...'; ic.innerHTML = '';
@@ -593,34 +593,58 @@
         async function loadKnowledgeList() { try{ const res=await fetch(`${API_URL}/api/knowledge`); const data=await res.json(); const c=document.getElementById('admin-kb-view-list'); c.innerHTML=''; if(data.success) data.knowledge.forEach(k=>c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between"><span>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-red-400">삭제</button></div>`); }catch(e){} }
         async function deleteKnowledge(id) { if(confirm("삭제?")){ showLoader(); await fetch(`${API_URL}/api/admin/knowledge/${id}`,{method:'DELETE'}); loadKnowledgeList(); hideLoader(); } }
 
-        // 💡 1. 정밀 출제 UI 100% 복구 완료 (난이도, 문항 유형 선택 등 모두 다시 작동)
+        // 💡 1. 정밀 출제 엔진 무결점 통신 및 에러 추적 복구 완료
         async function generateStreamQuestions() { 
-            const fd=new FormData(); 
-            fd.append("q_mode","신규"); 
-            fd.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb=>cb.value).join(', ')); 
-            fd.append("cnt_killer",document.getElementById('c-killer').value); 
-            fd.append("cnt_semi",document.getElementById('c-semi').value); 
-            fd.append("cnt_high",document.getElementById('c-high').value); 
-            fd.append("cnt_mid",document.getElementById('c-mid').value); 
-            fd.append("cnt_low",document.getElementById('c-low').value); 
-            fd.append("q_text",document.getElementById('gen-text').value); 
-            genFiles.forEach(f=>fd.append("files",f)); 
-            document.getElementById('gen-result-area').style.display='flex'; 
-            const r=document.getElementById('gen-result-text'); 
-            r.value="⏳ AI 출제 중..."; r.classList.add('animate-pulse'); 
-            try{ 
-                const res=await fetch(`${API_URL}/api/admin/generate_stream`,{method:'POST',body:fd}); 
+            const btn = document.querySelector('button[onclick="generateStreamQuestions()"]');
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>출제 중..."; }
+
+            const fd = new FormData(); 
+            fd.append("q_mode", "신규"); 
+            fd.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb=>cb.value).join(', ') || "수능/내신형"); 
+            fd.append("cnt_killer", document.getElementById('c-killer').value || 0); 
+            fd.append("cnt_semi", document.getElementById('c-semi').value || 0); 
+            fd.append("cnt_high", document.getElementById('c-high').value || 0); 
+            fd.append("cnt_mid", document.getElementById('c-mid').value || 0); 
+            fd.append("cnt_low", document.getElementById('c-low').value || 0); 
+            fd.append("q_text", document.getElementById('gen-text').value); 
+            genFiles.forEach(f => fd.append("files", f)); 
+
+            document.getElementById('gen-result-area').style.display = 'flex'; 
+            const r = document.getElementById('gen-result-text'); 
+            r.value = "⏳ AI 출제 중... (서버와 통신하고 있습니다)"; 
+            r.classList.add('animate-pulse'); 
+
+            try { 
+                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); 
                 r.classList.remove('animate-pulse'); 
-                r.value=""; 
-                const reader=res.body.getReader(); 
-                const dec=new TextDecoder("utf-8"); 
-                while(true){ 
-                    const {done,value}=await reader.read(); 
+                
+                // 💡 서버가 출제를 거부하고 에러를 뱉었을 때 화면에 즉시 표시
+                if(!res.ok) {
+                    const err = await res.text();
+                    r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}\n\n* 출제 문항 수가 0개이거나 지문이 너무 길지 않은지 확인해 주세요.`;
+                    if(btn) { btn.disabled = false; btn.innerHTML = "🚀 AI 정밀 출제 재시도"; }
+                    return;
+                }
+
+                r.value = ""; 
+                const reader = res.body.getReader(); 
+                const dec = new TextDecoder("utf-8"); 
+                while(true) { 
+                    const {done, value} = await reader.read(); 
                     if(done) break; 
-                    r.value+=dec.decode(value,{stream:true}); 
-                    r.scrollTop=r.scrollHeight; 
+                    r.value += dec.decode(value, {stream: true}); 
+                    r.scrollTop = r.scrollHeight; 
                 } 
-            }catch(e){r.classList.remove('animate-pulse');} 
+            } catch(e) { 
+                // 💡 통신이 끊어지거나 할당량이 초과되었을 때 화면에 즉시 표시
+                r.classList.remove('animate-pulse'); 
+                if (r.value === "⏳ AI 출제 중... (서버와 통신하고 있습니다)" || r.value === "") {
+                    r.value = `❌ 통신 실패: 렌더(Render) 서버가 잠들어 있거나 인터넷 연결이 끊어졌습니다.\n1~2분 뒤 다시 시도해 주세요.\n(에러 내용: ${e.message})`;
+                } else {
+                    r.value += `\n\n❌ [출제 중단] 구글 AI 서버의 일일 할당량이 초과되었거나 응답이 차단되었습니다.\n(에러 내용: ${e.message})`;
+                }
+            } 
+            if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
         }
     </script>
 </body>
