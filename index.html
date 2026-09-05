@@ -181,7 +181,7 @@
                 <div id="mypage-history-list" class="space-y-2 bg-[#151922] p-4 rounded-xl h-[400px] overflow-y-auto text-gray-300"></div>
             </div>
 
-            <!-- 공지사항 -->
+            <!-- 공지사항 (PDF 뷰어 완벽 반영) -->
             <div id="prog-board" class="prog-content w-full max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-white"><i class="fa-solid fa-bullhorn text-emerald-400 mr-3"></i>공지사항</h2>
@@ -528,7 +528,24 @@
         window.addEventListener('DOMContentLoaded', () => { 
             fetch(`${API_URL}/api/health`).catch(()=>{}); 
             const u = localStorage.getItem('logyedu_user');
-            if(u) { currentUser=JSON.parse(u); document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name; if(!currentUser.isAdmin) { document.getElementById('btn-mypage-nav').style.display='inline-block'; document.getElementById('mobile-mypage-btn').style.display='block'; } if(currentUser.isAdmin) { document.getElementById('card-admin').style.display='flex'; } document.getElementById('mobile-logout-btn').style.display='block'; if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup(); }
+            if(u) { 
+                currentUser=JSON.parse(u); 
+                document.getElementById('auth-nav').style.display='none'; 
+                document.getElementById('user-nav').classList.replace('hidden','flex'); 
+                document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name; 
+                if(!currentUser.isAdmin) { 
+                    document.getElementById('btn-mypage-nav').style.display='inline-block'; 
+                    document.getElementById('mobile-mypage-btn').style.display='block'; 
+                } 
+                if(currentUser.isAdmin) { 
+                    document.getElementById('card-admin').style.display='flex'; 
+                    const bwBtn = document.getElementById('btn-show-board-write');
+                    if(bwBtn) bwBtn.classList.remove('hidden');
+                } 
+                document.getElementById('mobile-logout-btn').style.display='block'; 
+                if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; 
+                else window.dispatchEvent(new Event('hashchange')); checkMainPopup(); 
+            }
         });
 
         function showModal(id) { document.getElementById(id+'-modal').style.display='flex'; }
@@ -768,7 +785,7 @@
             } catch(e) {}
         }
 
-        // 💡 게시판 첨부파일 변환 로직
+        // 💡 게시판 첨부파일 렌더링 함수
         async function renderBoardAttachment(url, containerId) {
             const c = document.getElementById(containerId);
             if(!c) return;
