@@ -182,10 +182,26 @@
             </div>
 
             <!-- 공지사항 -->
-            <div id="prog-board" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl border border-gray-800">
-                <div class="flex justify-between mb-4"><h2 class="text-2xl font-bold text-gray-200">공지사항</h2><button id="btn-show-board-write" onclick="document.getElementById('board-write-area').style.display='block'" class="hidden bg-emerald-600 px-4 py-2 rounded text-white text-sm">새 공지</button></div>
-                <div id="board-write-area" class="hidden bg-[#151922] p-4 border border-emerald-500 rounded-xl mb-4"><input type="text" id="bd-title" placeholder="제목" class="w-full bg-[#1e2430] p-2 text-white mb-2"><textarea id="bd-desc" placeholder="내용" class="w-full bg-[#1e2430] p-2 text-white mb-2"></textarea><input type="file" id="bd-file" multiple onchange="handleFileSelect(event, bdFiles, 'bd-file-visual')"><div id="bd-file-visual"></div><button onclick="createBoard()" class="bg-emerald-600 px-4 py-2 rounded text-white mt-2">등록</button></div>
-                <div id="board-list" class="grid grid-cols-1 gap-4"></div>
+            <div id="prog-board" class="prog-content w-full max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-white"><i class="fa-solid fa-bullhorn text-emerald-400 mr-3"></i>공지사항</h2>
+                    <button id="btn-show-board-write" onclick="document.getElementById('board-write-area').style.display='block'" class="hidden bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded-lg text-white font-bold transition">새 글 작성</button>
+                </div>
+                
+                <div id="board-write-area" class="hidden bg-[#1e2430] p-6 border border-emerald-500 rounded-2xl mb-8 shadow-xl">
+                    <input type="text" id="bd-title" placeholder="제목을 입력하세요" class="w-full bg-[#151922] border border-gray-600 p-4 text-white mb-4 rounded-lg outline-none focus:border-emerald-500">
+                    <textarea id="bd-desc" placeholder="내용을 입력하세요" class="w-full h-32 bg-[#151922] border border-gray-600 p-4 text-white mb-4 rounded-lg outline-none focus:border-emerald-500"></textarea>
+                    <div class="flex items-center gap-4 mb-4">
+                        <input type="file" id="bd-file" multiple accept=".pdf, image/*" class="text-white" onchange="handleFileSelect(event, bdFiles, 'bd-file-visual')">
+                        <div id="bd-file-visual" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button onclick="document.getElementById('board-write-area').style.display='none'" class="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded-lg text-white transition">취소</button>
+                        <button onclick="createBoard()" class="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded-lg text-white font-bold transition">등록하기</button>
+                    </div>
+                </div>
+
+                <div id="board-list" class="space-y-6"></div>
             </div>
 
             <!-- 문의사항 -->
@@ -282,7 +298,6 @@
                         <div class="bg-[#151922] p-6 rounded h-[600px] flex flex-col"><div id="admin-kb-view-list" class="flex-grow overflow-y-auto text-white space-y-2"></div></div>
                     </div>
 
-                    <!-- 💡 자료 가져오기 버튼이 적용된 출제 엔진 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
@@ -305,7 +320,6 @@
                                 <div><label class="text-xs text-blue-400 block mb-1 font-bold">하</label><input type="number" id="c-low" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none border border-gray-600 text-center"></div>
                             </div>
 
-                            <!-- 자료 가져오기 버튼 신설 -->
                             <div class="flex justify-between items-end mb-2">
                                 <label class="text-white font-bold text-sm">기준 지문 입력</label>
                                 <button onclick="openKnowledgeImportModal()" class="text-blue-400 hover:text-blue-300 font-bold text-sm transition bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-file-import mr-1"></i>자료학습 데이터 가져오기</button>
@@ -403,7 +417,7 @@
         </div>
     </div>
 
-    <!-- 💡 자료 가져오기 모달 -->
+    <!-- 자료 가져오기 모달 -->
     <div id="knowledge-import-modal" class="hidden fixed inset-0 z-[160] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[80vh]">
             <button onclick="closeModal('knowledge-import-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
@@ -460,7 +474,6 @@
         
         function deployFromGenerator() { const t = document.getElementById('gen-title').value.trim(); const c = document.getElementById('gen-result-text').value.trim(); if(!t) return alert("제목을 먼저 입력하세요."); switchAdminTab('admin-exam'); document.getElementById('rt-title').value = t; document.getElementById('rt-exp').value = c; if(adminExamSections.length === 0) { addAdminSection('모의고사', 45); } alert("제목과 해설지가 방 개설 페이지로 완벽하게 복사되었습니다.\n이제 학생용 PDF만 첨부하고 [오픈하기]를 누르시면 됩니다!"); }
 
-        // 💡 새롭게 추가된 자료 가져오기 모달 함수
         async function openKnowledgeImportModal() {
             showModal('knowledge-import');
             const c = document.getElementById('knowledge-import-list');
@@ -624,8 +637,8 @@
                 
                 if (data.success) {
                     let formattedReply = data.reply
-                        .replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>') // **강조** 처리를 파란 굵은 글씨로 변환
-                        .replace(/(?:\r\n|\r|\n|\\n)/g, '<br>'); // 모든 종류의 줄바꿈 문자 완벽 처리
+                        .replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>') 
+                        .replace(/(?:\r\n|\r|\n|\\n)/g, '<br>'); 
                     span.innerHTML = formattedReply;
                 } else {
                     span.innerHTML = `<span class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${data.reply}</span>`;
@@ -731,7 +744,64 @@
         async function submitHomework() { const t=document.getElementById('hw-target-title').innerText, f=document.getElementById('hw-file').files[0]; if(!f) return; showLoader(); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("title",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/homework/submit`,{method:'POST',body:fd}); const data=await res.json(); if(data.success) { document.getElementById('hw-result-area').innerHTML=`제출 성공 <br><a href="${API_URL}${data.answer_file}" target="_blank" class="text-blue-400 mt-2 inline-block">정답 해설 다운로드</a>`; document.getElementById('hw-result-area').style.display='block'; } }catch(e){} hideLoader(); }
         async function deleteHomework(title) { if(confirm("삭제?")) { showLoader(); await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(title)}`,{method:'DELETE'}); loadAdminHWList(); hideLoader(); } }
 
-        async function loadBoard() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('board-list'); c.innerHTML=''; if(data.success) { data.posts.forEach(p=>c.innerHTML+=`<div class="bg-gray-800 p-4 rounded mb-2 text-white font-bold">${p.title} <br><span class="text-gray-400 text-xs font-normal mt-1 block">${p.desc}</span><a href="${API_URL}${p.file_url}" target="_blank" class="text-blue-400 text-xs mt-2 inline-block">첨부파일 보기</a></div>`); } }catch(e){} }
+        // 💡 게시판 로드 로직 수정 (PDF 이미지 변환 후 바로 보여주기)
+        async function loadBoard() {
+            try {
+                const res = await fetch(`${API_URL}/api/board`);
+                const data = await res.json();
+                const c = document.getElementById('board-list');
+                c.innerHTML = '';
+                if(data.success) {
+                    data.posts.forEach(p => {
+                        const attachId = 'board-attach-' + p.id;
+                        let html = `<div class="bg-[#151922] p-6 rounded-xl mb-4 text-white border border-gray-700 shadow-lg">`;
+                        html += `<h3 class="text-xl font-bold text-blue-300 mb-2">${p.title}</h3>`;
+                        html += `<p class="text-gray-300 text-sm whitespace-pre-wrap mb-4">${p.desc}</p>`;
+                        if (p.file_url) {
+                            html += `<div id="${attachId}" class="w-full"></div>`;
+                            setTimeout(() => renderBoardAttachment(API_URL + p.file_url, attachId), 50);
+                        }
+                        html += `</div>`;
+                        c.innerHTML += html;
+                    });
+                }
+            } catch(e) {}
+        }
+
+        // 💡 게시판 첨부파일 변환 로직
+        async function renderBoardAttachment(url, containerId) {
+            const c = document.getElementById(containerId);
+            if(!c) return;
+            const isImg = url.match(/\.(jpeg|jpg|gif|png)$/i) != null;
+            
+            if(isImg) {
+                c.innerHTML = `<img src="${url}" class="w-full rounded-lg mt-2 border border-gray-600">`;
+            } else if(url.toLowerCase().endsWith('.pdf')) {
+                c.innerHTML = '<div class="text-gray-400 text-xs mt-2"><i class="fa-solid fa-spinner fa-spin"></i> 문서 로딩 중...</div>';
+                try {
+                    const pdf = await pdfjsLib.getDocument(url).promise;
+                    c.innerHTML = '';
+                    const w = c.clientWidth || 600; 
+                    for(let i=1; i<=pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const viewportBase = page.getViewport({scale: 1});
+                        const scale = w / viewportBase.width;
+                        const viewport = page.getViewport({scale: scale});
+                        const canvas = document.createElement('canvas');
+                        canvas.className = 'w-full rounded-lg mt-2 mb-2 border border-gray-600 bg-white';
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        c.appendChild(canvas);
+                        await page.render({canvasContext: canvas.getContext('2d'), viewport: viewport}).promise;
+                    }
+                } catch(e) {
+                    c.innerHTML = `<a href="${url}" target="_blank" class="text-blue-400 text-sm mt-2 inline-block bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-file-pdf mr-1"></i>PDF 보기/다운로드</a>`;
+                }
+            } else {
+                c.innerHTML = `<a href="${url}" target="_blank" class="text-blue-400 text-sm mt-2 inline-block bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-download mr-1"></i>첨부파일 보기</a>`;
+            }
+        }
+
         async function loadAdminBoardList() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('admin-board-view-list'); c.innerHTML=''; if(data.success){ data.posts.forEach((p,i)=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-3 rounded mb-2 text-white"><span>${p.title}</span><button onclick="deleteBoardPost('${p.id}')" class="text-red-400 text-xs">삭제</button></div>`); } }catch(e){} }
         async function createBoardAdmin() { const t=document.getElementById('bd-title-admin').value, d=document.getElementById('bd-desc-admin').value; if(!t) return; showLoader(); const fd=new FormData(); fd.append("title",t); fd.append("desc",d); if(bdFilesAdmin.length) fd.append("file",bdFilesAdmin[0]); try{ await fetch(`${API_URL}/api/admin/board`,{method:'POST',body:fd}); loadAdminBoardList(); document.getElementById('bd-title-admin').value=''; document.getElementById('bd-desc-admin').value=''; clearAllFiles('bd-file-admin-visual'); }catch(e){} hideLoader(); }
         async function createBoard() { const t=document.getElementById('bd-title').value, d=document.getElementById('bd-desc').value; if(!t) return; showLoader(); const fd=new FormData(); fd.append("title",t); fd.append("desc",d); if(bdFiles.length) fd.append("file",bdFiles[0]); try{ await fetch(`${API_URL}/api/admin/board`,{method:'POST',body:fd}); document.getElementById('board-write-area').style.display='none'; loadBoard(); document.getElementById('bd-title').value=''; document.getElementById('bd-desc').value=''; clearAllFiles('bd-file-visual'); }catch(e){} hideLoader(); }
@@ -746,7 +816,6 @@
         async function loadKnowledgeList() { try{ const res=await fetch(`${API_URL}/api/knowledge`); const data=await res.json(); const c=document.getElementById('admin-kb-view-list'); c.innerHTML=''; if(data.success) data.knowledge.forEach(k=>c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between"><span>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-red-400 text-xs">삭제</button></div>`); }catch(e){} }
         async function deleteKnowledge(id) { if(confirm("삭제?")){ showLoader(); await fetch(`${API_URL}/api/admin/knowledge/${id}`,{method:'DELETE'}); loadKnowledgeList(); hideLoader(); } }
 
-        // 💡 새롭게 추가된 대량 일괄 등록 스크립트 함수
         async function uploadKnowledgeBulk() { 
             const files = document.getElementById('kb-bulk-files').files; 
             if(files.length === 0) return alert("대량으로 등록할 파일들을 선택해주세요!"); 
@@ -769,14 +838,13 @@
             hideLoader(); 
         }
 
-        // 💡 지문 분석을 위한 별도의 통신 로직 (422 에러 방지 적용)
         async function analyzeTextStream() {
             const btn = document.querySelector('button[onclick="analyzeTextStream()"]');
             if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>분석 중..."; }
 
             const fd = new FormData(); 
             fd.append("q_mode", "분석"); 
-            fd.append("q_types", "지문 분석"); // 💡 빈칸("") 대신 "지문 분석"이라는 텍스트를 채워서 422 에러 방지
+            fd.append("q_types", "지문 분석"); 
             fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); 
             fd.append("q_text", document.getElementById('gen-text').value); 
             genFiles.forEach(f => fd.append("files", f)); 
