@@ -45,7 +45,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- 메인 팝업 -->
     <div id="main-popup" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-md shadow-2xl flex flex-col fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
@@ -62,7 +61,6 @@
         </div>
     </div>
 
-    <!-- 문의사항 모달 -->
     <div id="inquiry-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -87,7 +85,6 @@
         </div>
     </div>
 
-    <!-- 상단 네비게이션 -->
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
@@ -123,7 +120,6 @@
         </div>
     </nav>
 
-    <!-- 홈 뷰 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center pt-20 px-4 pb-20">
         <div class="text-center z-10 fade-in min-h-[80vh] flex flex-col justify-center items-center w-full">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all"><span class="text-blue-500">'로지는 언제나 올바름'</span>을 찾아냈습니다.<br><span class="text-2xl md:text-4xl lg:text-[2.5rem] mt-6 block text-gray-300 font-bold">그리고 그것이 <span class="text-blue-500">정답</span>이 되는 길을 만들었습니다.</span></h1>
@@ -133,7 +129,6 @@
         </div>
     </div>
 
-    <!-- 대시보드 화면 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
@@ -176,7 +171,6 @@
             </div>
         </div>
 
-        <!-- 세부 프로그램 뷰 -->
         <div id="program-view" style="display: none;" class="fade-in pt-24 px-4 pb-12 w-full max-w-7xl mx-auto">
             <button onclick="closeProgram()" class="mb-4 text-gray-400 hover:text-white font-bold"><i class="fa-solid fa-arrow-left"></i> 돌아가기</button>
 
@@ -247,10 +241,9 @@
                 <div id="essay-result-area" class="hidden bg-white p-6 mt-4 text-black rounded"><div id="essay-feedback"></div></div>
             </div>
 
-            <!-- 강의실 -->
+            <!-- 강의/과제/시험 목록 -->
             <div id="prog-lecture" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-purple-400 mb-4">강의실</h2><div id="student-lecture-list" class="grid grid-cols-2 gap-4"></div></div>
             
-            <!-- 과제 제출 (학생 화면 개선 - 클릭하여 자료 열기 기능 추가) -->
             <div id="prog-homework" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
                 <h2 class="text-2xl font-bold text-emerald-400 mb-4">과제 제출</h2>
                 <div id="student-hw-list" class="space-y-4"></div>
@@ -263,7 +256,6 @@
                 </div>
             </div>
 
-            <!-- 모의고사 목록 -->
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
             <!-- 모의고사 룸 -->
@@ -318,7 +310,6 @@
                         <div class="bg-[#151922] p-6 rounded h-[600px] flex flex-col"><div id="admin-kb-view-list" class="flex-grow overflow-y-auto text-white space-y-2"></div></div>
                     </div>
 
-                    <!-- 출제 엔진 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
@@ -394,7 +385,7 @@
         </div>
     </div>
 
-    <!-- 로그인 가이드 팝업 -->
+    <!-- 로그인 창 및 안내 팝업 -->
     <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md">
             <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -471,22 +462,82 @@
         function removeFileByName(cId, name) { if(cId==='kb-files-visual') kbFiles = kbFiles.filter(f=>f.name!==name); else if(cId==='gen-files-visual') genFiles = genFiles.filter(f=>f.name!==name); else if(cId==='chat-file-visual') chatFiles = chatFiles.filter(f=>f.name!==name); else if(cId==='bd-file-visual') bdFiles = bdFiles.filter(f=>f.name!==name); else if(cId==='bd-file-admin-visual') bdFilesAdmin = bdFilesAdmin.filter(f=>f.name!==name); renderAccumulatedFiles(eval(cId.split('-')[0]+'Files'+(cId.includes('admin')?'Admin':'')), cId); }
         function clearAllFiles(cId) { if(cId==='kb-files-visual') kbFiles=[]; else if(cId==='gen-files-visual') genFiles=[]; else if(cId==='chat-file-visual') chatFiles=[]; else if(cId==='bd-file-visual') bdFiles=[]; else if(cId==='bd-file-admin-visual') bdFilesAdmin=[]; renderAccumulatedFiles([], cId); }
 
-        // 💡 인쇄 다단 분리 버그가 완전히 해결된 출력 함수입니다.
+        // 💡 완벽하게 개선된 출력 엔진
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
-            let html = '', inBlock = false;
+            let html = '';
+            let inQuestion = false;
+            let inBogi = false;
+
             clean.split('\n').forEach(line => {
-                let text = line.trim(); if(!text) return html+='<br>';
-                if(/^\d+\./.test(text)){ if(inBlock) html+='</div>'; html+=`<div style="break-inside:avoid;margin-bottom:40px;"><div style="font-weight:bold;margin-bottom:10px;">${text}</div>`; inBlock=true; }
-                else if(/^[①②③④⑤]/.test(text)) html+=`<div style="padding-left:1.5em;text-indent:-1.5em;margin-bottom:5px;">${text}</div>`;
-                else if(text.includes('<보기>')||text.includes('[지문]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="border:1px solid #000;padding:15px;margin:15px 0;break-inside:avoid;font-weight:bold;">${text}</div>`; inBlock=true; }
-                else if(text.includes('[정답 및 해설]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="font-size:16pt;font-weight:bold;text-align:center;border-bottom:2px solid #000;margin:30px 0;break-before:page;column-span:all;">${text}</div>`; }
-                else if(text.includes('[정답표]')||text.includes('[상세 해설]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="font-size:13pt;font-weight:bold;margin-top:20px;border-bottom:1px solid #ccc;column-span:all;">${text}</div>`; }
-                else html+=`<div style="margin-bottom:5px;">${text}</div>`;
+                let text = line.trim(); 
+                if(!text) { 
+                    html += '<br>';
+                    return;
+                }
+
+                // 문제 번호 (1. 2. 3.)
+                if(/^\d+\./.test(text)){ 
+                    if(inBogi) { html += '</div>'; inBogi = false; }
+                    if(inQuestion) { html += '</div>'; }
+                    html += `<div style="break-inside:avoid; margin-bottom:25px;"><div style="font-weight:bold; margin-bottom:8px;">${text}</div>`; 
+                    inQuestion = true; 
+                }
+                // 선지 (① ②)
+                else if(/^[①②③④⑤]/.test(text)) {
+                    if(inBogi) { html += '</div>'; inBogi = false; }
+                    html += `<div style="padding-left:1.5em; text-indent:-1.5em; margin-bottom:4px;">${text}</div>`;
+                }
+                // 보기, 지문 블록 시작
+                else if(text.includes('<보기>') || text.includes('[지문]')) { 
+                    if(inBogi) { html += '</div>'; } 
+                    html += `<div style="border:1px solid #000; padding:12px; margin:10px 0; break-inside:avoid;">`;
+                    html += `<div style="font-weight:bold; margin-bottom:5px;">${text}</div>`;
+                    inBogi = true; 
+                }
+                // 정답 및 해설 (새 페이지로 넘기기)
+                else if(text.includes('[정답 및 해설]')) { 
+                    if(inBogi) { html += '</div>'; inBogi = false; }
+                    if(inQuestion) { html += '</div>'; inQuestion = false; }
+                    
+                    // 기존 2단 다단 컨테이너 닫고, 페이지 넘김 강제 지정, 새 2단 컨테이너 열기
+                    html += `</div><div style="page-break-before:always;"></div><div class="print-container">`;
+                    html += `<div style="font-size:14pt; font-weight:bold; text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin:20px 0; column-span:all;">${text}</div>`; 
+                }
+                // 정답표 등 소제목
+                else if(text.includes('[정답표]') || text.includes('[상세 해설]')) { 
+                    if(inBogi) { html += '</div>'; inBogi = false; }
+                    html += `<div style="font-size:11pt; font-weight:bold; margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; margin-bottom:10px; column-span:all;">${text}</div>`; 
+                }
+                // 일반 텍스트 (보기 내부라면 테두리 안에 포함됨)
+                else {
+                    html += `<div style="margin-bottom:4px;">${text}</div>`;
+                }
             });
-            if(inBlock) html+='</div>';
+
+            if(inBogi) html += '</div>';
+            if(inQuestion) html += '</div>';
+
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>body{font-family:serif;font-size:10.5pt;line-height:1.6;padding:15px;} .h{text-align:center;font-size:18pt;font-weight:bold;margin-bottom:20px;} .print-container { column-count: 2; column-gap: 50px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`); w.document.close();
+            w.document.write(`
+            <html>
+            <head>
+                <style>
+                    @media print {
+                        @page { margin: 15mm; }
+                    }
+                    body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 10px; color: #000; background: #fff; } 
+                    .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } 
+                    .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }
+                </style>
+            </head>
+            <body>
+                <div class="h">로지에듀 최준용 국어 - 실전 모의고사</div>
+                <div class="print-container">${html}</div>
+                <script>setTimeout(()=>window.print(),800);<\/script>
+            </body>
+            </html>`); 
+            w.document.close();
         }
 
         async function saveGeneratedQuestion() { const t=document.getElementById('gen-title').value.trim(), c=document.getElementById('gen-result-text').value.trim(); if(!t||!c) return alert("제목과 내용을 입력하세요."); const btn=document.getElementById('btn-save-gen'); const org=btn.innerHTML; btn.disabled=true; btn.innerHTML="저장 중..."; showLoader("저장 중..."); try{ await fetch(`${API_URL}/api/admin/questions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,content:c})}); document.getElementById('gen-title').value=''; loadGeneratedQuestions(); }catch(e){} btn.disabled=false; btn.innerHTML=org; hideLoader(); }
