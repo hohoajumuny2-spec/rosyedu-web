@@ -75,6 +75,18 @@
         </div>
     </div>
 
+    <div id="twin-modal" class="hidden fixed inset-0 z-[120] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <h3 class="text-2xl font-black text-blue-400"><i class="fa-solid fa-clone mr-2"></i>AI 쌍둥이 오답 클리닉</h3>
+                <button onclick="closeModal('twin-modal')" class="text-gray-400 hover:text-white text-2xl outline-none"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="twin-content" class="overflow-y-auto text-white leading-relaxed whitespace-pre-wrap flex-grow p-4 bg-[#151922] rounded-xl border border-gray-700">
+                <div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i><br>AI 국최가 쌍둥이 문제를 실시간으로 창조하고 있습니다...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- 상단 네비게이션 -->
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
@@ -235,7 +247,7 @@
                 <div id="essay-result-area" class="hidden bg-white p-6 mt-4 text-black rounded"><div id="essay-feedback"></div></div>
             </div>
 
-            <!-- 강의/과제/시험 목록 -->
+            <!-- 강의실 -->
             <div id="prog-lecture" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-purple-400 mb-4">강의실</h2><div id="student-lecture-list" class="grid grid-cols-2 gap-4"></div></div>
             
             <!-- 과제 제출 (학생 화면 개선 - 클릭하여 자료 열기 기능 추가) -->
@@ -251,6 +263,7 @@
                 </div>
             </div>
 
+            <!-- 모의고사 목록 -->
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
             <!-- 모의고사 룸 -->
@@ -431,7 +444,9 @@
             <button onclick="closeModal('knowledge-import-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             <h3 class="text-2xl font-black text-blue-400 mb-2"><i class="fa-solid fa-file-import mr-2"></i>학습된 자료 가져오기</h3>
             <p class="text-gray-400 text-sm mb-6">[자료학습] 탭에서 등록했던 자료 목록입니다. 클릭하시면 바로 출제 지문으로 입력됩니다.</p>
-            <div id="knowledge-import-list" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
+            <div id="knowledge-import-list" class="flex-grow overflow-y-auto space-y-2 pr-2">
+                <!-- 자료 리스트 렌더링 -->
+            </div>
         </div>
     </div>
 
@@ -456,6 +471,7 @@
         function removeFileByName(cId, name) { if(cId==='kb-files-visual') kbFiles = kbFiles.filter(f=>f.name!==name); else if(cId==='gen-files-visual') genFiles = genFiles.filter(f=>f.name!==name); else if(cId==='chat-file-visual') chatFiles = chatFiles.filter(f=>f.name!==name); else if(cId==='bd-file-visual') bdFiles = bdFiles.filter(f=>f.name!==name); else if(cId==='bd-file-admin-visual') bdFilesAdmin = bdFilesAdmin.filter(f=>f.name!==name); renderAccumulatedFiles(eval(cId.split('-')[0]+'Files'+(cId.includes('admin')?'Admin':'')), cId); }
         function clearAllFiles(cId) { if(cId==='kb-files-visual') kbFiles=[]; else if(cId==='gen-files-visual') genFiles=[]; else if(cId==='chat-file-visual') chatFiles=[]; else if(cId==='bd-file-visual') bdFiles=[]; else if(cId==='bd-file-admin-visual') bdFilesAdmin=[]; renderAccumulatedFiles([], cId); }
 
+        // 💡 인쇄 다단 분리 버그가 완전히 해결된 출력 함수입니다.
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = '', inBlock = false;
@@ -465,12 +481,12 @@
                 else if(/^[①②③④⑤]/.test(text)) html+=`<div style="padding-left:1.5em;text-indent:-1.5em;margin-bottom:5px;">${text}</div>`;
                 else if(text.includes('<보기>')||text.includes('[지문]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="border:1px solid #000;padding:15px;margin:15px 0;break-inside:avoid;font-weight:bold;">${text}</div>`; inBlock=true; }
                 else if(text.includes('[정답 및 해설]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="font-size:16pt;font-weight:bold;text-align:center;border-bottom:2px solid #000;margin:30px 0;break-before:page;column-span:all;">${text}</div>`; }
-                else if(text.includes('[정답표]')||text.includes('[상세 해설]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="font-size:13pt;font-weight:bold;margin-top:20px;border-bottom:1px solid #ccc;">${text}</div>`; }
+                else if(text.includes('[정답표]')||text.includes('[상세 해설]')) { if(inBlock){html+='</div>'; inBlock=false;} html+=`<div style="font-size:13pt;font-weight:bold;margin-top:20px;border-bottom:1px solid #ccc;column-span:all;">${text}</div>`; }
                 else html+=`<div style="margin-bottom:5px;">${text}</div>`;
             });
             if(inBlock) html+='</div>';
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>body{font-family:serif;font-size:10.5pt;line-height:1.6;padding:15px;column-count:2;column-gap:50px;column-rule:1px solid #ccc;} .h{text-align:center;font-size:18pt;font-weight:bold;column-span:all;margin-bottom:20px;}</style></head><body><div class="h">로지에듀 실전 모의고사</div>${html}<script>setTimeout(()=>window.print(),800);<\/script></body></html>`); w.document.close();
+            w.document.write(`<html><head><style>body{font-family:serif;font-size:10.5pt;line-height:1.6;padding:15px;} .h{text-align:center;font-size:18pt;font-weight:bold;margin-bottom:20px;} .print-container { column-count: 2; column-gap: 50px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`); w.document.close();
         }
 
         async function saveGeneratedQuestion() { const t=document.getElementById('gen-title').value.trim(), c=document.getElementById('gen-result-text').value.trim(); if(!t||!c) return alert("제목과 내용을 입력하세요."); const btn=document.getElementById('btn-save-gen'); const org=btn.innerHTML; btn.disabled=true; btn.innerHTML="저장 중..."; showLoader("저장 중..."); try{ await fetch(`${API_URL}/api/admin/questions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,content:c})}); document.getElementById('gen-title').value=''; loadGeneratedQuestions(); }catch(e){} btn.disabled=false; btn.innerHTML=org; hideLoader(); }
@@ -731,7 +747,6 @@
 
         async function loadStudentExams() { try{ const res=await fetch(`${API_URL}/api/exams`); const data=await res.json(); const c=document.getElementById('student-exam-list'); c.innerHTML=''; if(data.success) { studentExamsList=data.exams; data.exams.forEach((e,i) => { c.innerHTML+=`<div onclick="enterExamRoom(${i})" class="bg-gray-800 p-4 rounded text-white cursor-pointer hover:border-yellow-400 border border-transparent"><h3 class="font-bold">${e.title}</h3><p class="text-xs text-yellow-400 mt-2">입장하기</p></div>`; }); } }catch(e){} }
         
-        // 💡 관리자 모의고사 목록 링크 추가 완료
         async function loadAdminExams() { try{ const res=await fetch(`${API_URL}/api/exams`); const data=await res.json(); const c=document.getElementById('admin-exam-list'); c.innerHTML=''; if(data.success){ studentExamsList=data.exams; data.exams.forEach((e,i) => { c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${e.pdf_url}" target="_blank" class="hover:text-yellow-400 font-bold underline truncate w-1/2 cursor-pointer"><i class="fa-solid fa-file-pdf mr-2"></i>${e.title}</a><div class="flex gap-1 flex-shrink-0"><button onclick="startAdminLiveByIndex(${i})" class="bg-blue-600 px-3 py-1 rounded text-xs font-bold transition">감독</button><button onclick="deleteExamByIndex(${i})" class="text-red-400 bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded text-xs transition">삭제</button></div></div>`; }); } }catch(e){} }
         
         function startAdminLiveByIndex(i) { const e=studentExamsList[i]; startAdminLive(e.title, e.pdf_url); }
@@ -768,7 +783,6 @@
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
         function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderExamFile(API_URL+pdfUrl, title); connectLiveExam(title); }
 
-        // 💡 학생 과제 목록에 다운로드 링크 추가 완벽 복구
         async function loadHomeworks() { 
             try { 
                 const res=await fetch(`${API_URL}/api/homeworks`); 
@@ -794,11 +808,10 @@
             } catch(e){} 
         }
         
-        // 💡 관리자 과제 목록 링크 추가 완료
         async function loadAdminHWList() { try{ const res=await fetch(`${API_URL}/api/homeworks`); const data=await res.json(); const c=document.getElementById('admin-hw-view-list'); c.innerHTML=''; if(data.success){ data.homeworks.forEach((h,i) => c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${h.answer_file}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-file-arrow-down mr-2"></i>${h.title}</a><button onclick="deleteHomework('${h.title}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
         
         async function createHomework() { const t=document.getElementById('hw-title').value, d='', f=document.getElementById('hw-ans-file').files[0]; if(!t||!f) return alert("입력 필수"); showLoader("배포 중..."); const fd=new FormData(); fd.append("title",t); fd.append("desc",d); fd.append("answer_file",f); try{ await fetch(`${API_URL}/api/admin/homework`,{method:'POST',body:fd}); loadAdminHWList(); alert("완료"); document.getElementById('hw-title').value=''; }catch(e){} hideLoader(); }
-        async function submitHomework() { const t=document.getElementById('hw-target-title').innerText, f=document.getElementById('hw-file').files[0]; if(!f) return; showLoader(); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("title",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/homework/submit`,{method:'POST',body:fd}); const data=await res.json(); if(data.success) { document.getElementById('hw-result-area').innerHTML=`제출 성공 <br><a href="${API_URL}${data.answer_file}" target="_blank" class="text-blue-400 mt-2 inline-block">정답 해설 다운로드</a>`; document.getElementById('hw-result-area').style.display='block'; } }catch(e){} hideLoader(); }
+        async function submitHomework() { const t=document.getElementById('hw-target-title').innerText, f=document.getElementById('hw-file').files[0]; if(!f) return; showLoader(); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("title",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/homework/submit`,{method:'POST',body:fd}); const data=await res.json(); if(data.success) { document.getElementById('hw-result-area').innerHTML=`<div class="bg-emerald-900/30 border border-emerald-500 p-4 rounded-xl text-center"><p class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>제출이 완료되었습니다!</p>${data.answer_file ? `<a href="${API_URL}${data.answer_file}" target="_blank" class="text-blue-400 underline text-sm mt-2 inline-block"><i class="fa-solid fa-download mr-1"></i>정답/해설 다운로드</a>` : ''}</div>`; document.getElementById('hw-result-area').style.display='block'; } }catch(e){} hideLoader(); }
         async function deleteHomework(title) { if(confirm("삭제?")) { showLoader(); await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(title)}`,{method:'DELETE'}); loadAdminHWList(); hideLoader(); } }
 
         async function loadBoard() {
@@ -857,7 +870,6 @@
             }
         }
 
-        // 💡 관리자 공지사항 목록 링크 추가 완료
         async function loadAdminBoardList() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('admin-board-view-list'); c.innerHTML=''; if(data.success){ data.posts.forEach((p,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${p.file_url}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${p.title}</a><button onclick="deleteBoardPost('${p.id}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
         
         async function createBoardAdmin() { const t=document.getElementById('bd-title-admin').value, d=document.getElementById('bd-desc-admin').value; if(!t) return; showLoader(); const fd=new FormData(); fd.append("title",t); fd.append("desc",d); if(bdFilesAdmin.length) fd.append("file",bdFilesAdmin[0]); try{ await fetch(`${API_URL}/api/admin/board`,{method:'POST',body:fd}); loadAdminBoardList(); document.getElementById('bd-title-admin').value=''; document.getElementById('bd-desc-admin').value=''; clearAllFiles('bd-file-admin-visual'); }catch(e){} hideLoader(); }
@@ -866,7 +878,6 @@
 
         async function loadLectures() { try{ const res=await fetch(`${API_URL}/api/lectures`); const data=await res.json(); const c=document.getElementById('student-lecture-list'); c.innerHTML=''; if(data.success){ data.lectures.forEach(l=>c.innerHTML+=`<div class="bg-gray-800 p-4 rounded text-white font-bold">${l.title} <br><a href="${l.video_url}" target="_blank" class="text-blue-400 font-normal mt-2 inline-block">강의 시청하기</a></div>`); } }catch(e){} }
         
-        // 💡 관리자 강의 목록 링크 추가 완료
         async function loadAdminLectures() { try{ const res=await fetch(`${API_URL}/api/lectures`); const data=await res.json(); const c=document.getElementById('admin-lecture-list'); c.innerHTML=''; if(data.success){ data.lectures.forEach((l,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${l.video_url}" target="_blank" class="hover:text-purple-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-play mr-2"></i>${l.title}</a><button onclick="deleteLecture('${l.id}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
         
         async function createLecture() { const t=document.getElementById('lec-title').value, u=document.getElementById('lec-url').value; if(!t||!u) return; showLoader(); await fetch(`${API_URL}/api/admin/lecture`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,desc:'',video_url:u})}); loadAdminLectures(); document.getElementById('lec-title').value=''; document.getElementById('lec-url').value=''; hideLoader(); }
@@ -874,7 +885,6 @@
 
         async function uploadKnowledge() { const t=document.getElementById('kb-title').value, c=document.getElementById('kb-content').value; if(!t) return alert("제목 필수!"); showLoader("🧠 학습 중..."); const fd=new FormData(); fd.append("title",t); fd.append("content",c); kbFiles.forEach(f=>fd.append("files",f)); try{ await fetch(`${API_URL}/api/admin/knowledge`,{method:'POST',body:fd}); alert("학습 완료"); loadKnowledgeList(); document.getElementById('kb-title').value=''; document.getElementById('kb-content').value=''; clearAllFiles('kb-files-visual'); }catch(e){} hideLoader(); }
         
-        // 💡 자료학습 목록 링크(상세보기) 추가 완료
         async function loadKnowledgeList() { try{ const res=await fetch(`${API_URL}/api/knowledge`); const data=await res.json(); const c=document.getElementById('admin-kb-view-list'); c.innerHTML=''; if(data.success) { data.knowledge.forEach(k=>{ const safeContent = encodeURIComponent(k.content); c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center"><span class="font-bold truncate w-2/3 cursor-pointer hover:text-emerald-400 underline transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-2"></i>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-red-400 text-xs flex-shrink-0 bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`; }); } }catch(e){} }
         
         async function deleteKnowledge(id) { if(confirm("삭제?")){ showLoader(); await fetch(`${API_URL}/api/admin/knowledge/${id}`,{method:'DELETE'}); loadKnowledgeList(); hideLoader(); } }
