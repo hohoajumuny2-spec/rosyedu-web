@@ -45,6 +45,7 @@
 
     <div id="toast-container"></div>
 
+    <!-- 메인 팝업 -->
     <div id="main-popup" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-md shadow-2xl flex flex-col fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
@@ -61,6 +62,7 @@
         </div>
     </div>
 
+    <!-- 문의사항 모달 -->
     <div id="inquiry-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -85,6 +87,7 @@
         </div>
     </div>
 
+    <!-- 상단 네비게이션 -->
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
@@ -120,6 +123,7 @@
         </div>
     </nav>
 
+    <!-- 홈 뷰 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center pt-20 px-4 pb-20">
         <div class="text-center z-10 fade-in min-h-[80vh] flex flex-col justify-center items-center w-full">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all"><span class="text-blue-500">'로지는 언제나 올바름'</span>을 찾아냈습니다.<br><span class="text-2xl md:text-4xl lg:text-[2.5rem] mt-6 block text-gray-300 font-bold">그리고 그것이 <span class="text-blue-500">정답</span>이 되는 길을 만들었습니다.</span></h1>
@@ -129,6 +133,7 @@
         </div>
     </div>
 
+    <!-- 대시보드 화면 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
@@ -163,6 +168,8 @@
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">공지사항</h3>
                     <p class="text-gray-400 text-xs md:text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
+                
+                <!-- 💡 시스템 통합 관리 버튼 (관리자만 보임) -->
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⚙️</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -171,6 +178,7 @@
             </div>
         </div>
 
+        <!-- 세부 프로그램 뷰 -->
         <div id="program-view" style="display: none;" class="fade-in pt-24 px-4 pb-12 w-full max-w-7xl mx-auto">
             <button onclick="closeProgram()" class="mb-4 text-gray-400 hover:text-white font-bold"><i class="fa-solid fa-arrow-left"></i> 돌아가기</button>
 
@@ -241,9 +249,10 @@
                 <div id="essay-result-area" class="hidden bg-white p-6 mt-4 text-black rounded"><div id="essay-feedback"></div></div>
             </div>
 
-            <!-- 강의/과제/시험 목록 -->
+            <!-- 강의실 -->
             <div id="prog-lecture" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-purple-400 mb-4">강의실</h2><div id="student-lecture-list" class="grid grid-cols-2 gap-4"></div></div>
             
+            <!-- 과제 제출 -->
             <div id="prog-homework" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
                 <h2 class="text-2xl font-bold text-emerald-400 mb-4">과제 제출</h2>
                 <div id="student-hw-list" class="space-y-4"></div>
@@ -256,6 +265,7 @@
                 </div>
             </div>
 
+            <!-- 모의고사 목록 -->
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
             <!-- 모의고사 룸 -->
@@ -269,7 +279,7 @@
                 </div>
             </div>
 
-            <!-- 통합 관리 -->
+            <!-- 통합 관리 (원장님 전용) -->
             <div id="prog-admin" class="prog-content w-full mx-auto">
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                     <div class="flex gap-2 mb-6 border-b border-gray-700 pb-4">
@@ -385,7 +395,7 @@
         </div>
     </div>
 
-    <!-- 로그인 창 및 안내 팝업 -->
+    <!-- 로그인 가이드 팝업 -->
     <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md">
             <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -462,7 +472,7 @@
         function removeFileByName(cId, name) { if(cId==='kb-files-visual') kbFiles = kbFiles.filter(f=>f.name!==name); else if(cId==='gen-files-visual') genFiles = genFiles.filter(f=>f.name!==name); else if(cId==='chat-file-visual') chatFiles = chatFiles.filter(f=>f.name!==name); else if(cId==='bd-file-visual') bdFiles = bdFiles.filter(f=>f.name!==name); else if(cId==='bd-file-admin-visual') bdFilesAdmin = bdFilesAdmin.filter(f=>f.name!==name); renderAccumulatedFiles(eval(cId.split('-')[0]+'Files'+(cId.includes('admin')?'Admin':'')), cId); }
         function clearAllFiles(cId) { if(cId==='kb-files-visual') kbFiles=[]; else if(cId==='gen-files-visual') genFiles=[]; else if(cId==='chat-file-visual') chatFiles=[]; else if(cId==='bd-file-visual') bdFiles=[]; else if(cId==='bd-file-admin-visual') bdFilesAdmin=[]; renderAccumulatedFiles([], cId); }
 
-        // 💡 완벽하게 개선된 출력 엔진
+        // 💡 완벽하게 개선된 출력 엔진 (글자크기 9pt, <보기> 박스, 2단, 해설 페이지 분리)
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = '';
@@ -596,10 +606,34 @@
         async function deleteInquiry(id) { if(confirm("삭제?")) try{ await fetch(`${API_URL}/api/admin/inquiry/${id}`,{method:'DELETE'}); loadInquiries(); }catch(e){} }
 
         window.addEventListener('hashchange', () => {
-            const h = window.location.hash.replace('#',''); document.querySelectorAll('#home-view, #dashboard-screen, #program-view, .prog-content').forEach(el=>el.style.display='none');
-            if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); }
-            else { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('program-view').style.display='block'; const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block'; if(h==='prog-admin') switchAdminTab('admin-users'); }
+            const h = window.location.hash.replace('#',''); 
+            document.querySelectorAll('#home-view, #dashboard-screen, #program-view, .prog-content').forEach(el=>el.style.display='none');
+            
+            if(!h||h==='home') { 
+                document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); 
+            }
+            else if(h==='dashboard') { 
+                if(!currentUser) { window.location.hash='home'; return showModal('auth'); } 
+                document.getElementById('dashboard-screen').style.display='block'; 
+                document.getElementById('dashboard-home').style.display='block'; 
+                closeExamRoomStrict(); 
+            }
+            else { 
+                if(!currentUser) { window.location.hash='home'; return showModal('auth'); } 
+                
+                // 🚨 2중 보안 장치: 학생이 관리자 페이지 경로로 무단 접근 시 차단
+                if (h === 'prog-admin' && !currentUser.isAdmin) {
+                    alert("접근 권한이 없습니다. 원장님 전용 메뉴입니다.");
+                    window.location.hash = 'dashboard';
+                    return;
+                }
+
+                document.getElementById('dashboard-screen').style.display='block'; 
+                document.getElementById('program-view').style.display='block'; 
+                const t=document.getElementById('prog-'+h.replace('prog-','')); 
+                if(t) t.style.display='block'; 
+                if(h==='prog-admin') switchAdminTab('admin-users'); 
+            }
         });
 
         window.addEventListener('DOMContentLoaded', () => { 
@@ -610,11 +644,15 @@
                 document.getElementById('auth-nav').style.display='none'; 
                 document.getElementById('user-nav').classList.replace('hidden','flex'); 
                 document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name; 
+                
                 if(!currentUser.isAdmin) { 
                     document.getElementById('btn-mypage-nav').style.display='inline-block'; 
                     document.getElementById('mobile-mypage-btn').style.display='block'; 
+                    // 🚨 2중 보안 장치: 학생 화면에서는 관리자 버튼 구조를 완전히 제거
+                    document.getElementById('card-admin').style.display='none'; 
                 } 
                 if(currentUser.isAdmin) { 
+                    document.getElementById('card-admin').classList.remove('hidden');
                     document.getElementById('card-admin').style.display='flex'; 
                     const bwBtn = document.getElementById('btn-show-board-write');
                     if(bwBtn) bwBtn.classList.remove('hidden');
@@ -673,7 +711,7 @@
             hideLoader(); 
         }
 
-        function logout() { localStorage.removeItem('logyedu_user'); location.reload(); }
+        function logout() { localStorage.removeItem('logyedu_user'); window.location.hash='home'; location.reload(); }
 
         async function addSingleStudent() { const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value; if(!n) return; showLoader(); await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n})}); loadAdminStudents(); hideLoader(); }
         async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${s.id}"> ${s.school} ${s.grade} ${s.student_name}</label><div class="w-1/3 text-right"><button onclick="fetchReports('${s.student_name}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1">이력</button><button onclick="openEditStudent('${s.id}','${s.student_name}','${s.school}','${s.grade}')" class="bg-blue-600 px-2 rounded text-xs text-white">수정</button></div></div>`); } }
