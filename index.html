@@ -169,7 +169,6 @@
                     <p class="text-gray-400 text-xs md:text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
                 
-                <!-- 💡 시스템 통합 관리 버튼 (관리자만 보임) -->
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⚙️</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -189,7 +188,7 @@
                 <div id="mypage-history-list" class="space-y-2 bg-[#151922] p-4 rounded-xl h-[400px] overflow-y-auto text-gray-300"></div>
             </div>
 
-            <!-- 공지사항 (PDF 뷰어 반영) -->
+            <!-- 공지사항 -->
             <div id="prog-board" class="prog-content w-full max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold text-white"><i class="fa-solid fa-bullhorn text-emerald-400 mr-3"></i>공지사항</h2>
@@ -258,9 +257,11 @@
                 <div id="student-hw-list" class="space-y-4"></div>
                 <div id="hw-submit-area" class="hidden mt-6 bg-[#151922] p-6 rounded-xl border border-emerald-500 shadow-xl">
                     <h3 id="hw-target-title" class="text-xl text-white font-bold mb-4 border-b border-gray-700 pb-2"></h3>
-                    <p class="text-gray-400 text-sm mb-4">문제 풀이 사진이나 스캔 파일(PDF)을 첨부하여 과제를 제출하세요.</p>
-                    <input type="file" id="hw-file" class="w-full text-white bg-gray-800 p-3 rounded mb-4">
-                    <button onclick="submitHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 text-white font-bold rounded transition">제출 완료</button>
+                    <!-- 💡 수정됨: 여러 파일 첨부 가능 안내 문구 -->
+                    <p class="text-gray-400 text-sm mb-4">문제 풀이 사진이나 스캔 파일을 여러 장 선택하여 제출할 수 있습니다.</p>
+                    <!-- 💡 수정됨: multiple 속성 추가 -->
+                    <input type="file" id="hw-file" multiple class="w-full text-white bg-gray-800 p-3 rounded mb-4">
+                    <button onclick="submitHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 text-white font-bold rounded transition">과제 제출하기</button>
                     <div id="hw-result-area" class="hidden mt-4 text-white"></div>
                 </div>
             </div>
@@ -472,7 +473,6 @@
         function removeFileByName(cId, name) { if(cId==='kb-files-visual') kbFiles = kbFiles.filter(f=>f.name!==name); else if(cId==='gen-files-visual') genFiles = genFiles.filter(f=>f.name!==name); else if(cId==='chat-file-visual') chatFiles = chatFiles.filter(f=>f.name!==name); else if(cId==='bd-file-visual') bdFiles = bdFiles.filter(f=>f.name!==name); else if(cId==='bd-file-admin-visual') bdFilesAdmin = bdFilesAdmin.filter(f=>f.name!==name); renderAccumulatedFiles(eval(cId.split('-')[0]+'Files'+(cId.includes('admin')?'Admin':'')), cId); }
         function clearAllFiles(cId) { if(cId==='kb-files-visual') kbFiles=[]; else if(cId==='gen-files-visual') genFiles=[]; else if(cId==='chat-file-visual') chatFiles=[]; else if(cId==='bd-file-visual') bdFiles=[]; else if(cId==='bd-file-admin-visual') bdFilesAdmin=[]; renderAccumulatedFiles([], cId); }
 
-        // 💡 완벽하게 개선된 출력 엔진 (글자크기 9pt, <보기> 박스, 2단, 해설 페이지 분리)
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = '';
@@ -510,7 +510,6 @@
                     if(inBogi) { html += '</div>'; inBogi = false; }
                     if(inQuestion) { html += '</div>'; inQuestion = false; }
                     
-                    // 기존 2단 다단 컨테이너 닫고, 페이지 넘김 강제 지정, 새 2단 컨테이너 열기
                     html += `</div><div style="page-break-before:always;"></div><div class="print-container">`;
                     html += `<div style="font-size:14pt; font-weight:bold; text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin:20px 0; column-span:all;">${text}</div>`; 
                 }
@@ -519,7 +518,6 @@
                     if(inBogi) { html += '</div>'; inBogi = false; }
                     html += `<div style="font-size:11pt; font-weight:bold; margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; margin-bottom:10px; column-span:all;">${text}</div>`; 
                 }
-                // 일반 텍스트 (보기 내부라면 테두리 안에 포함됨)
                 else {
                     html += `<div style="margin-bottom:4px;">${text}</div>`;
                 }
@@ -621,7 +619,6 @@
             else { 
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); } 
                 
-                // 🚨 2중 보안 장치: 학생이 관리자 페이지 경로로 무단 접근 시 차단
                 if (h === 'prog-admin' && !currentUser.isAdmin) {
                     alert("접근 권한이 없습니다. 원장님 전용 메뉴입니다.");
                     window.location.hash = 'dashboard';
@@ -648,7 +645,6 @@
                 if(!currentUser.isAdmin) { 
                     document.getElementById('btn-mypage-nav').style.display='inline-block'; 
                     document.getElementById('mobile-mypage-btn').style.display='block'; 
-                    // 🚨 2중 보안 장치: 학생 화면에서는 관리자 버튼 구조를 완전히 제거
                     document.getElementById('card-admin').style.display='none'; 
                 } 
                 if(currentUser.isAdmin) { 
@@ -872,6 +868,7 @@
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
         function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderExamFile(API_URL+pdfUrl, title); connectLiveExam(title); }
 
+        // 💡 수정됨: [자료 열기] 버튼 숨기기 처리
         async function loadHomeworks() { 
             try { 
                 const res=await fetch(`${API_URL}/api/homeworks`); 
@@ -880,16 +877,17 @@
                 c.innerHTML=''; 
                 if(data.success){ 
                     data.homeworks.forEach((h,i) => {
-                        let fileLink = h.answer_file ? `<a href="${API_URL}${h.answer_file}" target="_blank" class="flex-1 md:flex-none text-center bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition"><i class="fa-solid fa-file-arrow-down mr-1"></i>자료 열기</a>` : '';
+                        // 💡 중요: 제출 완료 전에는 자료 열기 버튼을 보여주지 않습니다!
+                        const hwId = `hw-item-${i}`;
                         c.innerHTML += `
-                        <div class="bg-[#151922] p-5 rounded-xl border border-gray-700 shadow flex flex-col md:flex-row justify-between items-start md:items-center text-white gap-4 mb-3">
+                        <div id="${hwId}" class="bg-[#151922] p-5 rounded-xl border border-gray-700 shadow flex flex-col md:flex-row justify-between items-start md:items-center text-white gap-4 mb-3">
                             <div class="flex-grow">
                                 <span class="font-bold text-lg text-emerald-400 block mb-1"><i class="fa-solid fa-pen-to-square mr-2"></i>${h.title}</span>
-                                <span class="text-xs text-gray-400">자료를 확인한 후 과제를 제출하세요.</span>
+                                <span class="text-xs text-gray-400">파일을 첨부하여 과제를 제출하면 해설 자료가 오픈됩니다.</span>
                             </div>
                             <div class="flex gap-2 w-full md:w-auto">
-                                ${fileLink}
-                                <button onclick="document.getElementById('hw-submit-area').style.display='block'; document.getElementById('hw-target-title').innerText='${h.title}';" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition">제출하기</button>
+                                <span id="answer-link-${i}" class="hidden"></span>
+                                <button onclick="document.getElementById('hw-submit-area').style.display='block'; document.getElementById('hw-target-title').innerText='${h.title}'; document.getElementById('hw-target-title').dataset.idx='${i}';" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition">제출하기</button>
                             </div>
                         </div>`;
                     }); 
@@ -900,7 +898,49 @@
         async function loadAdminHWList() { try{ const res=await fetch(`${API_URL}/api/homeworks`); const data=await res.json(); const c=document.getElementById('admin-hw-view-list'); c.innerHTML=''; if(data.success){ data.homeworks.forEach((h,i) => c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${h.answer_file}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-file-arrow-down mr-2"></i>${h.title}</a><button onclick="deleteHomework('${h.title}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
         
         async function createHomework() { const t=document.getElementById('hw-title').value, d='', f=document.getElementById('hw-ans-file').files[0]; if(!t||!f) return alert("입력 필수"); showLoader("배포 중..."); const fd=new FormData(); fd.append("title",t); fd.append("desc",d); fd.append("answer_file",f); try{ await fetch(`${API_URL}/api/admin/homework`,{method:'POST',body:fd}); loadAdminHWList(); alert("완료"); document.getElementById('hw-title').value=''; }catch(e){} hideLoader(); }
-        async function submitHomework() { const t=document.getElementById('hw-target-title').innerText, f=document.getElementById('hw-file').files[0]; if(!f) return; showLoader(); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("title",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/homework/submit`,{method:'POST',body:fd}); const data=await res.json(); if(data.success) { document.getElementById('hw-result-area').innerHTML=`<div class="bg-emerald-900/30 border border-emerald-500 p-4 rounded-xl text-center"><p class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>제출이 완료되었습니다!</p>${data.answer_file ? `<a href="${API_URL}${data.answer_file}" target="_blank" class="text-blue-400 underline text-sm mt-2 inline-block"><i class="fa-solid fa-download mr-1"></i>정답/해설 다운로드</a>` : ''}</div>`; document.getElementById('hw-result-area').style.display='block'; } }catch(e){} hideLoader(); }
+        
+        // 💡 수정됨: 여러 파일 제출 기능 및 [자료 열기] 표시
+        async function submitHomework() { 
+            const titleEl = document.getElementById('hw-target-title');
+            const t = titleEl.innerText; 
+            const idx = titleEl.dataset.idx;
+            const fileInput = document.getElementById('hw-file');
+            const files = fileInput.files; 
+            
+            if(files.length === 0) return alert("제출할 파일을 하나 이상 첨부해주세요."); 
+            
+            showLoader(); 
+            const fd = new FormData(); 
+            fd.append("school", currentUser.school); 
+            fd.append("grade", currentUser.grade); 
+            fd.append("student_name", currentUser.name); 
+            fd.append("title", t); 
+            
+            for(let i=0; i<files.length; i++) {
+                fd.append("files", files[i]);
+            }
+            
+            try{ 
+                const res = await fetch(`${API_URL}/api/homework/submit`, {method: 'POST', body: fd}); 
+                const data = await res.json(); 
+                if(data.success) { 
+                    document.getElementById('hw-result-area').innerHTML = `<div class="bg-emerald-900/30 border border-emerald-500 p-4 rounded-xl text-center"><p class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>과제 제출이 완료되었습니다!</p></div>`; 
+                    document.getElementById('hw-result-area').style.display='block'; 
+                    
+                    // 💡 제출 성공 시, 숨겨놨던 자료 열기 버튼을 보여줍니다!
+                    if (data.answer_file && idx !== undefined) {
+                        const linkSpan = document.getElementById(`answer-link-${idx}`);
+                        if(linkSpan) {
+                            linkSpan.innerHTML = `<a href="${API_URL}${data.answer_file}" target="_blank" class="flex-1 md:flex-none text-center bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition text-white block"><i class="fa-solid fa-file-arrow-down mr-1"></i>정답/해설 자료 열람</a>`;
+                            linkSpan.classList.remove('hidden');
+                        }
+                    }
+                    
+                    fileInput.value = ''; // 첨부창 초기화
+                } 
+            } catch(e) {} 
+            hideLoader(); 
+        }
         async function deleteHomework(title) { if(confirm("삭제?")) { showLoader(); await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(title)}`,{method:'DELETE'}); loadAdminHWList(); hideLoader(); } }
 
         async function loadBoard() {
