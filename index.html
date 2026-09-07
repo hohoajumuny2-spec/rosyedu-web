@@ -73,18 +73,6 @@
         </div>
     </div>
 
-    <div id="twin-modal" class="hidden fixed inset-0 z-[120] modal-bg flex items-center justify-center p-4">
-        <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-                <h3 class="text-2xl font-black text-blue-400"><i class="fa-solid fa-clone mr-2"></i>AI 쌍둥이 오답 클리닉</h3>
-                <button onclick="closeModal('twin-modal')" class="text-gray-400 hover:text-white text-2xl outline-none"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div id="twin-content" class="overflow-y-auto text-white leading-relaxed whitespace-pre-wrap flex-grow p-4 bg-[#151922] rounded-xl border border-gray-700">
-                <div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i><br>AI 국최가 쌍둥이 문제를 실시간으로 창조하고 있습니다...</div>
-            </div>
-        </div>
-    </div>
-
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
@@ -137,6 +125,12 @@
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
                     <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+                </div>
+                <!-- 💡 타임어택 퀴즈 카드 추가 -->
+                <div onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="bg-[#1e2430] border border-orange-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-orange-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⏱️</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">타임어택 퀴즈</h3>
+                    <p class="text-orange-200/70 text-xs md:text-sm">마감일과 제한시간이 있는 퀴즈를 풀고 점수를 확인하세요.</p>
                 </div>
                 <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⏳</div>
@@ -205,7 +199,6 @@
                 <div id="board-list" class="space-y-6"></div>
             </div>
 
-            <!-- 문의사항 -->
             <div id="prog-inquiry" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                 <h2 class="text-2xl font-bold text-emerald-400 mb-4">문의 사항</h2>
                 <textarea id="inquiry-content-main" class="w-full h-24 bg-[#1e2430] p-4 text-white mb-4 rounded" placeholder="궁금한 점이나 오류 신고를 자유롭게 적어주세요..."></textarea><button onclick="submitInquiry('main')" class="w-full bg-emerald-600 py-3 rounded text-white font-bold">전송</button>
@@ -258,6 +251,26 @@
                 </div>
             </div>
 
+            <!-- 💡 타임어택 퀴즈 목록 (학생용) -->
+            <div id="prog-quiz-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
+                <h2 class="text-2xl font-bold text-orange-500 mb-4">타임어택 퀴즈</h2>
+                <p class="text-gray-400 text-sm mb-6">정해진 기한(마감)과 시험 시간이 있는 퀴즈입니다. 타이머가 0이 되면 자동 제출됩니다.</p>
+                <div id="student-quiz-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 💡 타임어택 퀴즈 룸 (학생용 응시화면) -->
+            <div id="prog-quiz-room" class="prog-content w-full max-w-4xl mx-auto bg-[#1e2430] p-6 rounded-xl shadow-2xl relative">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4 sticky top-0 bg-[#1e2430] z-10">
+                    <h2 id="quiz-room-title" class="text-2xl font-bold text-white"></h2>
+                    <div class="text-right">
+                        <span class="text-sm text-gray-400 block mb-1">남은 시간</span>
+                        <span id="quiz-timer" class="text-3xl font-black text-orange-400">00:00</span>
+                    </div>
+                </div>
+                <div id="quiz-questions-container" class="space-y-6 mb-8 text-white"></div>
+                <button onclick="submitQuizReal()" class="w-full bg-orange-600 hover:bg-orange-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg">퀴즈 제출하기</button>
+            </div>
+
             <!-- 모의고사 목록 -->
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
@@ -275,11 +288,13 @@
             <!-- 통합 관리 (원장님 전용) -->
             <div id="prog-admin" class="prog-content w-full mx-auto">
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
-                    <div class="flex gap-2 mb-6 border-b border-gray-700 pb-4">
+                    <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">학생 명단</button>
                         <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600 px-4 py-2 rounded">자료학습</button>
                         <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600 px-4 py-2 rounded">출제</button>
                         <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600 px-4 py-2 rounded">모의고사</button>
+                        <!-- 💡 퀴즈 관리 탭 버튼 -->
+                        <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="text-orange-400 font-bold border border-orange-600 px-4 py-2 rounded">퀴즈 출제</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                     </div>
@@ -293,6 +308,37 @@
                                 <button onclick="fetchReports()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs rounded text-white">전체보기</button>
                             </h3>
                             <div id="student-detail-container" class="flex-grow flex flex-col overflow-y-auto pr-2 text-white"></div>
+                        </div>
+                    </div>
+
+                    <!-- 💡 퀴즈 관리 탭 내용 -->
+                    <div id="admin-quiz" class="admin-tab-content grid grid-cols-2 gap-4">
+                        <div class="bg-[#151922] p-6 rounded">
+                            <h3 class="text-lg font-bold text-orange-400 mb-4">새 퀴즈 출제</h3>
+                            <input type="text" id="qz-title" placeholder="퀴즈 제목" class="w-full p-3 bg-gray-800 text-white mb-2 rounded border border-gray-600">
+                            
+                            <div class="flex gap-2 mb-2">
+                                <div class="w-1/2">
+                                    <label class="text-xs text-gray-400 mb-1 block">마감 일시 (기한)</label>
+                                    <input type="datetime-local" id="qz-deadline" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
+                                </div>
+                                <div class="w-1/2">
+                                    <label class="text-xs text-gray-400 mb-1 block">제한 시간 (분)</label>
+                                    <input type="number" id="qz-limit" placeholder="예: 10" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 border-t border-gray-700 pt-4">
+                                <h4 class="text-sm font-bold text-white mb-2">문제 목록</h4>
+                                <div id="qz-questions-board" class="space-y-4 max-h-64 overflow-y-auto mb-4 pr-2"></div>
+                                <button onclick="addQuizQuestionUI()" class="w-full bg-gray-700 hover:bg-gray-600 transition py-2 text-white rounded font-bold text-sm">+ 문제 1개 추가</button>
+                            </div>
+                            
+                            <button onclick="createQuiz()" class="w-full bg-orange-600 hover:bg-orange-700 py-3 text-white font-bold rounded mt-6 transition">퀴즈 오픈(배포)하기</button>
+                        </div>
+                        <div class="bg-[#151922] p-6 rounded h-[650px] flex flex-col">
+                            <h3 class="text-lg font-bold text-white mb-4">등록된 퀴즈 목록</h3>
+                            <div id="admin-quiz-list" class="flex-grow overflow-auto space-y-2"></div>
                         </div>
                     </div>
 
@@ -450,6 +496,9 @@
         let chatFiles = []; let kbFiles = []; let genFiles = []; let bdFiles = []; let bdFilesAdmin = [];
         let generatedQuestionsData = []; let studentExamsList = [];
         let adminExamSections = []; let adminExamQuestions = [];
+        
+        let quizQuestionsBuffer = []; let allQuizzes = [];
+        let activeQuizTimer = null; let activeQuizTimeLeft = 0; let currentActiveQuiz = null;
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err)); }); }
 
@@ -462,10 +511,7 @@
 
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
-            let html = '';
-            let inQuestion = false;
-            let inBogi = false;
-
+            let html = ''; let inQuestion = false; let inBogi = false;
             clean.split('\n').forEach(line => {
                 let text = line.trim(); 
                 if(!text) { html += '<br>'; return; }
@@ -499,7 +545,6 @@
             });
             if(inBogi) html += '</div>';
             if(inQuestion) html += '</div>';
-
             const w = window.open('','','width=900,height=1000');
             w.document.write(`<html><head><style>@media print { @page { margin: 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`); 
             w.document.close();
@@ -517,24 +562,18 @@
             const c = document.getElementById('knowledge-import-list');
             c.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>자료를 불러오는 중입니다...</div>';
             try {
-                const res = await fetch(`${API_URL}/api/knowledge`);
-                const data = await res.json();
+                const res = await fetch(`${API_URL}/api/knowledge`); const data = await res.json();
                 c.innerHTML = '';
                 if(data.success && data.knowledge.length > 0) {
-                    data.knowledge.forEach(k => {
-                        const safeContent = encodeURIComponent(k.content);
-                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-blue-500 cursor-pointer transition flex justify-between items-center" onclick="importKnowledgeText('${safeContent}')"><span class="text-white font-bold truncate pr-4">${k.title}</span><span class="text-xs bg-blue-600 hover:bg-blue-500 transition text-white px-4 py-2 rounded-lg flex-shrink-0 font-bold">선택</span></div>`;
-                    });
-                } else {
-                    c.innerHTML = '<div class="text-center text-gray-400 py-10 border border-gray-700 rounded-xl bg-gray-800">등록된 자료가 없습니다.<br>먼저 [자료학습] 탭에서 파일이나 텍스트를 등록해주세요.</div>';
-                }
-            } catch(e) { c.innerHTML = '<div class="text-red-400 text-center py-10 border border-red-900 rounded-xl bg-gray-800">서버 통신 오류로 자료를 불러오는데 실패했습니다.</div>'; }
+                    data.knowledge.forEach(k => { const safeContent = encodeURIComponent(k.content); c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-blue-500 cursor-pointer transition flex justify-between items-center" onclick="importKnowledgeText('${safeContent}')"><span class="text-white font-bold truncate pr-4">${k.title}</span><span class="text-xs bg-blue-600 hover:bg-blue-500 transition text-white px-4 py-2 rounded-lg flex-shrink-0 font-bold">선택</span></div>`; });
+                } else { c.innerHTML = '<div class="text-center text-gray-400 py-10 border border-gray-700 rounded-xl bg-gray-800">등록된 자료가 없습니다.</div>'; }
+            } catch(e) { c.innerHTML = '<div class="text-red-400 text-center py-10 border border-red-900 rounded-xl bg-gray-800">서버 통신 오류.</div>'; }
         }
 
         function importKnowledgeText(encodedContent) { document.getElementById('gen-text').value = decodeURIComponent(encodedContent); closeModal('knowledge-import-modal'); showToast("자료가 기준 지문에 성공적으로 입력되었습니다."); }
         function viewKnowledgeDetail(encodedContent) { alert(decodeURIComponent(encodedContent)); }
 
-        async function loadMyPage() { if(!currentUser) return; document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`; try{ const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0; if(data.success) { data.reports.forEach(r => { if(r.student_name===currentUser.name && r.school===currentUser.school) { cnt++; let sc = r.type==='로그인'?'<span class="text-blue-400">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400">질문완료</span>':(r.type.includes('모의고사')?`<span class="text-yellow-400">${r.score}점</span>`:'<span class="text-emerald-400">제출완료</span>')); c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between"><div class="text-white text-sm">${r.task_name} <span class="text-xs text-gray-500 block">${r.submitted_at} | ${r.type}</span></div><div>${sc}</div></div>`; } }); document.getElementById('mypage-count').innerText=`${cnt}건`; if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>"; } }catch(e){} }
+        async function loadMyPage() { if(!currentUser) return; document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`; try{ const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0; if(data.success) { data.reports.forEach(r => { if(r.student_name===currentUser.name && r.school===currentUser.school) { cnt++; let sc = r.type==='로그인'?'<span class="text-blue-400">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400">질문완료</span>':((r.type.includes('모의고사')||r.type.includes('퀴즈'))?`<span class="text-yellow-400">${r.score}점</span>`:'<span class="text-emerald-400">제출완료</span>')); c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between"><div class="text-white text-sm">${r.task_name} <span class="text-xs text-gray-500 block">${r.submitted_at} | ${r.type}</span></div><div>${sc}</div></div>`; } }); document.getElementById('mypage-count').innerText=`${cnt}건`; if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>"; } }catch(e){} }
 
         function scrollToSection(id) { const e = document.getElementById(id); if(e) window.scrollTo({top: e.offsetTop - 80, behavior: 'smooth'}); if(window.location.hash!=='#home') window.location.hash='home'; }
         function toggleMobileMenu() { const m = document.getElementById('mobile-menu'); m.classList.toggle('hidden'); m.classList.toggle('flex'); }
@@ -549,7 +588,7 @@
             const h = window.location.hash.replace('#',''); 
             document.querySelectorAll('#home-view, #dashboard-screen, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); }
+            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); }
             else { 
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); } 
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
@@ -581,15 +620,17 @@
         function toggleFullscreen() { const v=document.getElementById('pdf-viewer-section'); v.classList.toggle('fixed'); v.classList.toggle('inset-0'); v.classList.toggle('z-[120]'); v.classList.toggle('w-full'); v.classList.toggle('lg:w-2/3'); }
         function openProgram(id) { window.location.hash='prog-'+id; }
         function closeExamRoomStrict() { clearInterval(examTimerInterval); isDrawing=false; document.getElementById('pdf-inner-container').innerHTML=''; document.getElementById('exam-prep-overlay').style.display='none'; if(wsLive) wsLive.close(); }
-        function closeProgram() { window.location.hash='dashboard'; }
+        function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); }
         
         function switchAdminTab(id) { 
             document.querySelectorAll('.admin-tab-content').forEach(el=>el.style.display='none'); document.querySelectorAll('#prog-admin button').forEach(b=>{if(b.id.startsWith('btn-admin-')) b.classList.replace('bg-gray-800','border');}); 
             document.getElementById(id).style.display='block'; const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800'); 
             if(id==='admin-users'){fetchReports(); loadAdminStudents();} if(id==='admin-exam'){loadAdminExams();} if(id==='admin-lecture')loadAdminLectures(); 
-            if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();} if(id==='admin-knowledge')loadKnowledgeList(); if(id==='admin-generator')loadGeneratedQuestions(); 
+            if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();} if(id==='admin-knowledge')loadKnowledgeList(); if(id==='admin-generator')loadGeneratedQuestions();
+            if(id==='admin-quiz')loadAdminQuizzes();
         }
 
+        // 💡 1. 환영 문구 알림 추가
         async function login() { 
             const s=document.getElementById('login-school').value.trim(), g=document.getElementById('login-grade').value.trim(), n=document.getElementById('login-name').value.trim(), p=document.getElementById('login-pw').value.trim(); 
             if(!n&&!p) return alert("이름을 입력해주세요."); 
@@ -597,7 +638,16 @@
             try { 
                 const res=await fetch(`${API_URL}/api/auth`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,student_name:n,admin_password:p})}); 
                 const data=await res.json(); 
-                if(data.success) { currentUser={school:s,grade:g,name:n,isAdmin:data.is_admin}; localStorage.setItem('logyedu_user',JSON.stringify(currentUser)); location.reload(); } else alert(data.detail); 
+                if(data.success) { 
+                    currentUser={school:s,grade:g,name:n,isAdmin:data.is_admin}; 
+                    localStorage.setItem('logyedu_user',JSON.stringify(currentUser)); 
+                    
+                    if(!data.is_admin) {
+                        alert(`${n}학생 환영합니다! 열심히 공부합시다!`);
+                    }
+                    
+                    location.reload(); 
+                } else alert(data.detail); 
             } catch(e) { alert("서버 연결 지연. 잠시 후 다시 눌러주세요!"); } hideLoader(); 
         }
 
@@ -609,7 +659,6 @@
         function openEditStudent(id,n,s,g) { document.getElementById('edit-old-id').value=id; document.getElementById('edit-name').value=n; document.getElementById('edit-school').value=s; document.getElementById('edit-grade').value=g; showModal('edit-student'); }
         async function submitEditStudent() { const id=document.getElementById('edit-old-id').value, n=document.getElementById('edit-name').value, s=document.getElementById('edit-school').value, g=document.getElementById('edit-grade').value; showLoader(); await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g})}); closeModal('edit-student-modal'); loadAdminStudents(); hideLoader(); }
         
-        // 💡 수정됨: 원장님이 학생이 제출한 '여러 장의 파일'을 버튼으로 눌러볼 수 있도록 개선
         async function fetchReports(filterName = null) { 
             try {
                 const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json(); 
@@ -622,7 +671,7 @@
                         data.reports.forEach(r => {
                             if (r.student_name === filterName) {
                                 const timeStr = `<span class="text-[10px] text-gray-500 ml-2">${r.submitted_at}</span>`;
-                                if (r.type === '모의고사') { examCnt++; examHtml += `<div class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"><span>${r.task_name}</span><span class="text-yellow-400 font-bold">${r.score}점</span></div>`; } 
+                                if (r.type === '모의고사' || r.type === '타임어택 퀴즈') { examCnt++; examHtml += `<div class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"><span>[${r.type}] ${r.task_name}</span><span class="text-yellow-400 font-bold">${r.score}점</span></div>`; } 
                                 else if (r.type === '과제 제출' || r.type === '논술 첨삭') { 
                                     hwCnt++; 
                                     let fileLinks = '';
@@ -636,19 +685,19 @@
                                 else if (r.type === '로그인') { loginCnt++; loginHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-xs text-blue-300"><i class="fa-solid fa-right-to-bracket mr-1"></i>접속${timeStr}</div>`; }
                             }
                         });
-                        detailContainer.innerHTML = `<div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 모의고사 이력 (${examCnt}건)</h4><div class="max-h-32 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>`;
+                        detailContainer.innerHTML = `<div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 모의고사/퀴즈 이력 (${examCnt}건)</h4><div class="max-h-32 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>`;
                     } else {
                         titleSpan.innerHTML = `<i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계`;
                         let studentData = {};
-                        data.reports.forEach(r => { const key = `${r.school} ${r.grade} ${r.student_name}`; if (!studentData[key]) studentData[key] = { examScores: [], hwCount: 0 }; if (r.type === '모의고사') studentData[key].examScores.push(r.score); else if (r.type === '과제 제출' || r.type === '논술 첨삭') studentData[key].hwCount++; });
+                        data.reports.forEach(r => { const key = `${r.school} ${r.grade} ${r.student_name}`; if (!studentData[key]) studentData[key] = { examScores: [], hwCount: 0 }; if (r.type === '모의고사' || r.type === '타임어택 퀴즈') studentData[key].examScores.push(r.score); else if (r.type === '과제 제출' || r.type === '논술 첨삭') studentData[key].hwCount++; });
                         let allHtml = '<div class="space-y-2 mb-4 overflow-y-auto max-h-64 pr-2">';
-                        for (const [name, info] of Object.entries(studentData)) { let avg = info.examScores.length > 0 ? Math.round(info.examScores.reduce((a, b) => a + b, 0) / info.examScores.length) : 0; allHtml += `<div class="bg-[#1e2430] p-3 rounded border border-blue-600/50 flex justify-between items-center"><div><div class="font-bold text-white">${name}</div><div class="text-[10px] text-gray-400">모의고사 평균: <span class="text-yellow-400">${avg}점</span></div></div><div class="text-right text-emerald-400 font-black">과제 ${info.hwCount}건</div></div>`; }
+                        for (const [name, info] of Object.entries(studentData)) { let avg = info.examScores.length > 0 ? Math.round(info.examScores.reduce((a, b) => a + b, 0) / info.examScores.length) : 0; allHtml += `<div class="bg-[#1e2430] p-3 rounded border border-blue-600/50 flex justify-between items-center"><div><div class="font-bold text-white">${name}</div><div class="text-[10px] text-gray-400">시험 평균: <span class="text-yellow-400">${avg}점</span></div></div><div class="text-right text-emerald-400 font-black">과제 ${info.hwCount}건</div></div>`; }
                         allHtml += '</div><h4 class="text-md font-bold text-gray-400 mb-2 border-t border-gray-700 pt-4">전체 최근 로그</h4><div class="overflow-y-auto flex-grow space-y-1 pr-2">';
                         data.reports.forEach(r => { 
                             let scoreTxt = r.score; 
                             if(r.type==='로그인') scoreTxt = `<span class="text-blue-400">접속됨</span>`; 
                             else if(r.type==='질문') scoreTxt = `<span class="text-pink-400">질문함</span>`; 
-                            else if(r.type==='모의고사') scoreTxt = `<span class="text-yellow-400">${r.score}점</span>`; 
+                            else if(r.type.includes('모의고사')||r.type.includes('퀴즈')) scoreTxt = `<span class="text-yellow-400">${r.score}점</span>`; 
                             else {
                                 let fileLinks = '';
                                 if(r.file_url) {
@@ -685,6 +734,257 @@
         }
         
         async function submitEssayGrade() { const t=document.getElementById('essay-topic').value, f=document.getElementById('essay-file').files[0]; if(!t||!f) return alert("입력 필요"); showLoader("AI 첨삭 중..."); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("topic",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/essay/grade`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){ document.getElementById('essay-result-area').style.display='block'; document.getElementById('essay-feedback').innerHTML=data.feedback; } }catch(e){} hideLoader(); }
+
+        // 💡 3. 타임어택 퀴즈 시스템 함수
+        function addQuizQuestionUI() {
+            const container = document.getElementById('qz-questions-board');
+            const qIdx = container.children.length;
+            const div = document.createElement('div');
+            div.className = "bg-[#1e2430] p-4 rounded border border-gray-600 quiz-q-item";
+            div.innerHTML = `
+                <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="w-full p-2 bg-gray-800 text-white rounded mb-2 quiz-q-text">
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input type="text" placeholder="보기 1" class="w-full p-2 bg-gray-800 text-white rounded quiz-q-opt">
+                    <input type="text" placeholder="보기 2" class="w-full p-2 bg-gray-800 text-white rounded quiz-q-opt">
+                    <input type="text" placeholder="보기 3" class="w-full p-2 bg-gray-800 text-white rounded quiz-q-opt">
+                    <input type="text" placeholder="보기 4" class="w-full p-2 bg-gray-800 text-white rounded quiz-q-opt">
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" placeholder="정답 (1~4)" min="1" max="4" class="w-1/2 p-2 bg-gray-800 text-white rounded quiz-q-ans">
+                    <input type="number" placeholder="배점" class="w-1/2 p-2 bg-gray-800 text-white rounded quiz-q-score">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        async function createQuiz() {
+            const title = document.getElementById('qz-title').value.trim();
+            const deadline = document.getElementById('qz-deadline').value;
+            const limit = parseInt(document.getElementById('qz-limit').value);
+            
+            if(!title || !deadline || !limit) return alert("제목, 마감일, 제한 시간을 모두 입력하세요.");
+            
+            const qItems = document.querySelectorAll('.quiz-q-item');
+            if(qItems.length === 0) return alert("문제를 최소 1개 이상 추가하세요.");
+            
+            let questions = [];
+            for(let item of qItems) {
+                const text = item.querySelector('.quiz-q-text').value;
+                const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
+                const ans = parseInt(item.querySelector('.quiz-q-ans').value);
+                const score = parseInt(item.querySelector('.quiz-q-score').value);
+                if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
+                questions.push({ q_text: text, options: opts, answer: ans, score: score });
+            }
+            
+            showLoader("퀴즈 배포 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/quiz`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title,
+                        deadline: deadline,
+                        time_limit: limit,
+                        questions: questions
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert("퀴즈가 성공적으로 배포되었습니다!");
+                    document.getElementById('qz-title').value = '';
+                    document.getElementById('qz-deadline').value = '';
+                    document.getElementById('qz-limit').value = '';
+                    document.getElementById('qz-questions-board').innerHTML = '';
+                    loadAdminQuizzes();
+                }
+            } catch(e) { alert("서버 통신 오류"); }
+            hideLoader();
+        }
+
+        async function loadAdminQuizzes() {
+            try {
+                const res = await fetch(`${API_URL}/api/quizzes`);
+                const data = await res.json();
+                const c = document.getElementById('admin-quiz-list');
+                c.innerHTML = '';
+                if(data.success) {
+                    data.quizzes.forEach(q => {
+                        const isExpired = new Date() > new Date(q.deadline);
+                        const statusTag = isExpired ? `<span class="text-xs bg-red-900/50 text-red-400 px-2 py-1 rounded">마감됨</span>` : `<span class="text-xs bg-emerald-900/50 text-emerald-400 px-2 py-1 rounded">진행중</span>`;
+                        c.innerHTML += `
+                            <div class="bg-gray-800 p-4 rounded mb-2 border border-gray-700 flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-orange-400 mb-1">${q.title}</div>
+                                    <div class="text-xs text-gray-400">마감: ${q.deadline.replace('T', ' ')} | 제한: ${q.time_limit}분</div>
+                                    <div class="mt-1">${statusTag}</div>
+                                </div>
+                                <button onclick="deleteQuiz('${q.title}')" class="text-red-400 text-xs bg-red-900/30 px-3 py-2 rounded">삭제</button>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e){}
+        }
+
+        async function deleteQuiz(title) {
+            if(confirm("이 퀴즈를 삭제하시겠습니까?")) {
+                showLoader();
+                try {
+                    await fetch(`${API_URL}/api/admin/quiz/${encodeURIComponent(title)}`, {method: 'DELETE'});
+                    loadAdminQuizzes();
+                } catch(e){}
+                hideLoader();
+            }
+        }
+
+        async function loadStudentQuizzes() {
+            try {
+                // 학생이 이미 제출한 퀴즈 기록 가져오기
+                let submittedTasks = new Set();
+                if(currentUser && !currentUser.isAdmin) {
+                    const pRes = await fetch(`${API_URL}/api/student/profile/${currentUser.name}`);
+                    const pData = await pRes.json();
+                    if(pData.success && pData.reports) {
+                        pData.reports.forEach(r => {
+                            if(r.type === '타임어택 퀴즈') submittedTasks.add(r.task_name);
+                        });
+                    }
+                }
+
+                const res = await fetch(`${API_URL}/api/quizzes`);
+                const data = await res.json();
+                const c = document.getElementById('student-quiz-list');
+                c.innerHTML = '';
+                if(data.success) {
+                    allQuizzes = data.quizzes;
+                    data.quizzes.forEach((q, i) => {
+                        const isExpired = new Date() > new Date(q.deadline);
+                        const isSubmitted = submittedTasks.has(q.title);
+                        
+                        let statusHtml = '';
+                        let clickAction = '';
+                        let borderClass = 'border-gray-700';
+
+                        if(isSubmitted) {
+                            statusHtml = `<span class="bg-blue-900/50 text-blue-400 px-3 py-1 rounded text-sm font-bold w-full text-center block mt-4 border border-blue-700">제출 완료</span>`;
+                        } else if(isExpired) {
+                            statusHtml = `<span class="bg-red-900/50 text-red-400 px-3 py-1 rounded text-sm font-bold w-full text-center block mt-4 border border-red-700">마감된 퀴즈</span>`;
+                        } else {
+                            borderClass = 'border-orange-500 shadow-lg shadow-orange-500/20';
+                            statusHtml = `<button class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded font-bold text-sm w-full transition mt-4">퀴즈 시작하기</button>`;
+                            clickAction = `onclick="enterQuizRoom(${i})"`;
+                        }
+
+                        c.innerHTML += `
+                            <div class="bg-[#151922] p-6 rounded-xl border ${borderClass} flex flex-col justify-between" ${clickAction} style="${clickAction ? 'cursor:pointer' : ''}">
+                                <div>
+                                    <h3 class="font-bold text-xl text-white mb-2">${q.title}</h3>
+                                    <p class="text-xs text-gray-400 mb-1"><i class="fa-regular fa-clock mr-1"></i> 마감: ${q.deadline.replace('T', ' ')}</p>
+                                    <p class="text-xs text-orange-400 font-bold"><i class="fa-solid fa-hourglass-half mr-1"></i> 제한 시간: ${q.time_limit}분</p>
+                                </div>
+                                <div>${statusHtml}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e){}
+        }
+
+        function enterQuizRoom(idx) {
+            currentActiveQuiz = allQuizzes[idx];
+            
+            // 마감 기한 재확인 방어 로직
+            if(new Date() > new Date(currentActiveQuiz.deadline)) {
+                alert("이미 마감된 퀴즈입니다!");
+                return;
+            }
+
+            if(!confirm(`[${currentActiveQuiz.title}]\n제한 시간: ${currentActiveQuiz.time_limit}분\n시작하시겠습니까? 시작 후 멈출 수 없습니다.`)) return;
+
+            openProgram('quiz-room');
+            document.getElementById('quiz-room-title').innerText = currentActiveQuiz.title;
+            
+            // 문제 렌더링
+            const c = document.getElementById('quiz-questions-container');
+            c.innerHTML = '';
+            quizAnswers = Array(currentActiveQuiz.questions.length).fill(0);
+
+            currentActiveQuiz.questions.forEach((q, qIndex) => {
+                let optsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    if(!opt) return;
+                    optsHtml += `
+                        <label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 border border-transparent hover:border-orange-500 transition mb-2">
+                            <input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500">
+                            <span class="text-sm">${opt}</span>
+                        </label>
+                    `;
+                });
+                
+                c.innerHTML += `
+                    <div class="bg-[#151922] p-6 rounded-xl border border-gray-700">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="text-lg font-bold"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${q.q_text}</h4>
+                            <span class="bg-gray-800 text-gray-400 text-xs px-2 py-1 rounded">[${q.score}점]</span>
+                        </div>
+                        <div>${optsHtml}</div>
+                    </div>
+                `;
+            });
+
+            // 타이머 시작
+            activeQuizTimeLeft = currentActiveQuiz.time_limit * 60;
+            updateQuizTimerUI();
+            clearInterval(activeQuizTimer);
+            activeQuizTimer = setInterval(() => {
+                activeQuizTimeLeft--;
+                updateQuizTimerUI();
+                if(activeQuizTimeLeft <= 0) {
+                    clearInterval(activeQuizTimer);
+                    alert("시간이 초과되어 답안이 자동 제출됩니다.");
+                    submitQuizReal();
+                }
+            }, 1000);
+        }
+
+        function updateQuizTimerUI() {
+            const el = document.getElementById('quiz-timer');
+            const m = Math.floor(activeQuizTimeLeft / 60).toString().padStart(2, '0');
+            const s = (activeQuizTimeLeft % 60).toString().padStart(2, '0');
+            el.innerText = `${m}:${s}`;
+            if(activeQuizTimeLeft <= 60) el.classList.replace('text-orange-400', 'text-red-500');
+        }
+
+        function setQuizAnswer(qIdx, val) {
+            quizAnswers[qIdx] = val;
+        }
+
+        async function submitQuizReal() {
+            clearInterval(activeQuizTimer);
+            showLoader("퀴즈 채점 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/quiz/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        school: currentUser.school,
+                        grade: currentUser.grade,
+                        student_name: currentUser.name,
+                        title: currentActiveQuiz.title,
+                        answers: quizAnswers
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert(`제출 완료! 점수: ${data.score}점`);
+                    closeProgram();
+                    openProgram('quiz-list');
+                    loadStudentQuizzes(); // 목록 갱신
+                }
+            } catch(e) { alert("제출 중 오류가 발생했습니다."); }
+            hideLoader();
+        }
 
         let examTimerInterval; let studentOmrAnswers=[]; let currentExamTitle=""; let currentExamData=null; let studentSections=[]; let currSecIdx=0; let secAllocated=0; let secSpent=0; let isExamActive=false; let isExamPaused=false;
         
@@ -771,7 +1071,6 @@
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
         function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderExamFile(API_URL+pdfUrl, title); connectLiveExam(title); }
 
-        // 💡 수정됨: 과제를 제출한 학생에게만 답을 보여주는 철통 보안 로직 적용
         async function loadHomeworks() { 
             try { 
                 let submittedTasks = new Set();
@@ -840,7 +1139,6 @@
                     document.getElementById('hw-result-area').innerHTML = `<div class="bg-emerald-900/30 border border-emerald-500 p-4 rounded-xl text-center"><p class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>과제 제출이 완료되었습니다!</p></div>`; 
                     document.getElementById('hw-result-area').style.display='block'; 
                     fileInput.value = ''; 
-                    // 💡 목록 새로고침하여 정답 버튼 오픈 및 다시 제출 막기
                     loadHomeworks();
                 } 
             } catch(e) {} 
