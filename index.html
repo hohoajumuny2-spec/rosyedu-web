@@ -307,7 +307,6 @@
                         </div>
                     </div>
 
-                    <!-- 💡 5지 선다형 문제 입력창으로 변경된 퀴즈 출제 탭 -->
                     <div id="admin-quiz" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <h3 class="text-lg font-bold text-orange-400 mb-4">새 퀴즈 출제</h3>
@@ -726,7 +725,6 @@
         
         async function submitEssayGrade() { const t=document.getElementById('essay-topic').value, f=document.getElementById('essay-file').files[0]; if(!t||!f) return alert("입력 필요"); showLoader("AI 첨삭 중..."); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("topic",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/essay/grade`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){ document.getElementById('essay-result-area').style.display='block'; document.getElementById('essay-feedback').innerHTML=data.feedback; } }catch(e){} hideLoader(); }
 
-        // 💡 3. 관리자 퀴즈 추가 UI (5지 선다로 수정됨)
         function addQuizQuestionUI() {
             const container = document.getElementById('qz-questions-board');
             const qIdx = container.children.length;
@@ -835,7 +833,6 @@
             } catch(e){}
         }
 
-        // 💡 4. 학생 화면 퀴즈 풀기 UI (5지 선다 동그라미 번호 추가됨)
         function enterQuizRoom(idx) {
             currentActiveQuiz = allQuizzes[idx];
             if(new Date() > new Date(currentActiveQuiz.deadline)) { alert("이미 마감된 퀴즈입니다!"); return; }
@@ -844,7 +841,7 @@
             openProgram('quiz-room'); document.getElementById('quiz-room-title').innerText = currentActiveQuiz.title;
             const c = document.getElementById('quiz-questions-container'); c.innerHTML = ''; quizAnswers = Array(currentActiveQuiz.questions.length).fill(0);
 
-            const circles = ['①', '②', '③', '④', '⑤']; // 💡 동그라미 번호 배열
+            const circles = ['①', '②', '③', '④', '⑤']; 
 
             currentActiveQuiz.questions.forEach((q, qIndex) => {
                 let optsHtml = '';
@@ -965,6 +962,78 @@
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
         function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderExamFile(API_URL+pdfUrl, title); connectLiveExam(title); }
 
+        // 💡 5. 출제 버튼 안전장치 로직 (20문제 초과 시 경고)
+        async function generateStreamQuestions() { 
+            const k = parseInt(document.getElementById('c-killer').value || 0);
+            const s = parseInt(document.getElementById('c-semi').value || 0);
+            const h = parseInt(document.getElementById('c-high').value || 0);
+            const m = parseInt(document.getElementById('c-mid').value || 0);
+            const l = parseInt(document.getElementById('c-low').value || 0);
+            const total = k + s + h + m + l;
+            
+            if(total === 0) return alert("출제할 문항 수를 1개 이상 입력해주세요.");
+            if(total > 20) return alert("🚨 한 번에 너무 많은 문제(60문제 등)를 출제하면 AI가 과부하로 중간에 멈추거나 에러가 발생합니다. 최대 20문제씩 나누어서 출제해 주세요!");
+
+            const title = document.getElementById('gen-title').value.trim();
+            if(!title) return alert("출제할 문제집의 제목을 입력하세요.");
+
+            const btn = document.querySelector('button[onclick="generateStreamQuestions()"]');
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>AI가 출제 중입니다..."; }
+            
+            const fd = new FormData(); 
+            fd.append("q_mode", "신규"); 
+            fd.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb=>cb.value).join(', ') || "수능/내신형"); 
+            fd.append("cnt_killer", k); 
+            fd.append("cnt_semi", s); 
+            fd.append("cnt_high", h); 
+            fd.append("cnt_mid", m); 
+            fd.append("cnt_low", l); 
+            fd.append("q_text", document.getElementById('gen-text').value); 
+            genFiles.forEach(f => fd.append("files", f)); 
+            
+            document.getElementById('gen-result-area').style.display = 'flex'; 
+            const r = document.getElementById('gen-result-text'); 
+            r.value = "⏳ AI 출제 중... (문제가 많을수록 시간이 오래 걸립니다. 창을 닫지 마세요!)"; 
+            r.classList.add('animate-pulse'); 
+            
+            try { 
+                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); 
+                r.classList.remove('animate-pulse'); 
+                if(!res.ok) { 
+                    const err = await res.text(); 
+                    r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`; 
+                    if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; } 
+                    return; 
+                }
+                r.value = ""; 
+                const reader = res.body.getReader(); 
+                const dec = new TextDecoder("utf-8"); 
+                while(true) { 
+                    const {done, value} = await reader.read(); 
+                    if(done) break; 
+                    r.value += dec.decode(value, {stream: true}); 
+                    r.scrollTop = r.scrollHeight; 
+                } 
+            } catch(e) { 
+                r.classList.remove('animate-pulse'); 
+                r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; 
+            } 
+            if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+        }
+
+        async function analyzeTextStream() {
+            const btn = document.querySelector('button[onclick="analyzeTextStream()"]');
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>분석 중..."; }
+            const fd = new FormData(); fd.append("q_mode", "분석"); fd.append("q_types", "지문 분석"); fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); fd.append("q_text", document.getElementById('gen-text').value); genFiles.forEach(f => fd.append("files", f)); 
+            document.getElementById('gen-result-area').style.display = 'flex'; const r = document.getElementById('gen-result-text'); r.value = "⏳ AI 지문 분석 중... (서버와 통신하고 있습니다)"; r.classList.add('animate-pulse'); 
+            try { 
+                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); r.classList.remove('animate-pulse'); 
+                if(!res.ok) { const err = await res.text(); r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`; if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; } return; }
+                r.value = ""; const reader = res.body.getReader(); const dec = new TextDecoder("utf-8"); 
+                while(true) { const {done, value} = await reader.read(); if(done) break; r.value += dec.decode(value, {stream: true}); r.scrollTop = r.scrollHeight; } 
+            } catch(e) { r.classList.remove('animate-pulse'); r.value = `❌ 통신 실패: 렌더(Render) 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; } 
+            if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; }
+        }
     </script>
 </body>
 </html>
