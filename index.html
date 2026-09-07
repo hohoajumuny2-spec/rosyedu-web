@@ -337,21 +337,25 @@
                         </div>
                     </div>
 
+                    <!-- 💡 문제 해결된 자료학습 탭 -->
                     <div id="admin-knowledge" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <h4 class="text-white font-bold mb-2">단일 자료 직접 등록</h4>
-                            <input type="text" id="kb-title" placeholder="자료 제목" class="w-full p-2 bg-gray-800 text-white mb-2">
+                            <input type="text" id="kb-title" placeholder="자료 제목 (비워두면 파일명 자동등록)" class="w-full p-2 bg-gray-800 text-white mb-2">
                             <textarea id="kb-content" class="w-full h-24 bg-gray-800 text-white mb-2" placeholder="직접 내용을 입력하거나, 아래에서 파일을 선택하면 AI가 요약합니다."></textarea>
                             <input type="file" id="kb-files" multiple onchange="handleFileSelect(event, kbFiles, 'kb-files-visual')" class="text-white mb-2">
                             <div id="kb-files-visual" class="mb-2"></div>
-                            <button id="btn-knowledge" onclick="uploadKnowledge()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 text-white mt-2 transition">저장 및 학습</button>
+                            <button id="btn-knowledge" onclick="uploadKnowledge()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 text-white mt-2 transition font-bold shadow-lg">저장 및 학습</button>
                             
                             <h4 class="text-emerald-400 font-bold mb-2 mt-6 pt-4 border-t border-gray-700">⚡ 파일 대량 일괄 등록 (PDF, 이미지)</h4>
                             <p class="text-xs text-gray-400 mb-2">여러 개의 파일을 한 번에 선택하세요. 파일명이 제목으로 자동 지정되며, AI가 스스로 읽고 각각 저장합니다.</p>
                             <input type="file" id="kb-bulk-files" multiple accept=".pdf, image/*" class="w-full text-white mb-2">
-                            <button onclick="uploadKnowledgeBulk()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 text-white font-bold rounded mt-2 transition">여러 파일 한 번에 싹 다 넣기</button>
+                            <button onclick="uploadKnowledgeBulk()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 text-white font-bold rounded mt-2 transition shadow-lg">여러 파일 한 번에 싹 다 넣기</button>
                         </div>
-                        <div class="bg-[#151922] p-6 rounded h-[600px] flex flex-col"><div id="admin-kb-view-list" class="flex-grow overflow-y-auto text-white space-y-2"></div></div>
+                        <div class="bg-[#151922] p-6 rounded h-[600px] flex flex-col">
+                            <h3 class="text-lg font-bold text-emerald-400 mb-4 border-b border-gray-700 pb-2"><i class="fa-solid fa-list mr-2"></i>학습된 자료 목록</h3>
+                            <div id="admin-kb-view-list" class="flex-grow overflow-y-auto text-white space-y-2"></div>
+                        </div>
                     </div>
 
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -504,7 +508,6 @@
         function removeFileByName(cId, name) { if(cId==='kb-files-visual') kbFiles = kbFiles.filter(f=>f.name!==name); else if(cId==='gen-files-visual') genFiles = genFiles.filter(f=>f.name!==name); else if(cId==='chat-file-visual') chatFiles = chatFiles.filter(f=>f.name!==name); else if(cId==='bd-file-visual') bdFiles = bdFiles.filter(f=>f.name!==name); else if(cId==='bd-file-admin-visual') bdFilesAdmin = bdFilesAdmin.filter(f=>f.name!==name); renderAccumulatedFiles(eval(cId.split('-')[0]+'Files'+(cId.includes('admin')?'Admin':'')), cId); }
         function clearAllFiles(cId) { if(cId==='kb-files-visual') kbFiles=[]; else if(cId==='gen-files-visual') genFiles=[]; else if(cId==='chat-file-visual') chatFiles=[]; else if(cId==='bd-file-visual') bdFiles=[]; else if(cId==='bd-file-admin-visual') bdFilesAdmin=[]; renderAccumulatedFiles([], cId); }
 
-        // 💡 2. 인쇄 시 여백 세팅 유지
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = ''; let inQuestion = false; let inBogi = false;
@@ -542,24 +545,7 @@
             if(inBogi) html += '</div>';
             if(inQuestion) html += '</div>';
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`
-            <html>
-            <head>
-                <style>
-                    @media print { 
-                        @page { margin: 30mm 15mm 30mm 15mm; } 
-                    } 
-                    body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } 
-                    .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } 
-                    .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }
-                </style>
-            </head>
-            <body>
-                <div class="h">로지에듀 최준용 국어 - 실전 모의고사</div>
-                <div class="print-container">${html}</div>
-                <script>setTimeout(()=>window.print(),800);<\/script>
-            </body>
-            </html>`); 
+            w.document.write(`<html><head><style>@media print { @page { margin: 30mm 15mm 30mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`); 
             w.document.close();
         }
 
@@ -743,7 +729,6 @@
         
         async function submitEssayGrade() { const t=document.getElementById('essay-topic').value, f=document.getElementById('essay-file').files[0]; if(!t||!f) return alert("입력 필요"); showLoader("AI 첨삭 중..."); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("topic",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/essay/grade`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){ document.getElementById('essay-result-area').style.display='block'; document.getElementById('essay-feedback').innerHTML=data.feedback; } }catch(e){} hideLoader(); }
 
-        // 💡 1. 꼬였던 함수 복구 (자바스크립트 완전 분리 작성)
         function addQuizQuestionUI() {
             const container = document.getElementById('qz-questions-board');
             const qIdx = container.children.length;
@@ -981,7 +966,99 @@
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
         function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderExamFile(API_URL+pdfUrl, title); connectLiveExam(title); }
 
-        // 💡 5. 출제 버튼을 완벽하게 되살린 코드 (20문제 안전 장치 포함)
+        // 💡 1. 꼬였던 함수 복구 (자바스크립트 완전 분리 작성)
+        async function uploadKnowledge() {
+            let t = document.getElementById('kb-title').value.trim();
+            const c = document.getElementById('kb-content').value;
+
+            if (!t && kbFiles.length > 0) {
+                t = kbFiles[0].name.split('.').slice(0, -1).join('.');
+            }
+
+            if(!t) return alert("자료 제목을 입력하거나 파일을 첨부해주세요!");
+
+            showLoader("🧠 AI가 자료를 학습 중입니다...");
+            const fd = new FormData();
+            fd.append("title", t);
+            fd.append("content", c);
+            kbFiles.forEach(f => fd.append("files", f));
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/knowledge`, {method: 'POST', body: fd});
+                const data = await res.json();
+                if(data.success) {
+                    loadKnowledgeList();
+                    document.getElementById('kb-title').value = '';
+                    document.getElementById('kb-content').value = '';
+                    clearAllFiles('kb-files-visual');
+                } else {
+                    alert("오류 발생: " + data.detail);
+                }
+            } catch(e) {
+                alert("통신 오류가 발생했습니다.");
+            }
+            hideLoader();
+        }
+
+        async function uploadKnowledgeBulk() {
+            const files = document.getElementById('kb-bulk-files').files;
+            if(files.length === 0) return alert("대량으로 등록할 파일들을 선택해주세요!");
+            
+            showLoader(`⚡ ${files.length}개의 파일을 AI가 분석하고 있습니다...\n(파일이 많을수록 시간이 걸립니다. 창을 닫지 마세요!)`);
+            
+            const fd = new FormData();
+            for(let i=0; i<files.length; i++) { fd.append("files", files[i]); }
+            
+            try {
+                const res = await fetch(`${API_URL}/api/admin/knowledge/bulk`, {method: 'POST', body: fd});
+                const data = await res.json();
+                if(data.success) {
+                    alert(`${data.count}개의 파일이 성공적으로 개별 학습되었습니다!`);
+                    document.getElementById('kb-bulk-files').value = '';
+                    loadKnowledgeList();
+                } else {
+                    alert("오류가 발생했습니다.");
+                }
+            } catch(e) { 
+                alert("서버 연결에 실패했습니다."); 
+            }
+            hideLoader();
+        }
+
+        async function loadKnowledgeList() {
+            const c = document.getElementById('admin-kb-view-list');
+            c.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>목록을 불러오는 중...</div>';
+            try {
+                const res = await fetch(`${API_URL}/api/knowledge`);
+                const data = await res.json();
+                c.innerHTML = '';
+                if(data.success && data.knowledge && data.knowledge.length > 0) {
+                    data.knowledge.forEach(k => {
+                        const safeContent = encodeURIComponent(k.content);
+                        c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center"><span class="font-bold truncate w-2/3 cursor-pointer hover:text-emerald-400 underline transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-2"></i>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-red-400 text-xs flex-shrink-0 bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`;
+                    });
+                } else {
+                    c.innerHTML = '<div class="text-center text-gray-500 mt-10">등록된 학습 자료가 없습니다.</div>';
+                }
+            } catch(e) {
+                c.innerHTML = '<div class="text-center text-red-400 mt-10">목록을 불러오는 데 실패했습니다.<br>서버 연결을 확인하세요.</div>';
+            }
+        }
+
+        async function analyzeTextStream() {
+            const btn = document.querySelector('button[onclick="analyzeTextStream()"]');
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>분석 중..."; }
+            const fd = new FormData(); fd.append("q_mode", "분석"); fd.append("q_types", "지문 분석"); fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); fd.append("q_text", document.getElementById('gen-text').value); genFiles.forEach(f => fd.append("files", f)); 
+            document.getElementById('gen-result-area').style.display = 'flex'; const r = document.getElementById('gen-result-text'); r.value = "⏳ AI 지문 분석 중... (서버와 통신하고 있습니다)"; r.classList.add('animate-pulse'); 
+            try { 
+                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); r.classList.remove('animate-pulse'); 
+                if(!res.ok) { const err = await res.text(); r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`; if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; } return; }
+                r.value = ""; const reader = res.body.getReader(); const dec = new TextDecoder("utf-8"); 
+                while(true) { const {done, value} = await reader.read(); if(done) break; r.value += dec.decode(value, {stream: true}); r.scrollTop = r.scrollHeight; } 
+            } catch(e) { r.classList.remove('animate-pulse'); r.value = `❌ 통신 실패: 렌더(Render) 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; } 
+            if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; }
+        }
+
         async function generateStreamQuestions() { 
             const k = parseInt(document.getElementById('c-killer').value || 0);
             const s = parseInt(document.getElementById('c-semi').value || 0);
@@ -1038,20 +1115,6 @@
                 r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; 
             } 
             if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
-        }
-
-        async function analyzeTextStream() {
-            const btn = document.querySelector('button[onclick="analyzeTextStream()"]');
-            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>분석 중..."; }
-            const fd = new FormData(); fd.append("q_mode", "분석"); fd.append("q_types", "지문 분석"); fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); fd.append("q_text", document.getElementById('gen-text').value); genFiles.forEach(f => fd.append("files", f)); 
-            document.getElementById('gen-result-area').style.display = 'flex'; const r = document.getElementById('gen-result-text'); r.value = "⏳ AI 지문 분석 중... (서버와 통신하고 있습니다)"; r.classList.add('animate-pulse'); 
-            try { 
-                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); r.classList.remove('animate-pulse'); 
-                if(!res.ok) { const err = await res.text(); r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`; if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; } return; }
-                r.value = ""; const reader = res.body.getReader(); const dec = new TextDecoder("utf-8"); 
-                while(true) { const {done, value} = await reader.read(); if(done) break; r.value += dec.decode(value, {stream: true}); r.scrollTop = r.scrollHeight; } 
-            } catch(e) { r.classList.remove('animate-pulse'); r.value = `❌ 통신 실패: 렌더(Render) 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; } 
-            if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; }
         }
     </script>
 </body>
