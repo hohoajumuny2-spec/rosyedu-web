@@ -504,6 +504,7 @@
         function removeFileByName(cId, name) { if(cId==='kb-files-visual') kbFiles = kbFiles.filter(f=>f.name!==name); else if(cId==='gen-files-visual') genFiles = genFiles.filter(f=>f.name!==name); else if(cId==='chat-file-visual') chatFiles = chatFiles.filter(f=>f.name!==name); else if(cId==='bd-file-visual') bdFiles = bdFiles.filter(f=>f.name!==name); else if(cId==='bd-file-admin-visual') bdFilesAdmin = bdFilesAdmin.filter(f=>f.name!==name); renderAccumulatedFiles(eval(cId.split('-')[0]+'Files'+(cId.includes('admin')?'Admin':'')), cId); }
         function clearAllFiles(cId) { if(cId==='kb-files-visual') kbFiles=[]; else if(cId==='gen-files-visual') genFiles=[]; else if(cId==='chat-file-visual') chatFiles=[]; else if(cId==='bd-file-visual') bdFiles=[]; else if(cId==='bd-file-admin-visual') bdFilesAdmin=[]; renderAccumulatedFiles([], cId); }
 
+        // 💡 2. 인쇄 시 여백 세팅 유지
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = ''; let inQuestion = false; let inBogi = false;
@@ -541,7 +542,24 @@
             if(inBogi) html += '</div>';
             if(inQuestion) html += '</div>';
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>@media print { @page { margin: 30mm 15mm 30mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`); 
+            w.document.write(`
+            <html>
+            <head>
+                <style>
+                    @media print { 
+                        @page { margin: 30mm 15mm 30mm 15mm; } 
+                    } 
+                    body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } 
+                    .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } 
+                    .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }
+                </style>
+            </head>
+            <body>
+                <div class="h">로지에듀 최준용 국어 - 실전 모의고사</div>
+                <div class="print-container">${html}</div>
+                <script>setTimeout(()=>window.print(),800);<\/script>
+            </body>
+            </html>`); 
             w.document.close();
         }
 
@@ -725,6 +743,7 @@
         
         async function submitEssayGrade() { const t=document.getElementById('essay-topic').value, f=document.getElementById('essay-file').files[0]; if(!t||!f) return alert("입력 필요"); showLoader("AI 첨삭 중..."); const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("topic",t); fd.append("file",f); try{ const res=await fetch(`${API_URL}/api/essay/grade`,{method:'POST',body:fd}); const data=await res.json(); if(data.success){ document.getElementById('essay-result-area').style.display='block'; document.getElementById('essay-feedback').innerHTML=data.feedback; } }catch(e){} hideLoader(); }
 
+        // 💡 1. 꼬였던 함수 복구 (자바스크립트 완전 분리 작성)
         function addQuizQuestionUI() {
             const container = document.getElementById('qz-questions-board');
             const qIdx = container.children.length;
@@ -962,7 +981,7 @@
         function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value&&wsLive) wsLive.send(JSON.stringify({type:'msg',text:i.value})); i.value=''; }
         function startAdminLive(title, pdfUrl) { openProgram('exam-room'); currentExamTitle=title; document.getElementById('room-exam-title-active').innerText="🔴 "+title; document.getElementById('exam-prep-overlay').style.display='none'; document.getElementById('live-admin-controls').classList.replace('hidden','block'); document.getElementById('timer-ui-container').style.display='none'; document.getElementById('exam-omr-container').style.display='none'; if(pdfUrl) renderExamFile(API_URL+pdfUrl, title); connectLiveExam(title); }
 
-        // 💡 5. 출제 버튼 안전장치 로직 (20문제 초과 시 경고)
+        // 💡 5. 출제 버튼을 완벽하게 되살린 코드 (20문제 안전 장치 포함)
         async function generateStreamQuestions() { 
             const k = parseInt(document.getElementById('c-killer').value || 0);
             const s = parseInt(document.getElementById('c-semi').value || 0);
@@ -972,7 +991,7 @@
             const total = k + s + h + m + l;
             
             if(total === 0) return alert("출제할 문항 수를 1개 이상 입력해주세요.");
-            if(total > 20) return alert("🚨 한 번에 너무 많은 문제(60문제 등)를 출제하면 AI가 과부하로 중간에 멈추거나 에러가 발생합니다. 최대 20문제씩 나누어서 출제해 주세요!");
+            if(total > 20) return alert("🚨 한 번에 20문제가 넘게 출제하면 AI가 과부하로 서버를 다운시킵니다. 20문제 이하로 나누어서 출제해 주세요!");
 
             const title = document.getElementById('gen-title').value.trim();
             if(!title) return alert("출제할 문제집의 제목을 입력하세요.");
