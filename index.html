@@ -155,9 +155,7 @@
 
     <!-- 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
-        
-        <!-- 대시보드 홈 -->
-        <div id="dashboard-home">
+        <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
@@ -165,17 +163,17 @@
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
                     <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
                 </div>
-                <div onclick="openProgram('quiz-list');" class="bg-[#1e2430] border border-orange-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="bg-[#1e2430] border border-orange-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-orange-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⏱️</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">타임어택 퀴즈</h3>
                     <p class="text-orange-200/70 text-xs md:text-sm">마감일과 제한시간이 있는 퀴즈를 풀고 점수를 확인하세요.</p>
                 </div>
-                <div onclick="openProgram('exam-list');" class="bg-[#1e2430] border border-yellow-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⏳</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">실시간 모의고사</h3>
                     <p class="text-yellow-200/70 text-xs md:text-sm">타이머와 OMR 카드가 제공되는 실전 모의고사입니다.</p>
                 </div>
-                <div onclick="openProgram('lecture');" class="bg-[#1e2430] border border-purple-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🎬</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">해설 강의실</h3>
                     <p class="text-purple-200/70 text-xs md:text-sm">원장님의 명쾌 해설 강의를 수강하세요.</p>
@@ -185,16 +183,17 @@
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">AI 논술/요약 첨삭</h3>
                     <p class="text-pink-200/70 text-xs md:text-sm">손글씨/PDF 논술문을 올리면 AI가 직접 빨간펜 첨삭을 해줍니다.</p>
                 </div>
-                <div onclick="openProgram('homework');" class="bg-[#1e2430] border border-emerald-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div onclick="openProgram('homework'); loadHomeworks();" class="bg-[#1e2430] border border-emerald-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">📝</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">과제 제출</h3>
                     <p class="text-emerald-200/70 text-xs md:text-sm">원장님이 내주신 과제를 제출하고 해설을 확인하세요.</p>
                 </div>
-                <div onclick="openProgram('board');" class="bg-[#1e2430] border border-gray-600 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div onclick="openProgram('board'); loadBoard();" class="bg-[#1e2430] border border-gray-600 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-gray-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">📢</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">공지사항</h3>
                     <p class="text-gray-400 text-xs md:text-sm">학원 필수 자료 및 공지사항을 확인합니다.</p>
                 </div>
+                
                 <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⚙️</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
@@ -203,7 +202,6 @@
             </div>
         </div>
 
-        <!-- 세부 프로그램 뷰 -->
         <div id="program-view" class="hidden fade-in pt-6 pb-12 w-full max-w-7xl mx-auto">
             <button onclick="closeProgram()" class="mb-4 text-gray-400 hover:text-white font-bold"><i class="fa-solid fa-arrow-left"></i> 돌아가기</button>
 
@@ -614,7 +612,7 @@
     </div>
 
     <!-- 각종 모달 -->
-    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md shadow-2xl relative border border-gray-700">
             <button onclick="closeModal('auth-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h2 class="text-3xl font-black mb-2 text-white text-center">로그인</h2>
@@ -629,7 +627,7 @@
         </div>
     </div>
 
-    <div id="login-guide-modal" class="hidden fixed inset-0 z-[160] modal-bg flex items-center justify-center p-4">
+    <div id="login-guide-modal" class="hidden fixed inset-0 z-[160] modal-bg items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-emerald-500 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
             <button onclick="closeModal('login-guide-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             <h3 class="text-2xl font-black text-emerald-400 mb-5"><i class="fa-solid fa-circle-info mr-2"></i>올바른 로그인 방법</h3>
@@ -657,7 +655,7 @@
         </div>
     </div>
 
-    <div id="knowledge-import-modal" class="hidden fixed inset-0 z-[160] modal-bg flex items-center justify-center p-4">
+    <div id="knowledge-import-modal" class="hidden fixed inset-0 z-[160] modal-bg items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[80vh]">
             <button onclick="closeModal('knowledge-import-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             <h3 class="text-2xl font-black text-blue-400 mb-2"><i class="fa-solid fa-file-import mr-2"></i>학습된 자료 가져오기</h3>
@@ -666,7 +664,7 @@
         </div>
     </div>
 
-    <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg flex items-center justify-center p-4">
+    <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-sm border border-gray-700 shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4">학생 정보 수정</h3>
             <input type="hidden" id="edit-old-id">
@@ -680,7 +678,6 @@
         </div>
     </div>
 
-    <!-- 스크립트 하나로 완벽 통합 -->
     <script>
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null; let wsLive = null; 
@@ -703,7 +700,7 @@
         function showToast(m) { const c=document.getElementById('toast-container'); const t=document.createElement('div'); t.className='toast show'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
         function showLiveToast(m) { const c=document.getElementById('live-toast-container'); const t=document.createElement('div'); t.className='bg-red-600 text-white p-4 rounded-xl shadow-2xl font-bold text-center mb-2 animate-bounce'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(), 5000); }
         
-        // 라우팅 (클래스 토글 방식 - 버그 원인 제거)
+        // 라우팅 
         function goHome() {
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('home-view').classList.remove('hidden');
@@ -1002,7 +999,7 @@
                 if(data.success && data.knowledge && data.knowledge.length > 0) {
                     data.knowledge.forEach(k => {
                         const safeContent = encodeURIComponent(k.content);
-                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded-lg mb-3 border border-gray-700 text-white flex justify-between items-center shadow"><span class="font-bold text-lg truncate w-3/4 cursor-pointer hover:text-emerald-400 transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-3 text-emerald-500"></i>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-white font-bold text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition shadow-lg flex-shrink-0">삭제</button></div>`;
+                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded-lg mb-3 border border-gray-700 text-white flex justify-between items-center shadow"><span class="font-bold text-lg truncate w-3/4 cursor-pointer hover:text-emerald-400 underline transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-3 text-emerald-500"></i>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-white font-bold text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition shadow-lg flex-shrink-0">삭제</button></div>`;
                     });
                 } else { c.innerHTML = '<div class="text-center text-gray-500 mt-10 p-6 bg-gray-800 rounded-xl border border-gray-700">등록된 학습 자료가 없습니다.</div>'; }
             } catch(e) { c.innerHTML = '<div class="text-center text-red-400 mt-10 p-6 bg-gray-800 rounded-xl border border-gray-700">목록을 불러오는 데 실패했습니다.<br>서버 연결을 확인하세요.</div>'; }
@@ -1222,7 +1219,7 @@
                         } 
                     }); 
                     document.getElementById('mypage-count').innerText=`총 ${cnt}건`; 
-                    if(cnt===0) c.innerHTML="<div class='text-center text-gray-500 py-16'><i class="fa-solid fa-folder-open text-4xl mb-4"></i><p>아직 등록된 학습 기록이 없습니다.</p></div>"; 
+                    if(cnt===0) c.innerHTML="<div class='text-center text-gray-500 py-16'><i class=\"fa-solid fa-folder-open text-4xl mb-4\"></i><p>아직 등록된 학습 기록이 없습니다.</p></div>"; 
                 } 
             }catch(e){} 
         }
@@ -1454,9 +1451,9 @@
             
             const oc = document.getElementById('exam-omr-container'); oc.innerHTML='';
             studentOmrAnswers.forEach((ans, i) => {
-                let r = `<div class="flex items-center gap-2 p-3 rounded-lg mb-2 bg-[#151922] border border-gray-700 shadow-sm"><span class="w-8 font-bold text-indigo-400 text-lg">${i+1}.</span><div class="flex flex-grow justify-around">`;
-                for(let j=1; j<=5; j++) r += `<button class="omr-circle bg-gray-800 hover:bg-gray-600" onclick="setStudentOmr(${i},${j})" id="s-omr-${i}-${j}">${j}</button>`;
-                oc.innerHTML += r + `</div></div>`;
+                let r = `<div class="flex items-center gap-1 md:gap-2 p-2 rounded mb-1 bg-[#151922]"><span class="w-5 text-sm">${i+1}.</span>`;
+                for(let j=1; j<=5; j++) r += `<button class="omr-circle bg-gray-700" onclick="setStudentOmr(${i},${j})" id="s-omr-${i}-${j}">${j}</button>`;
+                oc.innerHTML += r + `</div>`;
             });
 
             currSecIdx = 0; secSpent = 0;
@@ -1470,7 +1467,8 @@
                 document.getElementById('btn-submit-exam').classList.remove('hidden');
             }
             
-            isExamActive = true; examTimerInterval = setInterval(engineTick, 1000);
+            isExamActive = true;
+            examTimerInterval = setInterval(engineTick, 1000);
         }
 
         function setStudentOmr(row, ans) {
@@ -1482,7 +1480,7 @@
         function nextExamSection() {
             if(currSecIdx < studentSections.length - 1) {
                 currSecIdx++; secSpent=0; secAllocated=studentSections[currSecIdx].time*60;
-                showLiveToast(`[${studentSections[currSecIdx].name}] 구간이 시작되었습니다. 집중하세요!`);
+                showLiveToast(`[${studentSections[currSecIdx].name}] 시작!`);
                 if(currSecIdx === studentSections.length - 1) {
                     document.getElementById('btn-next-section').classList.add('hidden');
                     document.getElementById('btn-submit-exam').classList.remove('hidden');
@@ -1492,16 +1490,19 @@
 
         function engineTick() {
             if(!isExamActive || isExamPaused) return;
-            secSpent++; let remain = secAllocated - secSpent;
+            secSpent++;
+            let remain = secAllocated - secSpent;
             if(studentSections.length>0) {
                 if(remain <= 0) {
                     document.getElementById('active-section-timer').innerText = "00:00";
-                    if(currSecIdx < studentSections.length - 1) { nextExamSection(); } else { submitRealtimeExam(); }
+                    if(currSecIdx < studentSections.length - 1) { nextExamSection(); }
+                    else { submitRealtimeExam(); }
                 } else {
                     let m = Math.floor(remain/60).toString().padStart(2,'0'); let s = (remain%60).toString().padStart(2,'0');
-                    const tel = document.getElementById('active-section-timer'); tel.innerText = `${m}:${s}`;
-                    if(remain <= 60) { tel.classList.remove('text-emerald-400'); tel.classList.add('text-red-500', 'animate-pulse'); }
-                    else { tel.classList.add('text-emerald-400'); tel.classList.remove('text-red-500', 'animate-pulse'); }
+                    const tel = document.getElementById('active-section-timer');
+                    tel.innerText = `${m}:${s}`;
+                    if(remain <= 60) tel.classList.replace('text-emerald-400','text-red-400');
+                    else tel.classList.replace('text-red-400','text-emerald-400');
                 }
             } else {
                 let m = Math.floor(secSpent/60).toString().padStart(2,'0'); let s = (secSpent%60).toString().padStart(2,'0');
@@ -1510,85 +1511,122 @@
         }
 
         async function submitRealtimeExam() { 
-            clearInterval(examTimerInterval); isExamActive=false; showLoader("OMR 카드를 서버로 전송하여 채점 및 정밀 분석을 진행 중입니다..."); 
+            clearInterval(examTimerInterval); isExamActive=false; showLoader("채점 및 분석 중..."); 
             try{ 
                 const res=await fetch(`${API_URL}/api/exam/submit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:currentUser.school,grade:currentUser.grade,student_name:currentUser.name,title:currentExamTitle,answers:studentOmrAnswers})}); 
-                if(!res.ok) throw new Error(`[${res.status}] 서버 오류 발생`);
+                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
                 const data=await res.json(); 
                 if(data.success){ 
-                    document.getElementById('exam-omr-container').classList.add('hidden'); document.getElementById('btn-submit-exam').classList.add('hidden'); 
-                    const rEl=document.getElementById('exam-result-report'); rEl.classList.remove('hidden'); document.getElementById('report-action-buttons').classList.remove('hidden'); document.getElementById('report-action-buttons').classList.add('flex');
-                    let html=`<h3 class="text-2xl font-black text-white mb-6 border-b border-gray-700 pb-4">개인 맞춤형 분석 리포트</h3>`; 
+                    document.getElementById('exam-omr-container').classList.add('hidden'); 
+                    document.getElementById('btn-submit-exam').classList.add('hidden'); 
+                    const rEl=document.getElementById('exam-result-report'); rEl.classList.remove('hidden'); 
+                    document.getElementById('report-action-buttons').classList.remove('hidden'); 
+                    document.getElementById('report-action-buttons').classList.add('flex'); 
+                    let html=`<h3 class="text-xl font-bold text-emerald-400 mb-4">리포트</h3>`; 
                     if(currentExamData.questions && currentExamData.questions.length>0) {
-                        html+=`<div class="text-6xl font-black text-center mb-8 py-8 bg-[#151922] rounded-2xl border border-gray-700 shadow-xl"><span class="text-emerald-400">${data.score}</span><span class="text-2xl text-gray-400 ml-2">점</span></div>`; 
+                        html+=`<div class="text-5xl font-black text-center mb-6 py-6 bg-gray-800 rounded-xl">${data.score}<span class="text-xl text-gray-400">점</span></div>`; 
                         
                         if(data.wrong_by_diff) {
-                            html+=`<div class="mb-6 bg-[#151922] p-6 rounded-xl border border-gray-700"><h4 class="text-base font-bold text-gray-300 mb-4 border-b border-gray-700 pb-2"><i class="fa-solid fa-chart-pie text-blue-400 mr-2"></i>영역 / 난이도별 오답 현황</h4><ul class="text-base space-y-3">`;
-                            let hasWrongs = false;
-                            for(const [diff, cnt] of Object.entries(data.wrong_by_diff)) { if(cnt>0) { html+=`<li class="flex justify-between items-center"><span class="font-bold text-white">${diff} 난이도</span> <span class="bg-red-900/30 text-red-400 border border-red-800 px-3 py-1 rounded-lg font-bold">${cnt}개 오답</span></li>`; hasWrongs = true; } }
-                            if(!hasWrongs) html+=`<li class="text-emerald-400 font-bold text-center py-2">틀린 문항이 없습니다. 완벽합니다!</li>`;
+                            html+=`<div class="mb-4 bg-gray-800 p-4 rounded-xl"><h4 class="text-sm text-gray-400 mb-2">영역/난이도별 오답 분석</h4><ul class="text-sm space-y-1">`;
+                            for(const [diff, cnt] of Object.entries(data.wrong_by_diff)) { if(cnt>0) html+=`<li><span class="font-bold text-yellow-400">${diff}</span>: ${cnt}개 틀림</li>`; }
                             html+=`</ul></div>`;
                         }
 
-                        if(data.potential_ab) html+=`<div class="mb-4 bg-blue-900/30 border border-blue-600 p-5 rounded-xl text-base leading-relaxed shadow-lg"><p class="text-blue-200"><i class="fa-solid fa-bolt text-yellow-400 mr-2 text-xl"></i><strong>킬러/준킬러</strong> 문항에서 실수를 줄였다면 <strong class="text-white text-xl ml-1">${data.potential_ab}점</strong>까지 충분히 가능했습니다.</p></div>`;
-                        if(data.potential_abc) html+=`<div class="mb-8 bg-purple-900/30 border border-purple-600 p-5 rounded-xl text-base leading-relaxed shadow-lg"><p class="text-purple-200"><i class="fa-solid fa-book-open text-purple-400 mr-2 text-xl"></i>기본기(상/중/하 난이도)를 탄탄히 다져 모두 맞췄다면 최종 <strong class="text-white text-xl ml-1">${data.potential_abc}점</strong> 도달이 가능합니다.</p></div>`;
-                    } else html+=`<p class="text-base text-gray-300 mb-6 text-center bg-[#151922] p-8 rounded-xl border border-gray-700">자기주도형 자율 모의고사가 성공적으로 종료 및 제출되었습니다.</p>`; 
+                        if(data.potential_ab) html+=`<div class="mb-4 bg-blue-900/30 border border-blue-500 p-4 rounded-xl text-sm leading-relaxed"><p class="text-blue-300"><i class="fa-solid fa-bolt text-yellow-400 mr-2"></i><strong>킬러/준킬러</strong>에서 실수를 줄였다면 <strong class="text-white text-lg">${data.potential_ab}점</strong>까지 가능했습니다.</p></div>`;
+                        if(data.potential_abc) html+=`<div class="mb-6 bg-purple-900/30 border border-purple-500 p-4 rounded-xl text-sm leading-relaxed"><p class="text-purple-300"><i class="fa-solid fa-book-open text-purple-400 mr-2"></i>기본기(난이도 상/중/하)를 모두 맞췄다면 최종 <strong class="text-white text-lg">${data.potential_abc}점</strong> 도달이 가능합니다.</p></div>`;
+                    } else html+=`<p class="text-sm text-gray-300 mb-4 text-center bg-gray-800 p-6 rounded-xl">자기주도형 자율 시험 종료.</p>`; 
                     
-                    if(data.video_url) html+=`<a href="${data.video_url}" target="_blank" class="flex justify-center items-center w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-bold mb-6 shadow-lg transition text-lg"><i class="fa-brands fa-youtube mr-3 text-2xl"></i>원장님 해설 강의 바로 시청하기</a>`;
-                    if(data.explanation_text) html+=`<div class="bg-[#151922] p-6 md:p-8 text-sm md:text-base whitespace-pre-wrap rounded-2xl border border-gray-700 text-gray-300 leading-relaxed shadow-inner"><h4 class="font-bold text-white mb-6 border-b border-gray-700 pb-3 text-lg"><i class="fa-solid fa-file-lines text-emerald-400 mr-2"></i>원장님 상세 해설지</h4>${data.explanation_text}</div>`; 
+                    if(data.video_url) html+=`<a href="${data.video_url}" target="_blank" class="block w-full bg-red-600 hover:bg-red-700 text-white text-center py-4 rounded-xl font-bold mb-4 shadow-lg transition"><i class="fa-brands fa-youtube mr-2"></i>원장님 해설 강의 보기</a>`;
+                    if(data.explanation_text) html+=`<div class="bg-gray-800 p-6 text-sm whitespace-pre-wrap rounded-xl border border-gray-700 text-gray-300 leading-relaxed shadow-inner"><h4 class="font-bold text-white mb-4 border-b border-gray-700 pb-2">상세 해설지</h4>${data.explanation_text}</div>`; 
                     rEl.innerHTML=html; 
-                } else { alert("제출 실패: " + data.detail); isExamActive=true; examTimerInterval=setInterval(engineTick,1000); }
-            }catch(e){ alert("서버 통신 오류가 발생하여 제출에 실패했습니다. 다시 시도해 주세요."); isExamActive=true; examTimerInterval=setInterval(engineTick,1000); } hideLoader(); 
+                } else {
+                    alert("제출 실패: " + data.detail);
+                    isExamActive=true; examTimerInterval=setInterval(engineTick,1000);
+                }
+            }catch(e){ 
+                alert("통신 오류: " + e.message); 
+                isExamActive=true; examTimerInterval=setInterval(engineTick,1000);
+            } 
+            hideLoader(); 
         }
 
         function startAdminLive(title, pdfUrl) {
             openProgram('exam-room');
             document.getElementById('exam-prep-overlay').classList.add('hidden');
-            document.getElementById('room-exam-title-active').innerHTML = `<span class="bg-red-600 text-white px-3 py-1 rounded-lg text-sm mr-3 font-bold animate-pulse">LIVE 감독중</span>${title}`;
+            document.getElementById('room-exam-title-active').innerText = '[감독] ' + title;
             document.getElementById('live-admin-controls').classList.remove('hidden');
             document.getElementById('timer-ui-container').classList.add('hidden');
             document.getElementById('exam-omr-container').classList.add('hidden');
             document.getElementById('btn-submit-exam').classList.add('hidden');
-            document.getElementById('report-action-buttons').classList.remove('hidden'); document.getElementById('report-action-buttons').classList.add('flex');
+            document.getElementById('report-action-buttons').classList.remove('hidden');
+            document.getElementById('report-action-buttons').classList.add('flex');
             
             wsLive = new WebSocket(`wss://korean-ai-tutor.onrender.com/ws/exam/${encodeURIComponent(title)}`);
-            wsLive.onmessage = (e)=>{ const d=JSON.parse(e.data); showLiveToast(`[학생 접속] ${d.msg}`); };
+            wsLive.onmessage = (e)=>{ const d=JSON.parse(e.data); showLiveToast(`[학생] ${d.msg}`); };
             setTimeout(()=>loadPdfToCanvas(API_URL+pdfUrl), 500);
         }
 
-        function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value && wsLive) { wsLive.send(JSON.stringify({type:'chat', msg:i.value})); showLiveToast("공지 전송 완료: "+i.value); i.value=''; } }
+        function sendLiveMessage() { const i=document.getElementById('live-msg-input'); if(i.value && wsLive) { wsLive.send(JSON.stringify({type:'chat', msg:i.value})); showLiveToast("전송: "+i.value); i.value=''; } }
 
         // 타임어택 퀴즈
         function addQuizQuestionUI() {
-            const b = document.getElementById('qz-questions-board'); const idx = quizQuestionsBuffer.length + 1;
+            const b = document.getElementById('qz-questions-board');
+            const idx = quizQuestionsBuffer.length + 1;
             quizQuestionsBuffer.push({q:"", ans:"", opt1:"", opt2:"", opt3:"", opt4:"", opt5:""});
-            const html = `<div class="bg-[#1e2430] p-5 rounded-xl border border-gray-600 relative shadow"><button onclick="removeQuizQuestion(${idx-1})" class="absolute top-4 right-4 text-red-400 hover:text-white bg-red-900/30 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button><div class="font-black text-white text-lg mb-3">Q${idx}.</div><textarea class="w-full bg-[#151922] p-3 text-white border border-gray-600 rounded-lg outline-none focus:border-orange-500 mb-3 text-sm h-20" placeholder="문제 내용" onchange="quizQuestionsBuffer[${idx-1}].q=this.value"></textarea><div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4"><input type="text" placeholder="①번 보기 내용" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg focus:border-orange-500 outline-none" onchange="quizQuestionsBuffer[${idx-1}].opt1=this.value"><input type="text" placeholder="②번 보기 내용" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg focus:border-orange-500 outline-none" onchange="quizQuestionsBuffer[${idx-1}].opt2=this.value"><input type="text" placeholder="③번 보기 내용" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg focus:border-orange-500 outline-none" onchange="quizQuestionsBuffer[${idx-1}].opt3=this.value"><input type="text" placeholder="④번 보기 내용" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg focus:border-orange-500 outline-none" onchange="quizQuestionsBuffer[${idx-1}].opt4=this.value"><input type="text" placeholder="⑤번 보기 내용 (선택)" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg focus:border-orange-500 outline-none md:col-span-2" onchange="quizQuestionsBuffer[${idx-1}].opt5=this.value"></div><div class="flex items-center gap-3 text-base"><label class="text-orange-400 font-bold bg-orange-900/30 px-3 py-1.5 rounded-lg border border-orange-800">정답 번호</label><select class="bg-[#151922] p-2 text-white border border-gray-600 rounded-lg outline-none font-bold" onchange="quizQuestionsBuffer[${idx-1}].ans=this.value"><option value="">선택</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div></div>`;
+            const html = `
+            <div class="bg-[#1e2430] p-4 rounded border border-gray-600 relative">
+                <button onclick="removeQuizQuestion(${idx-1})" class="absolute top-2 right-2 text-red-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="font-bold text-white mb-2">Q${idx}.</div>
+                <textarea class="w-full bg-[#151922] p-2 text-white border border-gray-600 rounded outline-none mb-2 text-sm" placeholder="문제 내용" onchange="quizQuestionsBuffer[${idx-1}].q=this.value"></textarea>
+                <div class="grid grid-cols-2 gap-2 text-xs mb-2">
+                    <input type="text" placeholder="①번 보기" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${idx-1}].opt1=this.value">
+                    <input type="text" placeholder="②번 보기" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${idx-1}].opt2=this.value">
+                    <input type="text" placeholder="③번 보기" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${idx-1}].opt3=this.value">
+                    <input type="text" placeholder="④번 보기" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${idx-1}].opt4=this.value">
+                    <input type="text" placeholder="⑤번 보기" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${idx-1}].opt5=this.value">
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <label class="text-orange-400 font-bold">정답 번호</label>
+                    <select class="bg-[#151922] p-2 text-white border border-gray-600 rounded outline-none" onchange="quizQuestionsBuffer[${idx-1}].ans=this.value">
+                        <option value="">선택</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                    </select>
+                </div>
+            </div>`;
             b.insertAdjacentHTML('beforeend', html);
         }
 
         function removeQuizQuestion(idx) { quizQuestionsBuffer.splice(idx,1); renderQuizQuestionsUI(); }
         function renderQuizQuestionsUI() {
-            const b = document.getElementById('qz-questions-board'); b.innerHTML=''; const temp = [...quizQuestionsBuffer]; quizQuestionsBuffer = [];
+            const b = document.getElementById('qz-questions-board'); b.innerHTML='';
+            const temp = [...quizQuestionsBuffer]; quizQuestionsBuffer = [];
             temp.forEach(q => { quizQuestionsBuffer.push(q); const currIdx = quizQuestionsBuffer.length-1; 
-                b.insertAdjacentHTML('beforeend', `<div class="bg-[#1e2430] p-5 rounded-xl border border-gray-600 relative shadow"><button onclick="removeQuizQuestion(${currIdx})" class="absolute top-4 right-4 text-red-400 hover:text-white bg-red-900/30 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button><div class="font-black text-white text-lg mb-3">Q${currIdx+1}.</div><textarea class="w-full bg-[#151922] p-3 text-white border border-gray-600 rounded-lg outline-none focus:border-orange-500 mb-3 text-sm h-20" onchange="quizQuestionsBuffer[${currIdx}].q=this.value">${q.q}</textarea><div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4"><input type="text" value="${q.opt1}" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg" onchange="quizQuestionsBuffer[${currIdx}].opt1=this.value"><input type="text" value="${q.opt2}" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg" onchange="quizQuestionsBuffer[${currIdx}].opt2=this.value"><input type="text" value="${q.opt3}" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg" onchange="quizQuestionsBuffer[${currIdx}].opt3=this.value"><input type="text" value="${q.opt4}" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg" onchange="quizQuestionsBuffer[${currIdx}].opt4=this.value"><input type="text" value="${q.opt5}" class="bg-[#151922] p-3 text-white border border-gray-600 rounded-lg md:col-span-2" onchange="quizQuestionsBuffer[${currIdx}].opt5=this.value"></div><div class="flex items-center gap-3 text-base"><label class="text-orange-400 font-bold bg-orange-900/30 px-3 py-1.5 rounded-lg border border-orange-800">정답 번호</label><select class="bg-[#151922] p-2 text-white border border-gray-600 rounded-lg font-bold" onchange="quizQuestionsBuffer[${currIdx}].ans=this.value"><option value="1" ${q.ans==='1'?'selected':''}>1</option><option value="2" ${q.ans==='2'?'selected':''}>2</option><option value="3" ${q.ans==='3'?'selected':''}>3</option><option value="4" ${q.ans==='4'?'selected':''}>4</option><option value="5" ${q.ans==='5'?'selected':''}>5</option></select></div></div>`);
+                b.insertAdjacentHTML('beforeend', `<div class="bg-[#1e2430] p-4 rounded border border-gray-600 relative"><button onclick="removeQuizQuestion(${currIdx})" class="absolute top-2 right-2 text-red-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button><div class="font-bold text-white mb-2">Q${currIdx+1}.</div><textarea class="w-full bg-[#151922] p-2 text-white border border-gray-600 rounded outline-none mb-2 text-sm" onchange="quizQuestionsBuffer[${currIdx}].q=this.value">${q.q}</textarea><div class="grid grid-cols-2 gap-2 text-xs mb-2"><input type="text" value="${q.opt1}" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${currIdx}].opt1=this.value"><input type="text" value="${q.opt2}" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${currIdx}].opt2=this.value"><input type="text" value="${q.opt3}" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${currIdx}].opt3=this.value"><input type="text" value="${q.opt4}" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${currIdx}].opt4=this.value"><input type="text" value="${q.opt5}" class="bg-[#151922] p-2 text-white border border-gray-600 rounded" onchange="quizQuestionsBuffer[${currIdx}].opt5=this.value"></div><div class="flex items-center gap-2 text-sm"><label class="text-orange-400 font-bold">정답 번호</label><select class="bg-[#151922] p-2 text-white border border-gray-600 rounded outline-none" onchange="quizQuestionsBuffer[${currIdx}].ans=this.value"><option value="1" ${q.ans==='1'?'selected':''}>1</option><option value="2" ${q.ans==='2'?'selected':''}>2</option><option value="3" ${q.ans==='3'?'selected':''}>3</option><option value="4" ${q.ans==='4'?'selected':''}>4</option><option value="5" ${q.ans==='5'?'selected':''}>5</option></select></div></div>`);
             });
         }
 
         async function createQuiz() {
-            const t = document.getElementById('qz-title').value.trim(), d = document.getElementById('qz-deadline').value, l = parseInt(document.getElementById('qz-limit').value);
-            if(!t || !d || !l || quizQuestionsBuffer.length===0) return alert("제목, 마감일시, 제한시간, 문제를 모두 입력해주세요.");
-            if(quizQuestionsBuffer.some(q=>!q.q || !q.ans)) return alert("비어있는 문제 내용이나 정답 세팅이 있습니다. 다시 확인해 주세요.");
+            const t = document.getElementById('qz-title').value.trim();
+            const d = document.getElementById('qz-deadline').value;
+            const l = parseInt(document.getElementById('qz-limit').value);
+            if(!t || !d || !l || quizQuestionsBuffer.length===0) return alert("제목, 마감일시, 제한시간, 문제를 모두 완성해주세요.");
+            if(quizQuestionsBuffer.some(q=>!q.q || !q.ans)) return alert("비어있는 문제 내용이나 정답이 있습니다.");
 
-            showLoader("서버에 타임어택 퀴즈를 세팅하고 학생들에게 배포 중입니다...");
-            const fd = new FormData(); fd.append("title", t); fd.append("deadline", d); fd.append("time_limit", l); fd.append("questions", JSON.stringify(quizQuestionsBuffer));
+            showLoader("퀴즈 배포 중...");
+            const fd = new FormData();
+            fd.append("title", t); fd.append("deadline", d); fd.append("time_limit", l);
+            fd.append("questions", JSON.stringify(quizQuestionsBuffer));
 
             try {
-                const res = await fetch(`${API_URL}/api/admin/quiz`, {method:'POST', body:fd}); const data = await res.json();
+                const res = await fetch(`${API_URL}/api/admin/quiz`, {method:'POST', body:fd});
+                const data = await res.json();
                 if(data.success) {
-                    alert("타임어택 퀴즈가 성공적으로 오픈되었습니다!");
-                    document.getElementById('qz-title').value=''; document.getElementById('qz-deadline').value=''; document.getElementById('qz-limit').value=''; quizQuestionsBuffer = []; renderQuizQuestionsUI(); loadAdminQuizzes();
+                    alert("퀴즈가 성공적으로 오픈되었습니다!");
+                    document.getElementById('qz-title').value=''; document.getElementById('qz-deadline').value=''; document.getElementById('qz-limit').value='';
+                    quizQuestionsBuffer = []; renderQuizQuestionsUI();
+                    loadAdminQuizzes();
                 } else alert("배포 실패: " + data.detail);
-            } catch(e) { alert("서버 통신 중 오류가 발생했습니다."); } hideLoader();
+            } catch(e) { alert("서버 통신 오류"); }
+            hideLoader();
         }
 
         async function loadAdminQuizzes() {
@@ -1598,19 +1636,20 @@
                 if(data.success) { 
                     allQuizzes=data.quizzes; 
                     data.quizzes.forEach((q,i) => { 
-                        c.innerHTML+=`<div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-800 p-4 rounded-lg mb-3 text-white border border-gray-700 shadow gap-3"><span class="font-bold truncate w-full md:w-3/4 text-lg"><i class="fa-solid fa-stopwatch mr-3 text-orange-400"></i>${q.title} <span class="text-xs text-gray-400 font-normal ml-3 bg-[#151922] px-2 py-1 rounded border border-gray-600 block md:inline-block mt-2 md:mt-0">${q.deadline.replace('T', ' ')} 마감</span></span><button onclick="deleteQuiz('${q.id}')" class="text-white font-bold text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition shadow w-full md:w-auto">퀴즈 삭제</button></div>`; 
+                        c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><span class="font-bold truncate w-2/3"><i class="fa-solid fa-stopwatch mr-2 text-orange-400"></i>${q.title} <span class="text-xs text-gray-400 font-normal ml-2">${q.deadline} 마감</span></span><button onclick="deleteQuiz('${q.id}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`; 
                     }); 
                 } 
             }catch(e){}
         }
 
-        async function deleteQuiz(id) { if(confirm("이 타임어택 퀴즈를 학생들의 목록에서 완전히 삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/quiz/${id}`,{method:'DELETE'}); loadAdminQuizzes(); hideLoader(); } }
+        async function deleteQuiz(id) { if(confirm("퀴즈를 삭제하시겠습니까?")) { showLoader(); await fetch(`${API_URL}/api/admin/quiz/${id}`,{method:'DELETE'}); loadAdminQuizzes(); hideLoader(); } }
 
         async function loadStudentQuizzes() {
             try{ 
                 let submittedTasks = new Set();
                 if(currentUser && !currentUser.isAdmin) {
-                    const pRes = await fetch(`${API_URL}/api/student/profile/${currentUser.name}`); const pData = await pRes.json();
+                    const pRes = await fetch(`${API_URL}/api/student/profile/${currentUser.name}`);
+                    const pData = await pRes.json();
                     if(pData.success && pData.reports) { pData.reports.forEach(r => { if(r.type === '타임어택 퀴즈') submittedTasks.add(r.task_name); }); }
                 }
 
@@ -1619,32 +1658,33 @@
                 if(data.success) { 
                     allQuizzes=data.quizzes; 
                     data.quizzes.forEach((q,i) => { 
-                        const isSubmitted = submittedTasks.has(q.title); const isExpired = new Date(q.deadline) < new Date();
+                        const isSubmitted = submittedTasks.has(q.title);
+                        const isExpired = new Date(q.deadline) < new Date();
                         
                         let statusHtml = '';
-                        if(isSubmitted) statusHtml = `<span class="bg-gray-600 text-white px-5 py-3 rounded-lg text-sm font-bold w-full md:w-auto text-center shadow-inner cursor-not-allowed border border-gray-500"><i class="fa-solid fa-check mr-2"></i>응시 완료</span>`;
-                        else if(isExpired) statusHtml = `<span class="bg-red-900/50 text-red-400 border border-red-500 px-5 py-3 rounded-lg text-sm font-bold w-full md:w-auto text-center cursor-not-allowed shadow-inner"><i class="fa-solid fa-ban mr-2"></i>기한 만료</span>`;
-                        else statusHtml = `<button onclick="startQuizReal(${i})" class="bg-orange-600 hover:bg-orange-700 w-full md:w-auto px-6 py-3 rounded-lg text-sm font-bold shadow-lg shadow-orange-600/30 text-white transition"><i class="fa-solid fa-play mr-2"></i>타임어택 도전하기</button>`;
+                        if(isSubmitted) statusHtml = `<span class="bg-gray-600 text-gray-300 px-3 py-1 rounded text-xs font-bold">응시 완료</span>`;
+                        else if(isExpired) statusHtml = `<span class="bg-red-900/50 text-red-400 border border-red-500 px-3 py-1 rounded text-xs font-bold">마감됨</span>`;
+                        else statusHtml = `<button onclick="startQuizReal(${i})" class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-orange-600/30 text-white transition"><i class="fa-solid fa-play mr-2"></i>도전하기</button>`;
 
-                        c.innerHTML+=`<div class="bg-[#151922] p-6 rounded-2xl border ${isSubmitted ? 'border-gray-700' : (isExpired ? 'border-red-900/50' : 'border-orange-500')} shadow-xl flex flex-col justify-between text-white gap-4 mb-4 relative overflow-hidden transition">
-                            ${isExpired && !isSubmitted ? `<div class="absolute inset-0 bg-black/60 z-10 flex items-center justify-center backdrop-blur-[2px]"><span class="border-[3px] border-red-500 text-red-500 font-black text-3xl px-6 py-3 rotate-[-15deg] shadow-lg rounded">기한 초과</span></div>` : ''}
+                        c.innerHTML+=`<div class="bg-[#151922] p-5 rounded-xl border ${isSubmitted ? 'border-gray-600' : (isExpired ? 'border-red-900/50' : 'border-orange-700')} shadow flex flex-col justify-between text-white gap-3 mb-3 relative overflow-hidden">
+                            ${isExpired && !isSubmitted ? `<div class="absolute inset-0 bg-black/50 z-10 flex items-center justify-center backdrop-blur-[1px]"><span class="border-2 border-red-500 text-red-500 font-black text-2xl px-4 py-2 rotate-[-15deg]">기한 초과</span></div>` : ''}
                             <div>
-                                <span class="font-black text-xl text-orange-400 block mb-3"><i class="fa-solid fa-bolt mr-2 text-yellow-400"></i>${q.title}</span>
-                                <span class="text-sm text-gray-300 flex flex-col md:flex-row md:items-center gap-2 font-bold"><span class="bg-[#1e2430] border border-gray-700 px-3 py-1.5 rounded-lg"><i class="fa-regular fa-clock text-orange-400 mr-2"></i>${q.deadline.replace('T',' ')} 마감</span> <span class="bg-orange-900/40 border border-orange-800 px-3 py-1.5 rounded-lg text-orange-300"><i class="fa-solid fa-hourglass-half mr-2"></i>제한시간 ${q.time_limit}분</span></span>
+                                <span class="font-bold text-lg text-orange-400 block mb-1">${q.title}</span>
+                                <span class="text-xs text-gray-400 flex items-center gap-2"><i class="fa-regular fa-clock"></i> ${q.deadline.replace('T',' ')} 마감 <span class="bg-gray-700 px-2 py-0.5 rounded text-white ml-1">제한시간 ${q.time_limit}분</span></span>
                             </div>
-                            <div class="text-right mt-2 flex md:justify-end">${statusHtml}</div>
+                            <div class="text-right mt-2">${statusHtml}</div>
                         </div>`; 
                     }); 
-                    if(c.innerHTML === '') c.innerHTML = '<div class="col-span-full text-center text-gray-500 py-16 bg-[#151922] rounded-2xl border border-gray-800"><i class="fa-solid fa-clipboard-check text-4xl mb-4"></i><p>현재 도전 가능한 타임어택 퀴즈가 없습니다.</p></div>';
                 } 
             }catch(e){}
         }
 
         function startQuizReal(idx) {
             const q = allQuizzes[idx];
-            if(!confirm(`[${q.title}]\n제한시간은 ${q.time_limit}분입니다. 한 번 시작하면 중간에 멈출 수 없습니다.\n지금 바로 타임어택에 도전하시겠습니까?`)) return;
+            if(!confirm(`[${q.title}]\n제한시간은 ${q.time_limit}분입니다. 시작하면 중간에 멈출 수 없습니다.\n지금 도전하시겠습니까?`)) return;
 
-            currentActiveQuiz = q; quizAnswers = Array(q.questions.length).fill("");
+            currentActiveQuiz = q;
+            quizAnswers = Array(q.questions.length).fill("");
             
             document.getElementById('prog-quiz-list').classList.add('hidden');
             document.getElementById('prog-quiz-room').classList.remove('hidden');
@@ -1652,15 +1692,15 @@
 
             const c = document.getElementById('quiz-questions-container'); c.innerHTML='';
             q.questions.forEach((question, i) => {
-                let html = `<div class="bg-[#151922] p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <p class="font-bold text-lg mb-6 leading-relaxed bg-[#1e2430] p-4 rounded-xl border border-gray-600 shadow-inner"><span class="text-orange-400 mr-2 text-xl font-black">Q${i+1}.</span>${question.q}</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">`;
+                let html = `<div class="bg-[#151922] p-5 rounded-xl border border-gray-700">
+                    <p class="font-bold text-lg mb-4 leading-relaxed"><span class="text-orange-400 mr-2">Q${i+1}.</span>${question.q}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">`;
                 for(let j=1; j<=5; j++) {
                     const optText = question[`opt${j}`];
                     if(optText) {
-                        html += `<div onclick="setQuizAnswer(${i}, ${j})" id="q-opt-${i}-${j}" class="bg-[#1e2430] border border-gray-600 p-4 rounded-xl cursor-pointer hover:border-orange-500 hover:bg-gray-800 transition flex items-center gap-4 q-opt-group-${i} shadow-sm">
-                            <div class="w-8 h-8 rounded-full border-2 border-gray-500 flex items-center justify-center flex-shrink-0 font-bold text-base text-gray-400 q-opt-circle-${i} transition">${j}</div>
-                            <span class="font-medium text-gray-200">${optText}</span>
+                        html += `<div onclick="setQuizAnswer(${i}, ${j})" id="q-opt-${i}-${j}" class="bg-[#1e2430] border border-gray-600 p-3 rounded cursor-pointer hover:border-orange-500 transition flex items-center gap-3 q-opt-group-${i}">
+                            <div class="w-6 h-6 rounded-full border border-gray-500 flex items-center justify-center flex-shrink-0 q-opt-circle-${i}">${j}</div>
+                            <span>${optText}</span>
                         </div>`;
                     }
                 }
@@ -1668,30 +1708,44 @@
                 c.insertAdjacentHTML('beforeend', html);
             });
 
-            activeQuizTimeLeft = q.time_limit * 60; clearInterval(activeQuizTimer); activeQuizTimer = setInterval(quizTick, 1000); window.scrollTo(0,0);
+            activeQuizTimeLeft = q.time_limit * 60;
+            clearInterval(activeQuizTimer);
+            activeQuizTimer = setInterval(quizTick, 1000);
+            window.scrollTo(0,0);
         }
 
         function setQuizAnswer(qIdx, ansNum) {
             quizAnswers[qIdx] = ansNum.toString();
-            document.querySelectorAll(`.q-opt-group-${qIdx}`).forEach(el => { el.classList.replace('border-orange-500','border-gray-600'); el.classList.remove('bg-orange-900/30', 'shadow-orange-500/20'); });
-            document.querySelectorAll(`.q-opt-circle-${qIdx}`).forEach(el => { el.classList.replace('border-orange-500','border-gray-500'); el.classList.remove('bg-orange-500','text-white'); el.classList.add('text-gray-400'); });
+            document.querySelectorAll(`.q-opt-group-${qIdx}`).forEach(el => { el.classList.replace('border-orange-500','border-gray-600'); el.classList.remove('bg-orange-900/30'); });
+            document.querySelectorAll(`.q-opt-circle-${qIdx}`).forEach(el => { el.classList.replace('border-orange-500','border-gray-500'); el.classList.remove('bg-orange-500','text-white'); });
             
             const selected = document.getElementById(`q-opt-${qIdx}-${ansNum}`);
-            selected.classList.replace('border-gray-600','border-orange-500'); selected.classList.add('bg-orange-900/30', 'shadow-orange-500/20');
-            const circle = selected.querySelector('div');
-            circle.classList.replace('border-gray-500','border-orange-500'); circle.classList.remove('text-gray-400'); circle.classList.add('bg-orange-500','text-white');
+            selected.classList.replace('border-gray-600','border-orange-500');
+            selected.classList.add('bg-orange-900/30');
+            selected.querySelector('div').classList.replace('border-gray-500','border-orange-500');
+            selected.querySelector('div').classList.add('bg-orange-500','text-white');
         }
 
         function quizTick() {
-            activeQuizTimeLeft--; const m = Math.floor(activeQuizTimeLeft / 60).toString().padStart(2, '0'); const s = (activeQuizTimeLeft % 60).toString().padStart(2, '0');
-            const tEl = document.getElementById('quiz-timer'); tEl.innerText = `${m}:${s}`;
+            activeQuizTimeLeft--;
+            const m = Math.floor(activeQuizTimeLeft / 60).toString().padStart(2, '0');
+            const s = (activeQuizTimeLeft % 60).toString().padStart(2, '0');
+            const tEl = document.getElementById('quiz-timer');
+            tEl.innerText = `${m}:${s}`;
+            
             if(activeQuizTimeLeft <= 60) { tEl.classList.replace('text-orange-400','text-red-500'); tEl.classList.add('animate-pulse'); }
-            if(activeQuizTimeLeft <= 0) { clearInterval(activeQuizTimer); alert("제한시간이 초과되었습니다. 지금까지 작성한 답안이 서버로 자동 제출됩니다."); submitQuizReal(); }
+            
+            if(activeQuizTimeLeft <= 0) {
+                clearInterval(activeQuizTimer);
+                alert("시간이 초과되었습니다. 작성된 곳까지만 자동 제출됩니다.");
+                submitQuizReal();
+            }
         }
 
         async function submitQuizReal() {
-            if(activeQuizTimeLeft > 0 && quizAnswers.some(a=>a==="")) { if(!confirm("아직 풀지 않은 문제가 남아있습니다. 이대로 퀴즈를 최종 제출하시겠습니까?")) return; }
-            clearInterval(activeQuizTimer); showLoader("서버로 OMR 카드를 전송하여 퀴즈 채점을 진행 중입니다...");
+            clearInterval(activeQuizTimer);
+            showLoader("퀴즈 채점 중...");
+            
             try {
                 const res = await fetch(`${API_URL}/api/quiz/submit`, {
                     method:'POST', headers:{'Content-Type':'application/json'},
@@ -1699,36 +1753,37 @@
                 });
                 const data = await res.json();
                 if(data.success) {
-                    alert(`채점 완료! 총 ${data.score}점 입니다.\n상세한 오답 내역은 [마이페이지]에서 언제든 확인할 수 있습니다.`);
-                    document.getElementById('prog-quiz-room').classList.add('hidden'); document.getElementById('prog-quiz-list').classList.remove('hidden'); loadStudentQuizzes();
-                } else alert("오류: " + data.detail);
-            } catch(e) { alert("서버 통신 오류가 발생했습니다. 다시 시도해 주세요."); } hideLoader();
+                    alert(`채점 완료! ${data.score}점 입니다.`);
+                    document.getElementById('prog-quiz-room').classList.add('hidden');
+                    document.getElementById('prog-quiz-list').classList.remove('hidden');
+                    loadStudentQuizzes();
+                }
+            } catch(e) {}
+            hideLoader();
         }
 
-        // 해설 강의실
         async function createLecture() { 
             const t=document.getElementById('lec-title').value, u=document.getElementById('lec-url').value; 
-            if(!t||!u) return alert("강의 제목과 동영상 URL을 모두 입력해 주세요."); 
-            showLoader("서버에 강의 정보를 등록 중입니다..."); 
+            if(!t||!u) return alert("제목과 URL을 입력하세요."); 
+            showLoader("강의 등록 중..."); 
             try {
                 const res = await fetch(`${API_URL}/api/admin/lecture`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,desc:'',video_url:u})}); 
                 if(!res.ok) throw new Error("등록 실패");
                 loadAdminLectures(); document.getElementById('lec-title').value=''; document.getElementById('lec-url').value=''; 
-            } catch(e) { alert("강의 등록 중 오류가 발생했습니다: " + e.message); } hideLoader(); 
+            } catch(e) { alert("오류 발생: " + e.message); } hideLoader(); 
         }
         
         async function loadLectures() { 
             try{ 
                 const res=await fetch(`${API_URL}/api/lectures`); const data=await res.json(); const c=document.getElementById('student-lecture-list'); c.innerHTML=''; 
                 if(data.success){ 
-                    data.lectures.forEach(l=>c.innerHTML+=`<div class="bg-[#151922] p-6 rounded-2xl border border-gray-700 shadow-lg text-white flex flex-col justify-between"><h3 class="font-bold text-xl mb-4 leading-relaxed"><i class="fa-solid fa-play text-purple-400 mr-2"></i>${l.title}</h3><a href="${l.video_url}" target="_blank" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg text-center transition shadow-lg shadow-purple-600/30 mt-2"><i class="fa-brands fa-youtube mr-2 text-lg"></i>강의 시청하기</a></div>`); 
-                    if(c.innerHTML === '') c.innerHTML = '<div class="col-span-full text-center text-gray-500 py-16 bg-[#151922] rounded-2xl border border-gray-800"><i class="fa-solid fa-video-slash text-4xl mb-4"></i><p>현재 등록된 해설 강의가 없습니다.</p></div>';
+                    data.lectures.forEach(l=>c.innerHTML+=`<div class="bg-gray-800 p-4 rounded text-white font-bold">${l.title} <br><a href="${l.video_url}" target="_blank" class="text-blue-400 font-normal mt-2 inline-block">강의 시청하기</a></div>`); 
                 } 
             }catch(e){} 
         }
         
-        async function loadAdminLectures() { try{ const res=await fetch(`${API_URL}/api/lectures`); const data=await res.json(); const c=document.getElementById('admin-lecture-list'); c.innerHTML=''; if(data.success){ data.lectures.forEach((l,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-4 rounded-lg mb-2 text-white border border-gray-700 shadow"><a href="${l.video_url}" target="_blank" class="hover:text-purple-400 font-bold underline truncate w-3/4 cursor-pointer text-lg"><i class="fa-solid fa-video mr-3 text-purple-500"></i>${l.title}</a><button onclick="deleteLecture('${l.id}')" class="text-white font-bold text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition shadow-lg flex-shrink-0">삭제</button></div>`); } }catch(e){} }
-        async function deleteLecture(id) { if(confirm("이 강의를 완전히 삭제하시겠습니까?")) { showLoader("강의 삭제 중..."); await fetch(`${API_URL}/api/admin/lecture/${id}`,{method:'DELETE'}); loadAdminLectures(); hideLoader(); } }
+        async function loadAdminLectures() { try{ const res=await fetch(`${API_URL}/api/lectures`); const data=await res.json(); const c=document.getElementById('admin-lecture-list'); c.innerHTML=''; if(data.success){ data.lectures.forEach((l,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${l.video_url}" target="_blank" class="hover:text-purple-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-play mr-2"></i>${l.title}</a><button onclick="deleteLecture('${l.id}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
+        async function deleteLecture(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/lecture/${id}`,{method:'DELETE'}); loadAdminLectures(); hideLoader(); } }
 
     </script>
 </body>
