@@ -4,270 +4,279 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로지에듀 최준용 국어 - AI 튜터 시스템</title>
+    <title>로지에듀 최준용 국어 - AI 스마트 학습실</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- PDF.js 라이브러리 추가 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f3f4f6; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .chat-box { max-height: 400px; overflow-y: auto; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #1a1e29; color: #ffffff; scroll-behavior: smooth; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1e29; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         
-        /* 공지사항 아코디언 스타일 */
-        .board-content { display: none; margin-top: 10px; border-top: 1px solid #4b5563; padding-top: 15px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out forwards; }
+        
+        /* 공지사항 아코디언 */
+        .board-content { display: none; margin-top: 10px; border-top: 1px solid #374151; padding-top: 15px; }
         .board-item.open .board-content { display: block; }
         .board-item .toggle-icon { transition: transform 0.3s ease; }
         .board-item.open .toggle-icon { transform: rotate(180deg); }
 
-        /* 파일 업로드 박스 스타일 */
-        .file-box { border: 1px dashed #6b7280; border-radius: 8px; padding: 10px; background-color: #1f2937; min-height: 60px; margin-bottom: 10px;}
-        .file-tag { display: inline-flex; items-center; background-color: #4f46e5; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin: 4px; }
+        /* 다중 파일 업로드 박스 */
+        .file-box { border: 1px dashed #4b5563; border-radius: 8px; padding: 10px; background-color: #1f2937; min-height: 50px; margin-bottom: 10px;}
+        .file-tag { display: inline-flex; align-items: center; background-color: #4f46e5; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin: 4px; }
         .file-tag button { margin-left: 6px; color: #fca5a5; font-weight: bold; cursor: pointer; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body class="min-h-screen flex flex-col">
     <!-- 전역 로딩 오버레이 -->
     <div id="global-loader" class="fixed inset-0 bg-black/80 z-[9999] hidden flex-col items-center justify-center">
         <i class="fa-solid fa-spinner fa-spin text-5xl text-blue-500 mb-4"></i>
         <p id="global-loader-text" class="text-white text-lg font-bold">처리 중입니다...</p>
     </div>
 
+    <!-- 네비게이션 헤더 -->
+    <nav class="fixed top-0 w-full flex justify-between items-center px-8 py-4 z-50 bg-[#1a1e29]/90 border-b border-gray-800 backdrop-blur-md">
+        <div class="text-2xl font-black text-white tracking-widest">로지에듀<span class="text-blue-500">*</span> 24시 국최 AI</div>
+        <div class="flex items-center gap-6">
+            <div id="user-info-display" class="hidden items-center gap-4">
+                <span id="header-user-info" class="text-blue-400 font-bold text-lg"></span>
+                <span id="header-xp-badge" class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm font-bold border border-yellow-500/50"></span>
+                <button onclick="logout()" class="text-gray-400 hover:text-white transition underline underline-offset-4 text-sm">로그아웃</button>
+            </div>
+        </div>
+    </nav>
+
     <!-- 1. 로그인 화면 -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-900">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-96 border border-gray-700">
-            <h1 class="text-2xl font-bold text-center text-blue-400 mb-6">로지에듀 스마트 학습실</h1>
+    <div id="login-screen" class="min-h-screen flex items-center justify-center pt-16">
+        <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
+            <h2 class="text-3xl font-black mb-8 text-center text-white">스마트 학습실 입장</h2>
             <div class="space-y-4">
-                <input type="text" id="login-school" placeholder="학교 (예: 미강고)" class="w-full bg-gray-700 border-gray-600 text-white p-2 rounded focus:outline-none focus:border-blue-500">
-                <input type="text" id="login-grade" placeholder="학년 (예: 1학년)" class="w-full bg-gray-700 border-gray-600 text-white p-2 rounded focus:outline-none focus:border-blue-500">
-                <input type="text" id="login-name" placeholder="이름 (예: 홍길동)" class="w-full bg-gray-700 border-gray-600 text-white p-2 rounded focus:outline-none focus:border-blue-500">
-                <input type="password" id="login-pw" placeholder="관리자 비밀번호 (원장님만 입력)" class="w-full bg-gray-700 border-gray-600 text-white p-2 rounded focus:outline-none focus:border-blue-500">
-                <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 font-bold transition">입장하기</button>
+                <div class="bg-[#151922] p-4 rounded-xl border border-gray-700">
+                    <p class="text-xs text-blue-400 mb-3 font-bold">* 원장님은 스텔스 키(1234)만 입력하면 프리패스</p>
+                    <input type="text" id="login-school" placeholder="학교 (예: 미강고)" class="w-full bg-transparent border-b border-gray-600 p-3 text-white focus:outline-none focus:border-blue-500 text-lg mb-2">
+                    <input type="text" id="login-grade" placeholder="학년 (예: 1학년)" class="w-full bg-transparent border-b border-gray-600 p-3 text-white focus:outline-none focus:border-blue-500 text-lg mb-2">
+                    <input type="text" id="login-name" placeholder="이름" class="w-full bg-transparent border-b border-gray-600 p-3 text-white focus:outline-none focus:border-blue-500 text-lg">
+                </div>
+                <input type="password" id="login-pw" placeholder="🔑 관리자 스텔스 키" class="w-full bg-[#151922] border border-gray-700 p-4 rounded-xl text-white text-lg focus:outline-none focus:border-red-500">
+                <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl text-white font-bold text-xl transition mt-4 shadow-lg shadow-blue-900/50">입장하기</button>
             </div>
         </div>
     </div>
 
     <!-- 2. 메인 시스템 화면 -->
-    <div id="app-screen" class="hidden min-h-screen flex flex-col bg-gray-900">
-        <!-- 상단 네비게이션 -->
-        <header class="bg-gray-800 border-b border-gray-700 text-white p-4 flex justify-between items-center sticky top-0 z-50">
-            <h1 class="text-xl font-bold text-blue-400">로지에듀 24시 국최 AI</h1>
-            <div class="flex items-center gap-4">
-                <span id="user-info" class="font-semibold text-gray-300"></span>
-                <button onclick="logout()" class="bg-red-900/50 text-red-400 border border-red-800 px-3 py-1 rounded text-sm hover:bg-red-800 hover:text-white transition">로그아웃</button>
-            </div>
-        </header>
-
+    <div id="app-screen" class="hidden flex-grow pt-24 px-4 w-full max-w-7xl mx-auto flex flex-col pb-12">
         <!-- 탭 메뉴 -->
-        <nav class="bg-gray-800 shadow-sm flex flex-wrap gap-2 p-3 justify-center border-b border-gray-700">
-            <button onclick="switchTab('board')" class="px-4 py-2 bg-gray-700 hover:bg-blue-900 rounded text-gray-200 transition font-medium">📢 공지사항</button>
-            <button onclick="switchTab('chat')" class="px-4 py-2 bg-gray-700 hover:bg-blue-900 rounded text-gray-200 transition font-medium">🧠 AI 튜터 질문</button>
-            <button onclick="switchTab('hw')" class="px-4 py-2 bg-gray-700 hover:bg-blue-900 rounded text-gray-200 transition font-medium">📝 과제 제출</button>
-            <button onclick="switchTab('omr')" class="px-4 py-2 bg-gray-700 hover:bg-blue-900 rounded text-gray-200 transition font-medium">💯 OMR 자동 채점</button>
-            <button onclick="switchTab('quiz')" class="px-4 py-2 bg-gray-700 hover:bg-blue-900 rounded text-gray-200 transition font-medium">🎯 타임어택 퀴즈</button>
-            <button id="admin-tab-btn" onclick="switchTab('admin')" class="hidden px-4 py-2 bg-blue-900/50 border border-blue-700 font-bold text-blue-300 hover:bg-blue-800 rounded transition">⚙️ 원장님 관제실</button>
-        </nav>
+        <div class="flex flex-wrap gap-2 mb-8 bg-[#1e2430] p-2 rounded-xl border border-gray-700 shadow-lg justify-center">
+            <button onclick="switchTab('board')" id="btn-tab-board" class="tab-btn px-6 py-3 rounded-lg text-gray-400 hover:text-white font-bold transition">📢 공지사항</button>
+            <button onclick="switchTab('chat')" id="btn-tab-chat" class="tab-btn px-6 py-3 rounded-lg text-gray-400 hover:text-white font-bold transition">🧠 AI 튜터 질문</button>
+            <button onclick="switchTab('hw')" id="btn-tab-hw" class="tab-btn px-6 py-3 rounded-lg text-gray-400 hover:text-white font-bold transition">📝 과제/논술 제출</button>
+            <button onclick="switchTab('omr')" id="btn-tab-omr" class="tab-btn px-6 py-3 rounded-lg text-gray-400 hover:text-white font-bold transition">💯 OMR 자동 채점</button>
+            <button onclick="switchTab('quiz')" id="btn-tab-quiz" class="tab-btn px-6 py-3 rounded-lg text-gray-400 hover:text-white font-bold transition">🎯 타임어택 퀴즈</button>
+            <button onclick="switchTab('admin')" id="btn-tab-admin" class="tab-btn hidden px-6 py-3 rounded-lg text-red-400 border border-red-900/50 hover:bg-red-900/20 font-bold transition">⚙️ 원장님 관제실</button>
+        </div>
 
         <!-- 본문 영역 -->
-        <main class="flex-grow p-4 md:p-6 flex justify-center">
-            <div class="w-full max-w-5xl bg-gray-800 border border-gray-700 shadow-2xl rounded-xl p-4 md:p-6">
+        <main class="w-full bg-[#1e2430] border border-gray-700 shadow-2xl rounded-2xl p-6 md:p-8">
+            
+            <!-- 📢 공지사항 탭 -->
+            <div id="tab-board" class="tab-content">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                    <h2 class="text-2xl font-bold text-blue-400">📢 로지에듀 공지사항</h2>
+                    <button id="btn-show-board-write" onclick="document.getElementById('board-write-area').style.display='block'" class="hidden bg-blue-600 text-white px-4 py-2 rounded font-bold shadow-lg shadow-blue-900/50">공지 작성하기</button>
+                </div>
+
+                <div id="board-write-area" class="hidden bg-[#151922] p-6 rounded-xl border border-gray-700 mb-6">
+                    <h3 class="text-lg font-bold text-white mb-4">새 공지사항 작성</h3>
+                    <input type="text" id="bd-title" placeholder="공지 제목" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-3 focus:border-blue-500 outline-none">
+                    <textarea id="bd-desc" placeholder="공지 내용" class="w-full bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 h-32 focus:border-blue-500 outline-none"></textarea>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm text-gray-400 mb-2">첨부파일 (다중 선택 가능)</label>
+                        <input type="file" id="bd-file" multiple onchange="handleFileSelect(event, bdFiles, 'bd-file-visual')" class="hidden">
+                        <button onclick="document.getElementById('bd-file').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm mb-2 transition">+ 파일 추가</button>
+                        <div id="bd-file-visual" class="file-box flex flex-wrap gap-1"></div>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3">
+                        <button onclick="document.getElementById('board-write-area').style.display='none'" class="bg-gray-700 text-white px-6 py-2 rounded font-bold">취소</button>
+                        <button onclick="createBoard()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded shadow-lg shadow-blue-900/50">공지 등록</button>
+                    </div>
+                </div>
+
+                <div id="board-list" class="space-y-4">
+                    <div class="text-center text-gray-500 py-10">등록된 공지사항이 없습니다.</div>
+                </div>
+            </div>
+
+            <!-- 🧠 AI 튜터 질문 탭 -->
+            <div id="tab-chat" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6 text-blue-400 border-b border-gray-700 pb-4"><i class="fa-solid fa-robot mr-2"></i>지식 검색 AI 튜터</h2>
+                <div id="chat-history" class="bg-[#151922] p-6 rounded-xl border border-gray-700 h-[500px] overflow-y-auto space-y-6 mb-4 shadow-inner text-lg leading-relaxed">
+                    <div class="text-center text-gray-500 mt-10 text-sm">궁금한 문제나 개념을 자유롭게 질문하세요!<br>(예: 사미인곡에서 '백설'의 의미가 뭐야?)</div>
+                </div>
                 
-                <!-- 공지사항 탭 -->
-                <div id="tab-board" class="tab-content active">
-                    <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
-                        <h2 class="text-2xl font-bold text-blue-300">📢 학원 공지사항</h2>
-                        <button id="btn-show-board-write" onclick="document.getElementById('board-write-area').style.display='block'" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">공지 작성하기</button>
+                <div class="bg-[#151922] p-4 rounded-xl border border-gray-700">
+                    <div class="mb-3">
+                        <input type="file" id="chat-file-input" multiple onchange="handleFileSelect(event, chatFiles, 'chat-file-visual')" class="hidden">
+                        <button onclick="document.getElementById('chat-file-input').click()" class="text-sm bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition"><i class="fa-solid fa-paperclip mr-1"></i> 질문 참고 파일 첨부</button>
+                        <div id="chat-file-visual" class="file-box mt-2 flex flex-wrap gap-1"></div>
                     </div>
-
-                    <!-- 원장님 공지 작성 영역 -->
-                    <div id="board-write-area" class="hidden bg-gray-900 p-4 rounded-xl border border-gray-700 mb-6">
-                        <h3 class="text-lg font-bold text-white mb-3">새 공지사항 작성</h3>
-                        <input type="text" id="bd-title" placeholder="공지 제목" class="w-full bg-gray-800 border border-gray-600 p-2 rounded text-white mb-2">
-                        <textarea id="bd-desc" placeholder="공지 내용" class="w-full bg-gray-800 border border-gray-600 p-2 rounded text-white mb-3 h-24"></textarea>
-                        
-                        <div class="mb-3">
-                            <label class="block text-sm text-gray-400 mb-1">첨부파일 (다중 선택 가능)</label>
-                            <input type="file" id="bd-file" multiple onchange="handleFileSelect(event, bdFiles, 'bd-file-visual')" class="hidden">
-                            <button onclick="document.getElementById('bd-file').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm mb-2">+ 파일 추가</button>
-                            <div id="bd-file-visual" class="file-box flex flex-wrap gap-1"></div>
-                        </div>
-                        
-                        <div class="flex justify-end gap-2">
-                            <button onclick="document.getElementById('board-write-area').style.display='none'" class="bg-gray-700 text-white px-4 py-2 rounded">취소</button>
-                            <button onclick="createBoard()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded">공지 등록</button>
-                        </div>
-                    </div>
-
-                    <!-- 학생 공지사항 목록 (아코디언) -->
-                    <div id="board-list" class="space-y-3">
-                        <div class="text-center text-gray-500 py-10">등록된 공지사항이 없습니다.</div>
+                    <div class="flex gap-3">
+                        <input type="text" id="chat-input" class="flex-grow bg-[#1e2430] border border-gray-600 p-4 rounded-lg text-white focus:outline-none focus:border-blue-500 text-lg" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()" class="bg-blue-600 text-white px-8 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-900/50 text-xl"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
                 </div>
+            </div>
 
-                <!-- AI 질문 탭 -->
-                <div id="tab-chat" class="tab-content">
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-blue-300">🧠 지식 검색 AI 튜터</h2>
-                    <div id="chat-history" class="chat-box space-y-4 mb-4 p-4 bg-gray-900 border border-gray-700 rounded-xl h-[500px] shadow-inner">
-                        <div class="text-gray-500 text-center text-sm mt-10">궁금한 문제나 개념을 물어보세요!<br>(예: 바탕 7회 독서 4번 정답이 뭐야?)</div>
+            <!-- 📝 과제 제출 탭 -->
+            <div id="tab-hw" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6 text-emerald-400 border-b border-gray-700 pb-4"><i class="fa-solid fa-pen-nib mr-2"></i>과제 및 논술 제출</h2>
+                
+                <div id="hw-submit-area" class="hidden bg-[#151922] p-6 rounded-xl border border-gray-700 mb-6 shadow-xl">
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-3">
+                        <h3 class="text-xl font-bold text-white"><span id="hw-target-title" class="text-emerald-400"></span> 과제 제출하기</h3>
+                        <button onclick="document.getElementById('hw-submit-area').style.display='none'" class="text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     
-                    <div class="bg-gray-900 p-3 rounded-xl border border-gray-700 mt-2">
-                        <div class="mb-2">
-                            <input type="file" id="chat-file-input" multiple onchange="handleFileSelect(event, chatFiles, 'chat-file-visual')" class="hidden">
-                            <button onclick="document.getElementById('chat-file-input').click()" class="text-sm bg-gray-800 border border-gray-600 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded transition"><i class="fa-solid fa-paperclip mr-1"></i> 질문 참고 파일 첨부</button>
-                            <div id="chat-file-visual" class="file-box mt-2 flex flex-wrap gap-1 min-h-[40px]"></div>
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="text" id="chat-input" class="flex-grow bg-gray-800 border border-gray-600 p-3 rounded-lg text-white focus:outline-none focus:border-blue-500" placeholder="질문을 입력하세요...">
-                            <button onclick="sendChat()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">전송</button>
-                        </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-400 mb-2">제출할 파일 (사진, PDF 여러 장 가능)</label>
+                        <input type="file" id="hw-file" multiple onchange="handleFileSelect(event, [], 'hw-submit-file-visual')" class="hidden">
+                        <button onclick="document.getElementById('hw-file').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm mb-2 transition">+ 파일 선택</button>
+                        <div id="hw-submit-file-visual" class="file-box flex flex-wrap gap-1"></div>
                     </div>
-                </div>
-
-                <!-- 과제 제출 탭 -->
-                <div id="tab-hw" class="tab-content">
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-emerald-400">📝 과제 제출</h2>
                     
-                    <!-- 과제 제출 영역 -->
-                    <div id="hw-submit-area" class="hidden bg-gray-900 p-6 rounded-xl border border-gray-700 mb-6">
-                        <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
-                            <h3 class="text-lg font-bold text-white"><span id="hw-target-title" class="text-emerald-400"></span> 과제 제출하기</h3>
-                            <button onclick="document.getElementById('hw-submit-area').style.display='none'" class="text-gray-400 hover:text-white">닫기 ✕</button>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-sm text-gray-400 mb-2">제출할 파일 (사진, PDF, 워드 등 여러 개 가능)</label>
-                            <input type="file" id="hw-file" multiple onchange="handleFileSelect(event, [], 'hw-submit-file-visual')" class="hidden">
-                            <button onclick="document.getElementById('hw-file').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm mb-2">+ 파일 선택</button>
-                            <div id="hw-submit-file-visual" class="file-box flex flex-wrap gap-1"></div>
-                        </div>
-                        
-                        <div id="hw-result-area" class="mb-4 hidden"></div>
-                        <button onclick="submitHomework()" class="w-full bg-emerald-600 text-white font-bold p-3 rounded-lg hover:bg-emerald-500 transition">제출하기</button>
-                    </div>
-
-                    <div id="student-hw-list" class="space-y-4">
-                        <div class="text-center text-gray-500 py-10">현재 등록된 과제가 없습니다.</div>
-                    </div>
+                    <div id="hw-result-area" class="mb-4 hidden text-center"></div>
+                    <button onclick="submitHomework()" class="w-full bg-emerald-600 text-white font-bold p-4 rounded-lg hover:bg-emerald-700 transition shadow-lg shadow-emerald-900/50 text-lg">제출하기</button>
                 </div>
 
-                <!-- OMR 자동 채점 탭 -->
-                <div id="tab-omr" class="tab-content">
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-yellow-400">💯 OMR 자동 채점</h2>
-                    <div class="bg-gray-900 p-6 rounded-xl border border-gray-700">
-                        <input type="text" id="omr-task" placeholder="과제명 (예: 미강고 중간고사 대비 1회)" class="w-full bg-gray-800 border border-gray-600 p-3 rounded text-white mb-6 focus:outline-none focus:border-yellow-500">
-                        
-                        <div class="grid grid-cols-5 gap-3 mb-6" id="omr-inputs">
-                            <!-- JS로 45번까지 생성 -->
-                        </div>
-                        
-                        <button onclick="submitOMR()" class="w-full bg-yellow-600 text-white p-4 rounded-lg font-bold hover:bg-yellow-500 transition text-lg shadow-lg shadow-yellow-900/30">답안 제출 및 채점</button>
-                        <div id="omr-result" class="mt-6 p-6 rounded-xl bg-gray-800 border border-gray-700 hidden"></div>
-                    </div>
-                </div>
+                <div id="student-hw-list" class="space-y-4"></div>
+            </div>
 
-                <!-- 타임어택 퀴즈 탭 -->
-                <div id="tab-quiz" class="tab-content">
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2 text-purple-400">🎯 타임어택 퀴즈</h2>
+            <!-- 💯 OMR 자동 채점 탭 -->
+            <div id="tab-omr" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6 text-indigo-400 border-b border-gray-700 pb-4"><i class="fa-solid fa-check-double mr-2"></i>OMR 자동 채점</h2>
+                <div class="bg-[#151922] p-8 rounded-xl border border-gray-700">
+                    <label class="block text-sm font-bold text-gray-400 mb-2">과제명 입력</label>
+                    <input type="text" id="omr-task" placeholder="예: 미강고 중간고사 대비 1회" class="w-full bg-[#1e2430] border border-gray-600 p-4 rounded text-white mb-8 focus:outline-none focus:border-indigo-500 text-lg">
                     
-                    <div id="quiz-list-area">
-                        <p class="text-gray-400 mb-4">원장님이 출제하신 퀴즈 목록입니다. 제한 시간 내에 풀어야 합니다.</p>
-                        <div id="student-quiz-list" class="space-y-3"></div>
+                    <label class="block text-sm font-bold text-gray-400 mb-4">정답 마킹</label>
+                    <div class="grid grid-cols-5 md:grid-cols-10 gap-3 mb-8" id="omr-inputs">
+                        <!-- JS로 자동 생성 -->
                     </div>
+                    
+                    <button onclick="submitOMR()" class="w-full bg-indigo-600 text-white p-4 rounded-lg font-bold hover:bg-indigo-700 transition text-lg shadow-lg shadow-indigo-900/50">답안 제출 및 채점</button>
+                    <div id="omr-result" class="mt-8 p-6 rounded-xl bg-[#1e2430] border border-gray-700 hidden text-center"></div>
+                </div>
+            </div>
 
-                    <div id="quiz-solve-area" class="hidden">
-                        <div class="flex justify-between items-center mb-4 bg-gray-900 p-4 rounded-lg border border-purple-500">
-                            <h3 id="active-quiz-title" class="text-xl font-bold text-white"></h3>
-                            <div class="text-2xl font-black text-red-400 font-mono tracking-wider bg-red-900/30 px-4 py-1 rounded" id="quiz-timer-display">00:00</div>
+            <!-- 🎯 타임어택 퀴즈 탭 -->
+            <div id="tab-quiz" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6 text-purple-400 border-b border-gray-700 pb-4"><i class="fa-solid fa-stopwatch mr-2"></i>타임어택 퀴즈</h2>
+                
+                <div id="quiz-list-area">
+                    <div id="student-quiz-list" class="space-y-4"></div>
+                </div>
+
+                <div id="quiz-solve-area" class="hidden">
+                    <div class="flex justify-between items-center mb-6 bg-[#151922] p-6 rounded-xl border border-purple-500 shadow-lg shadow-purple-900/20">
+                        <h3 id="active-quiz-title" class="text-2xl font-bold text-white"></h3>
+                        <div class="text-3xl font-black text-red-400 font-mono tracking-wider bg-red-900/30 px-6 py-2 rounded-lg" id="quiz-timer-display">00:00</div>
+                    </div>
+                    
+                    <div id="quiz-solve-files" class="mb-6 space-y-4"></div>
+                    <div id="quiz-questions-container" class="space-y-6 mb-8"></div>
+                    
+                    <button onclick="submitQuizAnswers()" class="w-full bg-purple-600 text-white p-4 rounded-lg font-bold text-xl hover:bg-purple-700 shadow-lg shadow-purple-900/50 transition">답안 최종 제출하기</button>
+                </div>
+            </div>
+
+            <!-- ⚙️ 원장님 관제실 탭 -->
+            <div id="tab-admin" class="tab-content">
+                <h2 class="text-2xl font-bold mb-6 text-red-400 border-b border-gray-700 pb-4"><i class="fa-solid fa-gears mr-2"></i>원장님 통합 관제실</h2>
+                
+                <div class="flex flex-wrap gap-3 mb-8 border-b border-gray-700 pb-4">
+                    <button onclick="switchAdminSubTab('admin-knowledge')" id="btn-admin-knowledge" class="admin-sub-btn px-6 py-2 bg-blue-600 text-white font-bold rounded-lg transition">🧠 AI 지식 주입</button>
+                    <button onclick="switchAdminSubTab('admin-hw-manage')" id="btn-admin-hw-manage" class="admin-sub-btn px-6 py-2 bg-gray-700 text-gray-300 font-bold hover:text-white rounded-lg transition">📝 과제 배포</button>
+                    <button onclick="switchAdminSubTab('admin-quiz-manage')" id="btn-admin-quiz-manage" class="admin-sub-btn px-6 py-2 bg-gray-700 text-gray-300 font-bold hover:text-white rounded-lg transition">🎯 퀴즈 출제</button>
+                </div>
+
+                <!-- 1. AI 지식 주입 -->
+                <div id="admin-knowledge" class="admin-sub-content">
+                    <div class="bg-[#151922] border-2 border-dashed border-blue-500/50 rounded-xl p-8 text-center max-w-3xl mx-auto shadow-xl">
+                        <i class="fa-solid fa-brain text-5xl text-blue-400 mb-4"></i>
+                        <p class="mb-6 text-gray-400 text-sm">학원 자체 교재, 해설지 텍스트 파일을 등록하여 AI 국최를 똑똑하게 만드세요.</p>
+                        
+                        <input type="text" id="kb-title" placeholder="자료 제목 (예: 바탕모의 7회 해설)" class="w-full bg-[#1e2430] border border-gray-600 p-4 rounded-lg text-white mb-4 focus:border-blue-500 outline-none">
+                        <textarea id="kb-content" placeholder="텍스트 내용을 붙여넣으세요." class="w-full bg-[#1e2430] border border-gray-600 p-4 rounded-lg text-white h-40 mb-4 focus:border-blue-500 outline-none leading-relaxed"></textarea>
+                        
+                        <div class="text-left mb-6">
+                            <label class="block text-sm font-bold text-gray-400 mb-2">학습 파일 첨부 (다중 선택 가능)</label>
+                            <input type="file" id="kb-files" multiple accept=".txt" onchange="handleFileSelect(event, kbFiles, 'kb-files-visual')" class="hidden">
+                            <button onclick="document.getElementById('kb-files').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-bold mb-2 transition">+ 파일 추가</button>
+                            <div id="kb-files-visual" class="file-box flex flex-wrap gap-1"></div>
                         </div>
                         
-                        <!-- 퀴즈 첨부파일 표시 영역 -->
-                        <div id="quiz-solve-files" class="mb-4"></div>
-
-                        <div id="quiz-questions-container" class="space-y-6 mb-6"></div>
-                        <button onclick="submitQuizAnswers()" class="w-full bg-purple-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-purple-500 shadow-lg shadow-purple-900/50">답안 최종 제출하기</button>
+                        <button onclick="uploadKnowledge()" class="w-full bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 font-bold text-lg shadow-lg shadow-blue-900/50 transition">서버에 지식 이식하기</button>
                     </div>
                 </div>
 
-                <!-- 원장님 관제실 탭 -->
-                <div id="tab-admin" class="tab-content">
-                    <h2 class="text-2xl font-bold mb-6 border-b border-gray-700 pb-2 text-blue-400">⚙️ 원장님 통합 관제실</h2>
-                    
-                    <div class="flex flex-wrap gap-2 mb-6">
-                        <button onclick="switchAdminSubTab('admin-knowledge')" id="btn-admin-knowledge" class="admin-sub-btn px-4 py-2 bg-blue-600 text-white rounded font-bold">🧠 AI 지식 주입</button>
-                        <button onclick="switchAdminSubTab('admin-hw-manage')" id="btn-admin-hw-manage" class="admin-sub-btn px-4 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">📝 과제 배포</button>
-                        <button onclick="switchAdminSubTab('admin-quiz-manage')" id="btn-admin-quiz-manage" class="admin-sub-btn px-4 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">🎯 퀴즈 출제</button>
-                    </div>
-
-                    <!-- 1. AI 지식 주입 서브 탭 -->
-                    <div id="admin-knowledge" class="admin-sub-content">
-                        <div class="bg-gray-900 border-2 border-dashed border-blue-500/50 rounded-xl p-8 text-center">
-                            <i class="fa-solid fa-brain text-4xl text-blue-400 mb-4"></i>
-                            <p class="mb-4 text-gray-300">학원 자체 교재, 해설지 텍스트 파일을 등록하여 AI 국최를 똑똑하게 만드세요.</p>
-                            
-                            <input type="text" id="kb-title" placeholder="자료 제목 (예: 바탕모의 7회 독서 해설)" class="w-full bg-gray-800 border border-gray-600 p-2 rounded text-white mb-2">
-                            <textarea id="kb-content" placeholder="텍스트 내용을 직접 붙여넣거나 아래에 파일을 첨부하세요." class="w-full bg-gray-800 border border-gray-600 p-2 rounded text-white h-32 mb-4"></textarea>
-                            
-                            <div class="text-left mb-4">
-                                <label class="block text-sm text-gray-400 mb-1">학습 파일 첨부 (다중 선택 가능)</label>
-                                <input type="file" id="kb-files" multiple accept=".txt" onchange="handleFileSelect(event, kbFiles, 'kb-files-visual')" class="hidden">
-                                <button onclick="document.getElementById('kb-files').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm mb-2">+ 파일 추가</button>
-                                <div id="kb-files-visual" class="file-box flex flex-wrap gap-1"></div>
-                            </div>
-                            
-                            <button onclick="uploadKnowledge()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/50">서버에 지식 이식하기</button>
+                <!-- 2. 과제 배포 -->
+                <div id="admin-hw-manage" class="admin-sub-content hidden">
+                    <div class="bg-[#151922] border border-gray-700 rounded-xl p-8 max-w-3xl mx-auto shadow-xl">
+                        <h3 class="text-xl font-bold text-emerald-400 mb-6"><i class="fa-solid fa-upload mr-2"></i>새 과제 배포하기</h3>
+                        <label class="block text-sm font-bold text-gray-400 mb-2">과제명</label>
+                        <input type="text" id="hw-title" placeholder="예: 9월 모평 대비 주간지 1주차" class="w-full bg-[#1e2430] border border-gray-600 p-4 rounded-lg text-white mb-6 focus:border-emerald-500 outline-none">
+                        
+                        <div class="mb-8">
+                            <label class="block text-sm font-bold text-gray-400 mb-2">해설지/정답 파일 업로드 (학생이 제출 시 공개됨)</label>
+                            <input type="file" id="hw-ans-file" onchange="handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual')" class="hidden">
+                            <button onclick="document.getElementById('hw-ans-file').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-bold mb-2 transition">+ 정답 파일 첨부</button>
+                            <div id="hw-ans-file-visual" class="file-box flex flex-wrap gap-1"></div>
                         </div>
+                        
+                        <button onclick="createHomeworkAdmin()" class="w-full bg-emerald-600 text-white px-6 py-4 rounded-lg font-bold text-lg hover:bg-emerald-700 shadow-lg shadow-emerald-900/50 transition">과제 배포하기</button>
                     </div>
+                </div>
 
-                    <!-- 2. 과제 배포 서브 탭 -->
-                    <div id="admin-hw-manage" class="admin-sub-content hidden">
-                        <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-emerald-400 mb-4">새 과제 배포하기</h3>
-                            <input type="text" id="hw-title" placeholder="과제명 (예: 9월 모평 대비 주간지 1주차)" class="w-full bg-gray-800 border border-gray-600 p-2 rounded text-white mb-4">
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm text-gray-400 mb-1">학생이 제출 완료 시 볼 수 있는 해설지/정답 파일 (필수)</label>
-                                <input type="file" id="hw-ans-file" onchange="handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual')" class="hidden">
-                                <button onclick="document.getElementById('hw-ans-file').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm mb-2">+ 정답 파일 첨부</button>
-                                <div id="hw-ans-file-visual" class="file-box flex flex-wrap gap-1"></div>
+                <!-- 3. 퀴즈 출제 -->
+                <div id="admin-quiz-manage" class="admin-sub-content hidden">
+                    <div class="bg-[#151922] border border-gray-700 rounded-xl p-8 shadow-xl">
+                        <h3 class="text-xl font-bold text-purple-400 mb-6"><i class="fa-solid fa-stopwatch mr-2"></i>타임어택 퀴즈 출제</h3>
+                        
+                        <div class="flex gap-4 mb-6">
+                            <div class="flex-grow">
+                                <label class="block text-sm font-bold text-gray-400 mb-2">퀴즈 제목</label>
+                                <input type="text" id="qz-title" placeholder="예: 관동별곡 핵심 복습" class="w-full bg-[#1e2430] border border-gray-600 p-4 rounded-lg text-white focus:border-purple-500 outline-none">
                             </div>
-                            
-                            <button onclick="createHomeworkAdmin()" class="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-emerald-500">과제 배포하기</button>
-                        </div>
-                    </div>
-
-                    <!-- 3. 퀴즈 출제 서브 탭 -->
-                    <div id="admin-quiz-manage" class="admin-sub-content hidden">
-                        <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
-                            <h3 class="text-lg font-bold text-purple-400 mb-4">타임어택 퀴즈 출제</h3>
-                            
-                            <div class="flex gap-2 mb-4">
-                                <input type="text" id="qz-title" placeholder="퀴즈 제목" class="flex-grow bg-gray-800 border border-gray-600 p-2 rounded text-white">
-                                <input type="number" id="qz-time" placeholder="제한시간(분)" class="w-32 bg-gray-800 border border-gray-600 p-2 rounded text-white">
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="block text-sm text-gray-400 mb-1">퀴즈 참고용 공통 파일 (이미지, 지문 PDF 등)</label>
-                                <input type="file" id="qz-files" multiple onchange="handleFileSelect(event, window.qzFilesBuffer = window.qzFilesBuffer || [], 'qz-files-visual')" class="hidden">
-                                <button onclick="document.getElementById('qz-files').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm mb-2">+ 퀴즈 파일 첨부</button>
-                                <div id="qz-files-visual" class="file-box flex flex-wrap gap-1"></div>
-                            </div>
-
-                            <div id="quiz-builder-area" class="space-y-4 mb-4">
-                                <!-- 퀴즈 문항 추가 공간 -->
-                            </div>
-                            
-                            <div class="flex gap-2">
-                                <button onclick="addQuizQuestionInput()" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 flex-grow border border-gray-500">+ 문항 추가</button>
-                                <button onclick="createQuizAdmin()" class="bg-purple-600 text-white font-bold px-6 py-2 rounded hover:bg-purple-500 w-1/3">퀴즈 발행하기</button>
+                            <div class="w-40">
+                                <label class="block text-sm font-bold text-gray-400 mb-2">제한시간(분)</label>
+                                <input type="number" id="qz-time" placeholder="10" class="w-full bg-[#1e2430] border border-gray-600 p-4 rounded-lg text-white text-center focus:border-purple-500 outline-none">
                             </div>
                         </div>
-                    </div>
 
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-400 mb-2">퀴즈 참고용 공통 파일 (이미지, 지문 PDF 등)</label>
+                            <input type="file" id="qz-files" multiple onchange="handleFileSelect(event, window.qzFilesBuffer = window.qzFilesBuffer || [], 'qz-files-visual')" class="hidden">
+                            <button onclick="document.getElementById('qz-files').click()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-bold mb-2 transition">+ 퀴즈 파일 첨부</button>
+                            <div id="qz-files-visual" class="file-box flex flex-wrap gap-1"></div>
+                        </div>
+
+                        <div id="quiz-builder-area" class="space-y-4 mb-6"></div>
+                        
+                        <div class="flex gap-4">
+                            <button onclick="addQuizQuestionInput()" class="bg-[#1e2430] text-white px-6 py-4 rounded-lg hover:bg-gray-700 flex-grow border border-gray-600 font-bold transition">+ 문항 추가</button>
+                            <button onclick="createQuizAdmin()" class="bg-purple-600 text-white font-bold px-10 py-4 rounded-lg hover:bg-purple-700 shadow-lg shadow-purple-900/50 transition text-lg w-1/3">퀴즈 발행하기</button>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -283,7 +292,7 @@ HTML
         let adminQuizQuestions = []; let allQuizzes = []; let currentActiveQuiz = null; let activeQuizTimeLeft = 0; let activeQuizTimer = null;
 
         // ==========================================
-        // 🛠️ 공통 UI 유틸리티
+        // 🛠️ 공통 로딩창 및 다중 파일 박스 로직
         // ==========================================
         function showLoader(text = "처리 중입니다...") { 
             document.getElementById('global-loader-text').innerText = text; 
@@ -291,12 +300,54 @@ HTML
         }
         function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
         
+        function handleFileSelect(event, targetArray, containerId) { 
+            Array.from(event.target.files).forEach(f => { 
+                if(!targetArray.some(x => x.name === f.name && x.size === f.size)) targetArray.push(f); 
+            }); 
+            event.target.value = ''; 
+            renderAccumulatedFiles(targetArray, containerId); 
+        }
+        
+        function renderAccumulatedFiles(array, containerId) { 
+            const c = document.getElementById(containerId); 
+            if(c) { 
+                if(array.length === 0) { c.innerHTML = '<span class="text-gray-500 text-sm flex items-center justify-center w-full h-full">첨부된 파일이 없습니다.</span>'; return; }
+                c.innerHTML = array.map(f => `<span class="file-tag">${f.name} <button onclick="removeFileByName('${containerId}', '${f.name.replace(/'/g, "\\'")}')">✕</button></span>`).join(''); 
+                c.innerHTML += `<div class="w-full mt-2 text-right"><button onclick="clearAllFiles('${containerId}')" class="text-xs text-red-400 font-bold bg-red-900/30 px-2 py-1 rounded">전체 삭제</button></div>`; 
+            } 
+        }
+        
+        function removeFileByName(cId, name) { 
+            if(cId === 'bd-file-visual') bdFiles = bdFiles.filter(f => f.name !== name);
+            else if(cId === 'chat-file-visual') chatFiles = chatFiles.filter(f => f.name !== name);
+            else if(cId === 'kb-files-visual') kbFiles = kbFiles.filter(f => f.name !== name);
+            else if(cId === 'hw-ans-file-visual') hwFilesAdmin = hwFilesAdmin.filter(f => f.name !== name);
+            else if(cId === 'qz-files-visual') window.qzFilesBuffer = window.qzFilesBuffer.filter(f => f.name !== name);
+            renderAccumulatedFiles(eval(cId.split('-')[0] === 'hw' ? 'hwFilesAdmin' : cId.split('-')[0] === 'qz' ? 'window.qzFilesBuffer' : cId.split('-')[0] + 'Files'), cId);
+        }
+        
+        function clearAllFiles(cId) { 
+            if(cId === 'bd-file-visual') bdFiles = []; else if(cId === 'chat-file-visual') chatFiles = []; 
+            else if(cId === 'kb-files-visual') kbFiles = []; else if(cId === 'hw-ans-file-visual') hwFilesAdmin = []; 
+            else if(cId === 'qz-files-visual') window.qzFilesBuffer = []; 
+            renderAccumulatedFiles([], cId); 
+        }
+
+        // ==========================================
+        // 🛠️ 로그인 및 탭 전환
+        // ==========================================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                if(!el.id.includes('admin')) el.classList.add('text-gray-400');
+            });
+            
             document.getElementById('tab-' + tabId).classList.add('active');
+            const btn = document.getElementById('btn-tab-' + tabId);
+            if(tabId !== 'admin') btn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
             
             if(tabId === 'board') loadBoard();
-            if(tabId === 'hw') loadHomeworks();
             if(tabId === 'quiz') loadStudentQuizzes();
         }
 
@@ -309,59 +360,12 @@ HTML
             
             document.getElementById(tabId).classList.remove('hidden');
             const btn = document.getElementById('btn-' + tabId);
-            
             if(tabId === 'admin-knowledge') btn.classList.replace('bg-gray-700', 'bg-blue-600');
             if(tabId === 'admin-hw-manage') btn.classList.replace('bg-gray-700', 'bg-emerald-600');
             if(tabId === 'admin-quiz-manage') btn.classList.replace('bg-gray-700', 'bg-purple-600');
             btn.classList.replace('text-gray-300', 'text-white');
         }
 
-        // ==========================================
-        // 🛠️ 다중 파일 업로드 박스 로직
-        // ==========================================
-        function handleFileSelect(event, targetArray, containerId) { 
-            Array.from(event.target.files).forEach(f => { 
-                if(!targetArray.some(x => x.name === f.name && x.size === f.size)) targetArray.push(f); 
-            }); 
-            event.target.value = ''; // 초기화
-            renderAccumulatedFiles(targetArray, containerId); 
-        }
-        
-        function renderAccumulatedFiles(array, containerId) { 
-            const c = document.getElementById(containerId); 
-            if(c) { 
-                if(array.length === 0) {
-                    c.innerHTML = '<span class="text-gray-500 text-sm flex items-center justify-center w-full h-full">첨부된 파일이 없습니다.</span>';
-                    return;
-                }
-                c.innerHTML = array.map(f => `<span class="file-tag">${f.name} <button onclick="removeFileByName('${containerId}', '${f.name.replace(/'/g, "\\'")}')">✕</button></span>`).join(''); 
-                c.innerHTML += `<div class="w-full mt-2 text-right"><button onclick="clearAllFiles('${containerId}')" class="text-xs text-red-400 font-bold bg-red-900/30 px-2 py-1 rounded">전체 삭제</button></div>`; 
-            } 
-        }
-        
-        function removeFileByName(cId, name) { 
-            if(cId === 'bd-file-visual') { bdFiles = bdFiles.filter(f => f.name !== name); renderAccumulatedFiles(bdFiles, cId); }
-            else if(cId === 'chat-file-visual') { chatFiles = chatFiles.filter(f => f.name !== name); renderAccumulatedFiles(chatFiles, cId); }
-            else if(cId === 'kb-files-visual') { kbFiles = kbFiles.filter(f => f.name !== name); renderAccumulatedFiles(kbFiles, cId); }
-            else if(cId === 'hw-submit-file-visual') { 
-                // HTML FileList는 직접 수정 불가하므로 시각적 요소만 제어하거나 File API 재구성 필요 (여기서는 간소화)
-            }
-            else if(cId === 'hw-ans-file-visual') { hwFilesAdmin = hwFilesAdmin.filter(f => f.name !== name); renderAccumulatedFiles(hwFilesAdmin, cId); }
-            else if(cId === 'qz-files-visual') { window.qzFilesBuffer = window.qzFilesBuffer.filter(f => f.name !== name); renderAccumulatedFiles(window.qzFilesBuffer, cId); }
-        }
-        
-        function clearAllFiles(cId) { 
-            if(cId === 'bd-file-visual') bdFiles = []; 
-            else if(cId === 'chat-file-visual') chatFiles = []; 
-            else if(cId === 'kb-files-visual') kbFiles = []; 
-            else if(cId === 'hw-ans-file-visual') hwFilesAdmin = []; 
-            else if(cId === 'qz-files-visual') window.qzFilesBuffer = []; 
-            renderAccumulatedFiles([], cId); 
-        }
-
-        // ==========================================
-        // 🛠️ 로그인 및 인증 로직
-        // ==========================================
         async function login() {
             const sSchool = document.getElementById('login-school').value.trim();
             const sGrade = document.getElementById('login-grade').value.trim();
@@ -370,57 +374,46 @@ HTML
 
             if (!sName) return alert("이름을 입력해주세요.");
 
-            showLoader("인증을 진행 중입니다...");
+            showLoader("데이터베이스 인증 중입니다...");
             try {
                 const res = await fetch(`${API_URL}/api/auth`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ school: sSchool, grade: sGrade, student_name: sName, admin_password: sPw })
                 });
                 const data = await res.json();
                 
                 if (res.ok && data.success) {
-                    currentUser = { school: sSchool, grade: sGrade, name: sName, isAdmin: data.is_admin };
+                    currentUser = { school: sSchool, grade: sGrade, name: sName, isAdmin: data.is_admin, xp: data.xp || 0 };
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
-                    document.getElementById('user-info').textContent = `${sSchool} ${sGrade} ${sName}`;
+                    document.getElementById('user-info-display').classList.remove('hidden');
+                    document.getElementById('user-info-display').classList.add('flex');
+                    document.getElementById('header-user-info').textContent = data.is_admin ? `[관리자] ${sName} 원장님` : `${sSchool} ${sGrade} ${sName}`;
+                    document.getElementById('header-xp-badge').textContent = `경험치: ${currentUser.xp} XP`;
                     
                     if (data.is_admin) {
-                        document.getElementById('admin-tab-btn').classList.remove('hidden');
+                        document.getElementById('btn-tab-admin').classList.remove('hidden');
                         document.getElementById('btn-show-board-write').classList.remove('hidden');
                     }
-                    switchTab('board'); // 로그인 후 공지사항 첫 화면
-                } else {
-                    alert(data.detail || "로그인 실패");
-                }
-            } catch (error) {
-                alert("서버 연결에 실패했습니다. (Render 서버 부팅 대기 중일 수 있습니다)");
-            }
+                    switchTab('board');
+                } else alert(data.detail || "인증 실패");
+            } catch (error) { alert("서버 연결 지연. 잠시 후 다시 시도해주세요."); }
             hideLoader();
         }
 
-        function logout() {
-            currentUser = null;
-            document.getElementById('app-screen').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
-        }
+        function logout() { location.reload(); }
 
         // ==========================================
-        // 🛠️ 공지사항 아코디언 메뉴 로직
+        // 🛠️ 아코디언 공지사항
         // ==========================================
-        function toggleBoardContent(id) {
-            const item = document.getElementById(`board-item-${id}`);
-            item.classList.toggle('open');
-        }
+        function toggleBoardContent(id) { document.getElementById(`board-item-${id}`).classList.toggle('open'); }
 
         async function createBoard() { 
-            const t = document.getElementById('bd-title').value;
-            const d = document.getElementById('bd-desc').value; 
+            const t = document.getElementById('bd-title').value; const d = document.getElementById('bd-desc').value; 
             if(!t) return alert("제목을 입력하세요."); 
             
-            showLoader("공지사항 및 파일을 업로드 중입니다..."); 
-            const fd = new FormData(); 
-            fd.append("title", t); fd.append("desc", d); 
+            showLoader("공지사항 업로드 중..."); 
+            const fd = new FormData(); fd.append("title", t); fd.append("desc", d); 
             bdFiles.forEach(f => fd.append("files", f)); 
             
             try { 
@@ -428,342 +421,116 @@ HTML
                 const data = await res.json();
                 if(data.success) {
                     document.getElementById('board-write-area').style.display = 'none'; 
-                    document.getElementById('bd-title').value = ''; 
-                    document.getElementById('bd-desc').value = ''; 
-                    clearAllFiles('bd-file-visual'); 
-                    loadBoard(); 
-                } else alert("오류: " + data.detail);
-            } catch(e) { alert("서버 통신 오류: " + e.message); } 
+                    document.getElementById('bd-title').value = ''; document.getElementById('bd-desc').value = ''; 
+                    clearAllFiles('bd-file-visual'); loadBoard(); 
+                }
+            } catch(e) { alert("통신 오류"); } 
             hideLoader(); 
         }
 
         async function loadBoard() {
             try {
-                // 파이어베이스에서 목록 강제 새로고침
                 const res = await fetch(`${API_URL}/api/board?t=${Date.now()}`);
                 const data = await res.json();
-                const c = document.getElementById('board-list');
-                c.innerHTML = '';
+                const c = document.getElementById('board-list'); c.innerHTML = '';
                 
                 if(data.success && data.posts.length > 0) {
                     data.posts.forEach((p, index) => {
                         let fileHtml = '';
                         if (p.file_url) {
-                            const urls = p.file_url.split(',');
-                            urls.forEach(url => {
+                            p.file_url.split(',').forEach(url => {
                                 const fullUrl = API_URL + url;
-                                if(fullUrl.match(/\.(jpeg|jpg|gif|png)$/i)) {
-                                    fileHtml += `<img src="${fullUrl}" class="w-full md:w-2/3 rounded-lg mt-4 border border-gray-600">`;
-                                } else {
-                                    fileHtml += `<a href="${fullUrl}" target="_blank" class="block bg-blue-900/30 text-blue-300 p-3 rounded mt-2 border border-blue-800 hover:bg-blue-900 transition"><i class="fa-solid fa-download mr-2"></i>첨부파일 다운로드</a>`;
-                                }
+                                if(fullUrl.match(/\.(jpeg|jpg|gif|png)$/i)) fileHtml += `<img src="${fullUrl}" class="w-full md:w-2/3 rounded-lg mt-4 border border-gray-600">`;
+                                else fileHtml += `<a href="${fullUrl}" target="_blank" class="inline-block bg-blue-900/30 text-blue-300 p-3 rounded mt-4 border border-blue-800 hover:bg-blue-900 transition"><i class="fa-solid fa-download mr-2"></i>첨부파일 다운로드</a>`;
                             });
                         }
-
-                        // 아코디언 HTML 구조
                         c.innerHTML += `
-                        <div id="board-item-${index}" class="board-item bg-gray-800 rounded-xl border border-gray-700 shadow-md mb-3 overflow-hidden">
-                            <div class="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-700 transition" onclick="toggleBoardContent(${index})">
-                                <h3 class="text-lg font-bold text-white"><span class="text-blue-500 mr-2">📢</span>${p.title}</h3>
-                                <div class="text-gray-400 toggle-icon">▼</div>
+                        <div id="board-item-${index}" class="board-item bg-[#151922] rounded-xl border border-gray-700 shadow-md mb-4 overflow-hidden">
+                            <div class="flex justify-between items-center p-5 cursor-pointer hover:bg-gray-800 transition" onclick="toggleBoardContent(${index})">
+                                <h3 class="text-xl font-bold text-white"><span class="text-blue-500 mr-3">📢</span>${p.title}</h3>
+                                <div class="text-gray-400 toggle-icon text-xl">▼</div>
                             </div>
-                            <div class="board-content bg-gray-900 px-6 pb-6 text-gray-300">
-                                <p class="whitespace-pre-wrap leading-relaxed">${p.desc}</p>
+                            <div class="board-content bg-[#1e2430] px-8 pb-8 text-gray-300 border-t border-gray-800">
+                                <p class="whitespace-pre-wrap leading-relaxed text-lg">${p.desc}</p>
                                 ${fileHtml}
-                                ${currentUser && currentUser.isAdmin ? `<div class="mt-4 text-right"><button onclick="deleteBoardPost('${p.id}')" class="text-red-400 text-sm">이 공지 삭제하기</button></div>` : ''}
                             </div>
                         </div>`;
                     });
-                } else {
-                    c.innerHTML = '<div class="text-center text-gray-500 py-10">등록된 공지사항이 없습니다.</div>';
-                }
+                } else c.innerHTML = '<div class="text-center text-gray-500 py-10">등록된 공지가 없습니다.</div>';
             } catch(e) {}
-        }
-        
-        async function deleteBoardPost(id) { 
-            if(!confirm("이 공지사항을 삭제하시겠습니까?")) return;
-            showLoader("삭제 중..."); 
-            await fetch(`${API_URL}/api/admin/board/${id}`, {method: 'DELETE'}); 
-            loadBoard(); 
-            hideLoader(); 
         }
 
         // ==========================================
-        // 🛠️ AI 질문 (텔레그램 연동) 로직
+        // 🛠️ AI 질문 (텔레그램 연동 로직은 서버에 있음)
         // ==========================================
         async function sendChat() { 
-            const i = document.getElementById('chat-input'); 
-            const p = i.value.trim(); 
+            const i = document.getElementById('chat-input'); const p = i.value.trim(); 
             if(!p && chatFiles.length === 0) return; 
             
             const h = document.getElementById('chat-history'); 
-            let myMsg = p || "(파일 전송됨)";
-            h.innerHTML += `<div class="text-right mb-4"><span class="bg-blue-600 p-3 rounded-lg text-white inline-block max-w-[80%] text-left whitespace-pre-wrap">${myMsg}</span></div>`; 
+            h.innerHTML += `<div class="text-right mb-6"><span class="bg-blue-600 p-4 rounded-2xl rounded-tr-none text-white inline-block max-w-[85%] text-left whitespace-pre-wrap shadow-lg">${p || "(파일 전송됨)"}</span></div>`; 
             i.value = ''; 
             
             const fd = new FormData(); 
-            fd.append("school", currentUser.school); 
-            fd.append("grade", currentUser.grade); 
-            fd.append("student_name", currentUser.name); 
-            fd.append("prompt", p); 
+            fd.append("school", currentUser.school); fd.append("grade", currentUser.grade); 
+            fd.append("student_name", currentUser.name); fd.append("prompt", p); 
             chatFiles.forEach(f => fd.append("files", f)); 
             clearAllFiles('chat-file-visual'); 
             
             const msgId = `msg-${Date.now()}`;
-            h.innerHTML += `<div class="text-left mb-4"><div class="bg-gray-800 p-4 rounded-xl text-white inline-block leading-relaxed border border-gray-700 w-full max-w-[90%]"><span class="block mb-2 font-bold text-blue-400">🤖 스마트 국최</span><span id="${msgId}" class="text-gray-300"><i class="fa-solid fa-spinner fa-spin mr-2"></i>원장님 자료를 검색하여 답변을 생성 중입니다...</span></div></div>`; 
+            h.innerHTML += `<div class="text-left mb-6"><div class="bg-[#1e2430] p-6 rounded-2xl rounded-tl-none text-gray-200 inline-block border border-gray-700 max-w-[90%] shadow-lg"><span class="block mb-3 font-bold text-blue-400 text-xl"><i class="fa-solid fa-robot mr-2"></i>AI 국최</span><span id="${msgId}" class="text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>원장님 자료를 탐색 중입니다...</span></div></div>`; 
             h.scrollTop = h.scrollHeight; 
             
             try { 
                 const res = await fetch(`${API_URL}/api/chat`, {method: 'POST', body: fd}); 
                 const data = await res.json(); 
-                const span = document.getElementById(msgId);
-                if (data.success) { 
-                    span.innerHTML = data.reply.replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>'); 
-                } else { 
-                    span.innerHTML = `<span class="text-red-400">오류: ${data.reply}</span>`; 
-                }
-                h.scrollTop = h.scrollHeight; 
-            } catch(e) { document.getElementById(msgId).innerHTML = `<span class="text-red-400">서버 통신 오류가 발생했습니다.</span>`; } 
+                document.getElementById(msgId).innerHTML = data.success ? data.reply.replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>') : `<span class="text-red-400">오류: ${data.reply}</span>`;
+            } catch(e) { document.getElementById(msgId).innerHTML = `<span class="text-red-400">서버 통신 오류</span>`; } 
+            h.scrollTop = h.scrollHeight; 
         }
 
         // ==========================================
-        // OMR 로직 초기화
+        // 🛠️ OMR 초기화 로직
         // ==========================================
         window.onload = () => {
             const omrBox = document.getElementById('omr-inputs');
-            for(let i=1; i<=45; i++) {
-                omrBox.innerHTML += `<input type="text" placeholder="${i}번" class="omr-ans w-full bg-gray-800 border border-gray-600 text-white p-2 rounded text-center focus:border-yellow-500">`;
+            if(omrBox) {
+                for(let i=1; i<=45; i++) omrBox.innerHTML += `<input type="text" placeholder="${i}번" class="omr-ans w-full bg-[#1e2430] border border-gray-600 text-white p-3 rounded text-center font-bold focus:border-indigo-500 outline-none">`;
             }
         };
 
-        async function submitOMR() {
-            const taskName = document.getElementById('omr-task').value.trim();
-            const answers = Array.from(document.querySelectorAll('.omr-ans')).map(inp => inp.value.trim());
-
-            if (!taskName) return alert('과제명을 입력해주세요.');
-            
-            showLoader("OMR 답안을 채점 중입니다...");
-            try {
-                const res = await fetch(`${API_URL}/api/omr/submit`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        school: currentUser.school, grade: currentUser.grade, student_name: currentUser.name,
-                        task_name: taskName, answers: answers
-                    })
-                });
-                
-                const data = await res.json();
-                const resultDiv = document.getElementById('omr-result');
-                resultDiv.classList.remove('hidden');
-
-                if (res.ok && data.success) {
-                    let html = `<h3 class="text-2xl font-bold text-yellow-400 mb-2">채점 결과: ${data.score}점</h3>`;
-                    if (data.score === 100) {
-                        html += `<p class="text-green-400 font-bold">🎉 완벽합니다! 만점입니다!</p>`;
-                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    } else {
-                        html += `<p class="text-red-400">틀린 문항 번호: ${data.wrongs.join(', ')}</p>`;
-                    }
-                    resultDiv.innerHTML = html;
-                } else {
-                    resultDiv.innerHTML = `<p class="text-red-400">${data.detail || '채점 실패'}</p>`;
-                }
-            } catch (error) {
-                alert("서버 오류가 발생했습니다.");
-            }
-            hideLoader();
-        }
-
         // ==========================================
-        // 🛠️ 퀴즈 관련 기능 (파일 첨부 포함)
+        // 🛠️ 퀴즈 관련 추가 로직 (파일 첨부 포함)
         // ==========================================
         function addQuizQuestionInput() {
             const c = document.getElementById('quiz-builder-area');
             const idx = adminQuizQuestions.length + 1;
             adminQuizQuestions.push({q:"", a:"", exp:""});
             
-            const html = `
-            <div class="bg-gray-800 p-4 rounded-lg border border-gray-600 mb-2" id="qz-qbox-${idx-1}">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-purple-400">문항 ${idx}</span>
+            c.insertAdjacentHTML('beforeend', `
+            <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-700 mb-4 shadow-md">
+                <span class="font-bold text-purple-400 block mb-3 text-lg">문항 ${idx}</span>
+                <textarea class="w-full bg-[#151922] border border-gray-600 p-3 rounded text-white mb-3 focus:border-purple-500 outline-none" placeholder="문제 내용" onchange="adminQuizQuestions[${idx-1}].q=this.value"></textarea>
+                <div class="flex gap-3">
+                    <input type="text" class="w-1/4 bg-[#151922] border border-gray-600 p-3 rounded text-white text-center focus:border-purple-500 outline-none" placeholder="정답" onchange="adminQuizQuestions[${idx-1}].a=this.value">
+                    <input type="text" class="w-3/4 bg-[#151922] border border-gray-600 p-3 rounded text-white focus:border-purple-500 outline-none" placeholder="해설 (학생 제출 후 공개)" onchange="adminQuizQuestions[${idx-1}].exp=this.value">
                 </div>
-                <textarea class="qz-q w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-2" placeholder="문제 내용" onchange="adminQuizQuestions[${idx-1}].q=this.value"></textarea>
-                <div class="flex gap-2">
-                    <input type="text" class="qz-a w-1/4 bg-gray-900 border border-gray-600 p-2 rounded text-white text-center" placeholder="정답" onchange="adminQuizQuestions[${idx-1}].a=this.value">
-                    <input type="text" class="qz-exp w-3/4 bg-gray-900 border border-gray-600 p-2 rounded text-white" placeholder="해설 (학생 제출 후 공개)" onchange="adminQuizQuestions[${idx-1}].exp=this.value">
-                </div>
-            </div>`;
-            c.insertAdjacentHTML('beforeend', html);
+            </div>`);
         }
 
         async function createQuizAdmin() {
             const t = document.getElementById('qz-title').value.trim();
             const tm = parseInt(document.getElementById('qz-time').value) || 10;
-            if(!t || adminQuizQuestions.length === 0) return alert("제목과 1개 이상의 문제를 입력하세요.");
+            if(!t || adminQuizQuestions.length === 0) return alert("제목과 문제를 입력하세요.");
             
-            showLoader("퀴즈를 발행 중입니다...");
+            showLoader("퀴즈 발행 중...");
             const fd = new FormData();
-            fd.append("title", t);
-            fd.append("time_limit", tm);
-            fd.append("questions", JSON.stringify(adminQuizQuestions));
-            
-            // 퀴즈용 첨부파일 전송
-            if(window.qzFilesBuffer && window.qzFilesBuffer.length > 0) {
-                window.qzFilesBuffer.forEach(f => fd.append("files", f));
-            }
+            fd.append("title", t); fd.append("time_limit", tm); fd.append("questions", JSON.stringify(adminQuizQuestions));
+            if(window.qzFilesBuffer) window.qzFilesBuffer.forEach(f => fd.append("files", f));
 
             try {
                 const res = await fetch(`${API_URL}/api/admin/quiz`, {method: 'POST', body: fd});
-                if(res.ok) {
-                    alert("출제 완료!");
-                    document.getElementById('qz-title').value = '';
-                    document.getElementById('quiz-builder-area').innerHTML = '';
-                    adminQuizQuestions = [];
-                    clearAllFiles('qz-files-visual');
-                } else alert("오류 발생");
-            } catch(e) { alert("서버 에러"); }
-            hideLoader();
-        }
-
-        async function loadStudentQuizzes() {
-            try {
-                const res = await fetch(`${API_URL}/api/quizzes`);
-                const data = await res.json();
-                const c = document.getElementById('student-quiz-list');
-                c.innerHTML = '';
-                if(data.success) {
-                    allQuizzes = data.quizzes;
-                    data.quizzes.forEach((q, i) => {
-                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl flex justify-between items-center border border-gray-700 hover:border-purple-500 transition cursor-pointer" onclick="startQuiz(${i})">
-                            <span class="font-bold text-white"><i class="fa-solid fa-stopwatch text-purple-400 mr-2"></i>${q.title}</span>
-                            <span class="bg-purple-900/50 text-purple-300 px-3 py-1 rounded-full text-xs font-bold">${q.time_limit}분</span>
-                        </div>`;
-                    });
-                }
-            } catch(e){}
-        }
-
-        function startQuiz(idx) {
-            const q = allQuizzes[idx];
-            if(!confirm(`[${q.title}]\n제한시간 ${q.time_limit}분입니다. 시작하시겠습니까?`)) return;
-            
-            currentActiveQuiz = q;
-            document.getElementById('quiz-list-area').style.display = 'none';
-            document.getElementById('quiz-solve-area').style.display = 'block';
-            document.getElementById('active-quiz-title').innerText = q.title;
-            
-            // 퀴즈 첨부파일 렌더링
-            const fContainer = document.getElementById('quiz-solve-files');
-            fContainer.innerHTML = '';
-            if(q.file_url) {
-                const urls = q.file_url.split(',');
-                urls.forEach(url => {
-                    if(url.match(/\.(jpeg|jpg|gif|png)$/i)) {
-                        fContainer.innerHTML += `<img src="${API_URL}${url}" class="w-full rounded border border-gray-600 mb-2">`;
-                    } else {
-                        fContainer.innerHTML += `<a href="${API_URL}${url}" target="_blank" class="block bg-blue-900/30 text-blue-300 p-2 rounded text-sm mb-2"><i class="fa-solid fa-download mr-2"></i>첨부파일 열기</a>`;
-                    }
-                });
-            }
-
-            const qc = document.getElementById('quiz-questions-container');
-            qc.innerHTML = '';
-            q.questions.forEach((question, i) => {
-                qc.innerHTML += `<div class="bg-gray-800 p-4 rounded border border-gray-600">
-                    <p class="font-bold mb-3 text-white">${i+1}. ${question.q}</p>
-                    <input type="text" id="quiz-ans-${i}" placeholder="정답 입력" class="w-full bg-gray-900 border border-gray-700 p-3 rounded text-white text-center text-lg focus:border-purple-500">
-                </div>`;
-            });
-
-            activeQuizTimeLeft = q.time_limit * 60;
-            clearInterval(activeQuizTimer);
-            activeQuizTimer = setInterval(updateQuizTimer, 1000);
-        }
-
-        function updateQuizTimer() {
-            activeQuizTimeLeft--;
-            const m = Math.floor(activeQuizTimeLeft / 60).toString().padStart(2, '0');
-            const s = (activeQuizTimeLeft % 60).toString().padStart(2, '0');
-            const tEl = document.getElementById('quiz-timer-display');
-            tEl.innerText = `${m}:${s}`;
-            if(activeQuizTimeLeft <= 60) tEl.classList.add('animate-pulse');
-            
-            if(activeQuizTimeLeft <= 0) {
-                clearInterval(activeQuizTimer);
-                alert("시간이 초과되었습니다. 작성된 곳까지만 자동 제출됩니다.");
-                submitQuizAnswers();
-            }
-        }
-
-        async function submitQuizAnswers() {
-            clearInterval(activeQuizTimer);
-            const answers = currentActiveQuiz.questions.map((_, i) => document.getElementById(`quiz-ans-${i}`).value.trim());
-            
-            showLoader("퀴즈 채점 중...");
-            try {
-                const res = await fetch(`${API_URL}/api/quiz/submit`, {
-                    method:'POST', headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        school: currentUser.school, grade: currentUser.grade, student_name: currentUser.name,
-                        title: currentActiveQuiz.title, answers: answers
-                    })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    alert(`채점 완료! ${data.score}점 입니다.`);
-                    document.getElementById('quiz-solve-area').style.display = 'none';
-                    document.getElementById('quiz-list-area').style.display = 'block';
-                    loadStudentQuizzes();
-                }
-            } catch(e) {}
-            hideLoader();
-        }
-
-        // ==========================================
-        // 🛠️ 과제 업로드(원장님) 로직
-        // ==========================================
-        async function createHomeworkAdmin() {
-            const t = document.getElementById('hw-title').value;
-            if(!t || hwFilesAdmin.length === 0) return alert("과제명과 정답 파일을 모두 등록해주세요.");
-            
-            showLoader("과제를 발행 중입니다...");
-            const fd = new FormData();
-            fd.append("title", t); fd.append("desc", ""); fd.append("answer_text", "");
-            hwFilesAdmin.forEach(f => fd.append("answer_file", f));
-            
-            try {
-                const res = await fetch(`${API_URL}/api/admin/homework`, {method: 'POST', body: fd});
-                const data = await res.json();
-                if(data.success) {
-                    alert("과제 배포 완료!");
-                    document.getElementById('hw-title').value = '';
-                    clearAllFiles('hw-ans-file-visual');
-                } else alert("오류: " + data.detail);
-            } catch(e) {}
-            hideLoader();
-        }
-        
-        async function uploadKnowledge() {
-            const t = document.getElementById('kb-title').value.trim();
-            const c = document.getElementById('kb-content').value;
-            if (!t && kbFiles.length === 0) return alert("자료 제목을 입력하거나 파일을 첨부해주세요!");
-
-            showLoader("🧠 AI가 자료를 학습 중입니다...");
-            const fd = new FormData();
-            fd.append("title", t || kbFiles[0].name);
-            fd.append("content", c);
-            kbFiles.forEach(f => fd.append("files", f));
-
-            try {
-                const res = await fetch(`${API_URL}/api/admin/knowledge`, {method: 'POST', body: fd});
-                const data = await res.json();
-                if(data.success) {
-                    alert("AI 학습 완료!");
-                    document.getElementById('kb-title').value = '';
-                    document.getElementById('kb-content').value = '';
-                    clearAllFiles('kb-files-visual');
-                } else alert("오류 발생: " + data.detail);
+                if(res.ok) { alert("출제 완료!"); document.getElementById('qz-title').value = ''; document.getElementById('quiz-builder-area').innerHTML = ''; adminQuizQuestions = []; clearAllFiles('qz-files-visual'); } 
             } catch(e) {}
             hideLoader();
         }
