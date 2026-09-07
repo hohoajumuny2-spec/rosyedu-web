@@ -35,16 +35,19 @@
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
+    <!-- 글로벌 로딩 -->
     <div id="global-loader" class="hidden fixed inset-0 z-[9999] bg-[#0f172a]/95 backdrop-blur-md flex flex-col items-center justify-center fade-in">
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
             <div class="absolute inset-2 border-r-4 border-emerald-500 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
         </div>
-        <p id="global-loader-text" class="text-xl md:text-2xl font-black text-emerald-400 tracking-wider text-center px-4 animate-pulse whitespace-pre-wrap leading-relaxed bg-gray-900/80 p-4 rounded-xl shadow-2xl border border-emerald-500/30">파일을 업로드 중입니다...</p>
+        <p id="global-loader-text" class="text-xl md:text-2xl font-black text-emerald-400 tracking-wider text-center px-4 animate-pulse whitespace-pre-wrap leading-relaxed bg-gray-900/80 p-4 rounded-xl shadow-2xl border border-emerald-500/30">처리 중입니다...</p>
     </div>
 
     <div id="toast-container"></div>
+    <div id="live-toast-container"></div>
 
+    <!-- 첫 접속 메인 팝업 -->
     <div id="main-popup" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-md shadow-2xl flex flex-col fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
@@ -61,6 +64,7 @@
         </div>
     </div>
 
+    <!-- 문의 모달 -->
     <div id="inquiry-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -73,11 +77,11 @@
         </div>
     </div>
 
+    <!-- 상단 내비게이션 바 -->
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
             <div class="hidden md:flex gap-6 items-center text-sm font-bold text-gray-300">
-                <!-- 💡 프로그램 소개, 이용 안내 링크 정상 작동 -->
                 <button onclick="scrollToSection('intro-section')" class="hover:text-blue-400">프로그램 소개</button>
                 <button onclick="scrollToSection('guide-section')" class="hover:text-blue-400">이용 안내</button>
                 <button onclick="openProgram('board'); loadBoard();" class="hover:text-blue-400">공지사항</button>
@@ -98,6 +102,7 @@
             </div>
         </div>
         
+        <!-- 모바일 햄버거 메뉴 -->
         <div id="mobile-menu" class="hidden flex-col bg-[#151922] border-t border-gray-800 text-sm font-bold text-gray-300 shadow-xl">
             <button onclick="scrollToSection('intro-section'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-blue-400 w-full">프로그램 소개</button>
             <button onclick="scrollToSection('guide-section'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-blue-400 w-full">이용 안내</button>
@@ -109,7 +114,7 @@
         </div>
     </nav>
 
-    <!-- 💡 홈 화면(소개 및 이용안내 복구 완료) -->
+    <!-- 홈 뷰 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center pt-20 px-4 overflow-y-auto">
         <div class="text-center z-10 fade-in min-h-[80vh] flex flex-col justify-center items-center w-full">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all"><span class="text-blue-500">'로지는 언제나 올바름'</span>을 찾아냈습니다.<br><span class="text-2xl md:text-4xl lg:text-[2.5rem] mt-6 block text-gray-300 font-bold">그리고 그것이 <span class="text-blue-500">정답</span>이 되는 길을 만들었습니다.</span></h1>
@@ -146,6 +151,7 @@
         </div>
     </div>
 
+    <!-- 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
@@ -227,7 +233,7 @@
                 <div id="board-list" class="space-y-6"></div>
             </div>
 
-            <!-- 문의 사항 -->
+            <!-- 문의사항 -->
             <div id="prog-inquiry" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                 <h2 class="text-2xl font-bold text-emerald-400 mb-4">문의 사항</h2>
                 <textarea id="inquiry-content-main" class="w-full h-24 bg-[#1e2430] p-4 text-white mb-4 rounded" placeholder="궁금한 점이나 오류 신고를 자유롭게 적어주세요..."></textarea><button onclick="submitInquiry('main')" class="w-full bg-emerald-600 py-3 rounded text-white font-bold">전송</button>
@@ -280,7 +286,7 @@
                 </div>
             </div>
 
-            <!-- 타임어택 퀴즈 -->
+            <!-- 타임어택 퀴즈 목록 -->
             <div id="prog-quiz-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
                 <h2 class="text-2xl font-bold text-orange-500 mb-4">타임어택 퀴즈</h2>
                 <p class="text-gray-400 text-sm mb-6">정해진 기한(마감)과 시험 시간이 있는 퀴즈입니다. 타이머가 0이 되면 자동 제출됩니다.</p>
@@ -327,6 +333,7 @@
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                     </div>
 
+                    <!-- 명단 탭 -->
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
                         <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white">추가</button></div></div>
                         <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
@@ -339,6 +346,7 @@
                         </div>
                     </div>
 
+                    <!-- 퀴즈 탭 -->
                     <div id="admin-quiz" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <h3 class="text-lg font-bold text-orange-400 mb-4">새 퀴즈 출제</h3>
@@ -366,6 +374,7 @@
                         </div>
                     </div>
 
+                    <!-- 자료학습 탭 -->
                     <div id="admin-knowledge" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <h4 class="text-white font-bold mb-2">단일 자료 직접 등록</h4>
@@ -386,6 +395,7 @@
                         </div>
                     </div>
 
+                    <!-- 출제 탭 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
@@ -434,24 +444,43 @@
                         <div class="bg-[#151922] p-6 rounded h-[800px] flex flex-col"><div id="admin-questions-list" class="flex-grow overflow-auto text-white space-y-2"></div></div>
                     </div>
 
+                    <!-- 모의고사 탭 -->
                     <div id="admin-exam" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
-                            <input type="text" id="rt-title" placeholder="시험 제목" class="w-full p-2 bg-gray-800 text-white mb-2"><input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4">
-                            <label class="text-white block mb-2"><input type="checkbox" id="rt-student-all" checked onchange="toggleExamStudents()"> 전체 학생</label><div id="rt-student-list-container" class="hidden bg-gray-800 p-2 h-24 overflow-auto text-white mb-4"></div>
-                            <div class="flex gap-2 mb-2"><input type="text" id="sec-name" class="w-1/2 p-2 bg-gray-800 text-white" placeholder="구간명"><input type="number" id="sec-time" class="w-1/4 p-2 bg-gray-800 text-white" placeholder="분"><button onclick="addAdminSection()" class="bg-yellow-600 text-white px-4">추가</button></div><div id="admin-section-board" class="mb-4 text-white flex flex-wrap"></div>
+                            <input type="text" id="rt-title" placeholder="시험 제목" class="w-full p-2 bg-gray-800 text-white mb-2">
+                            <input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4">
+                            <label class="text-white block mb-2"><input type="checkbox" id="rt-student-all" checked onchange="toggleExamStudents()"> 전체 학생</label>
+                            <div id="rt-student-list-container" class="hidden bg-gray-800 p-2 h-24 overflow-auto text-white mb-4"></div>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="sec-name" class="w-1/2 p-2 bg-gray-800 text-white" placeholder="구간명">
+                                <input type="number" id="sec-time" class="w-1/4 p-2 bg-gray-800 text-white" placeholder="분">
+                                <button onclick="addAdminSection()" class="bg-yellow-600 text-white px-4">추가</button>
+                            </div>
+                            <div id="admin-section-board" class="mb-4 text-white flex flex-wrap"></div>
                             <input type="file" id="rt-pdf" accept=".pdf, image/*" class="mb-4 text-white">
-                            <input type="text" id="rt-video" placeholder="해설강의 URL" class="w-full p-2 bg-gray-800 text-white mb-2"><textarea id="rt-exp" class="w-full p-2 bg-gray-800 text-white h-24 mb-4" placeholder="상세 해설지"></textarea>
-                            <div class="flex gap-2 mb-2"><input type="number" id="rt-qcount" class="w-2/3 p-2 bg-gray-800 text-white" placeholder="문항수 (생략가능)"><button onclick="buildAdminOMR()" class="w-1/3 bg-gray-600 text-white">OMR 생성</button></div><div id="admin-omr-board" class="h-32 overflow-auto mb-4 text-white"></div>
+                            <input type="text" id="rt-video" placeholder="해설강의 URL" class="w-full p-2 bg-gray-800 text-white mb-2">
+                            <textarea id="rt-exp" class="w-full p-2 bg-gray-800 text-white h-24 mb-4" placeholder="상세 해설지"></textarea>
+                            <div class="flex gap-2 mb-2">
+                                <input type="number" id="rt-qcount" class="w-2/3 p-2 bg-gray-800 text-white" placeholder="문항수 (생략가능)">
+                                <button onclick="buildAdminOMR()" class="w-1/3 bg-gray-600 text-white">OMR 생성</button>
+                            </div>
+                            <div id="admin-omr-board" class="h-32 overflow-auto mb-4 text-white"></div>
                             <button onclick="setRealtimeExam()" class="w-full bg-indigo-600 py-3 text-white font-bold">오픈하기</button>
                         </div>
                         <div class="bg-[#151922] p-6 rounded h-[700px] flex flex-col"><div id="admin-exam-list" class="flex-grow overflow-auto space-y-2"></div></div>
                     </div>
 
+                    <!-- 강의 탭 -->
                     <div id="admin-lecture" class="admin-tab-content grid grid-cols-2 gap-4">
-                        <div class="bg-[#151922] p-6 rounded"><input type="text" id="lec-title" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="lec-url" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="createLecture()" class="w-full bg-purple-600 py-2 text-white">등록</button></div>
-                        <div id="admin-lecture-list" class="bg-[#151922] p-6 rounded h-[500px] overflow-auto text-white"></div>
+                        <div class="bg-[#151922] p-6 rounded">
+                            <input type="text" id="lec-title" class="w-full p-2 mb-2 bg-gray-800 text-white" placeholder="강의 제목">
+                            <input type="text" id="lec-url" class="w-full p-2 mb-2 bg-gray-800 text-white" placeholder="동영상 URL">
+                            <button onclick="createLecture()" class="w-full bg-purple-600 py-2 text-white font-bold">등록</button>
+                        </div>
+                        <div id="admin-lecture-list" class="bg-[#151922] p-6 rounded h-[500px] overflow-auto text-white space-y-2"></div>
                     </div>
 
+                    <!-- 과제/공지 탭 -->
                     <div id="admin-hw" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <h3 class="text-white font-bold mb-4">과제/정답 배포</h3>
@@ -475,7 +504,9 @@
             </div>
         </div>
     </div>
-<div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+
+    <!-- 로그인/가이드/가져오기/수정 모달창 -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md">
             <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h2 class="text-3xl font-black mb-2 text-white text-center">로그인</h2>
@@ -507,8 +538,8 @@
                 <div class="bg-[#151922] p-4 rounded border border-emerald-900">
                     <p class="text-emerald-400 font-bold mb-2">✅ 올바른 예시 (접속 가능)</p>
                     <ul class="list-disc pl-5 space-y-1 text-white">
-                        <li><strong>학교:</strong> 미강고 (또는 하남고, 미사고)</li>
-                        <li><strong>학년:</strong> 2 (숫자만 입력)</li>
+                        <li><strong>학교:</strong> 미강고</li>
+                        <li><strong>학년:</strong> 2</li>
                         <li><strong>이름:</strong> 홍길동</li>
                     </ul>
                 </div>
@@ -533,12 +564,13 @@
             <input type="text" id="edit-grade" class="w-full p-2 bg-gray-800 text-white mb-2">
             <input type="text" id="edit-name" class="w-full p-2 bg-gray-800 text-white mb-4">
             <div class="flex gap-2">
-                <button onclick="submitEditStudent()" class="flex-1 bg-blue-600 py-2 text-white">저장</button>
-                <button onclick="closeModal('edit-student-modal')" class="flex-1 bg-gray-600 py-2 text-white">취소</button>
+                <button onclick="submitEditStudent()" class="flex-1 bg-blue-600 py-2 text-white font-bold rounded">저장</button>
+                <button onclick="closeModal('edit-student-modal')" class="flex-1 bg-gray-600 py-2 text-white font-bold rounded">취소</button>
             </div>
         </div>
     </div>
 
+    <!-- 전체 Javascript 시작 -->
     <script>
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null; let wsLive = null; 
@@ -567,7 +599,7 @@
             const c = document.getElementById(containerId); 
             if(c) { 
                 c.innerHTML = array.map((f,i) => `<span class="bg-indigo-900 text-white px-2 py-1 rounded text-xs m-1">${f.name} <button onclick="removeFileByName('${containerId}', '${f.name.replace(/'/g, "\\'")}')" class="text-red-400 ml-1 font-bold">X</button></span>`).join(''); 
-                if(array.length>0) c.innerHTML+=`<div class="w-full mt-1 text-right"><button onclick="clearAllFiles('${containerId}')" class="text-xs text-red-400">전체 삭제</button></div>`; 
+                if(array.length>0) c.innerHTML+=`<div class="w-full mt-1 text-right"><button onclick="clearAllFiles('${containerId}')" class="text-xs text-red-400 hover:text-red-300">전체 삭제</button></div>`; 
             } 
         }
         
@@ -590,6 +622,7 @@
             renderAccumulatedFiles([], cId); 
         }
 
+        // 인쇄 시 위아래 30mm 띄우는 완전한 PDF 출력 함수
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = ''; let inQuestion = false; let inBogi = false;
@@ -653,7 +686,7 @@
                 const c=document.getElementById('admin-questions-list'); c.innerHTML=''; 
                 if(data.success && data.questions.length>0){ 
                     generatedQuestionsData = data.questions; 
-                    data.questions.forEach((q,i) => { c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2"><div class="flex justify-between"><span class="text-yellow-400 cursor-pointer font-bold" onclick="viewGeneratedQuestion(${i})">${q.title}</span><button onclick="deleteGeneratedQuestion('${q.id}')" class="text-red-400 text-xs">삭제</button></div></div>`; }); 
+                    data.questions.forEach((q,i) => { c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2"><div class="flex justify-between"><span class="text-yellow-400 cursor-pointer font-bold" onclick="viewGeneratedQuestion(${i})">${q.title}</span><button onclick="deleteGeneratedQuestion('${q.id}')" class="text-red-400 text-xs hover:text-red-300 bg-red-900/40 px-2 py-1 rounded">삭제</button></div></div>`; }); 
                 } else { generatedQuestionsData=[]; } 
             }catch(e){} 
         }
@@ -689,8 +722,8 @@
                     data.reports.forEach(r => { 
                         if(r.student_name===currentUser.name && r.school===currentUser.school) { 
                             cnt++; 
-                            let sc = r.type==='로그인'?'<span class="text-blue-400">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400">질문완료</span>':((r.type.includes('모의고사')||r.type.includes('퀴즈'))?`<span class="text-yellow-400">${r.score}점</span>`:'<span class="text-emerald-400">제출완료</span>')); 
-                            c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between"><div class="text-white text-sm">${r.task_name} <span class="text-xs text-gray-500 block">${r.submitted_at} | ${r.type}</span></div><div>${sc}</div></div>`; 
+                            let sc = r.type==='로그인'?'<span class="text-blue-400 font-bold">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400 font-bold">질문완료</span>':((r.type.includes('모의고사')||r.type.includes('퀴즈'))?`<span class="text-yellow-400 font-bold">${r.score}점</span>`:'<span class="text-emerald-400 font-bold">제출완료</span>')); 
+                            c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between items-center"><div class="text-white text-sm w-2/3 truncate">${r.task_name} <span class="text-[10px] text-gray-500 block mt-1">${r.submitted_at} | ${r.type}</span></div><div>${sc}</div></div>`; 
                         } 
                     }); 
                     document.getElementById('mypage-count').innerText=`${cnt}건`; 
@@ -724,7 +757,7 @@
                 if(data.success) {
                     data.inquiries.forEach(i=>{ 
                         if(currentUser && (currentUser.isAdmin || i.student_name===currentUser.name)) {
-                            c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-sm text-gray-300">${i.content}<br><span class="text-[10px] text-gray-500">${i.created_at}</span>${currentUser.isAdmin?`<button onclick="deleteInquiry('${i.id}')" class="ml-2 text-red-400">x</button>`:''}</div>`; 
+                            c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-sm text-gray-300 flex justify-between items-start"><div class="w-5/6">${i.content}<br><span class="text-[10px] text-gray-500">${i.created_at}</span></div>${currentUser.isAdmin?`<button onclick="deleteInquiry('${i.id}')" class="text-red-400 bg-red-900/30 px-2 py-1 rounded text-xs hover:text-white transition">삭제</button>`:''}</div>`; 
                         }
                     }); 
                 }
@@ -959,7 +992,7 @@
                     document.getElementById('board-write-area').style.display='none'; loadBoard(); 
                     document.getElementById('bd-title').value=''; document.getElementById('bd-desc').value=''; 
                     clearAllFiles('bd-file-visual'); 
-                } else alert("오류: " + data.detail);
+                } else { alert("오류: " + data.detail); }
             } catch(e) { alert("서버 연결 실패 또는 시간 초과입니다.\n상세원인: " + e.message); } 
             hideLoader(); 
         }
@@ -990,17 +1023,31 @@
         async function renderBoardAttachment(url, containerId) {
             const c = document.getElementById(containerId);
             if(!c) return;
+            
+            c.className = "w-full overflow-x-auto bg-gray-900 rounded-lg p-2";
+            
             const isImg = url.match(/\.(jpeg|jpg|gif|png)$/i) != null;
-            if(isImg) { c.innerHTML = `<img src="${url}" class="w-full rounded-lg mt-2 border border-gray-600">`; } 
+            if(isImg) { 
+                c.innerHTML = `<img src="${url}" class="rounded-lg border border-gray-600 min-w-[800px] w-full h-auto">`; 
+            } 
             else if(url.toLowerCase().endsWith('.pdf')) {
                 c.innerHTML = '<div class="text-gray-400 text-xs mt-2"><i class="fa-solid fa-spinner fa-spin"></i> 문서 로딩 중...</div>';
                 try {
                     const pdf = await pdfjsLib.getDocument(url).promise;
-                    c.innerHTML = ''; const w = c.clientWidth || 600; 
+                    c.innerHTML = ''; 
+                    const w = Math.max(c.clientWidth, 800); 
                     for(let i=1; i<=pdf.numPages; i++) {
-                        const page = await pdf.getPage(i); const viewportBase = page.getViewport({scale: 1}); const scale = w / viewportBase.width; const viewport = page.getViewport({scale: scale});
-                        const canvas = document.createElement('canvas'); canvas.className = 'w-full rounded-lg mt-2 mb-2 border border-gray-600 bg-white'; canvas.width = viewport.width; canvas.height = viewport.height;
-                        c.appendChild(canvas); await page.render({canvasContext: canvas.getContext('2d'), viewport: viewport}).promise;
+                        const page = await pdf.getPage(i); 
+                        const viewportBase = page.getViewport({scale: 1}); 
+                        const scale = w / viewportBase.width; 
+                        const viewport = page.getViewport({scale: scale});
+                        const canvas = document.createElement('canvas'); 
+                        canvas.className = 'max-w-none rounded-lg mt-2 mb-2 border border-gray-600 bg-white'; 
+                        canvas.style.width = w + 'px';
+                        canvas.width = viewport.width; 
+                        canvas.height = viewport.height;
+                        c.appendChild(canvas); 
+                        await page.render({canvasContext: canvas.getContext('2d'), viewport: viewport}).promise;
                     }
                 } catch(e) { c.innerHTML = `<a href="${url}" target="_blank" class="text-blue-400 text-sm mt-2 inline-block bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-file-pdf mr-1"></i>PDF 보기/다운로드</a>`; }
             } else { c.innerHTML = `<a href="${url}" target="_blank" class="text-blue-400 text-sm mt-2 inline-block bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-download mr-1"></i>첨부파일 보기</a>`; }
