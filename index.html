@@ -154,7 +154,6 @@
                     <p class="text-gray-400">오직 로지에듀 재원생들만을 위해 고안된 5가지 핵심 프로그램을 소개합니다.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Cards omitted for brevity in template, identical to source 1 -->
                     <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl"><div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-robot"></i></div><h4 class="text-2xl font-bold mb-4">1. 24시간 AI 국최</h4><p class="text-gray-400 text-sm leading-relaxed">원장님의 두뇌를 그대로 이식한 전용 AI 조교입니다.</p></div>
                     <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl"><div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-file-arrow-up"></i></div><h4 class="text-2xl font-bold mb-4">2. 매일 학습 '과제 제출'</h4><p class="text-gray-400 text-sm leading-relaxed">플랫폼을 통해 매일 주어지는 과제를 간편하게 업로드합니다.</p></div>
                     <div class="bg-[#151922] border border-gray-800 p-8 rounded-xl"><div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 text-blue-500 text-xl"><i class="fa-solid fa-stopwatch"></i></div><h4 class="text-2xl font-bold mb-4">3. 온라인 실시간 모의고사</h4><p class="text-gray-400 text-sm leading-relaxed">실시간 타이머와 온라인 뷰어를 통해 실전 감각을 극대화합니다.</p></div>
@@ -399,10 +398,10 @@
         </div>
     </div>
 
-    <!-- 로그인 모달 -->
-    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+    <!-- 로그인 모달 (이름표 수정 완료) -->
+    <div id="login-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="closeModal('login-modal')" class="float-right text-gray-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
             <h2 class="text-3xl font-black mb-8 text-center text-white">로그인</h2>
             <div class="bg-[#151922] p-4 rounded-xl border border-gray-700 mb-4 space-y-2">
                 <input type="text" id="login-school" placeholder="학교 (예: 미강고)" class="w-full bg-transparent border-b border-gray-600 p-3 text-white outline-none">
@@ -466,7 +465,7 @@
                 const data = await res.json();
                 if(data.success) {
                     currentUser = { school:sch, grade:gr, name:nm, isAdmin:data.is_admin, xp: data.xp || 0 };
-                    closeModal('auth-modal');
+                    closeModal('login-modal'); // 모달창 이름표 수정 반영
                     document.getElementById('auth-nav').classList.add('hidden');
                     document.getElementById('user-nav').classList.remove('hidden'); document.getElementById('user-nav').classList.add('flex');
                     document.getElementById('header-user-info').innerText = data.is_admin ? '원장님' : `${sch} ${gr} ${nm}`;
