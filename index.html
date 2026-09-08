@@ -519,6 +519,7 @@
             </div>
         </div>
     </div>
+
     <script>
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null; let wsLive = null; 
@@ -534,7 +535,7 @@
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err)); }); }
 
-        // 💡 해결 1: 전역 통신 인터셉터 (관리자 API 호출 시 자동으로 보안 토큰 장착)
+        // 💡 해결: 전역 통신 인터셉터 (관리자 API 호출 시 자동으로 보안 토큰 장착)
         const originalFetch = window.fetch;
         window.fetch = async function() {
             let [resource, config] = arguments;
@@ -547,7 +548,7 @@
                     if (!(config.body instanceof FormData)) {
                         config.headers['Content-Type'] = 'application/json';
                     }
-                    config.headers['X-Admin-Token'] = currentUser.admin_token;
+                    config.headers['x-admin-token'] = currentUser.admin_token;
                 } else {
                     console.warn("관리자 권한 토큰이 없습니다.");
                 }
