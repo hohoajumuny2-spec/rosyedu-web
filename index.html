@@ -20,8 +20,6 @@
         .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
         .admin-tab-content, .prog-content { display: none; } .active-tab { display: block; animation: fadeIn 0.3s ease-out forwards; }
-        .omr-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #4b5563; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; transition: all 0.2s; outline: none; }
-        .omr-circle.active { background-color: #3b82f6; border-color: #3b82f6; color: white; }
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; }
         .toast { background-color: #ef4444; color: white; padding: 15px 30px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; opacity: 0; transition: opacity 0.5s; display: flex; align-items: center; gap: 10px; }
         .toast.show { opacity: 1; }
@@ -43,31 +41,17 @@
     <div id="toast-container"></div>
     <div id="live-toast-container"></div>
 
-    <div id="main-popup" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4">
-        <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-md shadow-2xl flex flex-col fade-in relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
-            <h2 class="text-2xl font-black text-white mb-4 mt-2"><i class="fa-solid fa-bullhorn text-blue-400 mr-2"></i>로지에듀 스마트 플랫폼 오픈!</h2>
-            <div class="text-gray-300 text-sm leading-relaxed mb-6">
-                <p class="mb-2">학생 여러분, 환영합니다.</p>
-                <p class="mb-2">이제 종이 없이 언제 어디서나 스마트폰과 태블릿으로 모의고사를 보고, 24시간 AI 튜터 '국최'에게 질문할 수 있습니다.</p>
-                <p class="text-yellow-400 font-bold">오류 사항이나 문의는 상단 메뉴의 [문의 사항]을 이용해 주세요!</p>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="closeMainPopup(true)" class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-3 rounded-xl font-bold transition text-xs">오늘 하루 보지 않기</button>
-                <button onclick="closeMainPopup(false)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition text-xs">닫기</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="inquiry-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
-        <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-                <h3 class="text-2xl font-black text-white"><i class="fa-solid fa-paper-plane text-emerald-400 mr-2"></i>원장님께 문의하기</h3>
-                <button onclick="closeModal('inquiry-modal')" class="text-gray-400 hover:text-white text-2xl outline-none"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <p class="text-xs text-gray-400 mb-4">작성하신 내용은 원장님께 실시간으로 전달됩니다.</p>
-            <textarea id="inquiry-content" class="w-full h-32 bg-[#151922] border border-gray-600 p-4 rounded-xl text-white mb-6 outline-none focus:border-emerald-500 transition" placeholder="궁금한 점이나 오류 신고를 자유롭게 적어주세요..."></textarea>
-            <button onclick="submitInquiry()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg transition shadow-lg shadow-emerald-600/30">전송하기</button>
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md shadow-2xl">
+            <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 class="text-3xl font-black mb-2 text-white text-center">로그인</h2>
+            <select id="login-class" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-2 mt-4">
+                <option value="" disabled selected>반을 선택하세요</option>
+                <option value="고1 미강고">고1 미강고</option><option value="고1 미사고">고1 미사고</option><option value="고1 하남고">고1 하남고</option><option value="논술">논술</option>
+            </select>
+            <input type="text" id="login-name" placeholder="본명 입력" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-4">
+            <input type="password" id="login-pw" placeholder="관리자 비밀번호 (학생은 비워둠)" class="w-full p-3 bg-[#151922] border border-gray-700 text-gray-400 rounded mb-4">
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg">입장하기</button>
         </div>
     </div>
 
@@ -346,7 +330,7 @@
                 </div>
             </div>
 
-            <!-- 💡 날아갔던 통합 관리 화면(prog-admin) 100% 완전 복구 -->
+            <!-- 관리자 탭 -->
             <div id="prog-admin" class="prog-content w-full mx-auto">
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
@@ -359,7 +343,7 @@
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                     </div>
 
-                    <!-- 학생명단 탭 -->
+                    <!-- 명단 관리 -->
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
                         <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white font-bold rounded">추가</button></div></div>
                         <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2 rounded font-bold">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
@@ -421,7 +405,7 @@
                         </div>
                     </div>
 
-                    <!-- 문제 출제 엔진 탭 -->
+                    <!-- 출제 엔진 탭 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
@@ -470,7 +454,7 @@
                         <div class="bg-[#151922] p-6 rounded h-[800px] flex flex-col"><div id="admin-questions-list" class="flex-grow overflow-auto text-white space-y-2"></div></div>
                     </div>
 
-                    <!-- 모의고사 탭 -->
+                    <!-- 모의고사 개설 탭 -->
                     <div id="admin-exam" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <input type="text" id="rt-title" placeholder="시험 제목" class="w-full p-2 bg-gray-800 text-white mb-2 rounded border border-gray-600">
@@ -549,6 +533,27 @@
         let pdfDoc = null; let isDrawing = false;
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err)); }); }
+
+        // 💡 해결 1: 전역 통신 인터셉터 (관리자 API 호출 시 자동으로 보안 토큰 장착)
+        const originalFetch = window.fetch;
+        window.fetch = async function() {
+            let [resource, config] = arguments;
+            if (typeof resource === 'string' && resource.includes('/api/admin/')) {
+                config = config || {};
+                config.headers = config.headers || {};
+                
+                // currentUser 객체에 담긴 토큰을 헤더에 삽입
+                if (currentUser && currentUser.admin_token) {
+                    if (!(config.body instanceof FormData)) {
+                        config.headers['Content-Type'] = 'application/json';
+                    }
+                    config.headers['X-Admin-Token'] = currentUser.admin_token;
+                } else {
+                    console.warn("관리자 권한 토큰이 없습니다.");
+                }
+            }
+            return originalFetch(resource, config);
+        };
 
         function showLoader(text = "처리 중입니다...") { document.getElementById('global-loader-text').innerText = text; document.getElementById('global-loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
@@ -799,6 +804,9 @@
                 const data=await res.json(); 
                 if(data.success) { 
                     currentUser={school:s,grade:g,name:n || "원장님",isAdmin:data.is_admin, class:sClass}; 
+                    // 💡 해결 1: 클로드의 보안 인증 토큰 저장
+                    if(data.admin_token) currentUser.admin_token = data.admin_token;
+                    
                     localStorage.setItem('logyedu_user',JSON.stringify(currentUser)); 
                     if(!data.is_admin) { alert(`${n}학생 환영합니다! 열심히 공부합시다!`); }
                     location.reload(); 
@@ -1590,6 +1598,141 @@
                 r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; 
             } 
             if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+        }
+
+        // 퀴즈 관련 추가 함수 복구
+        function addQuizQuestionUI() {
+            const container = document.getElementById('qz-questions-board');
+            const qIdx = container.children.length;
+            const div = document.createElement('div');
+            div.className = "bg-[#1e2430] p-4 rounded border border-gray-600 quiz-q-item";
+            div.innerHTML = `
+                <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="w-full p-2 bg-gray-800 text-white rounded mb-3 quiz-q-text border border-gray-600 outline-none">
+                <div class="space-y-2 mb-3 pl-2 border-l-2 border-orange-900">
+                    <input type="text" placeholder="① 보기 1" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                    <input type="text" placeholder="② 보기 2" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                    <input type="text" placeholder="③ 보기 3" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                    <input type="text" placeholder="④ 보기 4" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                    <input type="text" placeholder="⑤ 보기 5" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" placeholder="정답 (1~5)" min="1" max="5" class="w-1/2 p-2 bg-gray-800 text-orange-400 font-bold rounded quiz-q-ans outline-none">
+                    <input type="number" placeholder="배점" value="2" class="w-1/2 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score outline-none">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        async function createQuiz() {
+            const title = document.getElementById('qz-title').value.trim();
+            const deadline = document.getElementById('qz-deadline').value;
+            const limit = parseInt(document.getElementById('qz-limit').value);
+            if(!title || !deadline || !limit) return alert("제목, 마감일, 제한 시간을 모두 입력하세요.");
+            const qItems = document.querySelectorAll('.quiz-q-item');
+            if(qItems.length === 0) return alert("문제를 최소 1개 이상 추가하세요.");
+            
+            let questions = [];
+            for(let item of qItems) {
+                const text = item.querySelector('.quiz-q-text').value;
+                const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
+                const ans = parseInt(item.querySelector('.quiz-q-ans').value);
+                const score = parseInt(item.querySelector('.quiz-q-score').value);
+                if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
+                questions.push({ q_text: text, options: opts, answer: ans, score: score });
+            }
+            
+            showLoader("퀴즈 배포 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/quiz`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert("퀴즈가 성공적으로 배포되었습니다!");
+                    document.getElementById('qz-title').value = ''; document.getElementById('qz-questions-board').innerHTML = '';
+                    loadAdminQuizzes();
+                } else { alert("오류: " + data.detail); }
+            } catch(e) { alert("서버 통신 오류: " + e.message); }
+            hideLoader();
+        }
+
+        async function loadAdminQuizzes() {
+            try {
+                const res = await fetch(`${API_URL}/api/quizzes`); const data = await res.json();
+                const c = document.getElementById('admin-quiz-list'); c.innerHTML = '';
+                if(data.success) {
+                    data.quizzes.forEach(q => {
+                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded mb-2 border border-gray-700 flex justify-between items-center"><div><div class="font-bold text-orange-400 mb-1">${q.title}</div><div class="text-xs text-gray-400">마감: ${q.deadline}</div></div><button onclick="deleteQuiz('${q.title}')" class="text-red-400 text-xs bg-red-900/30 px-3 py-2 rounded hover:text-white transition">삭제</button></div>`;
+                    });
+                }
+            } catch(e){}
+        }
+
+        async function deleteQuiz(title) { if(confirm("삭제?")) { showLoader(); await fetch(`${API_URL}/api/admin/quiz/${encodeURIComponent(title)}`, {method: 'DELETE'}); loadAdminQuizzes(); hideLoader(); } }
+
+        async function loadStudentQuizzes() {
+            try {
+                const res = await fetch(`${API_URL}/api/quizzes`); const data = await res.json();
+                const c = document.getElementById('student-quiz-list'); c.innerHTML = '';
+                if(data.success) {
+                    allQuizzes = data.quizzes;
+                    data.quizzes.forEach((q, i) => {
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-orange-500 flex flex-col justify-between cursor-pointer shadow-lg shadow-orange-500/20" onclick="enterQuizRoom(${i})"><div><h3 class="font-bold text-xl text-white mb-2">${q.title}</h3><p class="text-xs text-orange-400 font-bold">제한 시간: ${q.time_limit}분</p></div><button class="bg-orange-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">퀴즈 시작</button></div>`;
+                    });
+                }
+            } catch(e){}
+        }
+
+        function enterQuizRoom(idx) {
+            currentActiveQuiz = allQuizzes[idx];
+            if(!confirm(`[${currentActiveQuiz.title}]\n제한 시간: ${currentActiveQuiz.time_limit}분\n시작하시겠습니까?`)) return;
+            openProgram('quiz-room'); document.getElementById('quiz-room-title').innerText = currentActiveQuiz.title;
+            const c = document.getElementById('quiz-questions-container'); c.innerHTML = ''; quizAnswers = Array(currentActiveQuiz.questions.length).fill(0);
+            const circles = ['①', '②', '③', '④', '⑤']; 
+            currentActiveQuiz.questions.forEach((q, qIndex) => {
+                let optsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    if(!opt) return;
+                    optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${opt}</span></label>`;
+                });
+                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${q.q_text}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div><div>${optsHtml}</div></div>`;
+            });
+            activeQuizTimeLeft = currentActiveQuiz.time_limit * 60; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
+        }
+        
+        function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
+        
+        async function submitQuizReal() { 
+            clearInterval(activeQuizTimer); showLoader("제출 중..."); 
+            try { 
+                const res = await fetch(`${API_URL}/api/quiz/submit`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ school:currentUser.school, grade:currentUser.grade, student_name:currentUser.name, title:currentActiveQuiz.title, answers:quizAnswers }) }); 
+                const data = await res.json();
+                if(data.success) {
+                    alert("제출이 완료되었습니다!"); closeProgram(); 
+                } else {
+                    alert(data.detail || "제출 실패");
+                }
+            } catch(e){ alert("오류: " + e.message); } 
+            hideLoader(); 
+        }
+
+        // 모의고사 구간 추가 복구
+        function addAdminSection(defaultName="", defaultTime="") {
+            const sn = defaultName || document.getElementById('sec-name').value.trim();
+            const st = parseInt(defaultTime || document.getElementById('sec-time').value);
+            if(!sn || !st) return alert("구간명과 시간을 올바르게 입력하세요.");
+            adminExamSections.push({name: sn, time: st});
+            document.getElementById('sec-name').value = ''; document.getElementById('sec-time').value = '';
+            renderAdminSectionBoard();
+        }
+
+        function renderAdminSectionBoard() {
+            const b = document.getElementById('admin-section-board'); b.innerHTML = '';
+            adminExamSections.forEach((s, i) => {
+                b.innerHTML += `<span class="bg-yellow-900/50 border border-yellow-600 px-3 py-1 rounded mr-2 mb-2 flex items-center text-sm font-bold text-yellow-400">${s.name} (${s.time}분) <button onclick="adminExamSections.splice(${i},1); renderAdminSectionBoard();" class="ml-2 text-white hover:text-red-400">X</button></span>`;
+            });
         }
     </script>
 </body>
