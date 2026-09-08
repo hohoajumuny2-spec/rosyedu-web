@@ -200,6 +200,41 @@
             <!-- 마이페이지 -->
             <div id="prog-mypage" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                 <h2 class="text-2xl font-bold text-emerald-400 mb-4">나의 학습 기록</h2>
+
+                <!-- 🌱 성장 아바타 -->
+                <div id="mypage-avatar-card" class="rounded-2xl p-6 mb-6 border border-emerald-700/50 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row items-center gap-6">
+                        <div class="relative flex-shrink-0">
+                            <div id="avatar-display" class="w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 border-blue-500 transition-all duration-500">🌱</div>
+                            <div id="avatar-item-badge" class="absolute -top-1 -right-1 text-3xl drop-shadow-lg"></div>
+                        </div>
+                        <div class="flex-grow w-full text-center sm:text-left">
+                            <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                                <span id="avatar-level-icon" class="text-2xl"></span>
+                                <span id="avatar-level-name" class="text-xl font-black text-white"></span>
+                                <span id="avatar-level-num" class="text-xs bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded-full font-bold"></span>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden mb-1 border border-gray-700">
+                                <div id="avatar-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-700" style="width:0%"></div>
+                            </div>
+                            <p id="avatar-progress-text" class="text-xs text-gray-400"></p>
+                            <button onclick="toggleWardrobe()" class="mt-3 text-xs bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white font-bold transition"><i class="fa-solid fa-shirt mr-1"></i>아바타 꾸미기</button>
+                        </div>
+                    </div>
+
+                    <div id="avatar-wardrobe" class="hidden mt-6 pt-6 border-t border-gray-700">
+                        <div class="mb-4">
+                            <p class="text-xs text-gray-400 mb-2 font-bold">캐릭터 선택</p>
+                            <div class="flex gap-3">
+                                <button onclick="setAvatarGender('boy')" id="gender-btn-boy" class="flex-1 py-3 rounded-xl border-2 border-gray-600 text-3xl transition">👦</button>
+                                <button onclick="setAvatarGender('girl')" id="gender-btn-girl" class="flex-1 py-3 rounded-xl border-2 border-gray-600 text-3xl transition">👧</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-2 font-bold">꾸미기 아이템 (레벨을 올려서 잠금해제하세요)</p>
+                        <div id="avatar-item-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-3"></div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4 mb-4"><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-info" class="text-lg text-white font-bold"></p></div><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-count" class="text-xl text-emerald-400 font-black">0건</p></div></div>
                 <div id="mypage-history-list" class="space-y-2 bg-[#151922] p-4 rounded-xl h-[400px] overflow-y-auto text-gray-300"></div>
             </div>
@@ -722,19 +757,121 @@
         function importKnowledgeText(encodedContent) { document.getElementById('gen-text').value = decodeURIComponent(encodedContent); closeModal('knowledge-import-modal'); showToast("자료가 기준 지문에 성공적으로 입력되었습니다."); }
         function viewKnowledgeDetail(encodedContent) { alert(decodeURIComponent(encodedContent)); }
 
+        // 💡 레벨/아바타 표시용 참고 테이블 — 백엔드 main.py의 LEVELS와 동일하게 유지 (변경 시 양쪽 다 수정)
+        const LEVEL_ITEMS_REF = [
+            {level:1, name:"씨앗", icon:"🌰", threshold:0, item:null},
+            {level:2, name:"새싹", icon:"🌱", threshold:150, item:{id:"sprout", emoji:"🌱", label:"새싹 배지"}},
+            {level:3, name:"떡잎", icon:"🌿", threshold:350, item:{id:"clover", emoji:"🍀", label:"네잎클로버"}},
+            {level:4, name:"줄기", icon:"🪴", threshold:600, item:{id:"bamboo", emoji:"🎍", label:"대나무 장식"}},
+            {level:5, name:"봉오리", icon:"🌸", threshold:900, item:{id:"flowerpin", emoji:"🌸", label:"꽃 머리핀"}},
+            {level:6, name:"꽃", icon:"🌼", threshold:1300, item:{id:"wreath", emoji:"🌻", label:"화관"}},
+            {level:7, name:"열매", icon:"🍏", threshold:1800, item:{id:"grapes", emoji:"🍇", label:"열매 목걸이"}},
+            {level:8, name:"잘 익은 열매", icon:"🍎", threshold:2400, item:{id:"crown", emoji:"👑", label:"작은 왕관"}},
+            {level:9, name:"빛나는 열매", icon:"🍎", threshold:3200, item:{id:"sparkle", emoji:"✨", label:"반짝이는 오라"}},
+            {level:10, name:"황금 열매", icon:"🏆", threshold:4200, item:{id:"trophy", emoji:"🏆", label:"황금 트로피"}},
+        ];
+        let myLevelInfo = null;
+        let myAvatarGender = 'boy';
+        let myAvatarItem = 'none';
+
+        // 관리자 화면에서 학생 xp만 가지고 레벨을 계산할 때 사용 (백엔드 compute_level_info와 동일 로직)
+        function computeLevelFromXp(xp) {
+            xp = Math.max(0, parseInt(xp) || 0);
+            let current = LEVEL_ITEMS_REF[0];
+            for (const lv of LEVEL_ITEMS_REF) { if (xp >= lv.threshold) current = lv; else break; }
+            return current;
+        }
+
+        function levelThemeGradient(level) {
+            // 레벨이 오를수록 흙빛 → 초록 → 분홍 → 금빛으로 배경이 화려해짐
+            const hues = [28, 95, 115, 135, 330, 320, 85, 22, 280, 45];
+            const h = hues[Math.min(Math.max(level,1)-1, hues.length-1)];
+            const light = level >= 10 ? 34 : 22;
+            return `radial-gradient(circle at 30% 25%, hsl(${h},60%,${light}%), #151922 75%)`;
+        }
+
+        function renderAvatarCard() {
+            if(!myLevelInfo) return;
+            const disp = document.getElementById('avatar-display');
+            disp.innerText = myAvatarGender === 'girl' ? '👧' : '👦';
+            disp.style.background = levelThemeGradient(myLevelInfo.level);
+
+            const itemDef = LEVEL_ITEMS_REF.map(l=>l.item).filter(Boolean).find(it=>it.id===myAvatarItem);
+            document.getElementById('avatar-item-badge').innerText = itemDef ? itemDef.emoji : '';
+            document.getElementById('avatar-level-icon').innerText = myLevelInfo.icon;
+            document.getElementById('avatar-level-name').innerText = myLevelInfo.name;
+            document.getElementById('avatar-level-num').innerText = `Lv.${myLevelInfo.level}`;
+
+            const cur = myLevelInfo.xp - myLevelInfo.current_threshold;
+            const span = myLevelInfo.is_max ? 1 : (myLevelInfo.next_threshold - myLevelInfo.current_threshold);
+            const pct = myLevelInfo.is_max ? 100 : Math.max(0, Math.min(100, Math.round((cur/span)*100)));
+            document.getElementById('avatar-progress-bar').style.width = pct + '%';
+            document.getElementById('avatar-progress-text').innerText = myLevelInfo.is_max
+                ? `최고 레벨을 달성했습니다! (누적 ${myLevelInfo.xp} 성장 포인트)`
+                : `다음 레벨 '${myLevelInfo.next_name}'까지 ${myLevelInfo.next_threshold - myLevelInfo.xp} 포인트 남음 (${myLevelInfo.xp}/${myLevelInfo.next_threshold})`;
+
+            const boyBtn = document.getElementById('gender-btn-boy'), girlBtn = document.getElementById('gender-btn-girl');
+            boyBtn.className = `flex-1 py-3 rounded-xl border-2 text-3xl transition ${myAvatarGender==='boy' ? 'border-blue-500 bg-blue-900/30' : 'border-gray-600'}`;
+            girlBtn.className = `flex-1 py-3 rounded-xl border-2 text-3xl transition ${myAvatarGender==='girl' ? 'border-pink-500 bg-pink-900/30' : 'border-gray-600'}`;
+
+            renderWardrobeGrid();
+        }
+
+        function renderWardrobeGrid() {
+            const grid = document.getElementById('avatar-item-grid');
+            grid.innerHTML = `<button onclick="equipAvatarItem('none')" class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition ${myAvatarItem==='none' ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 bg-gray-800 hover:border-gray-500'}"><span class="text-2xl">🚫</span><span class="text-[10px] text-gray-300">없음</span></button>`;
+            LEVEL_ITEMS_REF.forEach(lv => {
+                if(!lv.item) return;
+                const unlocked = myLevelInfo.level >= lv.level;
+                const equipped = myAvatarItem === lv.item.id;
+                if(unlocked) {
+                    grid.innerHTML += `<button onclick="equipAvatarItem('${lv.item.id}')" class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition ${equipped ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 bg-gray-800 hover:border-gray-500'}"><span class="text-2xl">${lv.item.emoji}</span><span class="text-[10px] text-gray-300">${escapeHtml(lv.item.label)}</span></button>`;
+                } else {
+                    grid.innerHTML += `<div class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-gray-800 bg-gray-900 opacity-50"><span class="text-2xl">🔒</span><span class="text-[10px] text-gray-500">Lv.${lv.level} 필요</span></div>`;
+                }
+            });
+        }
+
+        function toggleWardrobe() { document.getElementById('avatar-wardrobe').classList.toggle('hidden'); }
+
+        async function setAvatarGender(g) { myAvatarGender = g; renderAvatarCard(); await saveAvatarChoice(); }
+
+        async function equipAvatarItem(itemId) {
+            if(itemId !== 'none') {
+                const lv = LEVEL_ITEMS_REF.find(l => l.item && l.item.id === itemId);
+                if(!lv || myLevelInfo.level < lv.level) return; // 버튼이 애초에 안 보이지만 이중 방어
+            }
+            myAvatarItem = itemId;
+            renderAvatarCard();
+            await saveAvatarChoice();
+        }
+
+        async function saveAvatarChoice() {
+            try {
+                await fetch(`${API_URL}/api/student/avatar`, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ student_name: currentUser.name, gender: myAvatarGender, item: myAvatarItem })
+                });
+            } catch(e) {}
+        }
+
         async function loadMyPage() {
             if(!currentUser) return;
             document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
             try {
-                const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json();
+                const res=await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`); const data=await res.json();
                 const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0;
                 if(data.success) {
-                    data.reports.forEach(r => {
-                        if(r.student_name===currentUser.name && r.school===currentUser.school) {
-                            cnt++;
-                            let sc = r.type==='로그인'?'<span class="text-blue-400 font-bold">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400 font-bold">질문완료</span>':((r.type.includes('모의고사')||r.type.includes('퀴즈'))?`<span class="text-yellow-400 font-bold">${r.score}점</span>`:'<span class="text-emerald-400 font-bold">제출완료</span>'));
-                            c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between items-center"><div class="text-white text-sm w-2/3 truncate">${escapeHtml(r.task_name)} <span class="text-[10px] text-gray-500 block mt-1">${escapeHtml(r.submitted_at)} | ${escapeHtml(r.type)}</span></div><div>${sc}</div></div>`;
-                        }
+                    myLevelInfo = data.level_info || {level:1, name:"씨앗", icon:"🌰", xp:0, current_threshold:0, next_threshold:150, next_name:"새싹", is_max:false};
+                    myAvatarGender = (data.profile && data.profile.avatar_gender) || 'boy';
+                    myAvatarItem = (data.profile && data.profile.avatar_item) || 'none';
+                    renderAvatarCard();
+
+                    (data.reports || []).forEach(r => {
+                        if(r.school && currentUser.school && r.school !== currentUser.school) return;
+                        cnt++;
+                        let sc = r.type==='로그인'?'<span class="text-blue-400 font-bold">접속됨</span>':(r.type==='질문'?'<span class="text-pink-400 font-bold">질문완료</span>':((r.type.includes('모의고사')||r.type.includes('퀴즈'))?`<span class="text-yellow-400 font-bold">${r.score}점</span>`:'<span class="text-emerald-400 font-bold">제출완료</span>'));
+                        c.innerHTML+=`<div class="p-3 border-b border-gray-700 flex justify-between items-center"><div class="text-white text-sm w-2/3 truncate">${escapeHtml(r.task_name)} <span class="text-[10px] text-gray-500 block mt-1">${escapeHtml(r.submitted_at)} | ${escapeHtml(r.type)}</span></div><div>${sc}</div></div>`;
                     });
                     document.getElementById('mypage-count').innerText=`${cnt}건`;
                     if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>";
@@ -860,7 +997,7 @@
         function logout() { localStorage.removeItem('logyedu_user'); window.location.hash='home'; location.reload(); }
 
         async function addSingleStudent() { const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value; if(!n) return; showLoader("명단 추가 중..."); await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n})}); loadAdminStudents(); hideLoader(); }
-        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${escAttr(s.id)}"> ${escapeHtml(s.school)} ${escapeHtml(s.grade)} ${escapeHtml(s.student_name)}</label><div class="w-1/3 text-right"><button onclick="fetchReports('${escAttr(s.student_name)}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1 font-bold">이력</button><button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school)}','${escAttr(s.grade)}')" class="bg-blue-600 px-2 rounded text-xs text-white font-bold">수정</button></div></div>`); } }
+        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>{ const lv = computeLevelFromXp(s.xp); c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${escAttr(s.id)}"> ${escapeHtml(s.school)} ${escapeHtml(s.grade)} ${escapeHtml(s.student_name)} <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span></label><div class="w-1/3 text-right"><button onclick="fetchReports('${escAttr(s.student_name)}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1 font-bold">이력</button><button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school)}','${escAttr(s.grade)}')" class="bg-blue-600 px-2 rounded text-xs text-white font-bold">수정</button></div></div>`; }); } }
         async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
 
         // 💡 팝업 모달을 띄우고 기존 정보를 채워넣는 함수
