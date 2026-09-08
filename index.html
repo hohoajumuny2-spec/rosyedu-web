@@ -1380,7 +1380,24 @@
             hideLoader();
         }
 
+        // 💡 시험방(모의고사) UI 상태 초기화 — 관리자 "실시간 감독" 모드나 이전 제출 화면에서 남은
+        // display/innerHTML 상태가 다음 입장에 그대로 남아 PDF 영역이 비거나 버튼이 겹쳐 보이던 버그 수정
+        function resetExamRoomUI() {
+            document.getElementById('pdf-viewer-section').style.display = '';
+            document.getElementById('exam-omr-container').style.display = '';
+            document.getElementById('btn-submit-exam').style.display = 'none';
+            document.getElementById('btn-next-section').style.display = '';
+            document.getElementById('active-section-timer').innerText = '00:00';
+            document.getElementById('active-section-timer').classList.remove('text-red-500');
+            document.getElementById('active-target-score').innerText = '';
+            document.getElementById('exam-live-chat').style.display = 'none';
+            document.getElementById('exam-result-report').style.display = 'none';
+            document.getElementById('exam-result-report').innerHTML = '';
+            document.getElementById('report-action-buttons').style.display = 'none';
+        }
+
         function enterExamRoom(idx) {
+            resetExamRoomUI();
             currentExamData = studentExamsList[idx];
             currentExamTitle = currentExamData.title;
             openProgram('exam-room');
@@ -1419,6 +1436,7 @@
         }
 
         function startAdminLiveByIndex(i) {
+            resetExamRoomUI();
             currentExamData = studentExamsList[i];
             currentExamTitle = currentExamData.title;
             openProgram('exam-room');
