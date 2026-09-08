@@ -35,19 +35,17 @@
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
-    <!-- 글로벌 로딩 -->
     <div id="global-loader" class="hidden fixed inset-0 z-[9999] bg-[#0f172a]/95 backdrop-blur-md flex flex-col items-center justify-center fade-in">
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
             <div class="absolute inset-2 border-r-4 border-emerald-500 border-solid rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
         </div>
-        <p id="global-loader-text" class="text-xl md:text-2xl font-black text-emerald-400 tracking-wider text-center px-4 animate-pulse whitespace-pre-wrap leading-relaxed bg-gray-900/80 p-4 rounded-xl shadow-2xl border border-emerald-500/30">처리 중입니다...</p>
+        <p id="global-loader-text" class="text-xl md:text-2xl font-black text-emerald-400 tracking-wider text-center px-4 animate-pulse whitespace-pre-wrap leading-relaxed bg-gray-900/80 p-4 rounded-xl shadow-2xl border border-emerald-500/30">파일을 업로드 중입니다...</p>
     </div>
 
     <div id="toast-container"></div>
     <div id="live-toast-container"></div>
 
-    <!-- 첫 접속 메인 팝업 -->
     <div id="main-popup" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-blue-500 p-8 rounded-2xl w-full max-w-md shadow-2xl flex flex-col fade-in relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
@@ -64,7 +62,6 @@
         </div>
     </div>
 
-    <!-- 문의 모달 -->
     <div id="inquiry-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] border border-gray-700 p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
@@ -77,7 +74,6 @@
         </div>
     </div>
 
-    <!-- 상단 내비게이션 바 -->
     <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
@@ -102,7 +98,6 @@
             </div>
         </div>
         
-        <!-- 모바일 햄버거 메뉴 -->
         <div id="mobile-menu" class="hidden flex-col bg-[#151922] border-t border-gray-800 text-sm font-bold text-gray-300 shadow-xl">
             <button onclick="scrollToSection('intro-section'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-blue-400 w-full">프로그램 소개</button>
             <button onclick="scrollToSection('guide-section'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-blue-400 w-full">이용 안내</button>
@@ -114,7 +109,6 @@
         </div>
     </nav>
 
-    <!-- 홈 뷰 -->
     <div id="home-view" class="w-full flex-grow flex flex-col items-center pt-20 px-4 overflow-y-auto">
         <div class="text-center z-10 fade-in min-h-[80vh] flex flex-col justify-center items-center w-full">
             <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all"><span class="text-blue-500">'로지는 언제나 올바름'</span>을 찾아냈습니다.<br><span class="text-2xl md:text-4xl lg:text-[2.5rem] mt-6 block text-gray-300 font-bold">그리고 그것이 <span class="text-blue-500">정답</span>이 되는 길을 만들었습니다.</span></h1>
@@ -141,7 +135,7 @@
             <div class="bg-[#151922] p-8 rounded-2xl border border-gray-700 text-gray-300 leading-relaxed text-lg">
                 <div class="mb-6">
                     <h4 class="text-xl font-bold text-white mb-2">1. 로그인 방법</h4>
-                    <p>우측 상단의 [로그인] 버튼을 클릭한 후, 원장님께서 명단에 등록하신 <strong>학교, 학년, 이름</strong>을 띄어쓰기 없이 정확히 입력해야 접속할 수 있습니다.</p>
+                    <p>우측 상단의 [로그인] 버튼을 클릭한 후, 원장님께서 명단에 등록하신 <strong>반 선택과 본명</strong>을 정확히 입력해야 접속할 수 있습니다.</p>
                 </div>
                 <div>
                     <h4 class="text-xl font-bold text-white mb-2">2. 과제 제출 및 성적 확인</h4>
@@ -151,7 +145,6 @@
         </div>
     </div>
 
-    <!-- 대시보드 뷰 -->
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
@@ -286,7 +279,7 @@
                 </div>
             </div>
 
-            <!-- 타임어택 퀴즈 목록 -->
+            <!-- 타임어택 퀴즈 -->
             <div id="prog-quiz-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
                 <h2 class="text-2xl font-bold text-orange-500 mb-4">타임어택 퀴즈</h2>
                 <p class="text-gray-400 text-sm mb-6">정해진 기한(마감)과 시험 시간이 있는 퀴즈입니다. 타이머가 0이 되면 자동 제출됩니다.</p>
@@ -333,10 +326,10 @@
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                     </div>
 
-                    <!-- 명단 탭 -->
+                    <!-- 학생명단 탭 -->
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
-                        <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white">추가</button></div></div>
-                        <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
+                        <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white font-bold rounded">추가</button></div></div>
+                        <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2 rounded font-bold">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
                         <div class="col-span-2 bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] flex flex-col">
                             <h3 class="text-lg lg:text-xl font-bold mb-4 text-white flex justify-between items-center border-b border-gray-700 pb-4">
                                 <span id="stats-title-span"><i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계</span>
@@ -395,7 +388,7 @@
                         </div>
                     </div>
 
-                    <!-- 출제 탭 -->
+                    <!-- 문제 출제 엔진 탭 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
@@ -447,24 +440,12 @@
                     <!-- 모의고사 탭 -->
                     <div id="admin-exam" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
-                            <input type="text" id="rt-title" placeholder="시험 제목" class="w-full p-2 bg-gray-800 text-white mb-2">
-                            <input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4">
-                            <label class="text-white block mb-2"><input type="checkbox" id="rt-student-all" checked onchange="toggleExamStudents()"> 전체 학생</label>
-                            <div id="rt-student-list-container" class="hidden bg-gray-800 p-2 h-24 overflow-auto text-white mb-4"></div>
-                            <div class="flex gap-2 mb-2">
-                                <input type="text" id="sec-name" class="w-1/2 p-2 bg-gray-800 text-white" placeholder="구간명">
-                                <input type="number" id="sec-time" class="w-1/4 p-2 bg-gray-800 text-white" placeholder="분">
-                                <button onclick="addAdminSection()" class="bg-yellow-600 text-white px-4">추가</button>
-                            </div>
-                            <div id="admin-section-board" class="mb-4 text-white flex flex-wrap"></div>
+                            <input type="text" id="rt-title" placeholder="시험 제목" class="w-full p-2 bg-gray-800 text-white mb-2"><input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4">
+                            <label class="text-white block mb-2"><input type="checkbox" id="rt-student-all" checked onchange="toggleExamStudents()"> 전체 학생</label><div id="rt-student-list-container" class="hidden bg-gray-800 p-2 h-24 overflow-auto text-white mb-4"></div>
+                            <div class="flex gap-2 mb-2"><input type="text" id="sec-name" class="w-1/2 p-2 bg-gray-800 text-white" placeholder="구간명"><input type="number" id="sec-time" class="w-1/4 p-2 bg-gray-800 text-white" placeholder="분"><button onclick="addAdminSection()" class="bg-yellow-600 text-white px-4">추가</button></div><div id="admin-section-board" class="mb-4 text-white flex flex-wrap"></div>
                             <input type="file" id="rt-pdf" accept=".pdf, image/*" class="mb-4 text-white">
-                            <input type="text" id="rt-video" placeholder="해설강의 URL" class="w-full p-2 bg-gray-800 text-white mb-2">
-                            <textarea id="rt-exp" class="w-full p-2 bg-gray-800 text-white h-24 mb-4" placeholder="상세 해설지"></textarea>
-                            <div class="flex gap-2 mb-2">
-                                <input type="number" id="rt-qcount" class="w-2/3 p-2 bg-gray-800 text-white" placeholder="문항수 (생략가능)">
-                                <button onclick="buildAdminOMR()" class="w-1/3 bg-gray-600 text-white">OMR 생성</button>
-                            </div>
-                            <div id="admin-omr-board" class="h-32 overflow-auto mb-4 text-white"></div>
+                            <input type="text" id="rt-video" placeholder="해설강의 URL" class="w-full p-2 bg-gray-800 text-white mb-2"><textarea id="rt-exp" class="w-full p-2 bg-gray-800 text-white h-24 mb-4" placeholder="상세 해설지"></textarea>
+                            <div class="flex gap-2 mb-2"><input type="number" id="rt-qcount" class="w-2/3 p-2 bg-gray-800 text-white" placeholder="문항수 (생략가능)"><button onclick="buildAdminOMR()" class="w-1/3 bg-gray-600 text-white">OMR 생성</button></div><div id="admin-omr-board" class="h-32 overflow-auto mb-4 text-white"></div>
                             <button onclick="setRealtimeExam()" class="w-full bg-indigo-600 py-3 text-white font-bold">오픈하기</button>
                         </div>
                         <div class="bg-[#151922] p-6 rounded h-[700px] flex flex-col"><div id="admin-exam-list" class="flex-grow overflow-auto space-y-2"></div></div>
@@ -472,12 +453,8 @@
 
                     <!-- 강의 탭 -->
                     <div id="admin-lecture" class="admin-tab-content grid grid-cols-2 gap-4">
-                        <div class="bg-[#151922] p-6 rounded">
-                            <input type="text" id="lec-title" class="w-full p-2 mb-2 bg-gray-800 text-white" placeholder="강의 제목">
-                            <input type="text" id="lec-url" class="w-full p-2 mb-2 bg-gray-800 text-white" placeholder="동영상 URL">
-                            <button onclick="createLecture()" class="w-full bg-purple-600 py-2 text-white font-bold">등록</button>
-                        </div>
-                        <div id="admin-lecture-list" class="bg-[#151922] p-6 rounded h-[500px] overflow-auto text-white space-y-2"></div>
+                        <div class="bg-[#151922] p-6 rounded"><input type="text" id="lec-title" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="lec-url" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="createLecture()" class="w-full bg-purple-600 py-2 text-white font-bold rounded">등록</button></div>
+                        <div id="admin-lecture-list" class="bg-[#151922] p-6 rounded h-[500px] overflow-auto text-white"></div>
                     </div>
 
                     <!-- 과제/공지 탭 -->
@@ -504,19 +481,19 @@
             </div>
         </div>
     </div>
-
-    <!-- 로그인/가이드/가져오기/수정 모달창 -->
-    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
-        <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md">
+<div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h2 class="text-3xl font-black mb-2 text-white text-center">로그인</h2>
             <div class="text-center mb-6">
                 <button onclick="showModal('login-guide')" class="text-emerald-400 hover:text-emerald-300 text-sm font-bold underline transition"><i class="fa-solid fa-circle-question mr-1"></i>로그인이 안 되나요?</button>
             </div>
-            <input type="text" id="login-school" placeholder="학교 (예: 미강고, 하남고)" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-2">
-            <input type="text" id="login-grade" placeholder="학년 (예: 1, 2, 3)" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-2">
-            <input type="text" id="login-name" placeholder="이름" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-4">
-            <input type="password" id="login-pw" placeholder="관리자 비밀번호 (학생은 비워둠)" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-red-500 rounded text-white mb-4">
+            <select id="login-class" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-2">
+                <option value="" disabled selected>반을 선택하세요</option>
+                <option value="고1 미강고">고1 미강고</option><option value="고1 미사고">고1 미사고</option><option value="고1 하남고">고1 하남고</option><option value="논술">논술</option>
+            </select>
+            <input type="text" id="login-name" placeholder="본명 입력" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-4">
+            <input type="password" id="login-pw" placeholder="관리자 스텔스 키 (원장님만 입력)" class="w-full p-3 bg-[#151922] border border-gray-700 text-gray-400 p-3 rounded mb-4">
             <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg">입장하기</button>
         </div>
     </div>
@@ -526,23 +503,7 @@
             <button onclick="closeModal('login-guide-modal')" class="absolute top-5 right-5 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             <h3 class="text-2xl font-black text-emerald-400 mb-5"><i class="fa-solid fa-circle-info mr-2"></i>올바른 로그인 방법</h3>
             <div class="text-gray-300 text-sm leading-relaxed space-y-4">
-                <p>원장님이 명단에 등록하신 <strong>학교, 학년, 이름</strong>과 띄어쓰기까지 정확히 일치해야 접속할 수 있습니다.</p>
-                <div class="bg-[#151922] p-4 rounded border border-red-900">
-                    <p class="text-red-400 font-bold mb-2">❌ 잘못된 예시 (접속 불가)</p>
-                    <ul class="list-disc pl-5 space-y-1 text-gray-400">
-                        <li><span class="line-through">미사강변고</span> (줄임말이 아닌 경우)</li>
-                        <li><span class="line-through">하남 고등학교</span> (띄어쓰기 포함된 경우)</li>
-                        <li><span class="line-through">2학년</span> (글자가 포함된 경우)</li>
-                    </ul>
-                </div>
-                <div class="bg-[#151922] p-4 rounded border border-emerald-900">
-                    <p class="text-emerald-400 font-bold mb-2">✅ 올바른 예시 (접속 가능)</p>
-                    <ul class="list-disc pl-5 space-y-1 text-white">
-                        <li><strong>학교:</strong> 미강고</li>
-                        <li><strong>학년:</strong> 2</li>
-                        <li><strong>이름:</strong> 홍길동</li>
-                    </ul>
-                </div>
+                <p>원장님이 명단에 등록하신 <strong>반 이름(목록에서 선택)과 본명</strong>을 정확히 입력해야 접속할 수 있습니다.</p>
             </div>
             <button onclick="closeModal('login-guide-modal')" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 mt-6 rounded-xl transition text-lg">확인했습니다</button>
         </div>
@@ -560,9 +521,9 @@
     <div id="edit-student-modal" class="hidden fixed inset-0 z-[110] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-sm">
             <input type="hidden" id="edit-old-id">
-            <input type="text" id="edit-school" class="w-full p-2 bg-gray-800 text-white mb-2">
-            <input type="text" id="edit-grade" class="w-full p-2 bg-gray-800 text-white mb-2">
-            <input type="text" id="edit-name" class="w-full p-2 bg-gray-800 text-white mb-4">
+            <input type="text" id="edit-school" class="w-full p-2 bg-gray-800 text-white mb-2" placeholder="학교">
+            <input type="text" id="edit-grade" class="w-full p-2 bg-gray-800 text-white mb-2" placeholder="학년">
+            <input type="text" id="edit-name" class="w-full p-2 bg-gray-800 text-white mb-4" placeholder="이름">
             <div class="flex gap-2">
                 <button onclick="submitEditStudent()" class="flex-1 bg-blue-600 py-2 text-white font-bold rounded">저장</button>
                 <button onclick="closeModal('edit-student-modal')" class="flex-1 bg-gray-600 py-2 text-white font-bold rounded">취소</button>
@@ -570,7 +531,6 @@
         </div>
     </div>
 
-    <!-- 전체 Javascript 시작 -->
     <script>
         const API_URL = "https://korean-ai-tutor.onrender.com"; 
         let currentUser = null; let wsLive = null; 
@@ -598,8 +558,8 @@
         function renderAccumulatedFiles(array, containerId) { 
             const c = document.getElementById(containerId); 
             if(c) { 
-                c.innerHTML = array.map((f,i) => `<span class="bg-indigo-900 text-white px-2 py-1 rounded text-xs m-1">${f.name} <button onclick="removeFileByName('${containerId}', '${f.name.replace(/'/g, "\\'")}')" class="text-red-400 ml-1 font-bold">X</button></span>`).join(''); 
-                if(array.length>0) c.innerHTML+=`<div class="w-full mt-1 text-right"><button onclick="clearAllFiles('${containerId}')" class="text-xs text-red-400 hover:text-red-300">전체 삭제</button></div>`; 
+                c.innerHTML = array.map((f,i) => `<span class="bg-indigo-900 text-white px-2 py-1 rounded text-xs m-1">${f.name} <button onclick="removeFileByName('${containerId}', '${f.name.replace(/'/g, "\\'")}')" class="text-red-400 ml-1 font-bold hover:text-red-200">X</button></span>`).join(''); 
+                if(array.length>0) c.innerHTML+=`<div class="w-full mt-1 text-right"><button onclick="clearAllFiles('${containerId}')" class="text-xs text-red-400 font-bold hover:text-red-200">전체 삭제</button></div>`; 
             } 
         }
         
@@ -622,7 +582,6 @@
             renderAccumulatedFiles([], cId); 
         }
 
-        // 인쇄 시 위아래 30mm 띄우는 완전한 PDF 출력 함수
         function printGeneratedPDF() {
             let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = ''; let inQuestion = false; let inBogi = false;
@@ -686,13 +645,13 @@
                 const c=document.getElementById('admin-questions-list'); c.innerHTML=''; 
                 if(data.success && data.questions.length>0){ 
                     generatedQuestionsData = data.questions; 
-                    data.questions.forEach((q,i) => { c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2"><div class="flex justify-between"><span class="text-yellow-400 cursor-pointer font-bold" onclick="viewGeneratedQuestion(${i})">${q.title}</span><button onclick="deleteGeneratedQuestion('${q.id}')" class="text-red-400 text-xs hover:text-red-300 bg-red-900/40 px-2 py-1 rounded">삭제</button></div></div>`; }); 
+                    data.questions.forEach((q,i) => { c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2"><div class="flex justify-between items-center"><span class="text-yellow-400 cursor-pointer font-bold w-2/3 truncate hover:underline" onclick="viewGeneratedQuestion(${i})">${q.title}</span><button onclick="deleteGeneratedQuestion('${q.id}')" class="text-red-400 text-xs font-bold hover:text-red-300 bg-red-900/40 px-3 py-1 rounded transition">삭제</button></div></div>`; }); 
                 } else { generatedQuestionsData=[]; } 
             }catch(e){} 
         }
 
         function viewGeneratedQuestion(i) { const q=generatedQuestionsData[i]; if(!q) return; document.getElementById('gen-title').value=q.title; const t=document.getElementById('gen-result-text'); t.value=q.content; t.scrollTop=0; document.getElementById('gen-result-area').style.display='flex'; t.style.backgroundColor='#1e3a8a'; setTimeout(()=>t.style.backgroundColor='#1e2430',400); }
-        async function deleteGeneratedQuestion(id) { if(!confirm("삭제하시겠습니까?")) return; showLoader("삭제 중..."); try{ await fetch(`${API_URL}/api/admin/questions/${id}`,{method:'DELETE'}); loadGeneratedQuestions(); }catch(e){} hideLoader(); }
+        async function deleteGeneratedQuestion(id) { if(!confirm("해당 출제본을 삭제하시겠습니까?")) return; showLoader("삭제 중..."); try{ await fetch(`${API_URL}/api/admin/questions/${id}`,{method:'DELETE'}); loadGeneratedQuestions(); }catch(e){} hideLoader(); }
         
         function deployFromGenerator() { const t = document.getElementById('gen-title').value.trim(); const c = document.getElementById('gen-result-text').value.trim(); if(!t) return alert("제목을 먼저 입력하세요."); switchAdminTab('admin-exam'); document.getElementById('rt-title').value = t; document.getElementById('rt-exp').value = c; if(adminExamSections.length === 0) { addAdminSection('모의고사', 45); } alert("제목과 해설지가 방 개설 페이지로 완벽하게 복사되었습니다.\n이제 학생용 PDF만 첨부하고 [오픈하기]를 누르시면 됩니다!"); }
 
@@ -704,7 +663,7 @@
                 const res = await fetch(`${API_URL}/api/knowledge`); const data = await res.json();
                 c.innerHTML = '';
                 if(data.success && data.knowledge.length > 0) {
-                    data.knowledge.forEach(k => { const safeContent = encodeURIComponent(k.content); c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-blue-500 cursor-pointer transition flex justify-between items-center" onclick="importKnowledgeText('${safeContent}')"><span class="text-white font-bold truncate pr-4">${k.title}</span><span class="text-xs bg-blue-600 hover:bg-blue-500 transition text-white px-4 py-2 rounded-lg flex-shrink-0 font-bold">선택</span></div>`; });
+                    data.knowledge.forEach(k => { const safeContent = encodeURIComponent(k.content); c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-blue-500 cursor-pointer transition flex justify-between items-center mb-2" onclick="importKnowledgeText('${safeContent}')"><span class="text-white font-bold truncate pr-4 w-5/6">${k.title}</span><span class="text-xs bg-blue-600 hover:bg-blue-500 transition text-white px-4 py-2 rounded-lg flex-shrink-0 font-bold shadow-lg">선택</span></div>`; });
                 } else { c.innerHTML = '<div class="text-center text-gray-400 py-10 border border-gray-700 rounded-xl bg-gray-800">등록된 자료가 없습니다.</div>'; }
             } catch(e) { c.innerHTML = '<div class="text-red-400 text-center py-10 border border-red-900 rounded-xl bg-gray-800">서버 통신 오류.</div>'; }
         }
@@ -757,14 +716,14 @@
                 if(data.success) {
                     data.inquiries.forEach(i=>{ 
                         if(currentUser && (currentUser.isAdmin || i.student_name===currentUser.name)) {
-                            c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-sm text-gray-300 flex justify-between items-start"><div class="w-5/6">${i.content}<br><span class="text-[10px] text-gray-500">${i.created_at}</span></div>${currentUser.isAdmin?`<button onclick="deleteInquiry('${i.id}')" class="text-red-400 bg-red-900/30 px-2 py-1 rounded text-xs hover:text-white transition">삭제</button>`:''}</div>`; 
+                            c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2 text-sm text-gray-300 flex justify-between items-start"><div class="w-5/6">${i.content}<br><span class="text-[10px] text-gray-500">${i.created_at}</span></div>${currentUser.isAdmin?`<button onclick="deleteInquiry('${i.id}')" class="text-red-400 bg-red-900/30 px-2 py-1 rounded text-xs hover:text-white transition font-bold">삭제</button>`:''}</div>`; 
                         }
                     }); 
                 }
             }catch(e){} 
         }
 
-        async function deleteInquiry(id) { if(confirm("삭제?")) try{ await fetch(`${API_URL}/api/admin/inquiry/${id}`,{method:'DELETE'}); loadInquiries(); }catch(e){} }
+        async function deleteInquiry(id) { if(confirm("삭제하시겠습니까?")) try{ await fetch(`${API_URL}/api/admin/inquiry/${id}`,{method:'DELETE'}); loadInquiries(); }catch(e){} }
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#',''); 
@@ -817,14 +776,24 @@
         }
 
         async function login() { 
-            const s=document.getElementById('login-school').value.trim(), g=document.getElementById('login-grade').value.trim(), n=document.getElementById('login-name').value.trim(), p=document.getElementById('login-pw').value.trim(); 
-            if(!n&&!p) return alert("이름을 입력해주세요."); 
+            const sClass=document.getElementById('login-class').value; 
+            const n=document.getElementById('login-name').value.trim(); 
+            const p=document.getElementById('login-pw').value.trim(); 
+            
+            if(!sClass && !p) return alert("반과 이름을 모두 선택/입력해 주세요."); 
+            if(p && !n) { /* admin login skip */ } else if (!n) return alert("이름을 입력해주세요.");
+            
             showLoader("인증 중..."); 
+            
+            let s="미상", g="미상";
+            if(sClass && sClass.includes(" ")) { const parts = sClass.split(" "); g=parts[0]; s=parts[1]; } 
+            else if(sClass) { s=sClass; }
+            
             try { 
-                const res=await fetch(`${API_URL}/api/auth`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,student_name:n,admin_password:p})}); 
+                const res=await fetch(`${API_URL}/api/auth`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,student_name:n || "관리자",admin_password:p})}); 
                 const data=await res.json(); 
                 if(data.success) { 
-                    currentUser={school:s,grade:g,name:n,isAdmin:data.is_admin}; 
+                    currentUser={school:s,grade:g,name:n || "원장님",isAdmin:data.is_admin, class:sClass}; 
                     localStorage.setItem('logyedu_user',JSON.stringify(currentUser)); 
                     if(!data.is_admin) { alert(`${n}학생 환영합니다! 열심히 공부합시다!`); }
                     location.reload(); 
@@ -835,7 +804,7 @@
         function logout() { localStorage.removeItem('logyedu_user'); window.location.hash='home'; location.reload(); }
 
         async function addSingleStudent() { const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value; if(!n) return; showLoader("명단 추가 중..."); await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n})}); loadAdminStudents(); hideLoader(); }
-        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${s.id}"> ${s.school} ${s.grade} ${s.student_name}</label><div class="w-1/3 text-right"><button onclick="fetchReports('${s.student_name}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1">이력</button><button onclick="openEditStudent('${s.id}','${s.student_name}','${s.school}','${s.grade}')" class="bg-blue-600 px-2 rounded text-xs text-white">수정</button></div></div>`); } }
+        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${s.id}"> ${s.school} ${s.grade} ${s.student_name}</label><div class="w-1/3 text-right"><button onclick="fetchReports('${s.student_name}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1 font-bold">이력</button><button onclick="openEditStudent('${s.id}','${s.student_name}','${s.school}','${s.grade}')" class="bg-blue-600 px-2 rounded text-xs text-white font-bold">수정</button></div></div>`); } }
         async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
         function openEditStudent(id,n,s,g) { document.getElementById('edit-old-id').value=id; document.getElementById('edit-name').value=n; document.getElementById('edit-school').value=s; document.getElementById('edit-grade').value=g; showModal('edit-student'); }
         async function submitEditStudent() { const id=document.getElementById('edit-old-id').value, n=document.getElementById('edit-name').value, s=document.getElementById('edit-school').value, g=document.getElementById('edit-grade').value; showLoader("정보 수정 중..."); await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g})}); closeModal('edit-student-modal'); loadAdminStudents(); hideLoader(); }
@@ -899,19 +868,32 @@
             const i=document.getElementById('chat-input'); const p=i.value; if(!p) return; 
             const h=document.getElementById('chat-history'); h.innerHTML+=`<div class="text-right mb-4"><span class="bg-blue-600 p-3 rounded-lg text-white inline-block">${p}</span></div>`; 
             i.value=''; 
-            const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("prompt",p); 
+            
+            const fd=new FormData(); 
+            fd.append("school",currentUser.school || "미상"); 
+            fd.append("grade",currentUser.grade || "미상"); 
+            fd.append("student_name",currentUser.name || "미상"); 
+            fd.append("prompt",p); 
             chatFiles.forEach(f=>fd.append("files",f)); clearAllFiles('chat-file-visual'); 
+            
             const msgId=`msg-${Date.now()}`;
             h.innerHTML+=`<div class="text-left mb-4"><div class="bg-gray-800 p-4 rounded-xl text-white inline-block leading-relaxed border border-gray-700 w-full max-w-[90%]"><span class="block mb-2 font-bold text-blue-400 text-base md:text-xl">🤖 스마트 국최</span><span id="${msgId}" class="text-gray-300"><i class="fa-solid fa-spinner fa-spin mr-2"></i>답변을 작성하고 있습니다...</span></div></div>`; 
             h.scrollTop=h.scrollHeight; 
+            
             try { 
-                const res = await fetch(`${API_URL}/api/chat`, {method: 'POST', body: fd}); 
+                const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', body: fd}); 
+                if(!res.ok) throw new Error("서버 에러");
                 const data = await res.json(); 
                 const span = document.getElementById(msgId);
-                if (data.success) { span.innerHTML = data.reply.replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>'); } 
-                else { span.innerHTML = `<span class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${data.reply}</span>`; }
+                if (data.success) { 
+                    span.innerHTML = data.reply.replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>'); 
+                } else { 
+                    span.innerHTML = `<span class="text-red-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${data.reply || data.detail || '응답 오류가 발생했습니다.'}</span>`; 
+                }
                 h.scrollTop = h.scrollHeight; 
-            } catch(e) { document.getElementById(msgId).innerHTML = `<span class="text-red-400">서버 통신 오류가 발생했습니다.</span>`; } 
+            } catch(e) { 
+                document.getElementById(msgId).innerHTML = `<span class="text-red-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>서버 통신 오류: ${e.message}</span>`; 
+            } 
         }
 
         async function uploadKnowledge() {
@@ -959,6 +941,26 @@
             hideLoader();
         }
 
+        async function loadKnowledgeList() {
+            const c = document.getElementById('admin-kb-view-list');
+            c.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>학습 목록을 불러오는 중입니다...</div>';
+            try {
+                const res = await fetch(`${API_URL}/api/knowledge`);
+                const data = await res.json();
+                c.innerHTML = '';
+                if(data.success && data.knowledge && data.knowledge.length > 0) {
+                    data.knowledge.forEach(k => {
+                        const safeContent = encodeURIComponent(k.content);
+                        c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center"><span class="font-bold truncate w-2/3 cursor-pointer hover:text-emerald-400 underline transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-2"></i>${k.title}</span><button onclick="deleteKnowledge('${k.id}')" class="text-red-400 text-xs flex-shrink-0 bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`;
+                    });
+                } else {
+                    c.innerHTML = '<div class="text-center text-gray-500 mt-10">등록된 학습 자료가 없습니다.</div>';
+                }
+            } catch(e) { c.innerHTML = '<div class="text-center text-red-400 mt-10">목록을 불러오는 데 실패했습니다.<br>서버 연결을 확인하세요.</div>'; }
+        }
+        
+        async function deleteKnowledge(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/knowledge/${id}`,{method:'DELETE'}); loadKnowledgeList(); hideLoader(); } }
+
         async function createBoardAdmin() { 
             const t=document.getElementById('bd-title-admin').value, d=document.getElementById('bd-desc-admin').value; 
             if(!t) return alert("공지 제목을 입력하세요."); 
@@ -992,7 +994,7 @@
                     document.getElementById('board-write-area').style.display='none'; loadBoard(); 
                     document.getElementById('bd-title').value=''; document.getElementById('bd-desc').value=''; 
                     clearAllFiles('bd-file-visual'); 
-                } else { alert("오류: " + data.detail); }
+                } else alert("오류: " + data.detail);
             } catch(e) { alert("서버 연결 실패 또는 시간 초과입니다.\n상세원인: " + e.message); } 
             hideLoader(); 
         }
@@ -1232,6 +1234,229 @@
         async function loadAdminLectures() { try{ const res=await fetch(`${API_URL}/api/lectures`); const data=await res.json(); const c=document.getElementById('admin-lecture-list'); c.innerHTML=''; if(data.success){ data.lectures.forEach((l,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${l.video_url}" target="_blank" class="hover:text-purple-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-play mr-2"></i>${l.title}</a><button onclick="deleteLecture('${l.id}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
         async function deleteLecture(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/lecture/${id}`,{method:'DELETE'}); loadAdminLectures(); hideLoader(); } }
 
+        function addQuizQuestionUI() {
+            const container = document.getElementById('qz-questions-board');
+            const qIdx = container.children.length;
+            const div = document.createElement('div');
+            div.className = "bg-[#1e2430] p-4 rounded border border-gray-600 quiz-q-item";
+            div.innerHTML = `
+                <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="w-full p-2 bg-gray-800 text-white rounded mb-3 quiz-q-text border border-gray-600 focus:border-orange-500 outline-none">
+                <div class="space-y-2 mb-3 pl-2 border-l-2 border-orange-900">
+                    <input type="text" placeholder="① 보기 1" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none focus:border-orange-500 border border-transparent">
+                    <input type="text" placeholder="② 보기 2" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none focus:border-orange-500 border border-transparent">
+                    <input type="text" placeholder="③ 보기 3" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none focus:border-orange-500 border border-transparent">
+                    <input type="text" placeholder="④ 보기 4" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none focus:border-orange-500 border border-transparent">
+                    <input type="text" placeholder="⑤ 보기 5" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none focus:border-orange-500 border border-transparent">
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" placeholder="정답 (1~5)" min="1" max="5" class="w-1/2 p-2 bg-gray-800 text-orange-400 font-bold rounded quiz-q-ans border border-orange-500/50 focus:border-orange-500 outline-none">
+                    <input type="number" placeholder="배점" class="w-1/2 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score border border-emerald-500/50 focus:border-emerald-500 outline-none">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        async function createQuiz() {
+            const title = document.getElementById('qz-title').value.trim();
+            const deadline = document.getElementById('qz-deadline').value;
+            const limit = parseInt(document.getElementById('qz-limit').value);
+            
+            if(!title || !deadline || !limit) return alert("제목, 마감일, 제한 시간을 모두 입력하세요.");
+            
+            const qItems = document.querySelectorAll('.quiz-q-item');
+            if(qItems.length === 0) return alert("문제를 최소 1개 이상 추가하세요.");
+            
+            let questions = [];
+            for(let item of qItems) {
+                const text = item.querySelector('.quiz-q-text').value;
+                const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
+                const ans = parseInt(item.querySelector('.quiz-q-ans').value);
+                const score = parseInt(item.querySelector('.quiz-q-score').value);
+                if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
+                questions.push({ q_text: text, options: opts, answer: ans, score: score });
+            }
+            
+            showLoader("퀴즈 배포 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/quiz`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert("퀴즈가 성공적으로 배포되었습니다!");
+                    document.getElementById('qz-title').value = '';
+                    document.getElementById('qz-deadline').value = '';
+                    document.getElementById('qz-limit').value = '';
+                    document.getElementById('qz-questions-board').innerHTML = '';
+                    loadAdminQuizzes();
+                }
+            } catch(e) { alert("서버 통신 오류"); }
+            hideLoader();
+        }
+
+        async function loadAdminQuizzes() {
+            try {
+                const res = await fetch(`${API_URL}/api/quizzes`); const data = await res.json();
+                const c = document.getElementById('admin-quiz-list'); c.innerHTML = '';
+                if(data.success) {
+                    data.quizzes.forEach(q => {
+                        const isExpired = new Date() > new Date(q.deadline);
+                        const statusTag = isExpired ? `<span class="text-xs bg-red-900/50 text-red-400 px-2 py-1 rounded">마감됨</span>` : `<span class="text-xs bg-emerald-900/50 text-emerald-400 px-2 py-1 rounded">진행중</span>`;
+                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded mb-2 border border-gray-700 flex justify-between items-center"><div><div class="font-bold text-orange-400 mb-1">${q.title}</div><div class="text-xs text-gray-400">마감: ${q.deadline.replace('T', ' ')} | 제한: ${q.time_limit}분</div><div class="mt-1">${statusTag}</div></div><button onclick="deleteQuiz('${q.title}')" class="text-red-400 text-xs bg-red-900/30 px-3 py-2 rounded hover:text-white transition">삭제</button></div>`;
+                    });
+                }
+            } catch(e){}
+        }
+
+        async function deleteQuiz(title) {
+            if(confirm("이 퀴즈를 삭제하시겠습니까?")) { showLoader("삭제 중..."); try { await fetch(`${API_URL}/api/admin/quiz/${encodeURIComponent(title)}`, {method: 'DELETE'}); loadAdminQuizzes(); } catch(e){} hideLoader(); }
+        }
+
+        async function loadStudentQuizzes() {
+            try {
+                let submittedTasks = new Set();
+                if(currentUser && !currentUser.isAdmin) {
+                    const pRes = await fetch(`${API_URL}/api/student/profile/${currentUser.name}`);
+                    const pData = await pRes.json();
+                    if(pData.success && pData.reports) { pData.reports.forEach(r => { if(r.type === '타임어택 퀴즈') submittedTasks.add(r.task_name); }); }
+                }
+
+                const res = await fetch(`${API_URL}/api/quizzes`); const data = await res.json();
+                const c = document.getElementById('student-quiz-list'); c.innerHTML = '';
+                if(data.success) {
+                    allQuizzes = data.quizzes;
+                    data.quizzes.forEach((q, i) => {
+                        const isExpired = new Date() > new Date(q.deadline);
+                        const isSubmitted = submittedTasks.has(q.title);
+                        let statusHtml = ''; let clickAction = ''; let borderClass = 'border-gray-700';
+
+                        if(isSubmitted) { statusHtml = `<span class="bg-blue-900/50 text-blue-400 px-3 py-1 rounded text-sm font-bold w-full text-center block mt-4 border border-blue-700">제출 완료</span>`; } 
+                        else if(isExpired) { statusHtml = `<span class="bg-red-900/50 text-red-400 px-3 py-1 rounded text-sm font-bold w-full text-center block mt-4 border border-red-700">마감된 퀴즈</span>`; } 
+                        else { borderClass = 'border-orange-500 shadow-lg shadow-orange-500/20'; statusHtml = `<button class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded font-bold text-sm w-full transition mt-4">퀴즈 시작하기</button>`; clickAction = `onclick="enterQuizRoom(${i})"`; }
+
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border ${borderClass} flex flex-col justify-between" ${clickAction} style="${clickAction ? 'cursor:pointer' : ''}"><div><h3 class="font-bold text-xl text-white mb-2">${q.title}</h3><p class="text-xs text-gray-400 mb-1"><i class="fa-regular fa-clock mr-1"></i> 마감: ${q.deadline.replace('T', ' ')}</p><p class="text-xs text-orange-400 font-bold"><i class="fa-solid fa-hourglass-half mr-1"></i> 제한 시간: ${q.time_limit}분</p></div><div>${statusHtml}</div></div>`;
+                    });
+                }
+            } catch(e){}
+        }
+
+        function enterQuizRoom(idx) {
+            currentActiveQuiz = allQuizzes[idx];
+            if(new Date() > new Date(currentActiveQuiz.deadline)) { alert("이미 마감된 퀴즈입니다!"); return; }
+            if(!confirm(`[${currentActiveQuiz.title}]\n제한 시간: ${currentActiveQuiz.time_limit}분\n시작하시겠습니까? 시작 후 멈출 수 없습니다.`)) return;
+
+            openProgram('quiz-room'); document.getElementById('quiz-room-title').innerText = currentActiveQuiz.title;
+            const c = document.getElementById('quiz-questions-container'); c.innerHTML = ''; quizAnswers = Array(currentActiveQuiz.questions.length).fill(0);
+
+            const circles = ['①', '②', '③', '④', '⑤']; 
+
+            currentActiveQuiz.questions.forEach((q, qIndex) => {
+                let optsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    if(!opt) return;
+                    const numMark = circles[optIdx] || (optIdx + 1);
+                    optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${numMark}</span><span class="text-sm text-gray-200">${opt}</span></label>`;
+                });
+                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${q.q_text}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div><div>${optsHtml}</div></div>`;
+            });
+
+            activeQuizTimeLeft = currentActiveQuiz.time_limit * 60; updateQuizTimerUI(); clearInterval(activeQuizTimer);
+            activeQuizTimer = setInterval(() => {
+                activeQuizTimeLeft--; updateQuizTimerUI();
+                if(activeQuizTimeLeft <= 0) { clearInterval(activeQuizTimer); alert("시간이 초과되어 답안이 자동 제출됩니다."); submitQuizReal(); }
+            }, 1000);
+        }
+
+        function updateQuizTimerUI() {
+            const el = document.getElementById('quiz-timer'); const m = Math.floor(activeQuizTimeLeft / 60).toString().padStart(2, '0'); const s = (activeQuizTimeLeft % 60).toString().padStart(2, '0'); el.innerText = `${m}:${s}`;
+            if(activeQuizTimeLeft <= 60) el.classList.replace('text-orange-400', 'text-red-500');
+        }
+
+        function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
+
+        async function submitQuizReal() {
+            clearInterval(activeQuizTimer); showLoader("퀴즈 채점 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/quiz/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ school: currentUser.school, grade: currentUser.grade, student_name: currentUser.name, title: currentActiveQuiz.title, answers: quizAnswers }) });
+                const data = await res.json();
+                if(data.success) { alert(`제출 완료! 점수: ${data.score}점`); closeProgram(); openProgram('quiz-list'); loadStudentQuizzes(); }
+            } catch(e) { alert("제출 중 오류가 발생했습니다."); }
+            hideLoader();
+        }
+
+        async function analyzeTextStream() {
+            const btn = document.querySelector('button[onclick="analyzeTextStream()"]');
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>분석 중..."; }
+            const fd = new FormData(); fd.append("q_mode", "분석"); fd.append("q_types", "지문 분석"); fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); fd.append("q_text", document.getElementById('gen-text').value); genFiles.forEach(f => fd.append("files", f)); 
+            document.getElementById('gen-result-area').style.display = 'flex'; const r = document.getElementById('gen-result-text'); r.value = "⏳ AI 지문 분석 중... (서버와 통신하고 있습니다)"; r.classList.add('animate-pulse'); 
+            try { 
+                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); r.classList.remove('animate-pulse'); 
+                if(!res.ok) { const err = await res.text(); r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`; if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; } return; }
+                r.value = ""; const reader = res.body.getReader(); const dec = new TextDecoder("utf-8"); 
+                while(true) { const {done, value} = await reader.read(); if(done) break; r.value += dec.decode(value, {stream: true}); r.scrollTop = r.scrollHeight; } 
+            } catch(e) { r.classList.remove('animate-pulse'); r.value = `❌ 통신 실패: 렌더(Render) 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; } 
+            if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; }
+        }
+
+        async function generateStreamQuestions() { 
+            const k = parseInt(document.getElementById('c-killer').value || 0);
+            const s = parseInt(document.getElementById('c-semi').value || 0);
+            const h = parseInt(document.getElementById('c-high').value || 0);
+            const m = parseInt(document.getElementById('c-mid').value || 0);
+            const l = parseInt(document.getElementById('c-low').value || 0);
+            const total = k + s + h + m + l;
+            
+            if(total === 0) return alert("출제할 문항 수를 1개 이상 입력해주세요.");
+            if(total > 20) return alert("🚨 한 번에 20문제가 넘게 출제하면 AI가 과부하로 서버를 다운시킵니다. 20문제 이하로 나누어서 출제해 주세요!");
+
+            const title = document.getElementById('gen-title').value.trim();
+            if(!title) return alert("출제할 문제집의 제목을 입력하세요.");
+
+            const btn = document.querySelector('button[onclick="generateStreamQuestions()"]');
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>AI가 출제 중입니다..."; }
+            
+            const fd = new FormData(); 
+            fd.append("q_mode", "신규"); 
+            fd.append("q_types", Array.from(document.querySelectorAll('#gen-types input:checked')).map(cb=>cb.value).join(', ') || "수능/내신형"); 
+            fd.append("cnt_killer", k); 
+            fd.append("cnt_semi", s); 
+            fd.append("cnt_high", h); 
+            fd.append("cnt_mid", m); 
+            fd.append("cnt_low", l); 
+            fd.append("q_text", document.getElementById('gen-text').value); 
+            genFiles.forEach(f => fd.append("files", f)); 
+            
+            document.getElementById('gen-result-area').style.display = 'flex'; 
+            const r = document.getElementById('gen-result-text'); 
+            r.value = "⏳ AI 출제 중... (문제가 많을수록 시간이 오래 걸립니다. 창을 닫지 마세요!)"; 
+            r.classList.add('animate-pulse'); 
+            
+            try { 
+                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); 
+                r.classList.remove('animate-pulse'); 
+                if(!res.ok) { 
+                    const err = await res.text(); 
+                    r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`; 
+                    if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; } 
+                    return; 
+                }
+                r.value = ""; 
+                const reader = res.body.getReader(); 
+                const dec = new TextDecoder("utf-8"); 
+                while(true) { 
+                    const {done, value} = await reader.read(); 
+                    if(done) break; 
+                    r.value += dec.decode(value, {stream: true}); 
+                    r.scrollTop = r.scrollHeight; 
+                } 
+            } catch(e) { 
+                r.classList.remove('animate-pulse'); 
+                r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; 
+            } 
+            if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+        }
     </script>
 </body>
 </html>
