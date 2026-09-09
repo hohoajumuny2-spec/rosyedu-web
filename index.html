@@ -46,7 +46,7 @@
     <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md shadow-2xl">
             <button onclick="closeModal('auth-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h2 class="text-3xl font-black mb-2 text-white text-center">로그인</h2>
+            <h2 id="auth-modal-title" class="text-3xl font-black mb-2 text-white text-center">로그인</h2>
             <div class="grid grid-cols-2 gap-2 mb-2 mt-4">
                 <input type="text" id="login-school" list="login-school-list" placeholder="학교 (예: 미강고)" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white">
                 <input type="text" id="login-grade" list="login-grade-list" placeholder="학년 (예: 1학년, 고1)" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white">
@@ -56,7 +56,12 @@
             <p class="text-[11px] text-gray-500 mb-2 px-1">※ 목록에서 골라 입력하면 오타 없이 정확하게 입력됩니다.</p>
             <input type="text" id="login-name" placeholder="본명 입력" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-4">
             <input type="password" id="login-pw" placeholder="관리자 비밀번호 (학생은 비워둠)" class="w-full p-3 bg-[#151922] border border-gray-700 text-gray-400 rounded mb-4">
-            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg">입장하기</button>
+            <input type="text" id="signup-code" placeholder="가입 코드 (원장님께 문의해서 받으세요)" class="hidden w-full p-3 bg-[#151922] border border-emerald-700 outline-none focus:border-emerald-500 rounded text-white mb-4">
+            <button id="auth-primary-btn" onclick="authSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg">입장하기</button>
+            <p class="text-center text-xs text-gray-400 mt-4">
+                <span id="auth-mode-login-hint">처음이신가요? <button onclick="toggleSignupMode(true)" class="text-blue-400 hover:text-blue-300 font-bold underline">학생 회원가입</button></span>
+                <span id="auth-mode-signup-hint" class="hidden">이미 가입하셨나요? <button onclick="toggleSignupMode(false)" class="text-blue-400 hover:text-blue-300 font-bold underline">로그인으로 돌아가기</button></span>
+            </p>
         </div>
     </div>
 
@@ -77,6 +82,17 @@
             <input type="text" id="edit-name" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-6">
 
             <button onclick="submitEditStudent()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg shadow-lg">수정 완료</button>
+        </div>
+    </div>
+
+    <!-- 💡 누락되어 "자료학습 데이터 가져오기" 버튼이 반응 없던 모달 신규 추가 -->
+    <div id="knowledge-import-modal" class="hidden fixed inset-0 z-[160] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] p-6 rounded-2xl w-full max-w-2xl shadow-2xl border border-blue-600 max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-black text-white"><i class="fa-solid fa-database mr-2 text-blue-400"></i>자료학습 데이터 가져오기</h2>
+                <button onclick="closeModal('knowledge-import-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="knowledge-import-list" class="overflow-y-auto flex-grow space-y-2 pr-1"></div>
         </div>
     </div>
 
@@ -403,18 +419,18 @@
                             <div id="pdf-inner-container"></div>
                         </div>
                     </div>
-                    <div class="w-full lg:w-1/3 flex-1 min-h-0 lg:h-full bg-[#1e2430] p-4 flex flex-col rounded-lg overflow-y-auto">
+                    <div id="exam-side-panel" class="w-full lg:w-1/3 flex-1 min-h-0 lg:h-full bg-[#1e2430] p-4 flex flex-col rounded-lg overflow-y-auto transition-all duration-300">
                         <div id="timer-ui-container" class="mb-4">
                             <span id="active-target-score" class="text-yellow-400 font-bold block text-center mb-1"></span>
                             <div id="active-section-timer" class="text-5xl text-emerald-400 font-black text-center my-4 tracking-wider">00:00</div>
                             <button onclick="nextExamSection()" id="btn-next-section" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-500 transition">다음 구간 넘어가기</button>
                         </div>
                         <div id="exam-omr-container" class="flex-grow overflow-auto mb-2 bg-[#151922] rounded-lg p-2 border border-gray-700 pb-10"></div>
-                        <div id="exam-live-chat" class="hidden h-40 bg-[#151922] border border-gray-700 rounded-lg p-2 flex-col mb-4 shadow-inner">
+                        <div id="exam-live-chat" class="hidden h-56 bg-[#151922] border border-gray-700 rounded-lg p-2 flex-col mb-4 shadow-inner mx-auto w-full max-w-2xl">
                             <h4 class="text-xs text-emerald-400 font-bold mb-1 border-b border-gray-700 pb-1"><i class="fa-solid fa-headset mr-1"></i>실시간 질의응답 (원장님)</h4>
-                            <div id="exam-chat-messages" class="flex-grow overflow-auto text-xs space-y-1 mb-2 p-1"></div>
+                            <div id="exam-chat-messages" class="flex-grow overflow-auto text-sm space-y-1 mb-2 p-1"></div>
                             <div class="flex gap-1 mt-auto">
-                                <input type="text" id="exam-chat-input" class="flex-grow bg-gray-800 text-white px-2 py-1.5 rounded text-xs border border-gray-600 focus:border-emerald-500 outline-none" placeholder="질문..." onkeypress="if(event.key==='Enter') sendExamChat()">
+                                <input type="text" id="exam-chat-input" class="flex-grow bg-gray-800 text-white px-2 py-1.5 rounded text-sm border border-gray-600 focus:border-emerald-500 outline-none" placeholder="질문..." onkeypress="if(event.key==='Enter') sendExamChat()">
                                 <button onclick="sendExamChat()" class="bg-emerald-600 px-3 py-1.5 rounded text-white text-xs font-bold">전송</button>
                             </div>
                         </div>
@@ -744,7 +760,7 @@
             if(inBogi) html += '</div>';
             if(inQuestion) html += '</div>';
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>@media print { @page { margin: 30mm 15mm 30mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
+            w.document.write(`<html><head><style>@media print { @page { margin: 40mm 15mm 40mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
             w.document.close();
         }
 
@@ -943,8 +959,9 @@
 
         function scrollToSection(id) { const e = document.getElementById(id); if(e) window.scrollTo({top: e.offsetTop - 80, behavior: 'smooth'}); if(window.location.hash!=='#home') window.location.hash='home'; }
         function toggleMobileMenu() { const m = document.getElementById('mobile-menu'); m.classList.toggle('hidden'); m.classList.toggle('flex'); }
-        function closeMainPopup(h) { document.getElementById('main-popup').style.display='none'; if(h) localStorage.setItem('logyedu_hide', new Date().toISOString().split('T')[0]); }
-        function checkMainPopup() { if(localStorage.getItem('logyedu_hide') !== new Date().toISOString().split('T')[0]) document.getElementById('main-popup').style.display='flex'; }
+        // 💡 main-popup 요소가 HTML에 없어 매 로그인마다 조용히 에러가 나던 것을 방어 코드로 수정
+        function closeMainPopup(h) { const el = document.getElementById('main-popup'); if(el) el.style.display='none'; if(h) localStorage.setItem('logyedu_hide', new Date().toISOString().split('T')[0]); }
+        function checkMainPopup() { const el = document.getElementById('main-popup'); if(el && localStorage.getItem('logyedu_hide') !== new Date().toISOString().split('T')[0]) el.style.display='flex'; }
 
         async function submitInquiry(mode) {
             const el = document.getElementById(mode==='main'?'inquiry-content-main':'inquiry-content');
@@ -1023,7 +1040,7 @@
             }
         });
 
-        function showModal(id) { document.getElementById(id+'-modal').style.display='flex'; }
+        function showModal(id) { document.getElementById(id+'-modal').style.display='flex'; if(id==='auth') toggleSignupMode(false); }
         function closeModal(id) { const el = document.getElementById(id); if(el) el.style.display='none'; }
         function goHome() { window.location.hash='home'; }
         function goToDashboard() { if(!currentUser) return showModal('auth'); window.location.hash='dashboard'; }
@@ -1044,6 +1061,39 @@
             if(id==='admin-knowledge'){loadKnowledgeList();}
             if(id==='admin-generator'){loadGeneratedQuestions();}
             if(id==='admin-quiz'){loadAdminQuizzes();}
+        }
+
+        let isSignupMode = false;
+        function toggleSignupMode(flag) {
+            isSignupMode = flag;
+            document.getElementById('auth-modal-title').innerText = flag ? '학생 회원가입' : '로그인';
+            document.getElementById('login-pw').classList.toggle('hidden', flag);
+            document.getElementById('signup-code').classList.toggle('hidden', !flag);
+            document.getElementById('auth-mode-login-hint').classList.toggle('hidden', flag);
+            document.getElementById('auth-mode-signup-hint').classList.toggle('hidden', !flag);
+            document.getElementById('auth-primary-btn').innerText = flag ? '회원가입하기' : '입장하기';
+        }
+        function authSubmit() { isSignupMode ? registerStudent() : login(); }
+
+        async function registerStudent() {
+            const s = document.getElementById('login-school').value.trim();
+            const g = document.getElementById('login-grade').value.trim();
+            const n = document.getElementById('login-name').value.trim();
+            const code = document.getElementById('signup-code').value.trim();
+            if(!s || !g || !n || !code) return alert("학교, 학년, 이름, 가입 코드를 모두 입력해주세요.");
+            showLoader("회원가입 처리 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/student/register`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({school:s, grade:g, name:n, code:code})});
+                const data = await res.json();
+                if(data.success) {
+                    alert(data.already_existed ? "이미 등록된 학생이에요. 바로 입장할게요!" : `${n} 학생, 회원가입이 완료됐어요! 바로 학습실로 입장할게요.`);
+                    document.getElementById('login-pw').value = '';
+                    await login();
+                } else {
+                    alert(data.detail || "회원가입에 실패했습니다.");
+                }
+            } catch(e) { alert("서버 통신 오류: " + e.message); }
+            hideLoader();
         }
 
         async function login() {
@@ -1613,6 +1663,8 @@
             document.getElementById('exam-result-report').style.display = 'none';
             document.getElementById('exam-result-report').innerHTML = '';
             document.getElementById('report-action-buttons').style.display = 'none';
+            document.getElementById('exam-side-panel').classList.remove('lg:w-full');
+            document.getElementById('exam-side-panel').classList.add('lg:w-1/3');
         }
 
         function enterExamRoom(idx) {
@@ -1667,6 +1719,10 @@
             document.getElementById('active-section-timer').innerText = "LIVE";
             document.getElementById('btn-next-section').style.display = 'none';
 
+            // PDF가 안 보이니 남는 공간만큼 질의응답 패널을 넓게 씀
+            document.getElementById('exam-side-panel').classList.remove('lg:w-1/3');
+            document.getElementById('exam-side-panel').classList.add('lg:w-full');
+
             document.getElementById('exam-live-chat').style.display = 'flex';
             connectExamWebSocket(currentExamTitle);
         }
@@ -1683,6 +1739,11 @@
                 const nameColor = data.isAdmin ? 'text-yellow-400' : 'text-blue-300';
                 c.innerHTML += `<div class="mb-2 bg-gray-800 p-2 rounded-lg border border-gray-700"><span class="${nameColor} font-bold text-xs">[${escapeHtml(data.sender)}]</span> <span class="text-gray-200 text-sm block mt-1">${escapeHtml(data.msg)}</span></div>`;
                 c.scrollTop = c.scrollHeight;
+                // 💡 내가 보낸 메시지가 아니면 화면에 알림을 띄워서 못 보고 지나치지 않게 함
+                if(!isMe) {
+                    if(data.isAdmin && !currentUser.isAdmin) showLiveToast(`💬 원장님 답변: ${data.msg}`);
+                    else if(!data.isAdmin && currentUser.isAdmin) showLiveToast(`❓ ${data.sender} 학생: ${data.msg}`);
+                }
             };
         }
 
