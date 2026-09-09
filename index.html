@@ -745,7 +745,7 @@
                     if(inBogi) { html += '</div>'; inBogi = false; }
                     html += `<div style="padding-left:1.5em; text-indent:-1.5em; margin-bottom:4px;">${text}</div>`;
                 }
-                else if(text.includes('<보기>') || text.includes('[지문]')) {
+                else if(text.includes('<보기>') || text.includes('[보기]') || text.includes('[지문]')) {
                     if(inBogi) { html += '</div>'; }
                     html += `<div style="border:1px solid #000; padding:12px; margin:10px 0; break-inside:avoid;">`;
                     html += `<div style="font-weight:bold; margin-bottom:5px;">${text}</div>`;
