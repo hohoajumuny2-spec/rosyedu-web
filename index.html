@@ -1936,7 +1936,7 @@
             const total = k + s + h + m + l;
 
             if(total === 0) return alert("출제할 문항 수를 1개 이상 입력해주세요.");
-            if(total > 20) return alert("🚨 한 번에 20문제가 넘게 출제하면 AI가 과부하로 서버를 다운시킵니다. 20문제 이하로 나누어서 출제해 주세요!");
+            if(total > 50) return alert("🚨 한 번에 50문제가 넘으면 응답이 너무 길어져 실패할 수 있습니다. 50문제 이하로 나누어서 출제해 주세요!");
 
             const title = document.getElementById('gen-title').value.trim();
             if(!title) return alert("출제할 문제집의 제목을 입력하세요.");
