@@ -551,12 +551,18 @@
                             </div>
                             <textarea id="gen-text" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="직접 기준 지문을 입력하거나 위 버튼을 눌러 기존 자료를 불러오세요."></textarea>
 
+                            <label class="text-white font-bold text-sm block mb-2">출제 원칙 (선택)</label>
+                            <textarea id="gen-principle" class="w-full h-20 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="예: 지문의 3문단 내용을 반드시 1문제 이상 포함시켜줘 / 선지는 최대한 헷갈리게 구성해줘 / 어휘 문제는 제외해줘 등, AI가 문제를 낼 때 지켜야 할 원칙을 적어주세요."></textarea>
+
                             <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="text-white mb-2" onchange="handleFileSelect(event, genFiles, 'gen-files-visual')">
                             <div id="gen-files-visual" class="flex flex-wrap gap-2 mb-4"></div>
 
-                            <div class="flex gap-2 mb-4">
+                            <div class="flex gap-2 mb-2">
                                 <button onclick="analyzeTextStream()" class="w-1/3 bg-emerald-600 hover:bg-emerald-700 py-3 text-white font-bold rounded transition text-sm">지문 분석/요약</button>
                                 <button onclick="generateStreamQuestions()" class="w-2/3 bg-yellow-600 hover:bg-yellow-700 py-3 text-white font-bold rounded transition">AI 정밀 출제</button>
+                            </div>
+                            <div class="flex gap-2 mb-4">
+                                <button onclick="generateExplainer()" class="w-full bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-book-open mr-1"></i>학생용 해설자료 만들기 (바로 배포용)</button>
                             </div>
 
                             <div id="gen-result-area" class="hidden flex-grow flex flex-col">
@@ -730,7 +736,10 @@
         }
 
         function printGeneratedPDF() {
-            let clean = document.getElementById('gen-result-text').value.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
+            const raw = document.getElementById('gen-result-text').value;
+            if(/\[원문 지문\]/.test(raw) || /\[쉬운 설명\]/.test(raw)) return printExplainerPDF(raw);
+
+            let clean = raw.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
             let html = ''; let inQuestion = false; let inBogi = false;
             clean.split('\n').forEach(line => {
                 let text = line.trim();
@@ -767,6 +776,24 @@
             if(inQuestion) html += '</div>';
             const w = window.open('','','width=900,height=1000');
             w.document.write(`<html><head><style>@media print { @page { margin: 40mm 15mm 40mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
+            w.document.close();
+        }
+
+        function printExplainerPDF(raw) {
+            const clean = raw.replace(/[*#\\]/g, '');
+            let html = '';
+            clean.split('\n').forEach(line => {
+                const text = line.trim();
+                if(!text) { html += '<br>'; return; }
+                const heading = text.match(/^\[(.+)\]$/);
+                if(heading) {
+                    html += `<div style="font-size:14pt; font-weight:bold; margin:26px 0 12px; padding-bottom:8px; border-bottom:2px solid #000; break-after:avoid;">${heading[1]}</div>`;
+                } else {
+                    html += `<div style="margin-bottom:6px;">${text}</div>`;
+                }
+            });
+            const w = window.open('','','width=900,height=1000');
+            w.document.write(`<html><head><style>@media print { @page { margin: 30mm 20mm; } } body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; font-size: 11pt; line-height: 1.8; padding: 20px 10px; color: #111; background: #fff; } .h { text-align: center; font-size: 18pt; font-weight: bold; margin-bottom: 6px; } .sub { text-align: center; font-size: 10pt; color: #666; margin-bottom: 24px; border-bottom: 3px solid #111; padding-bottom: 20px; }</style></head><body><div class="h">로지에듀 최준용 국어</div><div class="sub">지문 해설 자료 · ${new Date().toLocaleDateString('ko-KR')}</div>${html}<script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
             w.document.close();
         }
 
@@ -1927,6 +1954,40 @@
             if(btn) { btn.disabled = false; btn.innerHTML = "지문 분석/요약"; }
         }
 
+        async function generateExplainer() {
+            const qText = document.getElementById('gen-text').value.trim();
+            if(!qText && genFiles.length === 0) return alert("해설자료를 만들 지문을 입력하거나 자료 파일을 업로드해주세요.");
+
+            const btn = document.querySelector('button[onclick="generateExplainer()"]');
+            const btnLabel = "<i class='fa-solid fa-book-open mr-1'></i>학생용 해설자료 만들기 (바로 배포용)";
+            if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>해설자료 작성 중..."; }
+
+            const fd = new FormData();
+            fd.append("q_text", qText);
+            genFiles.forEach(f => fd.append("files", f));
+
+            document.getElementById('gen-result-area').style.display = 'flex';
+            const r = document.getElementById('gen-result-text');
+            r.value = "⏳ 학생용 해설자료 작성 중... (지문 길이에 따라 시간이 걸릴 수 있습니다)";
+            r.classList.add('animate-pulse');
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/generate_explainer`, {method: 'POST', body: fd});
+                r.classList.remove('animate-pulse');
+                if(!res.ok) {
+                    const err = await res.text();
+                    r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`;
+                    if(btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+                    return;
+                }
+                r.value = "";
+                const reader = res.body.getReader();
+                const dec = new TextDecoder("utf-8");
+                while(true) { const {done, value} = await reader.read(); if(done) break; r.value += dec.decode(value, {stream: true}); r.scrollTop = r.scrollHeight; }
+            } catch(e) { r.classList.remove('animate-pulse'); r.value = `❌ 통신 실패: 렌더(Render) 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; }
+            if(btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+        }
+
         async function generateStreamQuestions() {
             const k = parseInt(document.getElementById('c-killer').value || 0);
             const s = parseInt(document.getElementById('c-semi').value || 0);
@@ -1953,6 +2014,7 @@
             fd.append("cnt_mid", m);
             fd.append("cnt_low", l);
             fd.append("q_text", document.getElementById('gen-text').value);
+            fd.append("q_principle", document.getElementById('gen-principle').value);
             genFiles.forEach(f => fd.append("files", f));
 
             document.getElementById('gen-result-area').style.display = 'flex';
