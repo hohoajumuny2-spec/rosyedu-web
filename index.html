@@ -873,15 +873,15 @@
         // 💡 레벨/아바타 표시용 참고 테이블 — 백엔드 main.py의 LEVELS와 동일하게 유지 (변경 시 양쪽 다 수정)
         const LEVEL_ITEMS_REF = [
             {level:1, name:"씨앗", icon:"🌰", threshold:0, item:null},
-            {level:2, name:"새싹", icon:"🌱", threshold:150, item:{id:"sprout", emoji:"🌱", label:"새싹 배지"}},
-            {level:3, name:"떡잎", icon:"🌿", threshold:350, item:{id:"clover", emoji:"🍀", label:"네잎클로버"}},
-            {level:4, name:"줄기", icon:"🪴", threshold:600, item:{id:"bamboo", emoji:"🎍", label:"대나무 장식"}},
-            {level:5, name:"봉오리", icon:"🌸", threshold:900, item:{id:"flowerpin", emoji:"🌸", label:"꽃 머리핀"}},
-            {level:6, name:"꽃", icon:"🌼", threshold:1300, item:{id:"wreath", emoji:"🌻", label:"화관"}},
-            {level:7, name:"열매", icon:"🍏", threshold:1800, item:{id:"grapes", emoji:"🍇", label:"열매 목걸이"}},
-            {level:8, name:"잘 익은 열매", icon:"🍎", threshold:2400, item:{id:"crown", emoji:"👑", label:"작은 왕관"}},
-            {level:9, name:"빛나는 열매", icon:"🍎", threshold:3200, item:{id:"sparkle", emoji:"✨", label:"반짝이는 오라"}},
-            {level:10, name:"황금 열매", icon:"🏆", threshold:4200, item:{id:"trophy", emoji:"🏆", label:"황금 트로피"}},
+            {level:2, name:"새싹", icon:"🌱", threshold:300, item:{id:"sprout", emoji:"🌱", label:"새싹 배지"}},
+            {level:3, name:"떡잎", icon:"🌿", threshold:700, item:{id:"clover", emoji:"🍀", label:"네잎클로버"}},
+            {level:4, name:"줄기", icon:"🪴", threshold:1200, item:{id:"bamboo", emoji:"🎍", label:"대나무 장식"}},
+            {level:5, name:"봉오리", icon:"🌸", threshold:1800, item:{id:"flowerpin", emoji:"🌸", label:"꽃 머리핀"}},
+            {level:6, name:"꽃", icon:"🌼", threshold:2600, item:{id:"wreath", emoji:"🌻", label:"화관"}},
+            {level:7, name:"열매", icon:"🍏", threshold:3600, item:{id:"grapes", emoji:"🍇", label:"열매 목걸이"}},
+            {level:8, name:"잘 익은 열매", icon:"🍎", threshold:4800, item:{id:"crown", emoji:"👑", label:"작은 왕관"}},
+            {level:9, name:"빛나는 열매", icon:"🍎", threshold:6400, item:{id:"sparkle", emoji:"✨", label:"반짝이는 오라"}},
+            {level:10, name:"황금 열매", icon:"🏆", threshold:8400, item:{id:"trophy", emoji:"🏆", label:"황금 트로피"}},
         ];
         let myLevelInfo = null;
         let myAvatarGender = 'boy';
@@ -997,7 +997,7 @@
                 const res=await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`); const data=await res.json();
                 const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0;
                 if(data.success) {
-                    myLevelInfo = data.level_info || {level:1, name:"씨앗", icon:"🌰", xp:0, current_threshold:0, next_threshold:150, next_name:"새싹", is_max:false};
+                    myLevelInfo = data.level_info || {level:1, name:"씨앗", icon:"🌰", xp:0, current_threshold:0, next_threshold:300, next_name:"새싹", is_max:false};
                     myAvatarGender = (data.profile && data.profile.avatar_gender) || 'boy';
                     myAvatarItem = (data.profile && data.profile.avatar_item) || 'none';
                     renderAvatarCard();
