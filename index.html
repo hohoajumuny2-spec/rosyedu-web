@@ -1240,6 +1240,39 @@
             hideLoader();
         }
 
+        // 💡 학생 상세 기록 맨 위에 보여줄 아바타 요약 카드 (마이페이지와 동일한 시각 언어 재사용)
+        function buildAdminAvatarSummaryHtml(levelInfo, profile) {
+            if (!levelInfo) return '';
+            const gender = (profile && profile.avatar_gender) === 'girl' ? '👧' : '👦';
+            const itemId = profile && profile.avatar_item;
+            const itemDef = LEVEL_ITEMS_REF.map(l => l.item).filter(Boolean).find(it => it.id === itemId);
+            const glow = LEVEL_GLOW[Math.min(Math.max(levelInfo.level, 1), 10) - 1];
+            const cur = levelInfo.xp - levelInfo.current_threshold;
+            const span = levelInfo.is_max ? 1 : (levelInfo.next_threshold - levelInfo.current_threshold);
+            const pct = levelInfo.is_max ? 100 : Math.max(0, Math.min(100, Math.round((cur / span) * 100)));
+            const progressText = levelInfo.is_max
+                ? `최고 레벨 달성 (누적 ${levelInfo.xp}점)`
+                : `다음 레벨까지 ${levelInfo.next_threshold - levelInfo.xp}점 남음 (${levelInfo.xp}/${levelInfo.next_threshold})`;
+            return `<div class="mb-4 bg-[#151922] rounded-xl p-4 border border-gray-700 flex items-center gap-4">
+                <div class="relative flex-shrink-0 w-16 h-16">
+                    <div class="absolute left-1/2 top-1/2 text-5xl opacity-25 pointer-events-none select-none" style="transform: translate(-50%, -50%);">${levelInfo.icon}</div>
+                    <div class="relative w-16 h-16 rounded-full flex items-center justify-center text-3xl border-4 bg-[#1e2430]" style="border-color:${glow};">${gender}</div>
+                    ${itemDef ? `<div class="absolute -top-1 -right-1 text-xl drop-shadow-lg">${itemDef.emoji}</div>` : ''}
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center flex-wrap gap-2 mb-1">
+                        <span class="font-black text-white">${escapeHtml(levelInfo.name)}</span>
+                        <span class="text-xs bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Lv.${levelInfo.level}</span>
+                        ${itemDef ? `<span class="text-xs text-gray-400">착용중: ${itemDef.emoji} ${escapeHtml(itemDef.label)}</span>` : '<span class="text-xs text-gray-500">착용중인 아이템 없음</span>'}
+                    </div>
+                    <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-700">
+                        <div class="h-full bg-gradient-to-r from-emerald-500 to-blue-500" style="width:${pct}%"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">${progressText}</p>
+                </div>
+            </div>`;
+        }
+
         async function fetchReports(filterName = null) {
             try {
                 const res=await fetch(`${API_URL}/api/admin/reports`); const data=await res.json();
@@ -1248,6 +1281,12 @@
                     const detailContainer = document.getElementById('student-detail-container');
                     if (filterName) {
                         titleSpan.innerHTML = `<i class="fa-solid fa-user mr-2"></i><span class="text-blue-400">${escapeHtml(filterName)}</span> 상세 기록`;
+                        let avatarSummaryHtml = '';
+                        try {
+                            const pRes = await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(filterName)}`);
+                            const pData = await pRes.json();
+                            if (pData.success) avatarSummaryHtml = buildAdminAvatarSummaryHtml(pData.level_info, pData.profile);
+                        } catch (e) {}
                         let examHtml = '', hwHtml = '', qHtml = '', loginHtml = ''; let examCnt = 0, hwCnt = 0, qCnt = 0, loginCnt = 0;
                         data.reports.forEach(r => {
                             if (r.student_name === filterName) {
@@ -1271,7 +1310,7 @@
                                 else if (r.type === '로그인') { loginCnt++; loginHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-xs text-blue-300"><i class="fa-solid fa-right-to-bracket mr-1"></i>접속${timeStr}</div>`; }
                             }
                         });
-                        detailContainer.innerHTML = `<div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 모의고사/퀴즈 이력 (${examCnt}건)</h4><div class="max-h-32 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>`;
+                        detailContainer.innerHTML = avatarSummaryHtml + `<div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 모의고사/퀴즈 이력 (${examCnt}건)</h4><div class="max-h-32 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>`;
                     } else {
                         titleSpan.innerHTML = `<i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계`;
                         let studentData = {};
