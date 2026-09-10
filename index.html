@@ -692,9 +692,11 @@
 
         // 💡 전역 통신 인터셉터 (관리자 API 호출 시 자동으로 보안 토큰 장착)
         const originalFetch = window.fetch;
+        let adminSessionExpiredNotified = false;
         window.fetch = async function() {
             let [resource, config] = arguments;
-            if (typeof resource === 'string' && resource.includes('/api/admin/')) {
+            const isAdminCall = typeof resource === 'string' && resource.includes('/api/admin/');
+            if (isAdminCall) {
                 config = config || {};
                 config.headers = config.headers || {};
 
@@ -708,7 +710,17 @@
                     console.warn("관리자 권한 토큰이 없습니다.");
                 }
             }
-            return originalFetch(resource, config);
+            const res = await originalFetch(resource, config);
+            // 💡 서버 재배포 등으로 관리자 토큰이 만료된 경우, 빈 화면 대신 재로그인을 안내
+            // (재배포마다 서버의 관리자 세션이 초기화되어, 화면엔 "0건"처럼 보이던 문제 수정)
+            if (isAdminCall && res.status === 401 && !adminSessionExpiredNotified) {
+                adminSessionExpiredNotified = true;
+                localStorage.removeItem('logyedu_user');
+                alert("관리자 로그인이 만료되었습니다 (서버 업데이트로 인해 발생할 수 있습니다).\n다시 로그인해주세요.");
+                window.location.hash = 'home';
+                location.reload();
+            }
+            return res;
         };
 
         function showLoader(text = "처리 중입니다...") { document.getElementById('global-loader-text').innerText = text; document.getElementById('global-loader').style.display = 'flex'; }
