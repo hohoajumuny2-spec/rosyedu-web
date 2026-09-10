@@ -1427,12 +1427,7 @@
             h.scrollTop=h.scrollHeight;
 
             try {
-                const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', body: fd});
-                if(!res.ok) {
-                    const errText = await res.text();
-                    throw new Error(`[${res.status}] ${errText}`);
-                }
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/chat`, fd);
                 const span = document.getElementById(msgId);
                 if (data.success) {
                     span.innerHTML = escapeHtml(data.reply).replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>');
@@ -1459,9 +1454,7 @@
             kbFiles.forEach(f => fd.append("files", f));
 
             try {
-                const res = await fetch(`${API_URL}/api/admin/knowledge`, {method: 'POST', body: fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/knowledge`, fd);
                 if(data.success) {
                     loadKnowledgeList();
                     document.getElementById('kb-title').value = '';
@@ -1479,9 +1472,7 @@
             const fd = new FormData();
             for(let i=0; i<files.length; i++) { fd.append("files", files[i]); }
             try {
-                const res = await fetch(`${API_URL}/api/admin/knowledge/bulk`, {method: 'POST', body: fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/knowledge/bulk`, fd);
                 if(data.success) {
                     alert(`${data.count}개의 파일이 성공적으로 개별 학습되었습니다!`);
                     document.getElementById('kb-bulk-files').value = '';
@@ -1538,9 +1529,7 @@
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
             if(bdFilesAdmin.length) fd.append("file",bdFilesAdmin[0]);
             try {
-                const res = await fetch(`${API_URL}/api/admin/board`,{method:'POST',body:fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/board`, fd);
                 if(data.success) {
                     loadAdminBoardList();
                     document.getElementById('bd-title-admin').value=''; document.getElementById('bd-desc-admin').value='';
@@ -1557,9 +1546,7 @@
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
             if(bdFiles.length) fd.append("file",bdFiles[0]);
             try {
-                const res = await fetch(`${API_URL}/api/admin/board`,{method:'POST',body:fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/board`, fd);
                 if(data.success) {
                     document.getElementById('board-write-area').style.display='none'; loadBoard();
                     document.getElementById('bd-title').value=''; document.getElementById('bd-desc').value='';
@@ -1636,9 +1623,7 @@
             const fd = new FormData();
             fd.append("title", t); fd.append("desc", ""); fd.append("answer_text", ""); fd.append("answer_file", hwFilesAdmin[0]);
             try {
-                const res = await fetch(`${API_URL}/api/admin/homework`, {method:'POST', body:fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
                 if(data.success) {
                     loadAdminHWList(); alert("과제 배포가 완료되었습니다!");
                     document.getElementById('hw-title').value=''; clearAllFiles('hw-ans-file-visual');
@@ -1742,9 +1727,7 @@
             showLoader("논술/요약 파일을 업로드하고 AI 첨삭을 진행 중입니다...");
             const fd=new FormData(); fd.append("school",currentUser.school); fd.append("grade",currentUser.grade); fd.append("student_name",currentUser.name); fd.append("topic",t); fd.append("file",f);
             try{
-                const res=await fetch(`${API_URL}/api/essay/grade`,{method:'POST',body:fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data=await res.json();
+                const data = await uploadFormData(`${API_URL}/api/essay/grade`, fd);
                 if(data.success){
                     document.getElementById('essay-result-area').style.display='block';
                     document.getElementById('essay-feedback').innerHTML=data.feedback;
@@ -1882,9 +1865,7 @@
             if (ans_f) fd.append("ans_file", ans_f);
 
             try {
-                const res = await fetch(`${API_URL}/api/admin/exam`,{method:'POST',body:fd});
-                if(!res.ok) throw new Error(`[${res.status}] ` + await res.text());
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/exam`, fd);
                 if(data.success) {
                     loadAdminExams(); alert("모의고사 방이 성공적으로 개설되었습니다!"); document.getElementById('rt-title').value='';
                 } else { alert("개설 실패: " + data.detail); }
@@ -2481,8 +2462,7 @@
             const fd = new FormData();
             fd.append("file", file);
             try {
-                const res = await fetch(`${API_URL}/api/admin/exam/${diffPhotoTargetExamId}/auto_difficulty`, { method: 'POST', body: fd });
-                const data = await res.json();
+                const data = await uploadFormData(`${API_URL}/api/admin/exam/${diffPhotoTargetExamId}/auto_difficulty`, fd);
                 hideLoader();
                 if (data.success) {
                     const lines = data.applied.map(a => `${a.number}번 - 오답률 ${a.wrong_rate}% → ${a.tier_label}`).join('\n');
