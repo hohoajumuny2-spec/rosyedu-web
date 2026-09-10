@@ -565,6 +565,10 @@
                                 <div><label class="text-xs text-emerald-400 block mb-1 font-bold">중</label><input type="number" id="c-mid" value="2" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none border border-gray-600 text-center"></div>
                                 <div><label class="text-xs text-blue-400 block mb-1 font-bold">하</label><input type="number" id="c-low" value="0" min="0" class="w-full bg-[#1e2430] p-2 rounded text-white outline-none border border-gray-600 text-center"></div>
                             </div>
+                            <div class="mb-4">
+                                <label class="text-xs text-gray-400 block mb-1 font-bold">문항 시작 번호 <span class="font-normal text-gray-500">(예: 21로 하면 21번부터 이어서 출제)</span></label>
+                                <input type="number" id="c-start-num" value="1" min="1" class="w-24 bg-[#1e2430] p-2 rounded text-white outline-none border border-gray-600 text-center">
+                            </div>
 
                             <div class="flex justify-between items-end mb-2">
                                 <label class="text-white font-bold text-sm">기준 지문 입력</label>
@@ -2269,6 +2273,7 @@
             fd.append("cnt_low", l);
             fd.append("q_text", document.getElementById('gen-text').value);
             fd.append("q_principle", document.getElementById('gen-principle').value);
+            fd.append("start_num", parseInt(document.getElementById('c-start-num').value) || 1);
             genFiles.forEach(f => fd.append("files", f));
 
             document.getElementById('gen-result-area').style.display = 'flex';
