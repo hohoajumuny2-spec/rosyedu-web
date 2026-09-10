@@ -415,8 +415,8 @@
                         <button onclick="startExamReal()" class="w-full bg-indigo-600 py-4 text-white font-bold rounded hover:bg-indigo-700 transition">시험 시작</button>
                     </div>
                 </div>
-                <div class="flex flex-col lg:flex-row h-full gap-4">
-                    <div id="pdf-viewer-section" class="w-full lg:w-2/3 h-[52vh] lg:h-full flex-shrink-0 bg-[#1e2430] p-4 flex flex-col relative">
+                <div class="flex flex-col md:flex-row h-full gap-4">
+                    <div id="pdf-viewer-section" class="w-full md:w-3/5 h-[42vh] md:h-full flex-shrink-0 bg-[#1e2430] p-4 flex flex-col relative">
                         <div class="flex justify-between mb-2">
                             <h2 id="room-exam-title-active" class="text-white font-bold flex items-center"></h2>
                             <div>
@@ -430,7 +430,7 @@
                             <div id="pdf-inner-container"></div>
                         </div>
                     </div>
-                    <div id="exam-side-panel" class="w-full lg:w-1/3 flex-1 min-h-0 lg:h-full bg-[#1e2430] p-4 flex flex-col rounded-lg overflow-y-auto transition-all duration-300">
+                    <div id="exam-side-panel" class="w-full md:w-2/5 flex-1 min-h-0 md:h-full bg-[#1e2430] p-4 flex flex-col rounded-lg overflow-y-auto transition-all duration-300">
                         <div id="timer-ui-container" class="mb-4">
                             <span id="active-target-score" class="text-yellow-400 font-bold block text-center mb-1"></span>
                             <div id="active-section-timer" class="text-5xl text-emerald-400 font-black text-center my-4 tracking-wider">00:00</div>
@@ -1970,18 +1970,41 @@
 
         function buildStudentOMR(questions) {
             const c = document.getElementById('exam-omr-container');
-            c.innerHTML = '<h3 class="text-white font-bold mb-4 text-center border-b border-gray-700 pb-2">OMR 답안 마킹 (터치 가능)</h3>';
             c.style.display = 'block';
-            let html = '<div class="space-y-4 pb-4">';
+            const n = questions.length;
+
+            // 💡 태블릿에서 문항이 많으면 스크롤을 계속 내려야 원하는 번호를 찾을 수 있어
+            // 답을 입력하기 어렵다는 학생 피드백 반영 — 상단에 문항 번호 바로가기 grid를 추가하고,
+            // 답을 체크한 문항은 색으로 표시해 진행 상황을 한눈에 볼 수 있게 함
+            let jumpHtml = `<div class="sticky top-0 z-10 bg-[#151922] pb-2 mb-3 border-b border-gray-700">
+                <div class="flex justify-between items-center text-xs text-gray-400 mb-2 px-1">
+                    <span>문항 바로가기</span>
+                    <span id="omr-progress-text">0 / ${n} 완료</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 px-1">`;
+            for (let i = 0; i < n; i++) {
+                jumpHtml += `<button id="omr-jump-${i}" onclick="scrollToOmrQuestion(${i})" class="w-8 h-8 rounded-md border border-gray-600 text-xs font-bold text-gray-400 flex items-center justify-center transition" style="touch-action: manipulation;">${i + 1}</button>`;
+            }
+            jumpHtml += `</div></div>`;
+
+            let html = '<div class="space-y-3 pb-4">';
             questions.forEach((q, i) => {
-                html += `<div class="flex items-center gap-3 justify-center"><span class="text-white font-bold w-6 text-right">${i+1}.</span><div class="flex gap-2">`;
-                for(let opt=1; opt<=5; opt++) {
-                    html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="w-11 h-11 rounded-full border border-gray-400 flex items-center justify-center font-bold text-base text-gray-300 hover:bg-blue-800 transition focus:outline-none flex-shrink-0" style="touch-action: manipulation;">${opt}</button>`;
+                html += `<div id="omr-row-${i}" class="flex items-center gap-3 justify-center rounded-lg p-1.5 transition-colors"><span class="text-white font-bold w-7 text-right">${i + 1}.</span><div class="flex gap-2">`;
+                for (let opt = 1; opt <= 5; opt++) {
+                    html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center font-bold text-lg text-gray-300 hover:bg-blue-800 active:scale-95 transition focus:outline-none flex-shrink-0" style="touch-action: manipulation;">${opt}</button>`;
                 }
                 html += `</div></div>`;
             });
             html += '</div>';
-            c.innerHTML += html;
+            c.innerHTML = jumpHtml + html;
+        }
+
+        function scrollToOmrQuestion(qIdx) {
+            const row = document.getElementById(`omr-row-${qIdx}`);
+            if (!row) return;
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.classList.add('bg-blue-900/40');
+            setTimeout(() => row.classList.remove('bg-blue-900/40'), 900);
         }
 
         function setOmrAnswer(qIdx, opt) {
@@ -1993,6 +2016,14 @@
                     else { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.add('text-gray-300', 'hover:bg-blue-800', 'border-gray-400'); }
                 }
             }
+            const jumpBtn = document.getElementById(`omr-jump-${qIdx}`);
+            if (jumpBtn) {
+                jumpBtn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+                jumpBtn.classList.remove('text-gray-400', 'border-gray-600');
+            }
+            const answeredCount = studentOmrAnswers.filter(a => a !== "" && a != null).length;
+            const progressText = document.getElementById('omr-progress-text');
+            if (progressText) progressText.innerText = `${answeredCount} / ${studentOmrAnswers.length} 완료`;
         }
 
         function startSectionTimer(sec) {
