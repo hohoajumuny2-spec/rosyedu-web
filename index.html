@@ -18,6 +18,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes levelUpPop { 0% { opacity: 0; transform: scale(0.5); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes levelUpBounce { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
+        @keyframes avatarGlowPulse { 0%, 100% { box-shadow: 0 0 14px 2px var(--glow-color, rgba(251,191,36,0.6)); } 50% { box-shadow: 0 0 32px 10px var(--glow-color, rgba(251,191,36,0.9)); } }
+        @keyframes avatarHaloSpin { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+        #avatar-display.avatar-maxlevel { animation: avatarGlowPulse 1.8s ease-in-out infinite; }
+        #avatar-halo.avatar-maxlevel { animation: avatarHaloSpin 4s linear infinite; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #1a1e29; } ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
@@ -260,13 +264,14 @@
                 <!-- 🌱 성장 아바타 -->
                 <div id="mypage-avatar-card" class="rounded-2xl p-6 mb-6 border border-emerald-700/50 relative overflow-hidden">
                     <div class="flex flex-col sm:flex-row items-center gap-6">
-                        <div class="relative flex-shrink-0">
-                            <div id="avatar-display" class="w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 border-blue-500 transition-all duration-500">🌱</div>
-                            <div id="avatar-item-badge" class="absolute -top-1 -right-1 text-3xl drop-shadow-lg"></div>
+                        <div class="relative flex-shrink-0 w-28 h-28">
+                            <div id="avatar-halo" class="absolute left-1/2 top-1/2 text-8xl opacity-20 pointer-events-none select-none transition-all duration-700" style="transform: translate(-50%, -50%);"></div>
+                            <div id="avatar-display" class="relative w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 border-blue-500 transition-all duration-500">🌱</div>
+                            <div id="avatar-item-badge" class="absolute -top-1 -right-1 text-3xl drop-shadow-lg z-10"></div>
                         </div>
                         <div class="flex-grow w-full text-center sm:text-left">
                             <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                                <span id="avatar-level-icon" class="text-2xl"></span>
+                                <span id="avatar-level-icon" class="text-4xl drop-shadow"></span>
                                 <span id="avatar-level-name" class="text-xl font-black text-white"></span>
                                 <span id="avatar-level-num" class="text-xs bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded-full font-bold"></span>
                             </div>
@@ -908,11 +913,29 @@
             return `radial-gradient(circle at 30% 25%, hsl(${h},60%,${light}%), #151922 75%)`;
         }
 
+        // 💡 레벨이 오를수록 캐릭터 테두리/후광 색이 은은한 흙빛 -> 초록 -> 파랑 -> 보라 -> 황금빛으로
+        // 뚜렷하게 escalate 되도록 (단순히 작은 배지 하나만 바뀌던 것을 더 눈에 띄게 개선)
+        const LEVEL_GLOW = ['#a8a29e', '#4ade80', '#22c55e', '#2dd4bf', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#f472b6', '#fbbf24'];
+
         function renderAvatarCard() {
             if(!myLevelInfo) return;
             const disp = document.getElementById('avatar-display');
             disp.innerText = myAvatarGender === 'girl' ? '👧' : '👦';
             disp.style.background = levelThemeGradient(myLevelInfo.level);
+
+            const glow = LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
+            disp.style.borderColor = glow;
+            disp.style.setProperty('--glow-color', glow + '99');
+            disp.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
+
+            // 💡 레벨의 성장 아이콘(🌰~🏆)을 캐릭터 뒤에 크게 후광처럼 띄우고, 레벨이 오를수록
+            // 점점 커지고 진해지게 만들어 "이모지가 함께 성장하는" 느낌을 줌
+            const halo = document.getElementById('avatar-halo');
+            halo.innerText = myLevelInfo.icon;
+            const haloScale = 1 + (myLevelInfo.level - 1) * 0.07;
+            halo.style.transform = `translate(-50%, -50%) scale(${haloScale.toFixed(2)})`;
+            halo.style.opacity = (0.16 + (myLevelInfo.level - 1) * 0.035).toFixed(2);
+            halo.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
 
             const itemDef = LEVEL_ITEMS_REF.map(l=>l.item).filter(Boolean).find(it=>it.id===myAvatarItem);
             document.getElementById('avatar-item-badge').innerText = itemDef ? itemDef.emoji : '';
