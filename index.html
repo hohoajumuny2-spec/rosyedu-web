@@ -1308,7 +1308,7 @@
             try {
                 const res = await fetch(`${API_URL}/api/admin/exam_report/${encodeURIComponent(studentName)}`);
                 const data = await res.json();
-                if (!data.success) { body.innerHTML = `<p class="text-red-400 text-center py-8">불러오기 실패</p>`; return; }
+                if (!data.success) { body.innerHTML = `<p class="text-red-400 text-center py-8">불러오기 실패${data.detail ? ': ' + escapeHtml(data.detail) : ''}</p>`; return; }
 
                 const idx = data.exams.findIndex(e => e.title === title);
                 if (idx === -1) { body.innerHTML = `<p class="text-red-400 text-center py-8">해당 시험 기록을 찾을 수 없습니다.</p>`; return; }
