@@ -862,7 +862,7 @@
                 const res = await fetch(`${API_URL}/api/knowledge`); const data = await res.json();
                 c.innerHTML = '';
                 if(data.success && data.knowledge.length > 0) {
-                    data.knowledge.forEach(k => { const safeContent = encodeURIComponent(k.content); c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-blue-500 cursor-pointer transition flex justify-between items-center mb-2" onclick="importKnowledgeText('${safeContent}')"><span class="text-white font-bold truncate pr-4 w-5/6">${escapeHtml(k.title)}</span><span class="text-xs bg-blue-600 hover:bg-blue-500 transition text-white px-4 py-2 rounded-lg flex-shrink-0 font-bold shadow-lg">선택</span></div>`; });
+                    data.knowledge.forEach(k => { const safeContent = escAttr(encodeURIComponent(k.content)); c.innerHTML += `<div class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-blue-500 cursor-pointer transition flex justify-between items-center mb-2" onclick="importKnowledgeText('${safeContent}')"><span class="text-white font-bold truncate pr-4 w-5/6">${escapeHtml(k.title)}</span><span class="text-xs bg-blue-600 hover:bg-blue-500 transition text-white px-4 py-2 rounded-lg flex-shrink-0 font-bold shadow-lg">선택</span></div>`; });
                 } else { c.innerHTML = '<div class="text-center text-gray-400 py-10 border border-gray-700 rounded-xl bg-gray-800">등록된 자료가 없습니다.</div>'; }
             } catch(e) { c.innerHTML = '<div class="text-red-400 text-center py-10 border border-red-900 rounded-xl bg-gray-800">서버 통신 오류.</div>'; }
         }
@@ -1465,7 +1465,7 @@
                 c.innerHTML = '';
                 if(data.success && data.knowledge && data.knowledge.length > 0) {
                     data.knowledge.forEach(k => {
-                        const safeContent = encodeURIComponent(k.content);
+                        const safeContent = escAttr(encodeURIComponent(k.content));
                         c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center"><span class="font-bold truncate w-2/3 cursor-pointer hover:text-emerald-400 underline transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-2"></i>${escapeHtml(k.title)}</span><button onclick="deleteKnowledge('${escAttr(k.id)}')" class="text-red-400 text-xs flex-shrink-0 bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`;
                     });
                 } else {
