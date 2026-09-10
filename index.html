@@ -620,6 +620,7 @@
                         <div class="bg-[#151922] p-6 rounded h-[850px] flex flex-col">
                             <h3 class="font-bold text-white mb-4 border-b border-gray-700 pb-2">등록된 모의고사</h3>
                             <div id="admin-exam-list" class="flex-grow overflow-auto space-y-2"></div>
+                            <input type="file" id="diff-photo-input" accept="image/*" class="hidden" onchange="handleDiffPhotoUpload(event)">
                         </div>
                     </div>
 
@@ -1252,12 +1253,13 @@
             } catch(e) {}
         }
 
+        // 난이도(diff)는 실제 정답률 구간 기준: a(80~100,하) b(65~79,중) c(45~64,상) d(20~44,준킬러) e(0~19,킬러)
         const DIFF_TIER_STYLE = {
-            a: { label: '킬러',   color: '#f87171' },
-            b: { label: '준킬러', color: '#fb923c' },
+            a: { label: '하',     color: '#60a5fa' },
+            b: { label: '중',     color: '#34d399' },
             c: { label: '상',     color: '#facc15' },
-            d: { label: '중',     color: '#34d399' },
-            e: { label: '하',     color: '#60a5fa' },
+            d: { label: '준킬러', color: '#fb923c' },
+            e: { label: '킬러',   color: '#f87171' },
         };
 
         function examTierBarHtml(tier, cur, prev) {
@@ -1768,12 +1770,12 @@
                 <div class="flex items-center gap-1 bg-gray-700 p-2 rounded">
                     <span class="w-6 text-right font-bold text-xs text-yellow-400">${i+1}.</span>
                     <input type="text" placeholder="답" value="${escapeHtml(q.ans)}" onchange="adminExamQuestions[${i}].ans=this.value" class="w-8 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
-                    <select onchange="adminExamQuestions[${i}].diff=this.value" title="난이도 (성적 분석에 사용됩니다)" class="w-16 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
-                        <option value="a" ${q.diff==='a'?'selected':''}>킬러</option>
-                        <option value="b" ${q.diff==='b'?'selected':''}>준킬러</option>
+                    <select onchange="adminExamQuestions[${i}].diff=this.value" title="난이도: 실제 정답률 구간 기준 (성적 분석에 사용됩니다)" class="w-16 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
+                        <option value="a" ${q.diff==='a'?'selected':''}>하</option>
+                        <option value="b" ${q.diff==='b'?'selected':''}>중</option>
                         <option value="c" ${q.diff==='c'?'selected':''}>상</option>
-                        <option value="d" ${q.diff==='d'?'selected':''}>중</option>
-                        <option value="e" ${q.diff==='e'?'selected':''}>하</option>
+                        <option value="d" ${q.diff==='d'?'selected':''}>준킬러</option>
+                        <option value="e" ${q.diff==='e'?'selected':''}>킬러</option>
                     </select>
                     <input type="number" placeholder="배점" value="${q.score}" onchange="adminExamQuestions[${i}].score=this.value" class="w-10 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
                 </div>`;
@@ -2347,6 +2349,7 @@
                             <span class="font-bold truncate w-1/2">${escapeHtml(ex.title)}</span>
                             <div class="flex gap-1">
                                 <button onclick="startAdminLiveByIndex(${i})" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-2 py-1 rounded font-bold text-white">실시간 감독</button>
+                                <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-camera mr-1"></i>오답률표 반영</button>
                                 <button onclick="deleteExam('${escAttr(ex.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-2 py-1 rounded transition">삭제</button>
                             </div>
                         </div>`;
@@ -2356,6 +2359,35 @@
         }
 
         async function deleteExam(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/exam/${id}`,{method:'DELETE'}); loadAdminExams(); hideLoader(); } }
+
+        let diffPhotoTargetExamId = null;
+        function triggerDiffPhotoUpload(examId) {
+            diffPhotoTargetExamId = examId;
+            document.getElementById('diff-photo-input').click();
+        }
+        async function handleDiffPhotoUpload(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file || !diffPhotoTargetExamId) return;
+
+            showLoader("오답률표 사진을 분석해 난이도를 반영하는 중...");
+            const fd = new FormData();
+            fd.append("file", file);
+            try {
+                const res = await fetch(`${API_URL}/api/admin/exam/${diffPhotoTargetExamId}/auto_difficulty`, { method: 'POST', body: fd });
+                const data = await res.json();
+                hideLoader();
+                if (data.success) {
+                    const lines = data.applied.map(a => `${a.number}번 - 오답률 ${a.wrong_rate}% → ${a.tier_label}`).join('\n');
+                    alert(`총 ${data.total_questions}문항 중 ${data.applied.length}문항에 반영되었습니다.\n\n${lines || '(사진에서 인식된 문항 없음)'}\n\n나머지 ${data.default_count}문항은 기본값(하)으로 설정되었습니다.\n\n※ 잘못 인식된 문항이 있다면 모의고사 개설 화면의 OMR 입력창에서 직접 수정할 수 있습니다.`);
+                } else {
+                    alert("반영 실패: " + (data.detail || "알 수 없는 오류"));
+                }
+            } catch (e) {
+                hideLoader();
+                alert("통신 오류: " + e.message);
+            }
+        }
 
         async function loadLectures() {
             try {
