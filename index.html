@@ -1989,11 +1989,16 @@
             }
             jumpHtml += `</div></div>`;
 
-            let html = '<div class="space-y-3 pb-4">';
+            // 💡 원형 버튼 5개를 가운데에 몰아넣는 방식은 좁은 폰 화면에서 버튼이 작아지고
+            // 터치가 부정확해져 "선택지 입력이 어렵다"는 피드백으로 이어짐 — 문항 번호를
+            // 위쪽에 두고, 선택지 5개는 화면 폭을 꽉 채우는 grid로 배치해 터치 영역을 최대화
+            let html = '<div class="space-y-2 pb-4">';
             questions.forEach((q, i) => {
-                html += `<div id="omr-row-${i}" class="flex items-center gap-3 justify-center rounded-lg p-1.5 transition-colors"><span class="text-white font-bold w-7 text-right">${i + 1}.</span><div class="flex gap-2">`;
+                html += `<div id="omr-row-${i}" class="rounded-lg p-2 bg-[#1e2430] border border-gray-700 transition-colors">
+                    <div class="text-white font-bold text-sm mb-1.5">${i + 1}번</div>
+                    <div class="grid grid-cols-5 gap-1.5">`;
                 for (let opt = 1; opt <= 5; opt++) {
-                    html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center font-bold text-lg text-gray-300 hover:bg-blue-800 active:scale-95 transition focus:outline-none flex-shrink-0" style="touch-action: manipulation;">${opt}</button>`;
+                    html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="aspect-square rounded-lg border border-gray-500 flex items-center justify-center font-bold text-lg sm:text-xl text-gray-300 hover:bg-blue-800 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">${opt}</button>`;
                 }
                 html += `</div></div>`;
             });
@@ -2014,8 +2019,8 @@
             for(let i=1; i<=5; i++) {
                 const b = document.getElementById(`omr-btn-${qIdx}-${i}`);
                 if(b) {
-                    if(i === opt) { b.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.remove('text-gray-300', 'hover:bg-blue-800', 'border-gray-400'); }
-                    else { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.add('text-gray-300', 'hover:bg-blue-800', 'border-gray-400'); }
+                    if(i === opt) { b.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.remove('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
+                    else { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.add('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
                 }
             }
             const jumpBtn = document.getElementById(`omr-jump-${qIdx}`);
