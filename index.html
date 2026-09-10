@@ -1973,17 +1973,19 @@
             c.style.display = 'block';
             const n = questions.length;
 
-            // 💡 태블릿에서 문항이 많으면 스크롤을 계속 내려야 원하는 번호를 찾을 수 있어
+            // 💡 태블릿/모바일에서 문항이 많으면 스크롤을 계속 내려야 원하는 번호를 찾을 수 있어
             // 답을 입력하기 어렵다는 학생 피드백 반영 — 상단에 문항 번호 바로가기 grid를 추가하고,
-            // 답을 체크한 문항은 색으로 표시해 진행 상황을 한눈에 볼 수 있게 함
-            let jumpHtml = `<div class="sticky top-0 z-10 bg-[#151922] pb-2 mb-3 border-b border-gray-700">
+            // 답을 체크한 문항은 색으로 표시해 진행 상황을 한눈에 볼 수 있게 함.
+            // (position:sticky는 일부 모바일 인앱 브라우저에서 부모의 overflow-auto와 겹치면
+            // 레이아웃이 깨지는 경우가 있어, 상단 고정 없이 일반 블록 + grid로 렌더링)
+            let jumpHtml = `<div class="bg-[#151922] pb-3 mb-3 border-b border-gray-700">
                 <div class="flex justify-between items-center text-xs text-gray-400 mb-2 px-1">
                     <span>문항 바로가기</span>
                     <span id="omr-progress-text">0 / ${n} 완료</span>
                 </div>
-                <div class="flex flex-wrap gap-1.5 px-1">`;
+                <div class="grid grid-cols-6 sm:grid-cols-8 gap-1.5 px-1">`;
             for (let i = 0; i < n; i++) {
-                jumpHtml += `<button id="omr-jump-${i}" onclick="scrollToOmrQuestion(${i})" class="w-8 h-8 rounded-md border border-gray-600 text-xs font-bold text-gray-400 flex items-center justify-center transition" style="touch-action: manipulation;">${i + 1}</button>`;
+                jumpHtml += `<button id="omr-jump-${i}" onclick="scrollToOmrQuestion(${i})" class="w-full aspect-square rounded-md border border-gray-600 text-xs font-bold text-gray-400 flex items-center justify-center transition" style="touch-action: manipulation;">${i + 1}</button>`;
             }
             jumpHtml += `</div></div>`;
 
@@ -2121,7 +2123,13 @@
                     await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
                 }
             } catch(e) {
-                c.innerHTML = `<div class="p-8 text-center bg-gray-800 rounded-lg"><p class="text-red-400 font-bold mb-4">PDF를 화면에 띄울 수 없습니다.</p><a href="${encodeURI(url)}" target="_blank" class="bg-blue-600 px-6 py-3 rounded-lg text-white font-bold"><i class="fa-solid fa-download mr-2"></i>새 창에서 시험지 다운로드</a></div>`;
+                // 💡 일부 모바일 인앱 브라우저(네이버 등)는 pdf.js의 캔버스 렌더링이 실패할 수 있어,
+                // 그 경우 브라우저 내장 PDF 뷰어(iframe)로 대체 표시를 시도 (단, 필기 기능은 사용 불가)
+                c.innerHTML = `<div class="p-4 text-center bg-gray-800 rounded-lg">
+                    <p class="text-yellow-400 font-bold mb-3 text-sm"><i class="fa-solid fa-triangle-exclamation mr-1"></i>화면에 바로 표시하는 데 실패해 대체 보기를 띄웠습니다. (이 화면에서는 필기 기능을 사용할 수 없어요)</p>
+                    <iframe src="${encodeURI(url)}" class="w-full bg-white rounded-lg" style="height:65vh; border:none;"></iframe>
+                    <a href="${encodeURI(url)}" target="_blank" class="inline-block mt-3 bg-blue-600 px-6 py-3 rounded-lg text-white font-bold"><i class="fa-solid fa-download mr-2"></i>새 창에서 시험지 열기/다운로드</a>
+                </div>`;
             }
             loadEl.style.display = 'none';
         }
