@@ -893,7 +893,10 @@
             {level:9, name:"빛나는 열매", icon:"🍎", threshold:6400, item:{id:"sparkle", emoji:"✨", label:"반짝이는 오라"}},
             {level:10, name:"황금 열매", icon:"🏆", threshold:8400, item:{id:"trophy", emoji:"🏆", label:"황금 트로피"}},
         ];
-        let myLevelInfo = null;
+        // 💡 서버에서 레벨 정보를 아직 못 받아온 상태(null)면 renderAvatarCard()가 그냥 멈춰버려서
+        // 캐릭터 선택 등 아바타 관련 버튼이 전부 반응 없는 것처럼 보이는 문제가 있었음.
+        // 안전한 기본값을 넣어 항상 렌더링이 진행되도록 함.
+        let myLevelInfo = {level:1, name:"씨앗", icon:"🌰", xp:0, current_threshold:0, next_threshold:300, next_name:"새싹", is_max:false};
         let myAvatarGender = 'boy';
         let myAvatarItem = 'none';
 
@@ -1025,10 +1028,9 @@
                 const res=await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`); const data=await res.json();
                 const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0;
                 if(data.success) {
-                    myLevelInfo = data.level_info || {level:1, name:"씨앗", icon:"🌰", xp:0, current_threshold:0, next_threshold:300, next_name:"새싹", is_max:false};
+                    myLevelInfo = data.level_info || myLevelInfo;
                     myAvatarGender = (data.profile && data.profile.avatar_gender) || 'boy';
                     myAvatarItem = (data.profile && data.profile.avatar_item) || 'none';
-                    renderAvatarCard();
 
                     (data.reports || []).forEach(r => {
                         if(r.school && currentUser.school && r.school !== currentUser.school) return;
@@ -1038,8 +1040,13 @@
                     });
                     document.getElementById('mypage-count').innerText=`${cnt}건`;
                     if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>";
+                } else {
+                    console.warn('마이페이지 정보를 불러오지 못했습니다:', data);
                 }
-            } catch(e){}
+            } catch(e) { console.warn('마이페이지 로딩 오류:', e); }
+            // 💡 프로필을 못 불러왔어도(네트워크 오류 등) 아바타 카드는 항상 다시 그려서
+            // 캐릭터 선택 등 버튼이 죽은 것처럼 보이지 않게 함
+            renderAvatarCard();
         }
 
         function scrollToSection(id) { const e = document.getElementById(id); if(e) window.scrollTo({top: e.offsetTop - 80, behavior: 'smooth'}); if(window.location.hash!=='#home') window.location.hash='home'; }
