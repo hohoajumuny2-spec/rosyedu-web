@@ -96,6 +96,17 @@
         </div>
     </div>
 
+    <!-- 📊 모의고사 성적 분석 모달 -->
+    <div id="exam-analysis-modal" class="hidden fixed inset-0 z-[170] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] p-6 rounded-2xl w-full max-w-2xl shadow-2xl border border-yellow-600 max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="exam-analysis-title" class="text-xl font-black text-white"><i class="fa-solid fa-chart-column mr-2 text-yellow-400"></i>모의고사 성적 분석</h2>
+                <button onclick="closeModal('exam-analysis-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="exam-analysis-body" class="overflow-y-auto flex-grow space-y-4 pr-1"></div>
+        </div>
+    </div>
+
     <!-- 🎉 레벨업 축하 화면 -->
     <div id="level-up-overlay" class="hidden fixed inset-0 z-[300] items-center justify-center p-4" style="background: rgba(10,10,20,0.85); backdrop-filter: blur(6px);">
         <div class="text-center" style="animation: levelUpPop 0.6s cubic-bezier(0.34,1.56,0.64,1);">
@@ -1193,7 +1204,12 @@
                         data.reports.forEach(r => {
                             if (r.student_name === filterName) {
                                 const timeStr = `<span class="text-[10px] text-gray-500 ml-2">${escapeHtml(r.submitted_at)}</span>`;
-                                if (r.type === '모의고사' || r.type === '타임어택 퀴즈') { examCnt++; examHtml += `<div class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"><span>[${escapeHtml(r.type)}] ${escapeHtml(r.task_name)}</span><span class="text-yellow-400 font-bold">${r.score}점</span></div>`; }
+                                if (r.type === '모의고사' || r.type === '타임어택 퀴즈') {
+                                    examCnt++;
+                                    const clickable = r.type === '모의고사' ? `onclick="openExamAnalysis('${escAttr(filterName)}','${escAttr(r.task_name)}')" class="bg-gray-800 hover:bg-gray-700 cursor-pointer p-2 rounded mb-1 flex justify-between text-sm transition"` : `class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"`;
+                                    const hint = r.type === '모의고사' ? `<i class="fa-solid fa-chart-column ml-1 text-yellow-500 text-xs" title="성적 분석 보기"></i>` : '';
+                                    examHtml += `<div ${clickable}><span>[${escapeHtml(r.type)}] ${escapeHtml(r.task_name)}${hint}</span><span class="text-yellow-400 font-bold">${r.score}점</span></div>`;
+                                }
                                 else if (r.type === '과제 제출' || r.type === '논술 첨삭') {
                                     hwCnt++;
                                     let fileLinks = '';
@@ -1234,6 +1250,115 @@
                     }
                 }
             } catch(e) {}
+        }
+
+        const DIFF_TIER_STYLE = {
+            a: { label: '킬러',   color: '#f87171' },
+            b: { label: '준킬러', color: '#fb923c' },
+            c: { label: '상',     color: '#facc15' },
+            d: { label: '중',     color: '#34d399' },
+            e: { label: '하',     color: '#60a5fa' },
+        };
+
+        function examTierBarHtml(tier, cur, prev) {
+            if (!cur || cur.total === 0) return '';
+            const pct = Math.round((cur.correct / cur.total) * 100);
+            const style = DIFF_TIER_STYLE[tier];
+            let deltaHtml = '';
+            if (prev && prev.total > 0) {
+                const prevPct = Math.round((prev.correct / prev.total) * 100);
+                const delta = pct - prevPct;
+                if (delta > 0) deltaHtml = `<span class="text-emerald-400 font-bold ml-2"><i class="fa-solid fa-arrow-up"></i> ${delta}%p</span>`;
+                else if (delta < 0) deltaHtml = `<span class="text-red-400 font-bold ml-2"><i class="fa-solid fa-arrow-down"></i> ${Math.abs(delta)}%p</span>`;
+                else deltaHtml = `<span class="text-gray-500 ml-2">-</span>`;
+            }
+            const wrongTxt = cur.wrong_nums.length ? `<span class="text-red-400">${cur.wrong_nums.join(', ')}번 오답</span>` : `<span class="text-emerald-400">전부 정답</span>`;
+            return `
+            <div class="mb-3">
+                <div class="flex justify-between items-center text-sm mb-1">
+                    <span class="font-bold" style="color:${style.color}">${style.label} (${cur.correct}/${cur.total})</span>
+                    <span>${pct}%${deltaHtml}</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5 mb-1">
+                    <div class="h-2.5 rounded-full" style="width:${pct}%; background-color:${style.color};"></div>
+                </div>
+                <div class="text-xs text-gray-400">${wrongTxt}</div>
+            </div>`;
+        }
+
+        async function openExamAnalysis(studentName, title) {
+            showModal('exam-analysis');
+            const body = document.getElementById('exam-analysis-body');
+            const titleEl = document.getElementById('exam-analysis-title');
+            body.innerHTML = `<p class="text-center text-gray-400 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>성적을 불러오는 중...</p>`;
+            try {
+                const res = await fetch(`${API_URL}/api/admin/exam_report/${encodeURIComponent(studentName)}`);
+                const data = await res.json();
+                if (!data.success) { body.innerHTML = `<p class="text-red-400 text-center py-8">불러오기 실패</p>`; return; }
+
+                const idx = data.exams.findIndex(e => e.title === title);
+                if (idx === -1) { body.innerHTML = `<p class="text-red-400 text-center py-8">해당 시험 기록을 찾을 수 없습니다.</p>`; return; }
+                const cur = data.exams[idx];
+                const prev = idx > 0 ? data.exams[idx - 1] : null;
+
+                titleEl.innerHTML = `<i class="fa-solid fa-chart-column mr-2 text-yellow-400"></i>${escapeHtml(studentName)} - ${escapeHtml(cur.title)}`;
+
+                let scoreDeltaHtml = '';
+                if (prev) {
+                    const delta = cur.score - prev.score;
+                    if (delta > 0) scoreDeltaHtml = `<span class="text-emerald-400 font-bold ml-2"><i class="fa-solid fa-arrow-up"></i> 지난 시험(${escapeHtml(prev.title)}) 대비 ${delta}점 상승</span>`;
+                    else if (delta < 0) scoreDeltaHtml = `<span class="text-red-400 font-bold ml-2"><i class="fa-solid fa-arrow-down"></i> 지난 시험(${escapeHtml(prev.title)}) 대비 ${Math.abs(delta)}점 하락</span>`;
+                    else scoreDeltaHtml = `<span class="text-gray-400 ml-2">지난 시험과 동일</span>`;
+                }
+
+                let tiersHtml = '';
+                ['a', 'b', 'c', 'd', 'e'].forEach(t => {
+                    tiersHtml += examTierBarHtml(t, cur.breakdown[t], prev ? prev.breakdown[t] : null);
+                });
+
+                // 지난 시험 대비 좋아진 점 / 나빠진 점 요약
+                let goodPoints = [], badPoints = [];
+                if (prev) {
+                    ['a', 'b', 'c', 'd', 'e'].forEach(t => {
+                        const c = cur.breakdown[t], p = prev.breakdown[t];
+                        if (!c || !p || c.total === 0 || p.total === 0) return;
+                        const cPct = Math.round((c.correct / c.total) * 100);
+                        const pPct = Math.round((p.correct / p.total) * 100);
+                        const label = DIFF_TIER_STYLE[t].label;
+                        if (cPct > pPct) goodPoints.push(`${label} 정답률 ${pPct}%→${cPct}% 상승`);
+                        else if (cPct < pPct) badPoints.push(`${label} 정답률 ${pPct}%→${cPct}% 하락`);
+                    });
+                }
+                let summaryHtml = '';
+                if (prev) {
+                    summaryHtml = `<div class="bg-[#151922] p-3 rounded-lg border border-gray-700 mb-4">
+                        <div class="text-sm font-bold text-emerald-400 mb-1">✅ 좋아진 점</div>
+                        <div class="text-xs text-gray-300 mb-2">${goodPoints.length ? goodPoints.join(' / ') : '없음'}</div>
+                        <div class="text-sm font-bold text-red-400 mb-1">⚠️ 확인이 필요한 점</div>
+                        <div class="text-xs text-gray-300">${badPoints.length ? badPoints.join(' / ') : '없음'}</div>
+                    </div>`;
+                }
+
+                body.innerHTML = `
+                    <div class="flex justify-between items-center bg-[#151922] p-4 rounded-lg border border-yellow-600/50">
+                        <div>
+                            <div class="text-xs text-gray-400">${escapeHtml(cur.submitted_at)}</div>
+                            <div class="text-3xl font-black text-yellow-400">${cur.score}<span class="text-lg text-gray-400"> / ${cur.total_possible}점</span></div>
+                        </div>
+                        <div class="text-right text-sm">${scoreDeltaHtml || '<span class="text-gray-500">첫 응시 기록</span>'}</div>
+                    </div>
+                    ${summaryHtml}
+                    <div>
+                        <h4 class="text-sm font-bold text-white mb-2 border-b border-gray-700 pb-1">난이도별 정답률</h4>
+                        ${tiersHtml || '<p class="text-xs text-gray-500">난이도 정보가 없는 시험입니다.</p>'}
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-bold text-white">틀린 문제: </span>
+                        ${cur.wrongs.length ? `<span class="text-red-400 font-bold">${cur.wrongs.join(', ')}번</span>` : `<span class="text-emerald-400 font-bold">전 문항 정답 🎉</span>`}
+                    </div>`;
+            } catch (e) {
+                body.innerHTML = `<p class="text-red-400 text-center py-8">통신 오류: ${escapeHtml(e.message)}</p>`;
+            }
         }
 
         async function sendChat() {
@@ -1643,12 +1768,12 @@
                 <div class="flex items-center gap-1 bg-gray-700 p-2 rounded">
                     <span class="w-6 text-right font-bold text-xs text-yellow-400">${i+1}.</span>
                     <input type="text" placeholder="답" value="${escapeHtml(q.ans)}" onchange="adminExamQuestions[${i}].ans=this.value" class="w-8 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
-                    <select onchange="adminExamQuestions[${i}].diff=this.value" class="w-10 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
-                        <option value="a" ${q.diff==='a'?'selected':''}>a</option>
-                        <option value="b" ${q.diff==='b'?'selected':''}>b</option>
-                        <option value="c" ${q.diff==='c'?'selected':''}>c</option>
-                        <option value="d" ${q.diff==='d'?'selected':''}>d</option>
-                        <option value="e" ${q.diff==='e'?'selected':''}>e</option>
+                    <select onchange="adminExamQuestions[${i}].diff=this.value" title="난이도 (성적 분석에 사용됩니다)" class="w-16 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
+                        <option value="a" ${q.diff==='a'?'selected':''}>킬러</option>
+                        <option value="b" ${q.diff==='b'?'selected':''}>준킬러</option>
+                        <option value="c" ${q.diff==='c'?'selected':''}>상</option>
+                        <option value="d" ${q.diff==='d'?'selected':''}>중</option>
+                        <option value="e" ${q.diff==='e'?'selected':''}>하</option>
                     </select>
                     <input type="number" placeholder="배점" value="${q.score}" onchange="adminExamQuestions[${i}].score=this.value" class="w-10 p-1 bg-gray-800 text-white text-center text-xs rounded border border-gray-600 focus:border-blue-500">
                 </div>`;
