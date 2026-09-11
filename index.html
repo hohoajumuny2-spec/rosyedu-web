@@ -2295,27 +2295,36 @@
 
             document.getElementById('gen-result-area').style.display = 'flex';
             const r = document.getElementById('gen-result-text');
-            r.value = "⏳ AI 출제 중... (문제가 많을수록 시간이 오래 걸립니다. 창을 닫지 마세요!)";
+            r.value = `⏳ AI 출제 중... (20문항씩 나눠서 순서대로 출제합니다. ${total}문항이면 ${Math.ceil(total/20)}회에 나눠 진행되며, 회차가 끝날 때마다 아래에 문항이 추가됩니다. 창을 닫지 마세요!)`;
             r.classList.add('animate-pulse');
 
             try {
                 const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd});
-                r.classList.remove('animate-pulse');
                 if(!res.ok) {
+                    r.classList.remove('animate-pulse');
                     const err = await res.text();
                     r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`;
                     if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
                     return;
                 }
-                r.value = "";
                 const reader = res.body.getReader();
                 const dec = new TextDecoder("utf-8");
+                // 💡 첫 회차 생성에는 시간이 걸리므로, 실제 내용이 도착할 때까지 안내 문구를 지우지 않는다
+                let gotFirstChunk = false;
                 while(true) {
                     const {done, value} = await reader.read();
                     if(done) break;
-                    r.value += dec.decode(value, {stream: true});
+                    const text = dec.decode(value, {stream: true});
+                    if(!gotFirstChunk) {
+                        if(!text.trim()) continue;
+                        gotFirstChunk = true;
+                        r.classList.remove('animate-pulse');
+                        r.value = "";
+                    }
+                    r.value += text;
                     r.scrollTop = r.scrollHeight;
                 }
+                r.classList.remove('animate-pulse');
             } catch(e) {
                 r.classList.remove('animate-pulse');
                 r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`;
