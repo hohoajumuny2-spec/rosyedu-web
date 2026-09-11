@@ -813,7 +813,7 @@
             if(inBogi) html += '</div>';
             if(inQuestion) html += '</div>';
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>@media print { @page { margin: 50mm 15mm 50mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 20px 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; column-fill: auto; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
+            w.document.write(`<html><head><style>@media print { @page { margin: 50mm 15mm 50mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 0 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin: 0 0 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; column-fill: auto; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
             w.document.close();
         }
 
@@ -1681,11 +1681,28 @@
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', url);
+                // 💡 fetch()는 전역 인터셉터가 /api/admin/ 요청에 x-admin-token을 자동으로
+                // 붙여주지만, XMLHttpRequest는 그 인터셉터를 안 거치기 때문에 직접 붙여야 함.
+                // (이걸 빠뜨려서 자료학습/과제 배포 등 관리자 업로드가 전부 401로 실패했었음)
+                const isAdminCall = typeof url === 'string' && url.includes('/api/admin/');
+                if (isAdminCall && currentUser && currentUser.admin_token) {
+                    xhr.setRequestHeader('x-admin-token', currentUser.admin_token);
+                }
                 xhr.onload = () => {
                     let data = null;
                     try { data = JSON.parse(xhr.responseText); } catch (e) {}
-                    if (xhr.status >= 200 && xhr.status < 300) resolve(data || {});
-                    else reject(new Error(`[${xhr.status}] ` + xhr.responseText));
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(data || {});
+                    } else {
+                        if (isAdminCall && xhr.status === 401 && !adminSessionExpiredNotified) {
+                            adminSessionExpiredNotified = true;
+                            localStorage.removeItem('logyedu_user');
+                            alert("관리자 로그인이 만료되었습니다 (서버 업데이트로 인해 발생할 수 있습니다).\n다시 로그인해주세요.");
+                            window.location.hash = 'home';
+                            location.reload();
+                        }
+                        reject(new Error(`[${xhr.status}] ` + xhr.responseText));
+                    }
                 };
                 xhr.onerror = () => reject(new Error('네트워크 연결에 실패했습니다.'));
                 xhr.send(formData);
