@@ -777,43 +777,105 @@
             const raw = document.getElementById('gen-result-text').value;
             if(/\[원문 지문\]/.test(raw) || /\[쉬운 설명\]/.test(raw)) return printExplainerPDF(raw);
 
-            let clean = raw.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
-            let html = ''; let inQuestion = false; let inBogi = false;
-            clean.split('\n').forEach(line => {
-                let text = line.trim();
-                if(!text) { html += '<br>'; return; }
-                if(/^\d+\./.test(text)){
-                    if(inBogi) { html += '</div>'; inBogi = false; }
-                    if(inQuestion) { html += '</div>'; }
-                    html += `<div style="break-inside:avoid; margin-bottom:25px;"><div style="font-weight:bold; margin-bottom:8px;">${text}</div>`;
-                    inQuestion = true;
+            // 💡 실제 학교 시험지(미강고 주간지) 형식에 맞춘 인쇄 레이아웃
+            const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const clean = raw.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
+
+            // 💡 실제 시험지는 "※ 다음 글을 읽고 물음에 답하시오."가 지문 박스 '위'에 오는데,
+            // AI는 [지문] → ※ 순서로 내보내므로, 박스 바로 뒤에 오는 ※ 안내문은 박스 앞으로 끌어올린다.
+            const lines = clean.split('\n');
+            for(let i = 0; i < lines.length - 1; i++) {
+                if(lines[i].trim() !== '[지문]') continue;
+                let j = i + 1;
+                while(j < lines.length && !lines[j].trim()) j++;
+                if(j < lines.length && /^※/.test(lines[j].trim())) {
+                    const guide = lines[j];
+                    lines.splice(j, 1);
+                    lines.splice(i, 0, guide);
                 }
-                else if(/^[①②③④⑤]/.test(text)) {
-                    if(inBogi) { html += '</div>'; inBogi = false; }
-                    html += `<div style="padding-left:1.5em; text-indent:-1.5em; margin-bottom:4px;">${text}</div>`;
+            }
+
+            let html = '';
+            let inQuestion = false, inBox = false;
+            const closeBox = () => { if(inBox) { html += '</div>'; inBox = false; } };
+            const closeQuestion = () => { if(inQuestion) { html += '</div>'; inQuestion = false; } };
+
+            lines.forEach(line => {
+                const text = line.trim();
+                if(!text) { html += '<div class="sp"></div>'; return; }
+
+                // 해설 파트는 새 페이지에서 시작
+                if(text.includes('[정답 및 해설]')) {
+                    closeBox(); closeQuestion();
+                    html += `</div><div class="pbreak"></div><div class="print-container"><div class="sect">정답 및 해설</div>`;
+                    return;
                 }
-                else if(text.includes('<보기>') || text.includes('[보기]') || text.includes('[지문]')) {
-                    if(inBogi) { html += '</div>'; }
-                    html += `<div style="border:1px solid #000; padding:12px; margin:10px 0; break-inside:avoid;">`;
-                    html += `<div style="font-weight:bold; margin-bottom:5px;">${text}</div>`;
-                    inBogi = true;
+                if(text.includes('[정답표]') || text.includes('[상세 해설]')) {
+                    closeBox(); closeQuestion();
+                    html += `<div class="sect2">${esc(text.replace(/[\[\]]/g, ''))}</div>`;
+                    return;
                 }
-                else if(text.includes('[정답 및 해설]')) {
-                    if(inBogi) { html += '</div>'; inBogi = false; }
-                    if(inQuestion) { html += '</div>'; inQuestion = false; }
-                    html += `</div><div style="page-break-before:always;"></div><div class="print-container">`;
-                    html += `<div style="font-size:14pt; font-weight:bold; text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin:20px 0; column-span:all;">${text}</div>`;
+                // 지문 박스 — 실제 시험지에는 "[지문]"이라는 글자를 쓰지 않고 테두리 박스만 씀
+                if(text === '[지문]') { closeBox(); closeQuestion(); html += `<div class="box">`; inBox = true; return; }
+                // 보기 박스 — 박스 안 상단 가운데에 <보기> 라벨.
+                // 💡 [보기]는 문항의 일부이므로 문항 블록을 닫지 않는다.
+                // (닫으면 발문만 앞 단에 남고 보기·선지가 다음 단으로 잘려 나감)
+                if(text === '[보기]' || /^[<[]보기[>\]]$/.test(text)) {
+                    closeBox();
+                    html += `<div class="box"><div class="boxlabel">&lt;보기&gt;</div>`;
+                    inBox = true; return;
                 }
-                else if(text.includes('[정답표]') || text.includes('[상세 해설]')) {
-                    if(inBogi) { html += '</div>'; inBogi = false; }
-                    html += `<div style="font-size:11pt; font-weight:bold; margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; margin-bottom:10px; column-span:all;">${text}</div>`;
+                // ※ 다음 글을 읽고 물음에 답하시오.
+                if(/^※/.test(text)) { closeBox(); closeQuestion(); html += `<div class="guide">${esc(text)}</div>`; return; }
+                // 문항: 번호를 본문 왼쪽 바깥으로 빼고 컬러 처리
+                const qm = text.match(/^(\d+)\.\s*(.*)$/);
+                if(qm) {
+                    closeBox(); closeQuestion();
+                    html += `<div class="q"><div class="qt"><span class="qn">${qm[1]}.</span>${esc(qm[2])}</div>`;
+                    inQuestion = true; return;
                 }
-                else { html += `<div style="margin-bottom:4px;">${text}</div>`; }
+                // 선지 ①~⑤
+                if(/^[①②③④⑤]/.test(text)) { html += `<div class="opt">${esc(text)}</div>`; return; }
+                // 출처 표기 (- 윤동주, 「길」) 는 우측 정렬
+                if(/^[-–—]\s*\S.*[「『]/.test(text)) { html += `<div class="src">${esc(text)}</div>`; return; }
+                // 지문 구획 [A]~[E]
+                if(/^\[[A-E]\]$/.test(text)) { html += `<div class="seg">${esc(text)}</div>`; return; }
+                html += `<div class="t">${esc(text)}</div>`;
             });
-            if(inBogi) html += '</div>';
-            if(inQuestion) html += '</div>';
-            const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>@media print { @page { margin: 50mm 15mm 50mm 15mm; } } body { font-family: 'KoPub Batang', 'Malgun Gothic', serif; font-size: 9pt; line-height: 1.6; padding: 0 10px; color: #000; background: #fff; } .h { text-align: center; font-size: 16pt; font-weight: bold; margin: 0 0 20px; border-bottom: 2px solid #000; padding-bottom: 10px; } .print-container { column-count: 2; column-gap: 40px; column-rule: 1px solid #ccc; column-fill: auto; }</style></head><body><div class="h">로지에듀 최준용 국어 - 실전 모의고사</div><div class="print-container">${html}</div><script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
+            closeBox(); closeQuestion();
+
+            const css = `
+@media print { @page { margin: 22mm 14mm 20mm 14mm; } }
+* { box-sizing: border-box; }
+body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-size: 9pt; line-height: 1.65; color: #000; background: #fff; margin: 0; padding: 0 4px 14mm; }
+.head { text-align: center; border-bottom: 3px double #1a3a8f; padding-bottom: 6px; margin-bottom: 10px; }
+.head .t1 { font-size: 15pt; font-weight: 800; color: #1a3a8f; letter-spacing: 2px; }
+.head .t2 { font-size: 9.5pt; color: #444; margin-top: 3px; }
+.print-container { column-count: 2; column-gap: 26px; column-rule: 1px solid #bbb; column-fill: auto; }
+.guide { font-weight: 700; font-size: 9.5pt; margin: 10px 0 5px; }
+.box { border: 1px solid #333; padding: 9px 10px; margin: 0 0 12px; break-inside: avoid; }
+.boxlabel { text-align: center; font-weight: 700; margin-bottom: 6px; }
+.seg { font-weight: 700; margin: 7px 0 2px; }
+.src { text-align: right; margin: 6px 0 2px; }
+.q { break-inside: avoid; margin: 0 0 16px; padding-left: 1.9em; }
+.qt { font-weight: 700; text-indent: -1.9em; margin-bottom: 5px; }
+.qn { color: #1a3a8f; font-weight: 800; margin-right: 0.45em; }
+.opt { padding-left: 1.25em; text-indent: -1.25em; margin-bottom: 2px; }
+.t { margin-bottom: 2px; }
+.sp { height: 5px; }
+.pbreak { break-before: page; }
+.sect { column-span: all; text-align: center; font-size: 13pt; font-weight: 800; color: #1a3a8f; border-bottom: 2px solid #1a3a8f; padding-bottom: 7px; margin: 0 0 12px; }
+.sect2 { column-span: all; font-size: 10.5pt; font-weight: 700; border-bottom: 1px solid #aaa; padding-bottom: 4px; margin: 14px 0 8px; }
+.foot { position: fixed; left: 0; right: 0; bottom: -14mm; text-align: center; font-size: 8.5pt; color: #1a3a8f; }
+.foot span { border: 1px solid #1a3a8f; border-radius: 999px; padding: 2px 26px; }
+`;
+            const title = (document.getElementById('gen-title').value || '').trim();
+            const w = window.open('', '', 'width=900,height=1000');
+            w.document.write(`<html><head><meta charset="utf-8"><style>${css}</style></head><body>`
+                + `<div class="head"><div class="t1">로지에듀 최준용 국어</div><div class="t2">${esc(title) || '실전 모의고사'}</div></div>`
+                + `<div class="print-container">${html}</div>`
+                + `<div class="foot"><span>로지에듀 최준용 국어!</span></div>`
+                + `<script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
             w.document.close();
         }
 
