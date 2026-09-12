@@ -845,7 +845,7 @@
             closeBox(); closeQuestion();
 
             const css = `
-@media print { @page { margin: 22mm 14mm 20mm 14mm; } }
+@media print { @page { size: A4; margin: 22mm 14mm 20mm 14mm; } }
 * { box-sizing: border-box; }
 body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-size: 9pt; line-height: 1.65; color: #000; background: #fff; margin: 0; padding: 0 4px 14mm; }
 .head { text-align: center; border-bottom: 3px double #1a3a8f; padding-bottom: 6px; margin-bottom: 10px; }
@@ -866,7 +866,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 .pbreak { break-before: page; }
 .sect { column-span: all; text-align: center; font-size: 13pt; font-weight: 800; color: #1a3a8f; border-bottom: 2px solid #1a3a8f; padding-bottom: 7px; margin: 0 0 12px; }
 .sect2 { column-span: all; font-size: 10.5pt; font-weight: 700; border-bottom: 1px solid #aaa; padding-bottom: 4px; margin: 14px 0 8px; }
-.foot { position: fixed; left: 0; right: 0; bottom: -14mm; text-align: center; font-size: 8.5pt; color: #1a3a8f; }
+.foot { margin-top: 16px; text-align: center; font-size: 8.5pt; color: #1a3a8f; }
 .foot span { border: 1px solid #1a3a8f; border-radius: 999px; padding: 2px 26px; }
 `;
             const title = (document.getElementById('gen-title').value || '').trim();
@@ -893,7 +893,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 }
             });
             const w = window.open('','','width=900,height=1000');
-            w.document.write(`<html><head><style>@media print { @page { margin: 30mm 20mm; } } body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; font-size: 11pt; line-height: 1.8; padding: 20px 10px; color: #111; background: #fff; } .h { text-align: center; font-size: 18pt; font-weight: bold; margin-bottom: 6px; } .sub { text-align: center; font-size: 10pt; color: #666; margin-bottom: 24px; border-bottom: 3px solid #111; padding-bottom: 20px; }</style></head><body><div class="h">로지에듀 최준용 국어</div><div class="sub">지문 해설 자료 · ${new Date().toLocaleDateString('ko-KR')}</div>${html}<script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
+            w.document.write(`<html><head><style>@media print { @page { size: A4; margin: 30mm 20mm; } } body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; font-size: 11pt; line-height: 1.8; padding: 20px 10px; color: #111; background: #fff; } .h { text-align: center; font-size: 18pt; font-weight: bold; margin-bottom: 6px; } .sub { text-align: center; font-size: 10pt; color: #666; margin-bottom: 24px; border-bottom: 3px solid #111; padding-bottom: 20px; }</style></head><body><div class="h">로지에듀 최준용 국어</div><div class="sub">지문 해설 자료 · ${new Date().toLocaleDateString('ko-KR')}</div>${html}<script>setTimeout(()=>window.print(),800);<\/script></body></html>`);
             w.document.close();
         }
 
