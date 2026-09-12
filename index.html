@@ -111,6 +111,21 @@
         </div>
     </div>
 
+    <!-- 🔍 출제 결과 크게 보기 -->
+    <div id="gen-fullscreen-modal" class="hidden fixed inset-0 z-[180] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] p-5 rounded-2xl w-full max-w-5xl h-[90vh] shadow-2xl border border-blue-600 flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-black text-white"><i class="fa-solid fa-file-lines mr-2 text-blue-400"></i>출제 결과 전체 보기 <span class="text-xs font-normal text-gray-400 ml-2">(여기서 수정한 내용도 그대로 저장됩니다)</span></h2>
+                <button onclick="closeGenFullscreen()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <textarea id="gen-fullscreen-text" class="flex-grow w-full bg-[#151922] text-white p-4 rounded border border-gray-600 outline-none text-sm font-mono leading-relaxed resize-none"></textarea>
+            <div class="flex gap-2 mt-3">
+                <button onclick="closeGenFullscreen()" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 text-white font-bold rounded transition">닫기</button>
+                <button onclick="closeGenFullscreen(); printGeneratedPDF();" class="bg-gray-200 hover:bg-white py-3 px-6 text-black font-bold rounded transition">인쇄</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🎉 레벨업 축하 화면 -->
     <div id="level-up-overlay" class="hidden fixed inset-0 z-[300] items-center justify-center p-4" style="background: rgba(10,10,20,0.85); backdrop-filter: blur(6px);">
         <div class="text-center" style="animation: levelUpPop 0.6s cubic-bezier(0.34,1.56,0.64,1);">
@@ -545,7 +560,7 @@
 
                     <!-- 출제 엔진 탭 -->
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-[#151922] p-6 rounded flex flex-col h-[800px] border border-gray-700 relative">
+                        <div class="bg-[#151922] p-6 rounded flex flex-col min-h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
                             <input type="text" id="gen-title" placeholder="출제할 문제집의 제목을 입력하세요" class="w-full bg-[#1e2430] border border-blue-500 p-3 rounded-lg text-white mb-4 outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
 
@@ -574,10 +589,10 @@
                                 <label class="text-white font-bold text-sm">기준 지문 입력</label>
                                 <button onclick="openKnowledgeImportModal()" class="text-blue-400 hover:text-blue-300 font-bold text-sm transition bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-file-import mr-1"></i>자료학습 데이터 가져오기</button>
                             </div>
-                            <textarea id="gen-text" class="w-full h-24 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="직접 기준 지문을 입력하거나 위 버튼을 눌러 기존 자료를 불러오세요."></textarea>
+                            <textarea id="gen-text" class="w-full h-44 shrink-0 resize-y bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="직접 기준 지문을 입력하거나 위 버튼을 눌러 기존 자료를 불러오세요."></textarea>
 
                             <label class="text-white font-bold text-sm block mb-2">출제 원칙 (선택)</label>
-                            <textarea id="gen-principle" class="w-full h-20 bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="예: 지문의 3문단 내용을 반드시 1문제 이상 포함시켜줘 / 선지는 최대한 헷갈리게 구성해줘 / 어휘 문제는 제외해줘 등, AI가 문제를 낼 때 지켜야 할 원칙을 적어주세요."></textarea>
+                            <textarea id="gen-principle" class="w-full h-32 shrink-0 resize-y bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="예: 지문의 3문단 내용을 반드시 1문제 이상 포함시켜줘 / 선지는 최대한 헷갈리게 구성해줘 / 어휘 문제는 제외해줘 등, AI가 문제를 낼 때 지켜야 할 원칙을 적어주세요."></textarea>
 
                             <input type="file" id="gen-files" multiple accept=".pdf, image/*" class="text-white mb-2" onchange="handleFileSelect(event, genFiles, 'gen-files-visual')">
                             <div id="gen-files-visual" class="flex flex-wrap gap-2 mb-4"></div>
@@ -591,10 +606,11 @@
                             </div>
 
                             <div id="gen-result-area" class="hidden flex-grow flex flex-col">
-                                <textarea id="gen-result-text" class="flex-grow bg-[#1e2430] text-white p-3 mb-2 rounded border border-gray-600 outline-none text-xs font-mono"></textarea>
+                                <textarea id="gen-result-text" class="flex-grow min-h-[420px] resize-y bg-[#1e2430] text-white p-3 mb-2 rounded border border-gray-600 outline-none text-xs font-mono leading-relaxed"></textarea>
                                 <div class="flex gap-2">
                                     <button id="btn-save-gen" onclick="saveGeneratedQuestion()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition">보관함 저장</button>
                                     <button onclick="deployFromGenerator()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 py-2 text-white font-bold rounded text-xs transition">방 개설하기</button>
+                                    <button onclick="openGenFullscreen()" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-up-right-and-down-left-from-center mr-1"></i>크게 보기</button>
                                     <button onclick="printGeneratedPDF()" class="bg-gray-200 hover:bg-white py-2 px-4 text-black font-bold rounded text-xs transition">인쇄</button>
                                 </div>
                             </div>
@@ -771,6 +787,17 @@
             else if(cId==='bd-file-admin-visual') bdFilesAdmin=[];
             else if(cId==='hw-ans-file-visual') hwFilesAdmin=[];
             renderAccumulatedFiles([], cId);
+        }
+
+        // 💡 출제 결과가 길어 좁은 칸에서 읽기 어렵다는 요청 반영 — 전체 화면으로 펼쳐 보고 수정까지 가능
+        function openGenFullscreen() {
+            document.getElementById('gen-fullscreen-text').value = document.getElementById('gen-result-text').value;
+            showModal('gen-fullscreen');
+        }
+        function closeGenFullscreen() {
+            // 큰 창에서 고친 내용을 원래 칸으로 되돌려 저장/인쇄에 반영
+            document.getElementById('gen-result-text').value = document.getElementById('gen-fullscreen-text').value;
+            closeModal('gen-fullscreen-modal');
         }
 
         function printGeneratedPDF() {
