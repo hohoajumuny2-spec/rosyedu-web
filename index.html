@@ -83,7 +83,10 @@
             <input type="text" id="edit-grade" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-3">
 
             <label class="text-xs text-gray-400 mb-1 block">이름</label>
-            <input type="text" id="edit-name" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-6">
+            <input type="text" id="edit-name" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-3">
+
+            <label class="text-xs text-gray-400 mb-1 block">반</label>
+            <select id="edit-class" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-6 class-select"><option value="">반 미배정</option></select>
 
             <button onclick="submitEditStudent()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg shadow-lg">수정 완료</button>
         </div>
@@ -492,9 +495,51 @@
 
                     <!-- 명단 관리 -->
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
-                        <div class="col-span-1 space-y-4"><div class="bg-[#151922] p-4 rounded"><input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white"><input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white"><button onclick="addSingleStudent()" class="w-full bg-emerald-600 py-2 text-white font-bold rounded">추가</button></div></div>
-                        <div class="col-span-1 bg-[#151922] p-4 rounded h-[600px] flex flex-col"><h3 class="text-white font-bold mb-2">명단 (<span id="total-student-count">0</span>명)</h3><button onclick="deleteSelectedStudents()" class="bg-red-600 text-white px-2 py-1 text-xs mb-2 rounded font-bold">선택 삭제</button><div id="admin-student-list" class="flex-grow overflow-y-auto space-y-1"></div></div>
-                        <div class="col-span-2 bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] flex flex-col">
+                        <div class="col-span-4 lg:col-span-1 space-y-4">
+                            <!-- 학생 추가 -->
+                            <div class="bg-[#151922] p-4 rounded">
+                                <h3 class="text-white font-bold mb-3"><i class="fa-solid fa-user-plus mr-2 text-emerald-400"></i>학생 추가</h3>
+                                <input type="text" id="add-school" placeholder="학교" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                                <input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                                <input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                                <select id="add-class" class="w-full p-2 mb-2 bg-gray-800 text-white rounded class-select"><option value="">반 미배정</option></select>
+                                <button onclick="addSingleStudent()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded transition">추가</button>
+                            </div>
+
+                            <!-- 반 관리 (수업 요일/시간) -->
+                            <div class="bg-[#151922] p-4 rounded">
+                                <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-users-rectangle mr-2 text-blue-400"></i>반 관리</h3>
+                                <p class="text-[11px] text-gray-500 mb-3">반과 수업 시간은 학생 로그인과 무관합니다. 언제든 바꿔도 학생은 그대로 로그인합니다.</p>
+                                <input type="hidden" id="cls-old-name">
+                                <input type="text" id="cls-name" placeholder="반 이름 (예: 고1 심화A)" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                                <div id="cls-days" class="flex gap-1 mb-2"></div>
+                                <div class="flex items-center gap-1 mb-2">
+                                    <input type="time" id="cls-start" class="flex-1 min-w-0 p-2 bg-gray-800 text-white rounded text-xs">
+                                    <span class="text-gray-500 text-xs">~</span>
+                                    <input type="time" id="cls-end" class="flex-1 min-w-0 p-2 bg-gray-800 text-white rounded text-xs">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="submitClass()" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 text-white font-bold rounded text-sm transition">반 저장</button>
+                                    <button id="cls-cancel-btn" onclick="resetClassForm()" class="hidden bg-gray-700 hover:bg-gray-600 py-2 px-3 text-white rounded text-sm transition">취소</button>
+                                </div>
+                                <div id="class-manage-list" class="mt-3 space-y-1 max-h-56 overflow-y-auto"></div>
+                            </div>
+                        </div>
+
+                        <!-- 반별 명단 -->
+                        <div class="col-span-4 lg:col-span-3 bg-[#151922] p-4 rounded h-[600px] flex flex-col">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-3">
+                                <h3 class="text-white font-bold"><i class="fa-solid fa-list-check mr-2 text-emerald-400"></i>반별 명단 <span class="text-gray-400 font-normal text-sm">(총 <span id="total-student-count">0</span>명)</span></h3>
+                                <div class="flex items-center gap-2">
+                                    <select id="bulk-class" class="p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 class-select"><option value="">반 미배정</option></select>
+                                    <button onclick="assignSelectedClass()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 학생 반 배정</button>
+                                    <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 삭제</button>
+                                </div>
+                            </div>
+                            <div id="admin-student-list" class="flex-grow overflow-y-auto pr-1"></div>
+                        </div>
+
+                        <div class="col-span-4 bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] flex flex-col">
                             <h3 class="text-lg lg:text-xl font-bold mb-4 text-white flex justify-between items-center border-b border-gray-700 pb-4">
                                 <span id="stats-title-span"><i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계</span>
                                 <button onclick="fetchReports()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs rounded text-white">전체보기</button>
@@ -1238,7 +1283,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function switchAdminTab(id) {
             document.querySelectorAll('.admin-tab-content').forEach(el=>el.style.display='none'); document.querySelectorAll('#prog-admin button').forEach(b=>{if(b.id.startsWith('btn-admin-')) b.classList.replace('bg-gray-800','border');});
-            document.getElementById(id).style.display='block'; const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800');
+            // 💡 탭 내용은 대부분 grid 레이아웃인데 display:'block'으로 덮어써서
+            //    칸이 옆으로 나뉘지 않고 전부 위아래로 쌓여버리던 문제 수정
+            const tabEl = document.getElementById(id);
+            tabEl.style.display = tabEl.classList.contains('grid') ? 'grid' : 'block';
+            const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800');
             if(id==='admin-users'){fetchReports(); loadAdminStudents();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
@@ -1310,16 +1359,221 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function logout() { localStorage.removeItem('logyedu_user'); window.location.hash='home'; location.reload(); }
 
-        async function addSingleStudent() { const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value; if(!n) return; showLoader("명단 추가 중..."); await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n})}); loadAdminStudents(); hideLoader(); }
-        async function loadAdminStudents() { const res=await fetch(`${API_URL}/api/admin/students`); const data=await res.json(); const c=document.getElementById('admin-student-list'); c.innerHTML=''; if(data.success){ document.getElementById('total-student-count').innerText=data.students.length; data.students.forEach(s=>{ const lv = computeLevelFromXp(s.xp); c.innerHTML+=`<div class="flex justify-between bg-gray-800 p-2 rounded mb-1"><label class="cursor-pointer text-sm truncate w-2/3"><input type="checkbox" class="student-checkbox" value="${escAttr(s.id)}"> ${escapeHtml(s.school)} ${escapeHtml(s.grade)} ${escapeHtml(s.student_name)} <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span></label><div class="w-1/3 text-right"><button onclick="fetchReports('${escAttr(s.student_name)}')" class="bg-emerald-600 px-2 rounded text-xs text-white mr-1 font-bold">이력</button><button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school)}','${escAttr(s.grade)}')" class="bg-blue-600 px-2 rounded text-xs text-white font-bold">수정</button></div></div>`; }); } }
+        // ─────────────────────────────────────────────
+        // 반(班) 관리 — 반별 명단 + 수업 요일/시간
+        //   반 정보는 학생 로그인(학교+학년+이름)과 완전히 분리되어 있다.
+        //   반을 만들거나 바꾸거나 지워도 학생은 평소처럼 그대로 로그인한다.
+        // ─────────────────────────────────────────────
+        const DAY_NAMES = ['월','화','수','목','금','토','일'];
+        let ADMIN_CLASSES = [];
+        let ADMIN_STUDENTS = [];
+        const collapsedClassGroups = new Set();
+
+        function renderDayCheckboxes() {
+            const box = document.getElementById('cls-days');
+            if (!box || box.dataset.ready) return;
+            box.innerHTML = DAY_NAMES.map((d,i)=>`<label class="flex-1 text-center cursor-pointer"><input type="checkbox" class="cls-day peer sr-only" value="${d}" data-idx="${i}"><span class="block py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-400 peer-checked:bg-blue-600 peer-checked:text-white transition">${d}</span></label>`).join('');
+            box.dataset.ready = '1';
+        }
+
+        function classScheduleLabel(c) {
+            const days = (c.days||'').split(',').map(s=>s.trim()).filter(Boolean);
+            const dayPart = days.length ? days.join('·') : '';
+            const timePart = (c.start_time && c.end_time) ? `${c.start_time}~${c.end_time}` : (c.start_time || '');
+            if (!dayPart && !timePart) return '수업 시간 미정';
+            return [dayPart, timePart].filter(Boolean).join(' ');
+        }
+
+        // 반 목록이 바뀔 때마다 화면 안의 모든 '반 선택' 드롭다운을 새로 채운다
+        function refreshClassSelects() {
+            document.querySelectorAll('.class-select').forEach(sel => {
+                const keep = sel.value;
+                sel.innerHTML = '<option value="">반 미배정</option>' +
+                    ADMIN_CLASSES.map(c=>`<option value="${escAttr(c.name)}">${escapeHtml(c.name)} (${escapeHtml(classScheduleLabel(c))})</option>`).join('');
+                sel.value = keep;
+                if (sel.value !== keep) sel.value = '';
+            });
+        }
+
+        function renderClassManageList() {
+            const box = document.getElementById('class-manage-list');
+            if (!box) return;
+            if (!ADMIN_CLASSES.length) { box.innerHTML = '<p class="text-[11px] text-gray-600 text-center py-2">아직 만든 반이 없습니다.</p>'; return; }
+            box.innerHTML = ADMIN_CLASSES.map(c=>{
+                const n = ADMIN_STUDENTS.filter(s=>(s.class_name||'')===c.name).length;
+                return `<div class="flex items-center justify-between bg-gray-800 px-2 py-1.5 rounded">
+                    <div class="min-w-0 mr-2">
+                        <div class="text-white text-xs font-bold truncate">${escapeHtml(c.name)} <span class="text-gray-500 font-normal">${n}명</span></div>
+                        <div class="text-[10px] text-blue-300 truncate">${escapeHtml(classScheduleLabel(c))}</div>
+                    </div>
+                    <div class="shrink-0">
+                        <button onclick="editClass('${escAttr(c.name)}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded text-[10px] text-white font-bold transition">수정</button>
+                        <button onclick="deleteClass('${escAttr(c.name)}')" class="bg-red-700 hover:bg-red-600 px-2 py-0.5 rounded text-[10px] text-white font-bold transition">삭제</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function resetClassForm() {
+            document.getElementById('cls-old-name').value = '';
+            document.getElementById('cls-name').value = '';
+            document.getElementById('cls-start').value = '';
+            document.getElementById('cls-end').value = '';
+            document.querySelectorAll('.cls-day').forEach(cb=>cb.checked=false);
+            document.getElementById('cls-cancel-btn').classList.add('hidden');
+        }
+
+        function editClass(name) {
+            const c = ADMIN_CLASSES.find(x=>x.name===name);
+            if (!c) return;
+            renderDayCheckboxes();
+            document.getElementById('cls-old-name').value = c.name;
+            document.getElementById('cls-name').value = c.name;
+            document.getElementById('cls-start').value = c.start_time || '';
+            document.getElementById('cls-end').value = c.end_time || '';
+            const days = (c.days||'').split(',').map(s=>s.trim());
+            document.querySelectorAll('.cls-day').forEach(cb=>cb.checked = days.includes(cb.value));
+            document.getElementById('cls-cancel-btn').classList.remove('hidden');
+            document.getElementById('cls-name').focus();
+        }
+
+        async function submitClass() {
+            const name = document.getElementById('cls-name').value.trim();
+            if (!name) return alert("반 이름을 입력해주세요.");
+            const days = Array.from(document.querySelectorAll('.cls-day:checked')).map(cb=>cb.value).join(',');
+            showLoader("반 저장 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/class`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        old_name: document.getElementById('cls-old-name').value,
+                        name: name, days: days,
+                        start_time: document.getElementById('cls-start').value,
+                        end_time: document.getElementById('cls-end').value
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) { alert(data.detail || "저장에 실패했습니다."); return; }
+                resetClassForm();
+                await loadAdminClassData();
+            } catch(e) { alert("저장 중 오류가 발생했습니다."); }
+            finally { hideLoader(); }
+        }
+
+        async function deleteClass(name) {
+            if (!confirm(`'${name}' 반을 삭제할까요?\n\n학생은 삭제되지 않고 '반 미배정'으로만 돌아갑니다.`)) return;
+            showLoader("반 삭제 중...");
+            try {
+                await fetch(`${API_URL}/api/admin/class/delete`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:name})});
+                resetClassForm();
+                await loadAdminClassData();
+            } catch(e) { alert("삭제 중 오류가 발생했습니다."); }
+            finally { hideLoader(); }
+        }
+
+        async function assignSelectedClass() {
+            const ids = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value);
+            if (!ids.length) return alert("반을 배정할 학생을 먼저 선택해주세요.");
+            const target = document.getElementById('bulk-class').value;
+            showLoader("반 배정 중...");
+            try {
+                await fetch(`${API_URL}/api/admin/student/assign_class`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids:ids, class_name:target})});
+                await loadAdminClassData();
+            } catch(e) { alert("배정 중 오류가 발생했습니다."); }
+            finally { hideLoader(); }
+        }
+
+        function toggleClassGroup(key) {
+            if (collapsedClassGroups.has(key)) collapsedClassGroups.delete(key);
+            else collapsedClassGroups.add(key);
+            renderAdminStudents();
+        }
+
+        // 반 목록 + 학생 명단을 함께 불러와 화면 전체를 다시 그린다
+        async function loadAdminClassData() {
+            renderDayCheckboxes();
+            try {
+                const [cRes, sRes] = await Promise.all([
+                    fetch(`${API_URL}/api/admin/classes`),
+                    fetch(`${API_URL}/api/admin/students`)
+                ]);
+                const cData = await cRes.json(), sData = await sRes.json();
+                ADMIN_CLASSES = cData.success ? (cData.classes||[]) : [];
+                ADMIN_STUDENTS = sData.success ? (sData.students||[]) : [];
+            } catch(e) { ADMIN_CLASSES = []; ADMIN_STUDENTS = []; }
+            refreshClassSelects();
+            renderClassManageList();
+            renderAdminStudents();
+        }
+        // 예전 이름으로 부르던 곳들이 있어서 그대로 유지
+        const loadAdminStudents = loadAdminClassData;
+
+        function renderAdminStudents() {
+            const c = document.getElementById('admin-student-list');
+            if (!c) return;
+            document.getElementById('total-student-count').innerText = ADMIN_STUDENTS.length;
+
+            const groups = ADMIN_CLASSES.map(cls => ({
+                key: cls.name,
+                title: cls.name,
+                sub: classScheduleLabel(cls),
+                students: ADMIN_STUDENTS.filter(s => (s.class_name||'') === cls.name)
+            }));
+            const assigned = new Set(ADMIN_CLASSES.map(x=>x.name));
+            const rest = ADMIN_STUDENTS.filter(s => !assigned.has(s.class_name||''));
+            if (rest.length) groups.push({ key:'__none__', title:'반 미배정', sub:'아래에서 학생을 선택하고 반을 배정해주세요', students: rest });
+
+            if (!groups.length) { c.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">등록된 학생이 없습니다.</p>'; return; }
+
+            c.innerHTML = groups.map(g => {
+                const open = !collapsedClassGroups.has(g.key);
+                const isNone = g.key === '__none__';
+                const head = isNone ? 'bg-gray-700/40 border-gray-600' : 'bg-blue-900/30 border-blue-700';
+                const rows = g.students.length ? g.students.map(s => {
+                    const lv = computeLevelFromXp(s.xp);
+                    return `<div class="flex items-center gap-2 bg-gray-800 p-2 rounded">
+                        <input type="checkbox" class="student-checkbox shrink-0" value="${escAttr(s.id)}">
+                        <span class="flex-grow min-w-0 truncate text-sm text-white">${escapeHtml(s.school||'')} ${escapeHtml(s.grade||'')} <b>${escapeHtml(s.student_name)}</b>
+                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>
+                        </span>
+                        <button onclick="fetchReports('${escAttr(s.student_name)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded text-xs text-white font-bold transition">이력</button>
+                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
+                    </div>`;
+                }).join('') : '<p class="text-gray-600 text-xs text-center py-3">이 반에 배정된 학생이 없습니다.</p>';
+
+                return `<div class="mb-3">
+                    <div onclick="toggleClassGroup('${escAttr(g.key)}')" class="flex items-center justify-between ${head} border px-3 py-2 rounded-t cursor-pointer select-none">
+                        <div class="min-w-0">
+                            <span class="text-white font-bold text-sm"><i class="fa-solid fa-chevron-${open?'down':'right'} text-[10px] mr-2 text-gray-400"></i>${escapeHtml(g.title)}</span>
+                            <span class="text-[11px] text-blue-300 ml-2">${escapeHtml(g.sub)}</span>
+                        </div>
+                        <span class="shrink-0 text-xs text-gray-300 font-bold">${g.students.length}명</span>
+                    </div>
+                    <div class="${open?'':'hidden'} space-y-1 p-2 border border-t-0 border-gray-700 rounded-b">${rows}</div>
+                </div>`;
+            }).join('');
+        }
+
+        async function addSingleStudent() {
+            const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value;
+            if(!n) return;
+            showLoader("명단 추가 중...");
+            await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n,class_name:document.getElementById('add-class').value})});
+            document.getElementById('add-name').value='';
+            await loadAdminClassData();
+            hideLoader();
+        }
         async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
 
         // 💡 팝업 모달을 띄우고 기존 정보를 채워넣는 함수
-        function openEditStudent(id,n,s,g) {
+        function openEditStudent(id,n,s,g,cls) {
             document.getElementById('edit-old-id').value=id;
             document.getElementById('edit-name').value=n;
             document.getElementById('edit-school').value=s;
             document.getElementById('edit-grade').value=g;
+            const sel=document.getElementById('edit-class');
+            sel.value=cls||'';
+            if(sel.value!==(cls||'')) sel.value='';   // 지워진 반이면 '미배정'으로
             showModal('edit-student');
         }
 
@@ -1327,7 +1581,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const id=document.getElementById('edit-old-id').value, n=document.getElementById('edit-name').value, s=document.getElementById('edit-school').value, g=document.getElementById('edit-grade').value;
             if(!n.trim()) return alert("이름을 입력해주세요.");
             showLoader("정보 수정 중...");
-            await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g})});
+            await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g,class_name:document.getElementById('edit-class').value})});
             closeModal('edit-student-modal');
             loadAdminStudents();
             hideLoader();
