@@ -1365,7 +1365,27 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         //   반을 만들거나 바꾸거나 지워도 학생은 평소처럼 그대로 로그인한다.
         // ─────────────────────────────────────────────
         const DAY_NAMES = ['월','화','수','목','금','토','일'];
+
+        // 서버 응답을 사람이 읽을 수 있는 말로 바꿔주는 공통 처리.
+        // 예전에는 서버가 404를 주면 FastAPI가 보낸 'Not Found'가 그대로 떠서
+        // 무슨 일인지 알 수 없었음 — 특히 새 기능이 배포되기 전 몇 분 동안.
+        async function adminPost(path, body) {
+            let res;
+            try {
+                res = await fetch(`${API_URL}${path}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+            } catch(e) {
+                return {ok:false, message:"서버에 연결하지 못했습니다. 인터넷 연결을 확인해주세요."};
+            }
+            if (res.status === 404) return {ok:false, message:"서버에 새 기능이 아직 반영되지 않았습니다.\n1~2분 뒤에 다시 시도해주세요."};
+            if (res.status === 401 || res.status === 403) return {ok:false, message:"관리자 로그인이 풀렸습니다. 다시 로그인해주세요."};
+            if (!res.ok) return {ok:false, message:`서버 오류가 발생했습니다. (${res.status})`};
+            let data;
+            try { data = await res.json(); } catch(e) { return {ok:false, message:"서버 응답을 읽지 못했습니다."}; }
+            if (!data.success) return {ok:false, message: data.detail || "처리에 실패했습니다."};
+            return {ok:true, data:data};
+        }
         let ADMIN_CLASSES = [];
+        let CLASSES_UNAVAILABLE = false;
         let ADMIN_STUDENTS = [];
         const collapsedClassGroups = new Set();
 
@@ -1398,6 +1418,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function renderClassManageList() {
             const box = document.getElementById('class-manage-list');
             if (!box) return;
+            if (CLASSES_UNAVAILABLE) { box.innerHTML = '<p class="text-[11px] text-yellow-500 text-center py-2 leading-relaxed">반 기능을 서버에서 불러오지 못했습니다.<br>잠시 뒤 새로고침해주세요.</p>'; return; }
             if (!ADMIN_CLASSES.length) { box.innerHTML = '<p class="text-[11px] text-gray-600 text-center py-2">아직 만든 반이 없습니다.</p>'; return; }
             box.innerHTML = ADMIN_CLASSES.map(c=>{
                 const n = ADMIN_STUDENTS.filter(s=>(s.class_name||'')===c.name).length;
@@ -1442,33 +1463,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!name) return alert("반 이름을 입력해주세요.");
             const days = Array.from(document.querySelectorAll('.cls-day:checked')).map(cb=>cb.value).join(',');
             showLoader("반 저장 중...");
-            try {
-                const res = await fetch(`${API_URL}/api/admin/class`, {
-                    method:'POST', headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        old_name: document.getElementById('cls-old-name').value,
-                        name: name, days: days,
-                        start_time: document.getElementById('cls-start').value,
-                        end_time: document.getElementById('cls-end').value
-                    })
-                });
-                const data = await res.json();
-                if (!data.success) { alert(data.detail || "저장에 실패했습니다."); return; }
-                resetClassForm();
-                await loadAdminClassData();
-            } catch(e) { alert("저장 중 오류가 발생했습니다."); }
-            finally { hideLoader(); }
+            const r = await adminPost('/api/admin/class', {
+                old_name: document.getElementById('cls-old-name').value,
+                name: name, days: days,
+                start_time: document.getElementById('cls-start').value,
+                end_time: document.getElementById('cls-end').value
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            resetClassForm();
+            await loadAdminClassData();
         }
 
         async function deleteClass(name) {
             if (!confirm(`'${name}' 반을 삭제할까요?\n\n학생은 삭제되지 않고 '반 미배정'으로만 돌아갑니다.`)) return;
             showLoader("반 삭제 중...");
-            try {
-                await fetch(`${API_URL}/api/admin/class/delete`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:name})});
-                resetClassForm();
-                await loadAdminClassData();
-            } catch(e) { alert("삭제 중 오류가 발생했습니다."); }
-            finally { hideLoader(); }
+            const r = await adminPost('/api/admin/class/delete', {name:name});
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            resetClassForm();
+            await loadAdminClassData();
         }
 
         async function assignSelectedClass() {
@@ -1476,11 +1490,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!ids.length) return alert("반을 배정할 학생을 먼저 선택해주세요.");
             const target = document.getElementById('bulk-class').value;
             showLoader("반 배정 중...");
-            try {
-                await fetch(`${API_URL}/api/admin/student/assign_class`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids:ids, class_name:target})});
-                await loadAdminClassData();
-            } catch(e) { alert("배정 중 오류가 발생했습니다."); }
-            finally { hideLoader(); }
+            const r = await adminPost('/api/admin/student/assign_class', {ids:ids, class_name:target});
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            await loadAdminClassData();
         }
 
         function toggleClassGroup(key) {
@@ -1492,15 +1505,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 반 목록 + 학생 명단을 함께 불러와 화면 전체를 다시 그린다
         async function loadAdminClassData() {
             renderDayCheckboxes();
+            let classesFailed = false;
             try {
                 const [cRes, sRes] = await Promise.all([
                     fetch(`${API_URL}/api/admin/classes`),
                     fetch(`${API_URL}/api/admin/students`)
                 ]);
-                const cData = await cRes.json(), sData = await sRes.json();
+                classesFailed = !cRes.ok;
+                const cData = cRes.ok ? await cRes.json() : {};
+                const sData = await sRes.json();
                 ADMIN_CLASSES = cData.success ? (cData.classes||[]) : [];
                 ADMIN_STUDENTS = sData.success ? (sData.students||[]) : [];
             } catch(e) { ADMIN_CLASSES = []; ADMIN_STUDENTS = []; }
+            CLASSES_UNAVAILABLE = classesFailed;
             refreshClassSelects();
             renderClassManageList();
             renderAdminStudents();
