@@ -522,7 +522,8 @@
                     </div>
                 </div>
                 <div id="quiz-questions-container" class="space-y-6 mb-8 text-white"></div>
-                <button onclick="submitQuizReal()" class="w-full bg-orange-600 hover:bg-orange-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg">퀴즈 제출하기</button>
+                <button id="btn-submit-quiz" onclick="submitQuizReal()" class="w-full bg-orange-600 hover:bg-orange-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg">퀴즈 제출하기</button>
+                <div id="quiz-result-view" class="hidden text-white"></div>
             </div>
 
             <!-- 모의고사 목록 -->
@@ -4094,6 +4095,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             currentActiveQuiz = allQuizzes[idx];
             if(!confirm(`[${currentActiveQuiz.title}]\n제한 시간: ${currentActiveQuiz.time_limit}분\n시작하시겠습니까?`)) return;
             openProgram('quiz-room'); document.getElementById('quiz-room-title').innerText = currentActiveQuiz.title;
+            // 앞서 본 채점 결과가 남아 있으면 치우고 새로 시작한다
+            document.getElementById('quiz-result-view').classList.add('hidden');
+            document.getElementById('quiz-questions-container').classList.remove('hidden');
+            document.getElementById('btn-submit-quiz').classList.remove('hidden');
             const c = document.getElementById('quiz-questions-container'); c.innerHTML = ''; quizAnswers = Array(currentActiveQuiz.questions.length).fill(0);
             const circles = ['①', '②', '③', '④', '⑤'];
             currentActiveQuiz.questions.forEach((q, qIndex) => {
@@ -4109,14 +4114,82 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
 
+        // 퀴즈를 내면 그 자리에서 점수와 틀린 문제를 바로 보여준다
+        function renderQuizResult(data) {
+            const circles = ['①', '②', '③', '④', '⑤'];
+            const mark = n => circles[Number(n) - 1] || n;
+
+            document.getElementById('quiz-questions-container').classList.add('hidden');
+            const submitBtn = document.getElementById('btn-submit-quiz');
+            if (submitBtn) submitBtn.classList.add('hidden');
+            const timerBox = document.getElementById('quiz-timer');
+            if (timerBox) timerBox.innerText = '종료';
+
+            const det = data.details || [];
+            const totalS = data.total_score || 0;
+            const pct = totalS ? Math.round((data.score || 0) / totalS * 100) : 0;
+            const tone = pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-yellow-400' : 'text-red-400';
+            const bar = pct >= 80 ? 'bg-emerald-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+            const wrongCount = det.length - (data.correct_count || 0);
+
+            let html = `<h3 class="text-xl font-bold text-orange-400 mb-3 text-center">채점 결과</h3>
+                <div class="bg-[#151922] border border-gray-700 rounded-xl p-5 mb-5 text-center">
+                    <div class="${tone} font-black leading-none"><span class="text-6xl">${data.score || 0}</span><span class="text-xl text-gray-400"> / ${totalS}점</span></div>
+                    <div class="text-sm text-gray-400 mt-3">${data.question_count || det.length}문항 중
+                        <b class="text-emerald-400">${data.correct_count || 0}개</b> 정답
+                        <span class="text-gray-600 mx-1">·</span>
+                        <b class="text-red-400">${wrongCount}개</b> 오답</div>
+                    <div class="h-2.5 bg-gray-800 rounded-full overflow-hidden mt-4">
+                        <div class="h-full ${bar}" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+
+            if (!det.length) {
+                html += `<p class="text-gray-400 text-center py-6">채점 내역을 불러오지 못했습니다.</p>`;
+            } else {
+                const wrongs = det.filter(d => !d.ok);
+                html += wrongs.length
+                    ? `<h4 class="text-white font-bold mb-2"><i class="fa-solid fa-circle-xmark text-red-400 mr-1"></i>틀린 문제 ${wrongs.length}개</h4>`
+                    : `<p class="text-center text-emerald-400 font-bold mb-4 py-3 text-lg">🎉 전부 맞혔습니다!</p><h4 class="text-white font-bold mb-2">문항별 확인</h4>`;
+
+                html += '<div class="space-y-3 mb-6">' + det.map(d => `
+                    <div class="rounded-xl p-4 border ${d.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60'}">
+                        <div class="flex items-start gap-2 mb-3">
+                            <span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${d.ok ? 'bg-emerald-600' : 'bg-red-600'} text-white">${d.ok ? 'O' : 'X'}</span>
+                            <p class="text-white text-sm font-bold leading-relaxed">${d.no}. ${escapeHtml(d.q_text || '')}</p>
+                        </div>
+                        <div class="pl-8 space-y-1 text-sm">
+                            <div class="${d.ok ? 'text-emerald-300' : 'text-red-300'}">
+                                <span class="text-gray-500 text-xs mr-1">내 답</span>
+                                ${d.blank ? '<b>고르지 않음</b>' : `<b>${mark(d.my)}</b> ${escapeHtml(d.my_text || '')}`}
+                            </div>
+                            ${d.ok ? '' : `<div class="text-emerald-300">
+                                <span class="text-gray-500 text-xs mr-1">정답</span>
+                                <b>${mark(d.ans)}</b> ${escapeHtml(d.ans_text || '')}
+                            </div>`}
+                            <div class="text-gray-500 text-xs">배점 ${d.score}점</div>
+                        </div>
+                    </div>`).join('') + '</div>';
+            }
+
+            html += `<button onclick="closeProgram()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg">학습실로 나가기</button>`;
+
+            const view = document.getElementById('quiz-result-view');
+            view.innerHTML = html;
+            view.classList.remove('hidden');
+            view.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         async function submitQuizReal() {
             clearInterval(activeQuizTimer); showLoader("제출 중...");
             try {
                 const res = await fetch(`${API_URL}/api/quiz/submit`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ school:currentUser.school, grade:currentUser.grade, student_name:currentUser.name, title:currentActiveQuiz.title, answers:quizAnswers }) });
                 const data = await res.json();
                 if(data.success) {
+                    // 💡 예전에는 "제출 완료" 알림만 띄우고 곧장 나가서, 몇 점인지도
+                    //    무엇을 틀렸는지도 볼 수 없었다. 이제 그 자리에서 바로 보여준다.
+                    renderQuizResult(data);
                     showLevelUpCelebration(data.level_up);
-                    alert("제출이 완료되었습니다!"); closeProgram();
                 } else {
                     alert(data.detail || "제출 실패");
                 }
