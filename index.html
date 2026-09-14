@@ -160,6 +160,51 @@
         </div>
     </div>
 
+    <!-- 📊 입결 자료 (엑셀) -->
+    <div id="univ-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl border border-indigo-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-file-excel mr-2 text-indigo-400"></i>입결 자료 관리</h2>
+                    <p id="univ-meta" class="text-[11px] text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="closeModal('univ-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5">
+                <div onclick="document.getElementById('univ-file').click()"
+                     class="border-2 border-dashed border-indigo-700/60 hover:border-indigo-500 rounded-lg p-5 text-center cursor-pointer transition mb-4">
+                    <i class="fa-solid fa-file-arrow-up text-indigo-400 text-2xl mb-2"></i>
+                    <p class="text-indigo-300 text-sm font-bold">쓰시던 엑셀 파일을 그대로 올리세요</p>
+                    <p class="text-[11px] text-gray-500 mt-1">xlsx 또는 csv · 첫 줄이 열 이름이면 됩니다. 형식은 맞추지 않으셔도 됩니다.</p>
+                    <input type="file" id="univ-file" accept=".xlsx,.csv" class="hidden" onchange="previewUnivFile(this.files[0]); this.value='';">
+                </div>
+
+                <div id="univ-map" class="hidden">
+                    <h3 class="text-white font-bold text-sm mb-1">어느 열이 무엇인지 골라주세요</h3>
+                    <p class="text-[11px] text-gray-500 mb-3">대학과 기준 점수만 고르면 됩니다. 나머지는 비워두셔도 됩니다.</p>
+                    <div id="univ-map-fields" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4"></div>
+                    <div class="bg-[#151922] border border-gray-700 rounded-lg p-3 mb-4 overflow-x-auto">
+                        <p class="text-[11px] text-gray-400 mb-2">파일 미리보기 (앞 5줄)</p>
+                        <table class="text-[11px] text-gray-300 w-full"><tbody id="univ-sample"></tbody></table>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="univ-label" placeholder="자료 이름 (예: 2026 수시 입결)" class="flex-grow p-2 bg-gray-800 text-white rounded text-sm">
+                        <button onclick="importUnivFile()" class="bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded text-white font-bold text-sm transition">저장하기</button>
+                    </div>
+                </div>
+
+                <div id="univ-list-box" class="mt-4">
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="univ-search" placeholder="대학 · 학과로 찾기" class="flex-grow p-2 bg-gray-800 text-white rounded text-sm" onkeypress="if(event.key==='Enter') loadUnivList()">
+                        <button onclick="loadUnivList()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white font-bold text-sm transition">찾기</button>
+                        <button onclick="clearUnivTable()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-white font-bold text-sm transition">전체 삭제</button>
+                    </div>
+                    <div id="univ-list" class="max-h-64 overflow-y-auto space-y-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 📋 학생부 평가 기준 -->
     <div id="criteria-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-purple-500 flex flex-col">
@@ -689,7 +734,8 @@
                             <button onclick="openNewStudentForm()" class="w-full mb-2 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-user-plus mr-1"></i>새 학생 등록하기</button>
                             <input type="text" id="counsel-search" oninput="renderCounselStudentList()" placeholder="이름으로 찾기" class="w-full p-2 mb-2 bg-gray-800 text-white rounded text-sm">
                             <div id="counsel-student-list" class="flex-grow overflow-y-auto pr-1 space-y-1"></div>
-                            <button onclick="openAdmissionTable()" class="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-sliders mr-1"></i>대학 라인 기준표 설정</button>
+                            <button onclick="openUnivTable()" class="mt-3 w-full bg-indigo-700 hover:bg-indigo-600 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-file-excel mr-1"></i>입결 자료(엑셀) 관리</button>
+                            <button onclick="openAdmissionTable()" class="mt-2 w-full bg-gray-700 hover:bg-gray-600 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-sliders mr-1"></i>대학 라인 기준표 설정</button>
                         </div>
 
                         <div class="col-span-4 lg:col-span-3 bg-[#151922] p-4 rounded min-h-[780px] flex flex-col">
@@ -2129,6 +2175,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     </div>
                     <p class="text-xs text-gray-400 leading-relaxed">${escapeHtml(t.reason)}</p>
                 </div>
+                ${renderTargetGap()}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     ${line('현재 수시 지원 가능 라인', tiers.susi, 'border-blue-700/50')}
                     ${line('현재 정시 지원 가능 라인', tiers.jeongsi, 'border-yellow-700/50')}
@@ -2471,6 +2518,180 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             COUNSEL_DATA.record_eval = r.data.record_eval;
             COUNSEL_DATA.record_eval_at = r.data.at;
             document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
+        }
+
+        // ── 입결 자료 (엑셀) ─────────────────────────
+        //   원장님이 쓰시던 엑셀을 그대로 올린다. 파일마다 열 구성이 달라서,
+        //   열 이름을 먼저 보여주고 무엇이 무엇인지 짝지어 받은 뒤 저장한다.
+        let UNIV_FILE = null;
+        const UNIV_MAP_FIELDS = [
+            ['univ',  '대학 이름',   true],
+            ['cut',   '기준 점수',   true],
+            ['major', '모집단위·학과', false],
+            ['type',  '전형 이름',   false],
+            ['track', '계열',        false],
+            ['note',  '비고',        false],
+        ];
+
+        async function openUnivTable() {
+            UNIV_FILE = null;
+            document.getElementById('univ-map').classList.add('hidden');
+            showModal('univ');
+            await loadUnivList();
+        }
+
+        async function loadUnivList() {
+            const q = (document.getElementById('univ-search').value || '').trim();
+            const r = await adminGet(`/api/admin/univ_table?q=${encodeURIComponent(q)}&limit=200`);
+            const meta = document.getElementById('univ-meta');
+            const box = document.getElementById('univ-list');
+            if (!r.ok) { meta.innerText = r.message; box.innerHTML = ''; return; }
+            const m = r.data.meta || {};
+            meta.innerText = m.count
+                ? `${m.label || '입결 자료'} · ${m.count.toLocaleString()}건 · ${m.metric === 'percentile' ? '백분위 기준' : '등급 기준'} · ${m.uploaded_at || ''}`
+                : '아직 올린 입결 자료가 없습니다.';
+            const rows = r.data.rows || [];
+            box.innerHTML = rows.length
+                ? rows.map(x => `<div class="flex justify-between items-center bg-[#151922] border border-gray-700 rounded px-3 py-1.5 text-xs">
+                        <span class="text-white truncate">${escapeHtml(x.univ)} <span class="text-gray-400">${escapeHtml(x.major || '')}</span>
+                            ${x.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(x.type)}</span>` : ''}</span>
+                        <b class="text-indigo-300 shrink-0 ml-2">${x.cut}${x.metric === 'percentile' ? '' : '등급'}</b>
+                    </div>`).join('')
+                : (q ? '<p class="text-gray-600 text-xs text-center py-4">찾는 대학이 없습니다.</p>' : '');
+        }
+
+        async function previewUnivFile(file) {
+            if (!file) return;
+            UNIV_FILE = file;
+            showLoader("파일을 읽는 중입니다...");
+            const fd = new FormData();
+            fd.append("file", file, file.name);
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/univ_table/preview`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("파일을 보내지 못했습니다."); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "파일을 읽지 못했습니다.");
+
+            const cols = data.columns || [];
+            const guess = (names) => {
+                for (let i = 0; i < cols.length; i++) {
+                    const c = String(cols[i]);
+                    if (names.some(n => c.includes(n))) return i;
+                }
+                return '';
+            };
+            const guessed = {
+                univ:  guess(['대학']),
+                cut:   guess(['컷', '등급', '점수', '백분위']),
+                major: guess(['학과', '모집', '학부', '전공']),
+                type:  guess(['전형']),
+                track: guess(['계열']),
+                note:  guess(['비고', '메모']),
+            };
+
+            document.getElementById('univ-map-fields').innerHTML = UNIV_MAP_FIELDS.map(([key, label, req]) => `
+                <div>
+                    <label class="text-[11px] ${req ? 'text-indigo-300 font-bold' : 'text-gray-400'} mb-1 block">${label}${req ? ' *' : ''}</label>
+                    <select id="um-${key}" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
+                        <option value="">${req ? '— 골라주세요 —' : '사용 안 함'}</option>
+                        ${cols.map((c, i) => `<option value="${i}" ${guessed[key] === i ? 'selected' : ''}>${escapeHtml(String(c))}</option>`).join('')}
+                    </select>
+                </div>`).join('') + `
+                <div class="md:col-span-2">
+                    <label class="text-[11px] text-indigo-300 font-bold mb-1 block">기준 점수의 종류 *</label>
+                    <select id="um-metric" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
+                        <option value="grade">내신 등급 (숫자가 낮을수록 좋음 — 수시용)</option>
+                        <option value="percentile">백분위 (숫자가 높을수록 좋음 — 정시용)</option>
+                    </select>
+                </div>`;
+
+            const sample = data.sample || [];
+            document.getElementById('univ-sample').innerHTML =
+                `<tr class="text-indigo-300 font-bold">${cols.map(c => `<td class="px-2 py-1 whitespace-nowrap">${escapeHtml(String(c))}</td>`).join('')}</tr>` +
+                sample.map(r => `<tr class="border-t border-gray-800">${r.map(c => `<td class="px-2 py-1 whitespace-nowrap">${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('');
+
+            document.getElementById('univ-label').value = (file.name || '').replace(/\.(xlsx|csv)$/i, '');
+            document.getElementById('univ-map').classList.remove('hidden');
+            document.getElementById('univ-map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function importUnivFile() {
+            if (!UNIV_FILE) return alert("먼저 파일을 올려주세요.");
+            const mapping = {};
+            for (const [key, label, req] of UNIV_MAP_FIELDS) {
+                const v = document.getElementById('um-' + key).value;
+                if (req && v === '') return alert(`'${label}' 열을 골라주세요.`);
+                mapping[key] = v === '' ? -1 : parseInt(v);
+            }
+            mapping.metric = document.getElementById('um-metric').value;
+
+            showLoader("입결 자료를 저장하는 중입니다...");
+            const fd = new FormData();
+            fd.append("file", UNIV_FILE, UNIV_FILE.name);
+            fd.append("mapping", JSON.stringify(mapping));
+            fd.append("label", document.getElementById('univ-label').value);
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/univ_table/import`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("저장하지 못했습니다."); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "저장에 실패했습니다.");
+
+            let msg = `${data.count.toLocaleString()}건을 저장했습니다.`;
+            if (data.warning) msg += `\n\n⚠ ${data.warning}`;
+            alert(msg);
+            document.getElementById('univ-map').classList.add('hidden');
+            UNIV_FILE = null;
+            await loadUnivList();
+            if (COUNSEL_TARGET) await reloadCounsel();
+        }
+
+        async function clearUnivTable() {
+            if (!confirm("저장된 입결 자료를 모두 지웁니다.\n엑셀 원본은 그대로 있으니 다시 올리시면 됩니다. 계속할까요?")) return;
+            showLoader("삭제 중...");
+            const r = await adminPost('/api/admin/univ_table/clear', {});
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            await loadUnivList();
+        }
+
+        // ── 목표 대학까지의 거리 ─────────────────────
+        function renderTargetGap() {
+            const g = (COUNSEL_DATA && COUNSEL_DATA.target_gap) || {};
+            if (g.status !== 'ok') {
+                return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3 mb-3 text-xs text-gray-500">
+                    <i class="fa-solid fa-bullseye mr-1"></i>${escapeHtml(g.message || '목표 대학 정보가 없습니다.')}</div>`;
+            }
+            const c = g.closest;
+            let head = '';
+            if (c && c.gap !== null && c.gap !== undefined) {
+                head = c.reach
+                    ? `<span class="text-emerald-400 font-bold">이미 기준을 넘었습니다</span>
+                       <span class="text-gray-400 ml-2">기준 ${c.cut}${c.unit} · 현재 ${c.mine}${c.unit}</span>`
+                    : `<span class="text-yellow-400 font-bold">${Math.abs(c.gap)}${c.unit} 더 필요합니다</span>
+                       <span class="text-gray-400 ml-2">기준 ${c.cut}${c.unit} · 현재 ${c.mine}${c.unit}</span>`;
+            } else {
+                head = '<span class="text-gray-500">성적을 입력하면 목표까지의 거리를 계산합니다</span>';
+            }
+            return `<div class="bg-[#1e2430] border border-indigo-700/50 rounded-lg p-4 mb-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <span class="text-white font-bold text-sm"><i class="fa-solid fa-bullseye mr-1 text-indigo-400"></i>목표: ${escapeHtml(g.univ)} ${escapeHtml(g.major || '')}</span>
+                    <span class="text-[11px] text-gray-400">자료 ${g.total}건 중 <b class="text-emerald-400">${g.reachable}건</b> 도달</span>
+                </div>
+                <div class="text-xs mb-3">${head}</div>
+                <div class="space-y-1 max-h-40 overflow-y-auto">
+                    ${g.items.filter(i => i.gap !== null && i.gap !== undefined).map(i => `
+                        <div class="flex justify-between items-center bg-[#151922] rounded px-2 py-1.5 text-xs">
+                            <span class="text-gray-300 truncate">${escapeHtml(i.univ)} ${escapeHtml(i.major || '')}
+                                ${i.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(i.type)}</span>` : ''}</span>
+                            <span class="shrink-0 ml-2 ${i.reach ? 'text-emerald-400' : 'text-yellow-400'} font-bold">
+                                ${i.cut}${i.unit} · ${i.reach ? '도달' : Math.abs(i.gap) + i.unit + ' 부족'}</span>
+                        </div>`).join('')}
+                </div>
+            </div>`;
         }
 
         // ── 학생부 평가 기준 ─────────────────────────
