@@ -114,6 +114,31 @@
         </div>
     </div>
 
+    <!-- 📚 자료 보기 · 수정 -->
+    <div id="kb-edit-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-emerald-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-lg font-black text-white"><i class="fa-solid fa-database mr-2 text-emerald-400"></i><span id="kb-edit-mode-label">자료 수정</span></h2>
+                <button onclick="closeModal('kb-edit-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5">
+                <input type="hidden" id="kb-edit-id">
+                <label class="text-xs text-gray-400 mb-1 block">자료 제목</label>
+                <input type="text" id="kb-edit-title" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-emerald-500 rounded text-white mb-4">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-xs text-gray-400">자료 내용 <span class="text-gray-600">(AI가 이 내용을 읽고 학생 질문에 답합니다)</span></label>
+                    <span id="kb-edit-count" class="text-[10px] text-gray-500"></span>
+                </div>
+                <textarea id="kb-edit-content" oninput="updateKbCount()" class="w-full h-[52vh] p-3 bg-[#151922] border border-gray-600 outline-none focus:border-emerald-500 rounded text-white text-sm leading-relaxed resize-y font-mono"></textarea>
+                <p id="kb-edit-meta" class="text-[10px] text-gray-600 mt-2"></p>
+            </div>
+            <div class="p-4 border-t border-gray-700 flex gap-2">
+                <button onclick="saveKnowledgeEdit()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-3 text-white font-bold rounded transition">수정 내용 저장</button>
+                <button onclick="closeModal('kb-edit-modal')" class="bg-gray-700 hover:bg-gray-600 py-3 px-6 text-white font-bold rounded transition">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🧭 학습 성향 검사 -->
     <div id="tendency-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-3xl h-[92vh] shadow-2xl border border-pink-500 flex flex-col">
@@ -1196,7 +1221,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         function importKnowledgeText(encodedContent) { document.getElementById('gen-text').value = decodeURIComponent(encodedContent); closeModal('knowledge-import-modal'); showToast("자료가 기준 지문에 성공적으로 입력되었습니다."); }
-        function viewKnowledgeDetail(encodedContent) { alert(decodeURIComponent(encodedContent)); }
+
 
         // 💡 레벨/아바타 표시용 참고 테이블 — 백엔드 main.py의 LEVELS와 동일하게 유지 (변경 시 양쪽 다 수정)
         const LEVEL_ITEMS_REF = [
@@ -2719,22 +2744,70 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
         }
 
+        // 💡 자료 본문을 onclick 속성에 통째로 실어 나르던 방식을 버리고 목록을 캐시해 둔다.
+        //    긴 자료나 따옴표가 든 자료에서 버튼이 깨지던 문제가 사라지고, 수정도 붙일 수 있다.
+        let KB_LIST = [];
+
         async function loadKnowledgeList() {
             const c = document.getElementById('admin-kb-view-list');
             c.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>학습 목록을 불러오는 중입니다...</div>';
             try {
                 const res = await fetch(`${API_URL}/api/knowledge`);
                 const data = await res.json();
-                c.innerHTML = '';
-                if(data.success && data.knowledge && data.knowledge.length > 0) {
-                    data.knowledge.forEach(k => {
-                        const safeContent = escAttr(encodeURIComponent(k.content));
-                        c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center"><span class="font-bold truncate w-2/3 cursor-pointer hover:text-emerald-400 underline transition" onclick="viewKnowledgeDetail('${safeContent}')"><i class="fa-solid fa-database mr-2"></i>${escapeHtml(k.title)}</span><button onclick="deleteKnowledge('${escAttr(k.id)}')" class="text-red-400 text-xs flex-shrink-0 bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`;
-                    });
-                } else {
+                KB_LIST = (data.success && data.knowledge) ? data.knowledge : [];
+                if (!KB_LIST.length) {
                     c.innerHTML = '<div class="text-center text-gray-500 mt-10">등록된 학습 자료가 없습니다.</div>';
+                    return;
                 }
+                c.innerHTML = KB_LIST.map(k => {
+                    const len = (k.content || '').length;
+                    const edited = k.updated_at ? ` · 수정 ${escapeHtml(String(k.updated_at).slice(0, 16))}` : '';
+                    return `<div class="bg-gray-800 p-3 rounded text-white">
+                        <div class="flex justify-between items-start gap-2">
+                            <button onclick="openKnowledgeEdit('${escAttr(k.id)}')" class="text-left min-w-0 flex-grow hover:text-emerald-400 transition">
+                                <div class="font-bold truncate"><i class="fa-solid fa-database mr-2 text-emerald-500"></i>${escapeHtml(k.title)}</div>
+                                <div class="text-[10px] text-gray-500 mt-0.5">${len.toLocaleString()}자${edited}</div>
+                            </button>
+                            <div class="shrink-0 flex gap-1">
+                                <button onclick="openKnowledgeEdit('${escAttr(k.id)}')" class="text-emerald-300 text-xs bg-emerald-900/30 hover:bg-emerald-900/60 px-3 py-1 rounded transition font-bold">보기 · 수정</button>
+                                <button onclick="deleteKnowledge('${escAttr(k.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
             } catch(e) { c.innerHTML = '<div class="text-center text-red-400 mt-10">목록을 불러오는 데 실패했습니다.<br>서버 연결을 확인하세요.</div>'; }
+        }
+
+        function updateKbCount() {
+            document.getElementById('kb-edit-count').innerText =
+                document.getElementById('kb-edit-content').value.length.toLocaleString() + '자';
+        }
+
+        function openKnowledgeEdit(id) {
+            const k = KB_LIST.find(x => x.id === id);
+            if (!k) return alert("자료를 찾지 못했습니다. 목록을 새로고침해주세요.");
+            document.getElementById('kb-edit-id').value = k.id;
+            document.getElementById('kb-edit-title').value = k.title || '';
+            document.getElementById('kb-edit-content').value = k.content || '';
+            document.getElementById('kb-edit-meta').innerText =
+                `등록 ${String(k.created_at || '').slice(0, 16)}${k.updated_at ? ' · 최근 수정 ' + String(k.updated_at).slice(0, 16) : ''}`;
+            updateKbCount();
+            showModal('kb-edit');
+        }
+
+        async function saveKnowledgeEdit() {
+            const id = document.getElementById('kb-edit-id').value;
+            const title = document.getElementById('kb-edit-title').value.trim();
+            const content = document.getElementById('kb-edit-content').value.trim();
+            if (!title) return alert("자료 제목을 입력해주세요.");
+            if (!content) return alert("자료 내용이 비어 있습니다.");
+            showLoader("자료 수정 중...");
+            const r = await adminPost('/api/admin/knowledge/update', { id: id, title: title, content: content });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            closeModal('kb-edit-modal');
+            await loadKnowledgeList();
+            alert("자료가 수정되었습니다. AI가 바로 새 내용으로 답합니다.");
         }
 
         async function deleteKnowledge(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/knowledge/${id}`,{method:'DELETE'}); loadKnowledgeList(); hideLoader(); } }
