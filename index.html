@@ -662,6 +662,7 @@
                     <div id="admin-counsel" class="admin-tab-content grid grid-cols-4 gap-4">
                         <div class="col-span-4 lg:col-span-1 bg-[#151922] p-4 rounded h-[780px] flex flex-col">
                             <h3 class="text-white font-bold mb-2"><i class="fa-solid fa-comments mr-2 text-pink-400"></i>상담할 학생</h3>
+                            <button onclick="openNewStudentForm()" class="w-full mb-2 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-user-plus mr-1"></i>새 학생 등록하기</button>
                             <input type="text" id="counsel-search" oninput="renderCounselStudentList()" placeholder="이름으로 찾기" class="w-full p-2 mb-2 bg-gray-800 text-white rounded text-sm">
                             <div id="counsel-student-list" class="flex-grow overflow-y-auto pr-1 space-y-1"></div>
                             <button onclick="openAdmissionTable()" class="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-sliders mr-1"></i>대학 라인 기준표 설정</button>
@@ -686,7 +687,8 @@
                                 </div>
 
                                 <div class="flex flex-wrap gap-1 mb-4">
-                                    <button onclick="switchCounselTab('cs-grades')"   id="btn-cs-grades"   class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-pink-600 text-white">① 성적 · 진학 전략</button>
+                                    <button onclick="switchCounselTab('cs-profile')"  id="btn-cs-profile"  class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-pink-600 text-white">⓪ 학생 정보</button>
+                                    <button onclick="switchCounselTab('cs-grades')"   id="btn-cs-grades"   class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">① 성적 · 진학 전략</button>
                                     <button onclick="switchCounselTab('cs-tendency')" id="btn-cs-tendency" class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">② 학습 성향</button>
                                     <button onclick="switchCounselTab('cs-record')"   id="btn-cs-record"   class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">③ 학생부 평가</button>
                                     <button onclick="switchCounselTab('cs-logs')"     id="btn-cs-logs"     class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">④ 학습 기록</button>
@@ -694,16 +696,27 @@
                                 </div>
 
                                 <!-- ① 성적 · 진학 전략 -->
-                                <div id="cs-grades" class="cs-tab-content flex-grow overflow-y-auto pr-1">
+                                <!-- ⓪ 학생 정보 -->
+                                <div id="cs-profile" class="cs-tab-content flex-grow overflow-y-auto pr-1">
+                                    <div id="profile-form"></div>
+                                </div>
+
+                                <div id="cs-grades" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
                                     <div id="counsel-strategy" class="mb-4"></div>
                                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                         <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
                                             <div class="flex justify-between items-center mb-2">
                                                 <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-school mr-1 text-blue-400"></i>내신 성적</h4>
-                                                <button onclick="addNaesinRow()" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
+                                                <div class="flex items-center gap-1">
+                                                    <select id="naesin-scale" onchange="changeNaesinScale(this.value)" class="p-1 bg-gray-800 text-white rounded text-[11px] border border-gray-600" title="이 학생의 학교가 쓰는 내신 등급 체계">
+                                                        <option value="9">9등급제</option>
+                                                        <option value="5">5등급제</option>
+                                                    </select>
+                                                    <button onclick="addNaesinRow()" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
+                                                </div>
                                             </div>
                                             <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                                                <span class="col-span-3">학기</span><span class="col-span-4">과목</span><span class="col-span-2">단위</span><span class="col-span-2">등급</span><span class="col-span-1"></span>
+                                                <span class="col-span-3">학기</span><span class="col-span-3">과목</span><span class="col-span-2">단위</span><span class="col-span-2">등급</span><span class="col-span-2">환산</span>
                                             </div>
                                             <div id="naesin-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
                                         </div>
@@ -1873,6 +1886,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('counsel-sub').innerText =
                 `${stu.school || ''} ${stu.grade || ''} ${stu.class_name ? '· ' + stu.class_name : ''}  ${c.updated_at ? '· 최근 수정 ' + c.updated_at : ''}`;
 
+            const scaleSel = document.getElementById('naesin-scale');
+            if (scaleSel) scaleSel.value = c.naesin_scale || '9';
+            renderProfileForm();
             renderStrategy();
             renderGradeRows();
             renderTendency();
@@ -1886,17 +1902,170 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 || '<p class="text-gray-600 text-sm text-center py-10">위쪽 <b class="text-pink-400">종합 소견서 만들기</b> 버튼을 누르면<br>성적 · 성향 · 학생부 · 학습기록을 묶은 소견서가 만들어집니다.</p>';
         }
 
+        // ── ⓪ 학생 인적사항 (상담 기초 자료) ─────────
+        //   새 학생이 들어오면 여기서 바로 등록하고, 상담에 필요한 정보를
+        //   한자리에 모아 둔다. AI 상담문과 종합 소견서도 이 내용을 참고한다.
+        const PROFILE_FIELDS = [
+            ['phone',         '학생 연락처',   'tel',  '010-0000-0000',           1],
+            ['parent_phone',  '학부모 연락처', 'tel',  '010-0000-0000',           1],
+            ['parent_relation','학부모 관계',  'text', '예: 어머니',              1],
+            ['birth',         '생년월일',      'text', '예: 2009-03-15',          1],
+            ['enrolled_at',   '학원 등록일',   'date', '',                        1],
+            ['track',         '계열',          'text', '예: 인문 / 자연 / 미정',  1],
+            ['target_univ',   '희망 대학',     'text', '예: 서울대 · 연세대',     1],
+            ['target_major',  '희망 학과',     'text', '예: 국어국문학과',        1],
+            ['prev_academy',  '이전 학습 이력','text', '예: ○○학원 2년, 인강 위주', 2],
+            ['strength',      '강점',          'text', '예: 문학 감상, 성실함',   2],
+            ['weakness',      '약점',          'text', '예: 비문학 시간 부족',    2],
+            ['note',          '특이사항',      'area', '건강·가정·성향 등 상담 때 알아둘 점', 2],
+        ];
+
+        function renderProfileForm() {
+            const box = document.getElementById('profile-form');
+            if (!box) return;
+            const p = (COUNSEL_DATA && COUNSEL_DATA.profile) || {};
+            const stu = ADMIN_STUDENTS.find(s => s.student_name === COUNSEL_TARGET) || {};
+
+            const field = ([key, label, type, ph, span]) => {
+                const v = escAttr(p[key] || '');
+                const input = type === 'area'
+                    ? `<textarea id="pf-${key}" rows="3" placeholder="${ph}" class="w-full p-2 bg-gray-800 text-white rounded text-sm resize-y">${escapeHtml(p[key] || '')}</textarea>`
+                    : `<input type="${type}" id="pf-${key}" value="${v}" placeholder="${ph}" class="w-full p-2 bg-gray-800 text-white rounded text-sm">`;
+                return `<div class="${span === 2 ? 'md:col-span-2' : ''}">
+                    <label class="text-[11px] text-gray-400 mb-1 block">${label}</label>${input}</div>`;
+            };
+
+            box.innerHTML = `
+                <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-4 mb-3">
+                    <h4 class="text-white font-bold text-sm mb-3"><i class="fa-solid fa-id-card mr-1 text-pink-400"></i>기본 정보</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                        <div><label class="text-[11px] text-gray-400 mb-1 block">학교</label>
+                            <input type="text" id="pf-school" value="${escAttr(stu.school || '')}" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
+                        <div><label class="text-[11px] text-gray-400 mb-1 block">학년</label>
+                            <input type="text" id="pf-grade" value="${escAttr(stu.grade || '')}" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
+                        <div><label class="text-[11px] text-gray-400 mb-1 block">반</label>
+                            <select id="pf-class" class="w-full p-2 bg-gray-800 text-white rounded text-sm class-select"><option value="">반 미배정</option></select></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${PROFILE_FIELDS.map(field).join('')}</div>
+                    <button onclick="saveCounselProfile()" class="mt-4 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-floppy-disk mr-1"></i>학생 정보 저장</button>
+                </div>`;
+
+            refreshClassSelects();
+            const sel = document.getElementById('pf-class');
+            if (sel) { sel.value = stu.class_name || ''; if (sel.value !== (stu.class_name || '')) sel.value = ''; }
+        }
+
+        function collectProfile() {
+            const out = {};
+            PROFILE_FIELDS.forEach(([key]) => {
+                const el = document.getElementById('pf-' + key);
+                out[key] = el ? el.value.trim() : '';
+            });
+            return out;
+        }
+
+        async function saveCounselProfile() {
+            if (!COUNSEL_TARGET) return;
+            showLoader("학생 정보 저장 중...");
+            const r = await adminPost('/api/admin/counsel/profile', {
+                student_name: COUNSEL_TARGET,
+                school: document.getElementById('pf-school').value,
+                grade: document.getElementById('pf-grade').value,
+                class_name: document.getElementById('pf-class').value,
+                profile: collectProfile(),
+                create: false
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            await loadAdminClassData();     // 명단 쪽 학교/학년/반도 같이 갱신
+            renderCounselStudentList();
+            renderCounselCard();
+            alert("학생 정보가 저장되었습니다.");
+        }
+
+        // ── 새 학생 등록 ─────────────────────────────
+        function openNewStudentForm() {
+            const name = (prompt("새로 등록할 학생의 이름을 입력해주세요.") || '').trim();
+            if (!name) return;
+            if (ADMIN_STUDENTS.some(s => s.student_name === name)) {
+                return alert("이미 명단에 있는 이름입니다.\n동명이인이라면 '김민준B'처럼 구분을 붙여주세요.");
+            }
+            NEW_STUDENT_NAME = name;
+            COUNSEL_TARGET = name;
+            COUNSEL_DATA = emptyCounsel(name);
+            document.getElementById('counsel-empty').classList.add('hidden');
+            document.getElementById('counsel-body').classList.remove('hidden');
+            renderCounselCard();
+            switchCounselTab('cs-profile');
+            document.getElementById('counsel-title').innerText = name;
+            document.getElementById('counsel-sub').innerText = '아직 명단에 없는 학생입니다. 아래 정보를 채우고 저장하면 등록됩니다.';
+            // 저장 버튼을 '등록' 동작으로 바꾼다
+            const btn = document.querySelector('#profile-form button');
+            if (btn) {
+                btn.setAttribute('onclick', 'createStudentFromProfile()');
+                btn.innerHTML = '<i class="fa-solid fa-user-plus mr-1"></i>이 학생 등록하기';
+                btn.className = 'mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white font-bold text-sm transition';
+            }
+            document.getElementById('pf-school').focus();
+        }
+
+        let NEW_STUDENT_NAME = null;
+
+        function emptyCounsel(name) {
+            return {
+                student_name: name, profile: {}, naesin_scale: '9',
+                naesin_rows: [], mock_rows: [],
+                naesin: { avg: null, main_avg: null, total_units: 0, count: 0, by_term: [], scale: '9', other_scale: '5', avg_other: null, main_avg_other: null },
+                mock: { avg: null, pct_avg: null, latest: null, count: 0, by_date: [] },
+                track: { verdict: '판단 보류', gap: null, susi_weight: 50, jeongsi_weight: 50, reason: '성적을 입력하면 계산됩니다.' },
+                tiers: { susi: null, jeongsi: null }, table_note: '',
+                tendency: null, record_text: '', record_eval: '', record_eval_at: '',
+                analysis: null, summary: null, logs: [], log_avg: null, updated_at: ''
+            };
+        }
+
+        async function createStudentFromProfile() {
+            const name = NEW_STUDENT_NAME;
+            if (!name) return;
+            const school = document.getElementById('pf-school').value.trim();
+            const grade = document.getElementById('pf-grade').value.trim();
+            if (!school || !grade) return alert("학교와 학년은 반드시 입력해주세요.\n학생이 로그인할 때 이 두 가지로 본인 확인을 합니다.");
+
+            showLoader("학생 등록 중...");
+            const r = await adminPost('/api/admin/counsel/profile', {
+                student_name: name, school: school, grade: grade,
+                class_name: document.getElementById('pf-class').value,
+                profile: collectProfile(), create: true
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            NEW_STUDENT_NAME = null;
+            COUNSEL_DATA = r.data.counsel;
+            await loadAdminClassData();
+            renderCounselStudentList();
+            renderCounselCard();
+            alert(`${name} 학생이 명단에 등록되었습니다.\n이제 학교·학년·이름으로 로그인할 수 있습니다.`);
+        }
+
         // ── ① 성적 · 전략 ────────────────────────────
-        function gradeChip(label, value, unit, tone) {
+        function gradeChip(label, value, unit, tone, extra) {
             const v = (value === null || value === undefined) ? '미입력' : value + (unit || '');
             const color = (value === null || value === undefined) ? 'text-gray-600' : tone;
             return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3 text-center">
                 <div class="text-[10px] text-gray-500 mb-1">${label}</div>
-                <div class="text-xl font-black ${color}">${escapeHtml(String(v))}</div></div>`;
+                <div class="text-xl font-black ${color}">${escapeHtml(String(v))}</div>${extra || ''}</div>`;
         }
 
         function renderStrategy() {
             const c = COUNSEL_DATA, t = c.track, tiers = c.tiers;
+            const nScale = currentNaesinScale(), oScale = nScale === '9' ? '5' : '9';
+            // 화면에서 등급제를 바꾸면 저장 전에도 바로 환산이 보이도록 다시 계산
+            const naAvg = c.naesin.avg, naMain = c.naesin.main_avg;
+            const naAvgOther = convertGrade(naAvg, nScale, oScale);
+            const naMainOther = convertGrade(naMain, nScale, oScale);
+            const sub = (v) => v === null || v === undefined ? '' :
+                `<div class="text-[10px] text-blue-300 mt-0.5">${oScale}등급제 ${v}</div>`;
             const line = (label, tier, tone) => tier
                 ? `<div class="bg-[#1e2430] border ${tone} rounded-lg p-3">
                        <div class="text-[10px] text-gray-500 mb-1">${label}</div>
@@ -1908,8 +2077,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
             document.getElementById('counsel-strategy').innerHTML = `
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                    ${gradeChip('내신 평균', c.naesin.avg, '등급', 'text-blue-400')}
-                    ${gradeChip('주요과목 평균', c.naesin.main_avg, '등급', 'text-blue-300')}
+                    ${gradeChip(`내신 평균 (${nScale}등급제)`, naAvg, '등급', 'text-blue-400', sub(naAvgOther))}
+                    ${gradeChip('주요과목 평균', naMain, '등급', 'text-blue-300', sub(naMainOther))}
                     ${gradeChip('모의 평균' + (c.mock.latest ? ` (${c.mock.latest})` : ''), c.mock.avg, '등급', 'text-yellow-400')}
                     ${gradeChip('모의 평균 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
                 </div>
@@ -1931,24 +2100,126 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <p class="text-[10px] text-gray-600 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>${escapeHtml(c.table_note || '')} 왼쪽 아래 '대학 라인 기준표 설정'에서 수정할 수 있습니다.</p>`;
         }
 
-        const NAESIN_FIELDS = [['term', '학기', 3, 'text', '1-1'], ['subject', '과목', 4, 'text', '문학'], ['unit', '단위', 2, 'number', '4'], ['grade', '등급', 2, 'number', '2']];
+        const NAESIN_FIELDS = [['term', '학기', 3, 'text', '1-1'], ['subject', '과목', 3, 'text', '문학'], ['unit', '단위', 2, 'number', '4'], ['grade', '등급', 2, 'number', '2']];
         const MOCK_FIELDS = [['date', '시행', 3, 'text', '2026-06'], ['subject', '과목', 3, 'text', '국어'], ['grade', '등급', 2, 'number', '2'], ['percentile', '백분위', 3, 'number', '88']];
 
         function rowHtml(kind, fields, row, i) {
+            // 내신 줄에는 반대 등급제 환산값을 옆에 같이 띄운다
+            const conv = kind === 'naesin'
+                ? `<span class="col-span-1 text-[10px] text-blue-300 flex items-center justify-center" data-conv="1">${escapeHtml(row.grade_other || '')}</span>`
+                : '';
             return `<div class="grid grid-cols-12 gap-1" data-row="${kind}">
                 ${fields.map(([k, label, span, type, ph]) =>
-                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">`
+                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0"${k === 'grade' && kind === 'naesin' ? ' oninput="updateRowConversion(this)"' : ''}>`
                 ).join('')}
+                ${conv}
                 <button onclick="this.parentElement.remove()" class="col-span-1 text-red-400 hover:text-red-300 text-xs" title="이 줄 삭제"><i class="fa-solid fa-xmark"></i></button>
             </div>`;
+        }
+
+        // ─────────────────────────────────────────────
+        // 내신 9등급제 ↔ 5등급제 환산 (서버와 같은 누적 비율)
+        //   9등급제 누적: 4 / 11 / 23 / 40 / 60 / 77 / 89 / 96 / 100 (%)
+        //   5등급제 누적: 10 / 34 / 66 / 90 / 100 (%)
+        // ─────────────────────────────────────────────
+        const GRADE_CUTS = { '9': [4,11,23,40,60,77,89,96,100], '5': [10,34,66,90,100] };
+        const GRADE_MIDS = Object.fromEntries(Object.entries(GRADE_CUTS).map(([k, cuts]) => {
+            let prev = 0;
+            return [k, cuts.map(c => { const m = (prev + c) / 2; prev = c; return m; })];
+        }));
+
+        function gradeToPct(g, scale) {
+            const mids = GRADE_MIDS[scale];
+            const v = Math.max(1, Math.min(mids.length, g));
+            const lo = Math.floor(v) - 1;
+            if (lo >= mids.length - 1) return mids[mids.length - 1];
+            return mids[lo] + (v - Math.floor(v)) * (mids[lo + 1] - mids[lo]);
+        }
+
+        function pctToGrade(p, scale) {
+            const mids = GRADE_MIDS[scale];
+            if (p <= mids[0]) return 1;
+            if (p >= mids[mids.length - 1]) return mids.length;
+            for (let i = 0; i < mids.length - 1; i++) {
+                if (p >= mids[i] && p <= mids[i + 1]) {
+                    const span = mids[i + 1] - mids[i];
+                    return Math.round(((i + 1) + (span ? (p - mids[i]) / span : 0)) * 100) / 100;
+                }
+            }
+            return mids.length;
+        }
+
+        function convertGrade(g, frm, to) {
+            const v = parseFloat(g);
+            if (isNaN(v)) return null;
+            if (frm === to) return Math.round(v * 100) / 100;
+            return Math.round(pctToGrade(gradeToPct(v, frm), to) * 100) / 100;
+        }
+
+        // 과목 하나는 '몇~몇 등급'처럼 폭으로 보는 것이 정확하다
+        function convertGradeBand(g, frm, to) {
+            const v = parseInt(g);
+            if (isNaN(v)) return '';
+            if (frm === to) return v + '등급';
+            const idx = Math.max(1, Math.min(GRADE_CUTS[frm].length, v));
+            const loPct = idx === 1 ? 0 : GRADE_CUTS[frm][idx - 2];
+            const hiPct = GRADE_CUTS[frm][idx - 1];
+            const bandOf = p => { for (let i = 0; i < GRADE_CUTS[to].length; i++) if (p <= GRADE_CUTS[to][i]) return i + 1; return GRADE_CUTS[to].length; };
+            const low = bandOf(loPct + 0.01), high = bandOf(Math.max(loPct + 0.01, hiPct - 0.01));
+            return low === high ? `${low}등급` : `${low}~${high}등급`;
+        }
+
+        function currentNaesinScale() {
+            const el = document.getElementById('naesin-scale');
+            return el && el.value === '5' ? '5' : '9';
+        }
+
+        function updateRowConversion(inp) {
+            const row = inp.closest('[data-row]');
+            const box = row && row.querySelector('[data-conv]');
+            if (!box) return;
+            const from = currentNaesinScale(), to = from === '9' ? '5' : '9';
+            const g = parseFloat(inp.value);
+            const max = GRADE_CUTS[from].length;   // 9등급제면 9, 5등급제면 5
+            // 💡 체계에 없는 등급(5등급제에 8등급 같은)은 환산하지 않고 빨갛게 알려준다.
+            //    그냥 환산하면 없는 등급이 있는 것처럼 보여 상담 자료가 틀어진다.
+            if (!isNaN(g) && (g < 1 || g > max)) {
+                inp.classList.add('border', 'border-red-500');
+                box.innerHTML = `<span class="text-red-400" title="${from}등급제는 1~${max}등급까지입니다">1~${max}만</span>`;
+                return;
+            }
+            inp.classList.remove('border', 'border-red-500');
+            box.innerText = convertGradeBand(inp.value, from, to);
+        }
+
+        function changeNaesinScale(v) {
+            const from = currentNaesinScale();
+            const max = GRADE_CUTS[from].length;
+            const inputs = Array.from(document.querySelectorAll('#naesin-rows [data-row] input[data-k="grade"]'));
+            inputs.forEach(inp => { inp.max = max; updateRowConversion(inp); });
+
+            const bad = inputs.filter(inp => { const g = parseFloat(inp.value); return !isNaN(g) && (g < 1 || g > max); });
+            if (bad.length) {
+                alert(`${from}등급제는 1~${max}등급까지입니다.
+범위를 벗어난 과목이 ${bad.length}개 있어 빨갛게 표시했습니다.
+
+등급을 고쳐주세요. 그대로 두면 저장해도 평균에 잘못 반영됩니다.`);
+                bad[0].focus();
+            }
+            renderStrategy();
         }
 
         function renderGradeRows() {
             const n = COUNSEL_DATA.naesin_rows || [], m = COUNSEL_DATA.mock_rows || [];
             document.getElementById('naesin-rows').innerHTML = (n.length ? n : [{}]).map((r, i) => rowHtml('naesin', NAESIN_FIELDS, r, i)).join('');
             document.getElementById('mock-rows').innerHTML = (m.length ? m : [{}]).map((r, i) => rowHtml('mock', MOCK_FIELDS, r, i)).join('');
+            applyNaesinMax();
         }
-        function addNaesinRow() { document.getElementById('naesin-rows').insertAdjacentHTML('beforeend', rowHtml('naesin', NAESIN_FIELDS, {}, 0)); }
+        function applyNaesinMax() {
+            const max = GRADE_CUTS[currentNaesinScale()].length;
+            document.querySelectorAll('#naesin-rows [data-row] input[data-k="grade"]').forEach(inp => { inp.max = max; inp.min = 1; });
+        }
+        function addNaesinRow() { document.getElementById('naesin-rows').insertAdjacentHTML('beforeend', rowHtml('naesin', NAESIN_FIELDS, {}, 0)); applyNaesinMax(); }
         function addMockRow() { document.getElementById('mock-rows').insertAdjacentHTML('beforeend', rowHtml('mock', MOCK_FIELDS, {}, 0)); }
 
         function collectRows(containerId) {
@@ -1965,7 +2236,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const r = await adminPost('/api/admin/counsel/grades', {
                 student_name: COUNSEL_TARGET,
                 naesin: collectRows('naesin-rows'),
-                mock: collectRows('mock-rows')
+                mock: collectRows('mock-rows'),
+                naesin_scale: currentNaesinScale()
             });
             hideLoader();
             if (!r.ok) return alert(r.message);
