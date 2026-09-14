@@ -160,6 +160,30 @@
         </div>
     </div>
 
+    <!-- 📋 학생부 평가 기준 -->
+    <div id="criteria-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-purple-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-list-check mr-2 text-purple-400"></i>학생부 평가 기준</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">AI는 여기 적힌 영역과 등급 잣대만 사용합니다. 기준에 없는 항목은 만들지 않습니다.</p>
+                </div>
+                <button onclick="closeModal('criteria-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5">
+                <p class="text-[11px] text-yellow-500/90 bg-yellow-950/30 border border-yellow-800/50 rounded p-3 mb-3 leading-relaxed">
+                    처음 값은 대학들이 공통으로 쓰는 평가요소를 바탕으로 넣어둔 <b>임시 기준</b>입니다.
+                    원장님이 실제로 쓰시는 잣대로 바꿔주셔야 평가가 원장님 기준과 맞습니다.
+                </p>
+                <textarea id="criteria-text" class="w-full h-[58vh] p-4 bg-[#151922] border border-gray-600 outline-none focus:border-purple-500 rounded text-white text-sm leading-relaxed resize-y font-mono"></textarea>
+            </div>
+            <div class="p-4 border-t border-gray-700 flex gap-2">
+                <button onclick="saveRecordCriteria()" class="flex-1 bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded transition">기준 저장</button>
+                <button onclick="restoreCriteriaDefault()" class="bg-gray-700 hover:bg-gray-600 py-3 px-5 text-white font-bold rounded transition">기본값으로</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🎚 대학 라인 기준표 -->
     <div id="admission-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-blue-500 flex flex-col">
@@ -728,6 +752,9 @@
                                             <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
                                                 <span class="col-span-3">시행(예 2026-06)</span><span class="col-span-3">과목</span><span class="col-span-2">등급</span><span class="col-span-3">백분위</span><span class="col-span-1"></span>
                                             </div>
+                                            <p class="text-[10px] text-gray-600 px-1 mb-1">영어·한국사는 절대평가라 백분위 칸이 잠깁니다. 등급만 넣으시면 됩니다.</p>
+                                            <div class="hidden">
+                                            </div>
                                             <div id="mock-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
                                         </div>
                                     </div>
@@ -745,6 +772,10 @@
 
                                 <!-- ③ 학생부 평가 -->
                                 <div id="cs-record" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <p class="text-[11px] text-gray-500">AI는 아래 <b class="text-gray-400">평가 기준</b>에 적힌 잣대만 사용합니다.</p>
+                                        <button onclick="openRecordCriteria()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-list-check mr-1"></i>학생부 평가 기준 설정</button>
+                                    </div>
                                     <label class="text-xs text-gray-400 mb-1 block">희망 전공 (선택)</label>
                                     <input type="text" id="cs-major" placeholder="예: 국어국문학과, 미디어커뮤니케이션" class="w-full p-2 mb-3 bg-gray-800 text-white rounded text-sm">
                                     <label class="text-xs text-gray-400 mb-1 block">학생부 내용 붙여넣기 (세특 · 창체 · 행발 등)</label>
@@ -2079,9 +2110,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     ${gradeChip(`내신 평균 (${nScale}등급제)`, naAvg, '등급', 'text-blue-400', sub(naAvgOther))}
                     ${gradeChip('주요과목 평균', naMain, '등급', 'text-blue-300', sub(naMainOther))}
-                    ${gradeChip('모의 평균' + (c.mock.latest ? ` (${c.mock.latest})` : ''), c.mock.avg, '등급', 'text-yellow-400')}
-                    ${gradeChip('모의 평균 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
+                    ${gradeChip('국·수·탐 평균' + (c.mock.latest ? ` (${c.mock.latest})` : ''), c.mock.avg, '등급', 'text-yellow-400')}
+                    ${gradeChip('국·수·탐 평균 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
                 </div>
+                ${c.mock.abs_text ? `<div class="bg-[#1e2430] border border-gray-700 rounded-lg px-3 py-2 mb-3 text-xs">
+                    <span class="text-gray-500">절대평가</span>
+                    <b class="text-yellow-300 ml-2">${escapeHtml(c.mock.abs_text)}</b>
+                    <span class="text-gray-600 ml-2">백분위가 없어 위 평균에는 넣지 않았습니다</span>
+                </div>` : ''}
                 <div class="bg-[#1e2430] border border-pink-700/50 rounded-lg p-4 mb-3">
                     <div class="flex flex-wrap items-center gap-2 mb-2">
                         <span class="bg-pink-600 text-white text-xs font-black px-3 py-1 rounded-full">${escapeHtml(t.verdict)}</span>
@@ -2103,6 +2139,38 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         const NAESIN_FIELDS = [['term', '학기', 3, 'text', '1-1'], ['subject', '과목', 3, 'text', '문학'], ['unit', '단위', 2, 'number', '4'], ['grade', '등급', 2, 'number', '2']];
         const MOCK_FIELDS = [['date', '시행', 3, 'text', '2026-06'], ['subject', '과목', 3, 'text', '국어'], ['grade', '등급', 2, 'number', '2'], ['percentile', '백분위', 3, 'number', '88']];
 
+        // 영어·한국사 등은 절대평가라 백분위가 없다. 상대평가 과목과 섞으면
+        // 정시 판단이 어긋나므로 입력 단계에서부터 갈라 놓는다.
+        const ABSOLUTE_SUBJECTS = ['영어', '한국사', '제2외국어', '한문', '아랍어', '일본어', '중국어', '독일어', '프랑스어', '스페인어', '러시아어', '베트남어'];
+        function isAbsoluteSubject(name) {
+            const n = String(name || '').trim();
+            return ABSOLUTE_SUBJECTS.some(k => n.includes(k));
+        }
+
+        function updateMockRowMode(inp) {
+            const row = inp.closest('[data-row]');
+            if (!row) return;
+            const subj = row.querySelector('input[data-k="subject"]');
+            const pct = row.querySelector('input[data-k="percentile"]');
+            if (!subj || !pct) return;
+            if (isAbsoluteSubject(subj.value)) {
+                pct.value = '';
+                pct.disabled = true;
+                pct.placeholder = '절대평가';
+                pct.classList.add('opacity-40', 'cursor-not-allowed');
+                row.dataset.absolute = '1';
+            } else {
+                pct.disabled = false;
+                pct.placeholder = '88';
+                pct.classList.remove('opacity-40', 'cursor-not-allowed');
+                delete row.dataset.absolute;
+            }
+        }
+
+        function refreshMockModes() {
+            document.querySelectorAll('#mock-rows [data-row] input[data-k="subject"]').forEach(updateMockRowMode);
+        }
+
         function rowHtml(kind, fields, row, i) {
             // 내신 줄에는 반대 등급제 환산값을 옆에 같이 띄운다
             const conv = kind === 'naesin'
@@ -2110,7 +2178,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 : '';
             return `<div class="grid grid-cols-12 gap-1" data-row="${kind}">
                 ${fields.map(([k, label, span, type, ph]) =>
-                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0"${k === 'grade' && kind === 'naesin' ? ' oninput="updateRowConversion(this)"' : ''}>`
+                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0"${k === 'grade' && kind === 'naesin' ? ' oninput="updateRowConversion(this)"' : ''}${k === 'subject' && kind === 'mock' ? ' oninput="updateMockRowMode(this)"' : ''}>`
                 ).join('')}
                 ${conv}
                 <button onclick="this.parentElement.remove()" class="col-span-1 text-red-400 hover:text-red-300 text-xs" title="이 줄 삭제"><i class="fa-solid fa-xmark"></i></button>
@@ -2214,13 +2282,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('naesin-rows').innerHTML = (n.length ? n : [{}]).map((r, i) => rowHtml('naesin', NAESIN_FIELDS, r, i)).join('');
             document.getElementById('mock-rows').innerHTML = (m.length ? m : [{}]).map((r, i) => rowHtml('mock', MOCK_FIELDS, r, i)).join('');
             applyNaesinMax();
+            refreshMockModes();
         }
         function applyNaesinMax() {
             const max = GRADE_CUTS[currentNaesinScale()].length;
             document.querySelectorAll('#naesin-rows [data-row] input[data-k="grade"]').forEach(inp => { inp.max = max; inp.min = 1; });
         }
         function addNaesinRow() { document.getElementById('naesin-rows').insertAdjacentHTML('beforeend', rowHtml('naesin', NAESIN_FIELDS, {}, 0)); applyNaesinMax(); }
-        function addMockRow() { document.getElementById('mock-rows').insertAdjacentHTML('beforeend', rowHtml('mock', MOCK_FIELDS, {}, 0)); }
+        function addMockRow() { document.getElementById('mock-rows').insertAdjacentHTML('beforeend', rowHtml('mock', MOCK_FIELDS, {}, 0)); refreshMockModes(); }
 
         function collectRows(containerId) {
             return Array.from(document.getElementById(containerId).children).map(div => {
@@ -2402,6 +2471,34 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             COUNSEL_DATA.record_eval = r.data.record_eval;
             COUNSEL_DATA.record_eval_at = r.data.at;
             document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
+        }
+
+        // ── 학생부 평가 기준 ─────────────────────────
+        //   AI가 스스로 잣대를 정하지 않도록, 원장님이 적은 기준만 쓰게 한다.
+        async function openRecordCriteria() {
+            showLoader("평가 기준 불러오는 중...");
+            const r = await adminGet('/api/admin/counsel/record_criteria');
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            document.getElementById('criteria-text').value = r.data.text || '';
+            window.__criteriaDefault = r.data.default || '';
+            showModal('criteria');
+        }
+
+        function restoreCriteriaDefault() {
+            if (!confirm("기본 기준으로 되돌립니다. 지금 화면의 내용은 사라집니다.")) return;
+            document.getElementById('criteria-text').value = window.__criteriaDefault || '';
+        }
+
+        async function saveRecordCriteria() {
+            const text = document.getElementById('criteria-text').value.trim();
+            if (!text) return alert("평가 기준이 비어 있습니다. 기준이 없으면 AI가 제멋대로 판단합니다.");
+            showLoader("평가 기준 저장 중...");
+            const r = await adminPost('/api/admin/counsel/record_criteria', { text: text });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            closeModal('criteria-modal');
+            alert("평가 기준이 저장되었습니다.\n이제 학생부 평가는 이 기준으로만 이뤄집니다.");
         }
 
         // ── ④ 학습 기록 ──────────────────────────────
