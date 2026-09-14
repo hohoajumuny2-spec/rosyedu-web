@@ -114,6 +114,62 @@
         </div>
     </div>
 
+    <!-- 🧭 학습 성향 검사 -->
+    <div id="tendency-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-3xl h-[92vh] shadow-2xl border border-pink-500 flex flex-col">
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-compass mr-2 text-pink-400"></i>학습 성향 검사</h2>
+                    <button onclick="closeModal('tendency-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <p class="text-[11px] text-gray-400 mb-2">28문항 · 약 5분. 정답이 없으니 평소 모습 그대로 솔직하게 골라주세요.</p>
+                <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div id="tendency-progress" class="h-full bg-pink-500 transition-all" style="width:0%"></div>
+                </div>
+                <p class="text-[11px] text-gray-400 mt-1"><span id="tendency-count">0</span> / 28 문항 완료</p>
+            </div>
+            <div id="tendency-questions" class="flex-grow overflow-y-auto p-4 space-y-3"></div>
+            <div class="p-4 border-t border-gray-700">
+                <button onclick="submitTendency()" class="w-full bg-pink-600 hover:bg-pink-700 py-3 text-white font-bold rounded transition text-lg">검사 제출하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎚 대학 라인 기준표 -->
+    <div id="admission-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-blue-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-sliders mr-2 text-blue-400"></i>대학 라인 기준표</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">AI는 여기 적힌 대학만 말합니다. 실제 입시 결과에 맞게 직접 고쳐 쓰세요.</p>
+                </div>
+                <button onclick="closeModal('admission-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5 space-y-5">
+                <div>
+                    <h3 class="text-white font-bold text-sm mb-2">수시 — 내신 등급 기준</h3>
+                    <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
+                        <span class="col-span-2">이 등급까지</span><span class="col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
+                    </div>
+                    <div id="susi-rows" class="space-y-1"></div>
+                    <button onclick="addTableRow('susi')" class="mt-2 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-[11px] text-white font-bold transition">+ 구간 추가</button>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-sm mb-2">정시 — 모의고사 평균 백분위 기준</h3>
+                    <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
+                        <span class="col-span-2">이 백분위부터</span><span class="col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
+                    </div>
+                    <div id="jeongsi-rows" class="space-y-1"></div>
+                    <button onclick="addTableRow('jeongsi')" class="mt-2 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-[11px] text-white font-bold transition">+ 구간 추가</button>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-700 flex gap-2">
+                <button onclick="saveAdmissionTable()" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 text-white font-bold rounded transition">기준표 저장</button>
+                <button onclick="restoreAdmissionDefault()" class="bg-gray-700 hover:bg-gray-600 py-3 px-5 text-white font-bold rounded transition">기본값으로</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🔍 출제 결과 크게 보기 -->
     <div id="gen-fullscreen-modal" class="hidden fixed inset-0 z-[180] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-5 rounded-2xl w-full max-w-5xl h-[90vh] shadow-2xl border border-blue-600 flex flex-col">
@@ -258,6 +314,11 @@
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">과제 제출</h3>
                     <p class="text-emerald-200/70 text-xs md:text-sm">원장님이 내주신 과제를 제출하고 해설을 확인하세요.</p>
                 </div>
+                <div onclick="openProgram('counsel'); loadMyCounsel();" class="bg-[#1e2430] border border-pink-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🧭</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">나의 진학 상담</h3>
+                    <p class="text-pink-200/70 text-xs md:text-sm">학습 성향 검사를 하고, 내 성적에 맞는 수시·정시 전략을 확인하세요.</p>
+                </div>
                 <div onclick="openProgram('board'); loadBoard();" class="bg-[#1e2430] border border-gray-600 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-gray-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">📢</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">공지사항</h3>
@@ -274,6 +335,15 @@
 
         <div id="program-view" style="display: none;" class="fade-in pt-24 px-4 pb-12 w-full max-w-7xl mx-auto">
             <button onclick="closeProgram()" class="mb-4 text-gray-400 hover:text-white font-bold"><i class="fa-solid fa-arrow-left"></i> 돌아가기</button>
+
+            <!-- 나의 진학 상담 -->
+            <div id="prog-counsel" class="prog-content w-full max-w-5xl mx-auto">
+                <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
+                    <h2 class="text-2xl font-bold text-pink-400 mb-1"><i class="fa-solid fa-compass mr-2"></i>나의 진학 상담</h2>
+                    <p class="text-gray-500 text-xs mb-5">원장님이 정리해 주신 나의 성적 · 성향 · 전략을 한눈에 봅니다.</p>
+                    <div id="my-counsel-body"></div>
+                </div>
+            </div>
 
             <!-- 마이페이지 -->
             <div id="prog-mypage" class="prog-content w-full max-w-5xl mx-auto bg-[#1e2430] p-6 rounded-xl border border-gray-800">
@@ -485,6 +555,7 @@
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">학생 명단</button>
+                        <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="text-pink-400 font-bold border border-pink-500 px-4 py-2 rounded">상담</button>
                         <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600 px-4 py-2 rounded">자료학습</button>
                         <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600 px-4 py-2 rounded">출제</button>
                         <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600 px-4 py-2 rounded">모의고사 개설</button>
@@ -545,6 +616,115 @@
                                 <button onclick="fetchReports()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs rounded text-white">전체보기</button>
                             </h3>
                             <div id="student-detail-container" class="flex-grow flex flex-col overflow-y-auto pr-2 text-white"></div>
+                        </div>
+                    </div>
+
+                    <!-- 상담 프로그램 -->
+                    <div id="admin-counsel" class="admin-tab-content grid grid-cols-4 gap-4">
+                        <div class="col-span-4 lg:col-span-1 bg-[#151922] p-4 rounded h-[780px] flex flex-col">
+                            <h3 class="text-white font-bold mb-2"><i class="fa-solid fa-comments mr-2 text-pink-400"></i>상담할 학생</h3>
+                            <input type="text" id="counsel-search" oninput="renderCounselStudentList()" placeholder="이름으로 찾기" class="w-full p-2 mb-2 bg-gray-800 text-white rounded text-sm">
+                            <div id="counsel-student-list" class="flex-grow overflow-y-auto pr-1 space-y-1"></div>
+                            <button onclick="openAdmissionTable()" class="mt-3 w-full bg-gray-700 hover:bg-gray-600 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-sliders mr-1"></i>대학 라인 기준표 설정</button>
+                        </div>
+
+                        <div class="col-span-4 lg:col-span-3 bg-[#151922] p-4 rounded min-h-[780px] flex flex-col">
+                            <div id="counsel-empty" class="flex-grow flex flex-col items-center justify-center text-gray-600">
+                                <i class="fa-solid fa-user-graduate text-5xl mb-4"></i>
+                                <p class="text-sm">왼쪽에서 학생을 선택하면 상담 카드가 열립니다.</p>
+                            </div>
+
+                            <div id="counsel-body" class="hidden flex-grow flex flex-col">
+                                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-700 pb-3 mb-3">
+                                    <div>
+                                        <h3 id="counsel-title" class="text-white font-black text-lg"></h3>
+                                        <p id="counsel-sub" class="text-[11px] text-gray-500"></p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="makeCounselSummary()" class="bg-pink-600 hover:bg-pink-700 px-3 py-1.5 text-xs rounded text-white font-bold transition"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>종합 소견서 만들기</button>
+                                        <button onclick="printCounsel()" class="bg-gray-200 hover:bg-white px-3 py-1.5 text-xs rounded text-black font-bold transition"><i class="fa-solid fa-print mr-1"></i>인쇄</button>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap gap-1 mb-4">
+                                    <button onclick="switchCounselTab('cs-grades')"   id="btn-cs-grades"   class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-pink-600 text-white">① 성적 · 진학 전략</button>
+                                    <button onclick="switchCounselTab('cs-tendency')" id="btn-cs-tendency" class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">② 학습 성향</button>
+                                    <button onclick="switchCounselTab('cs-record')"   id="btn-cs-record"   class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">③ 학생부 평가</button>
+                                    <button onclick="switchCounselTab('cs-logs')"     id="btn-cs-logs"     class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">④ 학습 기록</button>
+                                    <button onclick="switchCounselTab('cs-summary')"  id="btn-cs-summary"  class="cs-tab-btn px-3 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300">⑤ 종합 소견</button>
+                                </div>
+
+                                <!-- ① 성적 · 진학 전략 -->
+                                <div id="cs-grades" class="cs-tab-content flex-grow overflow-y-auto pr-1">
+                                    <div id="counsel-strategy" class="mb-4"></div>
+                                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                        <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-school mr-1 text-blue-400"></i>내신 성적</h4>
+                                                <button onclick="addNaesinRow()" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
+                                            </div>
+                                            <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
+                                                <span class="col-span-3">학기</span><span class="col-span-4">과목</span><span class="col-span-2">단위</span><span class="col-span-2">등급</span><span class="col-span-1"></span>
+                                            </div>
+                                            <div id="naesin-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
+                                        </div>
+                                        <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-chart-line mr-1 text-yellow-400"></i>모의고사 성적</h4>
+                                                <button onclick="addMockRow()" class="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
+                                            </div>
+                                            <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
+                                                <span class="col-span-3">시행(예 2026-06)</span><span class="col-span-3">과목</span><span class="col-span-2">등급</span><span class="col-span-3">백분위</span><span class="col-span-1"></span>
+                                            </div>
+                                            <div id="mock-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 mt-3">
+                                        <button onclick="saveCounselGrades()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-floppy-disk mr-1"></i>성적 저장</button>
+                                        <button onclick="runCounselAnalysis()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-robot mr-1"></i>AI 진학 상담 분석</button>
+                                    </div>
+                                    <div id="counsel-analysis" class="mt-4"></div>
+                                </div>
+
+                                <!-- ② 학습 성향 -->
+                                <div id="cs-tendency" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
+                                    <div id="tendency-view"></div>
+                                </div>
+
+                                <!-- ③ 학생부 평가 -->
+                                <div id="cs-record" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
+                                    <label class="text-xs text-gray-400 mb-1 block">희망 전공 (선택)</label>
+                                    <input type="text" id="cs-major" placeholder="예: 국어국문학과, 미디어커뮤니케이션" class="w-full p-2 mb-3 bg-gray-800 text-white rounded text-sm">
+                                    <label class="text-xs text-gray-400 mb-1 block">학생부 내용 붙여넣기 (세특 · 창체 · 행발 등)</label>
+                                    <textarea id="cs-record-text" rows="12" class="w-full p-3 bg-gray-800 text-white rounded text-sm leading-relaxed resize-y" placeholder="학생부에서 평가받고 싶은 부분을 그대로 붙여넣으세요."></textarea>
+                                    <button onclick="runRecordEval()" class="mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-file-circle-check mr-1"></i>AI 정성 평가 실행</button>
+                                    <div id="cs-record-result" class="mt-4"></div>
+                                </div>
+
+                                <!-- ④ 학습 기록 -->
+                                <div id="cs-logs" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
+                                    <div class="bg-[#1e2430] p-3 rounded border border-gray-700 mb-4">
+                                        <h4 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-plus mr-1 text-emerald-400"></i>학습 기록 추가</h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                                            <input type="date" id="log-date" class="p-2 bg-gray-800 text-white rounded text-sm">
+                                            <input type="text" id="log-title" placeholder="제목 (예: 비문학 과학 3세트)" class="p-2 bg-gray-800 text-white rounded text-sm md:col-span-3">
+                                            <input type="number" id="log-score" placeholder="점수" class="p-2 bg-gray-800 text-white rounded text-sm">
+                                            <input type="number" id="log-max" placeholder="만점" class="p-2 bg-gray-800 text-white rounded text-sm">
+                                            <input type="text" id="log-memo" placeholder="메모 (예: 추론 문항에서 실점)" class="p-2 bg-gray-800 text-white rounded text-sm md:col-span-2">
+                                        </div>
+                                        <textarea id="log-content" rows="2" placeholder="학습 내용 (무엇을 어떻게 공부했는지)" class="w-full p-2 bg-gray-800 text-white rounded text-sm resize-y mb-2"></textarea>
+                                        <button onclick="addCounselLog()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white font-bold text-sm transition">기록 추가</button>
+                                    </div>
+                                    <div id="cs-log-list"></div>
+                                    <h4 class="text-white font-bold text-sm mt-6 mb-2"><i class="fa-solid fa-bolt mr-1 text-yellow-400"></i>원내 자동 기록 <span class="text-[11px] text-gray-500 font-normal">(모의고사 · 과제 · 퀴즈에서 자동으로 쌓인 기록)</span></h4>
+                                    <div id="cs-auto-list"></div>
+                                </div>
+
+                                <!-- ⑤ 종합 소견 -->
+                                <div id="cs-summary" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
+                                    <div id="cs-summary-result"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1289,6 +1469,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             tabEl.style.display = tabEl.classList.contains('grid') ? 'grid' : 'block';
             const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800');
             if(id==='admin-users'){fetchReports(); loadAdminStudents();}
+            if(id==='admin-counsel'){initCounselTab();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
@@ -1359,6 +1540,646 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function logout() { localStorage.removeItem('logyedu_user'); window.location.hash='home'; location.reload(); }
 
+        // ═════════════════════════════════════════════
+        // 상담 프로그램
+        //   ① 성적 → 수시/정시 전략 + 가능 대학 라인
+        //   ② 학습 성향 검사   ③ 학생부 정성 평가   ④ 학습 기록 누적
+        //   네 가지가 학생 한 명의 상담 카드 하나에 모두 쌓인다.
+        // ═════════════════════════════════════════════
+        let COUNSEL_TARGET = null;   // 지금 상담 중인 학생 이름
+        let COUNSEL_DATA = null;     // 그 학생의 상담 카드
+        let ADMISSION_TABLE = null;
+        let TENDENCY_Q = null;
+        let TENDENCY_ANSWERS = {};
+        let TENDENCY_FOR = null;     // 누구 이름으로 제출할지 (원장님 대리 응시 대비)
+        let ALL_REPORTS = [];
+
+        // AI가 돌려주는 마크다운을 읽기 좋은 HTML로. 라이브러리 없이 필요한 만큼만.
+        function mdLite(text) {
+            if (!text) return '';
+            const out = [];
+            let inList = false;
+            const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+            escapeHtml(text).split('\n').forEach(raw => {
+                const line = raw.trim();
+                if (!line) { closeList(); out.push('<div class="h-2"></div>'); return; }
+                let m;
+                if ((m = line.match(/^#{2,4}\s*(.+)$/))) {
+                    closeList();
+                    out.push(`<h4 class="text-pink-300 font-black text-base mt-5 mb-2 pb-1 border-b border-gray-700">${m[1]}</h4>`);
+                    return;
+                }
+                if ((m = line.match(/^[-*•]\s+(.+)$/))) {
+                    if (!inList) { out.push('<ul class="list-disc ml-5 space-y-1 my-1">'); inList = true; }
+                    out.push(`<li>${m[1].replace(/\*\*(.+?)\*\*/g, '<b class="text-white">$1</b>')}</li>`);
+                    return;
+                }
+                closeList();
+                out.push(`<p class="my-1 leading-relaxed">${line.replace(/\*\*(.+?)\*\*/g, '<b class="text-white">$1</b>')}</p>`);
+            });
+            closeList();
+            return out.join('');
+        }
+
+        function aiBox(title, text, at) {
+            if (!text) return '';
+            return `<div class="bg-[#12161f] border border-gray-700 rounded-lg p-4 text-gray-300 text-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-white font-bold text-sm">${escapeHtml(title)}</span>
+                    <span class="text-[10px] text-gray-500">${escapeHtml(at || '')}</span>
+                </div>${mdLite(text)}</div>`;
+        }
+
+        // ── 학생 고르기 ──────────────────────────────
+        async function initCounselTab() {
+            if (!ADMIN_STUDENTS.length) await loadAdminClassData();
+            renderCounselStudentList();
+        }
+
+        function renderCounselStudentList() {
+            const box = document.getElementById('counsel-student-list');
+            if (!box) return;
+            const q = (document.getElementById('counsel-search').value || '').trim();
+            const list = ADMIN_STUDENTS.filter(s => !q || (s.student_name || '').includes(q));
+            if (!list.length) { box.innerHTML = '<p class="text-gray-600 text-xs text-center py-6">학생이 없습니다.</p>'; return; }
+
+            // 반별로 묶어서 보여준다 (명단 화면과 같은 순서)
+            const groups = ADMIN_CLASSES.map(c => ({ name: c.name, students: list.filter(s => (s.class_name || '') === c.name) }));
+            const assigned = new Set(ADMIN_CLASSES.map(c => c.name));
+            const rest = list.filter(s => !assigned.has(s.class_name || ''));
+            if (rest.length) groups.push({ name: '반 미배정', students: rest });
+
+            box.innerHTML = groups.filter(g => g.students.length).map(g => `
+                <div class="text-[10px] text-blue-300 font-bold px-1 pt-2">${escapeHtml(g.name)}</div>
+                ${g.students.map(s => {
+                    const on = COUNSEL_TARGET === s.student_name;
+                    return `<button onclick="selectCounselStudent('${escAttr(s.student_name)}')" class="w-full text-left px-2 py-1.5 rounded text-sm truncate transition ${on ? 'bg-pink-600 text-white font-bold' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}">${escapeHtml(s.student_name)} <span class="text-[10px] opacity-60">${escapeHtml(s.school || '')} ${escapeHtml(s.grade || '')}</span></button>`;
+                }).join('')}
+            `).join('');
+        }
+
+        async function selectCounselStudent(name) {
+            COUNSEL_TARGET = name;
+            renderCounselStudentList();
+            document.getElementById('counsel-empty').classList.add('hidden');
+            document.getElementById('counsel-body').classList.remove('hidden');
+            await reloadCounsel();
+        }
+
+        async function reloadCounsel() {
+            if (!COUNSEL_TARGET) return;
+            showLoader("상담 자료 불러오는 중...");
+            const r = await adminGet(`/api/admin/counsel/${encodeURIComponent(COUNSEL_TARGET)}`);
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            renderCounselCard();
+        }
+
+        function switchCounselTab(id) {
+            document.querySelectorAll('.cs-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.cs-tab-btn').forEach(b => { b.classList.remove('bg-pink-600', 'text-white'); b.classList.add('bg-gray-800', 'text-gray-300'); });
+            document.getElementById(id).classList.remove('hidden');
+            const b = document.getElementById('btn-' + id);
+            if (b) { b.classList.remove('bg-gray-800', 'text-gray-300'); b.classList.add('bg-pink-600', 'text-white'); }
+            if (id === 'cs-logs') loadAutoRecords();
+        }
+
+        function renderCounselCard() {
+            const c = COUNSEL_DATA;
+            const stu = ADMIN_STUDENTS.find(s => s.student_name === COUNSEL_TARGET) || {};
+            document.getElementById('counsel-title').innerText = COUNSEL_TARGET;
+            document.getElementById('counsel-sub').innerText =
+                `${stu.school || ''} ${stu.grade || ''} ${stu.class_name ? '· ' + stu.class_name : ''}  ${c.updated_at ? '· 최근 수정 ' + c.updated_at : ''}`;
+
+            renderStrategy();
+            renderGradeRows();
+            renderTendency();
+            document.getElementById('cs-major').value = COUNSEL_DATA.target_major || document.getElementById('cs-major').value || '';
+            document.getElementById('cs-record-text').value = c.record_text || '';
+            document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', c.record_eval, c.record_eval_at);
+            document.getElementById('counsel-analysis').innerHTML = aiBox('AI 진학 상담 분석', (c.analysis || {}).text, (c.analysis || {}).at);
+            renderCounselLogs();
+            document.getElementById('cs-summary-result').innerHTML =
+                aiBox('학부모 상담 종합 소견서', (c.summary || {}).text, (c.summary || {}).at)
+                || '<p class="text-gray-600 text-sm text-center py-10">위쪽 <b class="text-pink-400">종합 소견서 만들기</b> 버튼을 누르면<br>성적 · 성향 · 학생부 · 학습기록을 묶은 소견서가 만들어집니다.</p>';
+        }
+
+        // ── ① 성적 · 전략 ────────────────────────────
+        function gradeChip(label, value, unit, tone) {
+            const v = (value === null || value === undefined) ? '미입력' : value + (unit || '');
+            const color = (value === null || value === undefined) ? 'text-gray-600' : tone;
+            return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3 text-center">
+                <div class="text-[10px] text-gray-500 mb-1">${label}</div>
+                <div class="text-xl font-black ${color}">${escapeHtml(String(v))}</div></div>`;
+        }
+
+        function renderStrategy() {
+            const c = COUNSEL_DATA, t = c.track, tiers = c.tiers;
+            const line = (label, tier, tone) => tier
+                ? `<div class="bg-[#1e2430] border ${tone} rounded-lg p-3">
+                       <div class="text-[10px] text-gray-500 mb-1">${label}</div>
+                       <div class="text-white font-bold text-sm mb-1">${escapeHtml(tier.tier)}</div>
+                       <div class="text-xs text-gray-400 leading-relaxed">${escapeHtml(tier.examples)}</div></div>`
+                : `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
+                       <div class="text-[10px] text-gray-500 mb-1">${label}</div>
+                       <div class="text-gray-600 text-sm">성적을 입력하면 계산됩니다</div></div>`;
+
+            document.getElementById('counsel-strategy').innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    ${gradeChip('내신 평균', c.naesin.avg, '등급', 'text-blue-400')}
+                    ${gradeChip('주요과목 평균', c.naesin.main_avg, '등급', 'text-blue-300')}
+                    ${gradeChip('모의 평균' + (c.mock.latest ? ` (${c.mock.latest})` : ''), c.mock.avg, '등급', 'text-yellow-400')}
+                    ${gradeChip('모의 평균 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
+                </div>
+                <div class="bg-[#1e2430] border border-pink-700/50 rounded-lg p-4 mb-3">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span class="bg-pink-600 text-white text-xs font-black px-3 py-1 rounded-full">${escapeHtml(t.verdict)}</span>
+                        <span class="text-[11px] text-gray-500">수시와 정시는 둘 다 준비하는 것이 전제입니다. 아래는 '비중'입니다.</span>
+                    </div>
+                    <div class="flex h-7 rounded overflow-hidden mb-2 text-[11px] font-bold">
+                        <div class="bg-blue-600 flex items-center justify-center text-white" style="width:${t.susi_weight}%">수시 ${t.susi_weight}%</div>
+                        <div class="bg-yellow-600 flex items-center justify-center text-white" style="width:${t.jeongsi_weight}%">정시 ${t.jeongsi_weight}%</div>
+                    </div>
+                    <p class="text-xs text-gray-400 leading-relaxed">${escapeHtml(t.reason)}</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    ${line('현재 수시 지원 가능 라인', tiers.susi, 'border-blue-700/50')}
+                    ${line('현재 정시 지원 가능 라인', tiers.jeongsi, 'border-yellow-700/50')}
+                </div>
+                <p class="text-[10px] text-gray-600 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>${escapeHtml(c.table_note || '')} 왼쪽 아래 '대학 라인 기준표 설정'에서 수정할 수 있습니다.</p>`;
+        }
+
+        const NAESIN_FIELDS = [['term', '학기', 3, 'text', '1-1'], ['subject', '과목', 4, 'text', '문학'], ['unit', '단위', 2, 'number', '4'], ['grade', '등급', 2, 'number', '2']];
+        const MOCK_FIELDS = [['date', '시행', 3, 'text', '2026-06'], ['subject', '과목', 3, 'text', '국어'], ['grade', '등급', 2, 'number', '2'], ['percentile', '백분위', 3, 'number', '88']];
+
+        function rowHtml(kind, fields, row, i) {
+            return `<div class="grid grid-cols-12 gap-1" data-row="${kind}">
+                ${fields.map(([k, label, span, type, ph]) =>
+                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">`
+                ).join('')}
+                <button onclick="this.parentElement.remove()" class="col-span-1 text-red-400 hover:text-red-300 text-xs" title="이 줄 삭제"><i class="fa-solid fa-xmark"></i></button>
+            </div>`;
+        }
+
+        function renderGradeRows() {
+            const n = COUNSEL_DATA.naesin_rows || [], m = COUNSEL_DATA.mock_rows || [];
+            document.getElementById('naesin-rows').innerHTML = (n.length ? n : [{}]).map((r, i) => rowHtml('naesin', NAESIN_FIELDS, r, i)).join('');
+            document.getElementById('mock-rows').innerHTML = (m.length ? m : [{}]).map((r, i) => rowHtml('mock', MOCK_FIELDS, r, i)).join('');
+        }
+        function addNaesinRow() { document.getElementById('naesin-rows').insertAdjacentHTML('beforeend', rowHtml('naesin', NAESIN_FIELDS, {}, 0)); }
+        function addMockRow() { document.getElementById('mock-rows').insertAdjacentHTML('beforeend', rowHtml('mock', MOCK_FIELDS, {}, 0)); }
+
+        function collectRows(containerId) {
+            return Array.from(document.getElementById(containerId).children).map(div => {
+                const o = {};
+                div.querySelectorAll('input[data-k]').forEach(inp => { o[inp.dataset.k] = inp.value.trim(); });
+                return o;
+            }).filter(o => Object.values(o).some(v => v !== ''));
+        }
+
+        async function saveCounselGrades() {
+            if (!COUNSEL_TARGET) return;
+            showLoader("성적 저장 중...");
+            const r = await adminPost('/api/admin/counsel/grades', {
+                student_name: COUNSEL_TARGET,
+                naesin: collectRows('naesin-rows'),
+                mock: collectRows('mock-rows')
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            renderCounselCard();
+            alert("성적이 저장되었습니다.");
+        }
+
+        async function runCounselAnalysis() {
+            if (!COUNSEL_TARGET) return;
+            if (!confirm("저장된 성적을 기준으로 AI 진학 상담 분석을 실행합니다.\n저장하지 않은 수정 내용은 반영되지 않습니다. 계속할까요?")) return;
+            showLoader("AI가 진학 전략을 분석하고 있습니다... (30초 정도 걸립니다)");
+            const r = await adminPost('/api/admin/counsel/analyze', { student_name: COUNSEL_TARGET });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA.analysis = r.data.analysis;
+            document.getElementById('counsel-analysis').innerHTML = aiBox('AI 진학 상담 분석', r.data.analysis.text, r.data.analysis.at);
+        }
+
+        // ── ② 학습 성향 ──────────────────────────────
+        function renderTendency() {
+            const t = COUNSEL_DATA.tendency;
+            const box = document.getElementById('tendency-view');
+            if (!t || !t.axes) {
+                box.innerHTML = `<div class="text-center py-10">
+                    <i class="fa-solid fa-clipboard-question text-4xl text-gray-700 mb-4"></i>
+                    <p class="text-gray-500 text-sm mb-1">${escapeHtml(COUNSEL_TARGET)} 학생이 아직 학습 성향 검사를 하지 않았습니다.</p>
+                    <p class="text-gray-600 text-xs mb-5">학생이 직접 '나의 진학 상담'에서 응시하거나, 상담 중에 원장님이 대신 체크해도 됩니다.</p>
+                    <button onclick="openTendencyTest('${escAttr(COUNSEL_TARGET)}')" class="bg-pink-600 hover:bg-pink-700 px-5 py-2.5 rounded text-white font-bold text-sm transition">지금 검사 진행하기</button>
+                </div>`;
+                return;
+            }
+            const bar = a => {
+                const tone = a.score >= 70 ? 'bg-emerald-500' : a.score >= 45 ? 'bg-yellow-500' : 'bg-red-500';
+                return `<div class="mb-2">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-white font-bold">${escapeHtml(a.name)} <span class="text-gray-500 font-normal">${escapeHtml(a.desc)}</span></span>
+                        <span class="text-gray-300 font-bold">${a.score}</span>
+                    </div>
+                    <div class="h-2.5 bg-gray-800 rounded-full overflow-hidden"><div class="h-full ${tone}" style="width:${a.score}%"></div></div>
+                </div>`;
+            };
+            const sorted = [...t.axes].sort((a, b) => a.score - b.score);
+            box.innerHTML = `
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                    <p class="text-[11px] text-gray-500">검사일 ${escapeHtml(t.submitted_at || '')} · 100점에 가까울수록 잘 갖춰진 상태</p>
+                    <div class="flex gap-2">
+                        <button onclick="runTendencyAnalysis()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-robot mr-1"></i>AI 해석</button>
+                        <button onclick="openTendencyTest('${escAttr(COUNSEL_TARGET)}')" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-white font-bold text-xs transition">다시 검사</button>
+                    </div>
+                </div>
+                <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-4 mb-3">${t.axes.map(bar).join('')}</div>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <div class="bg-red-950/30 border border-red-800/50 rounded p-3">
+                        <div class="text-[10px] text-red-400 font-bold mb-1">가장 약한 영역</div>
+                        <div class="text-white text-sm font-bold">${sorted.slice(0, 2).map(a => escapeHtml(a.name) + ' ' + a.score).join(' · ')}</div>
+                    </div>
+                    <div class="bg-emerald-950/30 border border-emerald-800/50 rounded p-3">
+                        <div class="text-[10px] text-emerald-400 font-bold mb-1">가장 강한 영역</div>
+                        <div class="text-white text-sm font-bold">${sorted.slice(-2).reverse().map(a => escapeHtml(a.name) + ' ' + a.score).join(' · ')}</div>
+                    </div>
+                </div>
+                ${aiBox('학습 성향 해석', t.analysis, t.analyzed_at)}`;
+        }
+
+        async function runTendencyAnalysis() {
+            showLoader("AI가 학습 성향을 해석하고 있습니다...");
+            const r = await adminPost('/api/admin/counsel/tendency_analyze', { student_name: COUNSEL_TARGET });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA.tendency.analysis = r.data.analysis;
+            COUNSEL_DATA.tendency.analyzed_at = r.data.at;
+            renderTendency();
+        }
+
+        // ── 성향 검사 모달 (학생 · 원장님 공용) ───────
+        async function openTendencyTest(forName) {
+            TENDENCY_FOR = forName;
+            TENDENCY_ANSWERS = {};
+            if (!TENDENCY_Q) {
+                showLoader("검사 문항 불러오는 중...");
+                try {
+                    const res = await fetch(`${API_URL}/api/counsel/tendency_questions`);
+                    const data = await res.json();
+                    TENDENCY_Q = data.questions || [];
+                } catch (e) { hideLoader(); return alert("문항을 불러오지 못했습니다."); }
+                hideLoader();
+            }
+            const scale = ['전혀 아니다', '아니다', '보통이다', '그렇다', '매우 그렇다'];
+            document.getElementById('tendency-questions').innerHTML = TENDENCY_Q.map((q, i) => `
+                <div class="bg-[#151922] border border-gray-700 rounded-lg p-3" id="tq-${q.id}">
+                    <p class="text-white text-sm mb-3 leading-relaxed"><span class="text-pink-400 font-bold mr-1">${i + 1}.</span>${escapeHtml(q.text)}</p>
+                    <div class="grid grid-cols-5 gap-1">
+                        ${[1, 2, 3, 4, 5].map(v => `<button onclick="pickTendency(${q.id},${v})" data-q="${q.id}" data-v="${v}"
+                            class="tq-btn py-3 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold transition flex flex-col items-center gap-1">
+                            <span class="text-base">${v}</span><span class="text-[9px] opacity-70 leading-tight">${scale[v - 1]}</span></button>`).join('')}
+                    </div>
+                </div>`).join('');
+            updateTendencyProgress();
+            showModal('tendency');
+        }
+
+        function pickTendency(qid, v) {
+            TENDENCY_ANSWERS[qid] = v;
+            document.querySelectorAll(`.tq-btn[data-q="${qid}"]`).forEach(b => {
+                const on = Number(b.dataset.v) === v;
+                b.classList.toggle('bg-pink-600', on);
+                b.classList.toggle('text-white', on);
+                b.classList.toggle('bg-gray-800', !on);
+                b.classList.toggle('text-gray-300', !on);
+            });
+            updateTendencyProgress();
+            // 답하면 다음 문항으로 부드럽게 넘어가 준다
+            const idx = TENDENCY_Q.findIndex(q => q.id === qid);
+            const next = TENDENCY_Q[idx + 1];
+            if (next) document.getElementById('tq-' + next.id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function updateTendencyProgress() {
+            const n = Object.keys(TENDENCY_ANSWERS).length, total = (TENDENCY_Q || []).length || 28;
+            document.getElementById('tendency-count').innerText = n;
+            document.getElementById('tendency-progress').style.width = Math.round(n / total * 100) + '%';
+        }
+
+        async function submitTendency() {
+            const total = (TENDENCY_Q || []).length;
+            const done = Object.keys(TENDENCY_ANSWERS).length;
+            if (done < total) {
+                const first = TENDENCY_Q.find(q => TENDENCY_ANSWERS[q.id] === undefined);
+                alert(`아직 ${total - done}문항이 남았습니다. 남은 문항으로 이동합니다.`);
+                if (first) document.getElementById('tq-' + first.id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            showLoader("검사 결과를 채점하고 있습니다...");
+            try {
+                const res = await fetch(`${API_URL}/api/counsel/tendency_submit`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_name: TENDENCY_FOR, answers: TENDENCY_ANSWERS })
+                });
+                const data = await res.json();
+                hideLoader();
+                if (!data.success) return alert(data.detail || "제출에 실패했습니다.");
+                closeModal('tendency-modal');
+                alert("검사가 완료되었습니다.");
+                if (COUNSEL_TARGET === TENDENCY_FOR) await reloadCounsel();
+                if (currentUser && currentUser.name === TENDENCY_FOR) await loadMyCounsel();
+            } catch (e) { hideLoader(); alert("제출 중 오류가 발생했습니다."); }
+        }
+
+        // ── ③ 학생부 정성 평가 ───────────────────────
+        async function runRecordEval() {
+            if (!COUNSEL_TARGET) return;
+            const body = document.getElementById('cs-record-text').value.trim();
+            if (body.length < 50) return alert("학생부 내용을 조금 더 붙여넣어 주세요. (최소 50자)");
+            showLoader("AI가 학생부를 평가하고 있습니다... (40초 정도 걸립니다)");
+            const r = await adminPost('/api/admin/counsel/record_eval', {
+                student_name: COUNSEL_TARGET, record_text: body,
+                target_major: document.getElementById('cs-major').value.trim()
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA.record_eval = r.data.record_eval;
+            COUNSEL_DATA.record_eval_at = r.data.at;
+            document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
+        }
+
+        // ── ④ 학습 기록 ──────────────────────────────
+        function renderCounselLogs() {
+            const logs = COUNSEL_DATA.logs || [];
+            const box = document.getElementById('cs-log-list');
+            if (!logs.length) { box.innerHTML = '<p class="text-gray-600 text-xs text-center py-4">아직 쌓인 기록이 없습니다.</p>'; return; }
+            const avg = COUNSEL_DATA.log_avg;
+            box.innerHTML = `
+                ${avg !== null && avg !== undefined ? `<p class="text-xs text-emerald-400 font-bold mb-2">기록된 점수 평균 ${avg}%  <span class="text-gray-500 font-normal">(${logs.length}건 중 점수가 있는 기록 기준)</span></p>` : ''}
+                <div class="space-y-1">${logs.map(l => {
+                    const pct = (l.score !== '' && l.max_score !== '' && Number(l.max_score) > 0)
+                        ? Math.round(Number(l.score) / Number(l.max_score) * 100) : null;
+                    const tone = pct === null ? 'text-gray-500' : pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-yellow-400' : 'text-red-400';
+                    return `<div class="bg-[#1e2430] border border-gray-700 rounded p-3">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="min-w-0">
+                                <div class="text-white text-sm font-bold truncate">${escapeHtml(l.title)}</div>
+                                <div class="text-[10px] text-gray-500">${escapeHtml(l.date || '')}</div>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                ${pct !== null ? `<div class="${tone} font-black text-sm">${l.score}/${l.max_score} <span class="text-[10px]">(${pct}%)</span></div>` : ''}
+                                <button onclick="deleteCounselLog('${escAttr(l.id)}')" class="text-red-500 hover:text-red-400 text-[10px] mt-1">삭제</button>
+                            </div>
+                        </div>
+                        ${l.content ? `<p class="text-xs text-gray-400 mt-2 leading-relaxed">${escapeHtml(l.content)}</p>` : ''}
+                        ${l.memo ? `<p class="text-[11px] text-pink-300 mt-1"><i class="fa-solid fa-note-sticky mr-1"></i>${escapeHtml(l.memo)}</p>` : ''}
+                    </div>`;
+                }).join('')}</div>`;
+        }
+
+        async function addCounselLog() {
+            if (!COUNSEL_TARGET) return;
+            const title = document.getElementById('log-title').value.trim();
+            if (!title) return alert("제목을 입력해주세요.");
+            showLoader("기록 추가 중...");
+            const r = await adminPost('/api/admin/counsel/log', {
+                student_name: COUNSEL_TARGET,
+                date: document.getElementById('log-date').value,
+                title: title,
+                content: document.getElementById('log-content').value,
+                score: document.getElementById('log-score').value,
+                max_score: document.getElementById('log-max').value,
+                memo: document.getElementById('log-memo').value
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            ['log-title', 'log-content', 'log-score', 'log-max', 'log-memo'].forEach(id => document.getElementById(id).value = '');
+            COUNSEL_DATA = r.data.counsel;
+            renderCounselLogs();
+        }
+
+        async function deleteCounselLog(id) {
+            if (!confirm("이 기록을 삭제할까요?")) return;
+            showLoader("삭제 중...");
+            const r = await adminPost('/api/admin/counsel/log/delete', { student_name: COUNSEL_TARGET, log_id: id });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            renderCounselLogs();
+        }
+
+        // 모의고사·과제·퀴즈에서 자동으로 쌓인 기록도 같은 화면에서 본다
+        async function loadAutoRecords() {
+            const box = document.getElementById('cs-auto-list');
+            if (!box || !COUNSEL_TARGET) return;
+            if (!ALL_REPORTS.length) {
+                const r = await adminGet('/api/admin/reports');
+                ALL_REPORTS = r.ok ? (r.data.reports || []) : [];
+            }
+            const mine = ALL_REPORTS.filter(x => x.student_name === COUNSEL_TARGET && x.type !== '로그인').slice(0, 40);
+            if (!mine.length) { box.innerHTML = '<p class="text-gray-600 text-xs text-center py-4">자동으로 쌓인 기록이 없습니다.</p>'; return; }
+            box.innerHTML = `<div class="space-y-1">${mine.map(x => `
+                <div class="flex justify-between items-center bg-[#1e2430] border border-gray-700 rounded px-3 py-2">
+                    <div class="min-w-0">
+                        <span class="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded mr-2">${escapeHtml(x.type || '')}</span>
+                        <span class="text-white text-sm">${escapeHtml(x.task_name || '')}</span>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        ${x.score !== undefined && x.score !== null && x.score !== '' ? `<span class="text-emerald-400 font-bold text-sm">${escapeHtml(String(x.score))}점</span>` : ''}
+                        <div class="text-[10px] text-gray-500">${escapeHtml((x.submitted_at || '').slice(0, 16))}</div>
+                    </div>
+                </div>`).join('')}</div>`;
+        }
+
+        // ── ⑤ 종합 소견 ──────────────────────────────
+        async function makeCounselSummary() {
+            if (!COUNSEL_TARGET) return;
+            switchCounselTab('cs-summary');
+            showLoader("AI가 종합 소견서를 작성하고 있습니다... (1분 정도 걸립니다)");
+            const r = await adminPost('/api/admin/counsel/summary', { student_name: COUNSEL_TARGET });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA.summary = r.data.summary;
+            document.getElementById('cs-summary-result').innerHTML = aiBox('학부모 상담 종합 소견서', r.data.summary.text, r.data.summary.at);
+        }
+
+        function printCounsel() {
+            if (!COUNSEL_DATA) return;
+            const c = COUNSEL_DATA;
+            const stu = ADMIN_STUDENTS.find(s => s.student_name === COUNSEL_TARGET) || {};
+            const sec = (t, body) => body ? `<h2>${t}</h2><div class="body">${body}</div>` : '';
+            const tierLine = (label, tier) => tier ? `<p><b>${label}</b> ${tier.tier} — ${tier.examples}</p>` : '';
+            const html = `<!doctype html><html><head><meta charset="utf-8"><title>${COUNSEL_TARGET} 상담 소견서</title><style>
+                @page { size: A4; margin: 20mm 16mm; }
+                body { font-family: 'Malgun Gothic','맑은 고딕',sans-serif; font-size: 10.5pt; line-height: 1.7; color:#111; }
+                .head { text-align:center; border-bottom:2px solid #1a3a8f; padding-bottom:10px; margin-bottom:16px; }
+                .head h1 { margin:0; font-size:16pt; color:#1a3a8f; }
+                .head p { margin:4px 0 0; font-size:9.5pt; color:#555; }
+                h2 { font-size:12pt; color:#1a3a8f; border-left:4px solid #1a3a8f; padding-left:8px; margin:18px 0 8px; }
+                h4 { font-size:11pt; color:#1a3a8f; margin:12px 0 4px; }
+                .body { font-size:10pt; }
+                .grid { display:flex; gap:10px; margin-bottom:10px; }
+                .cell { flex:1; border:1px solid #bbb; border-radius:4px; padding:8px; text-align:center; }
+                .cell .l { font-size:8pt; color:#666; } .cell .v { font-size:14pt; font-weight:800; color:#1a3a8f; }
+                ul { margin:4px 0 4px 18px; } p { margin:4px 0; }
+                .foot { margin-top:24px; text-align:center; font-size:9pt; color:#1a3a8f; border-top:1px solid #ccc; padding-top:10px; }
+            </style></head><body>
+                <div class="head"><h1>학습 · 진학 상담 소견서</h1>
+                <p>${escapeHtml(stu.school || '')} ${escapeHtml(stu.grade || '')} ${escapeHtml(COUNSEL_TARGET)}${stu.class_name ? ' · ' + escapeHtml(stu.class_name) : ''} &nbsp;|&nbsp; ${new Date().toLocaleDateString('ko-KR')}</p></div>
+                <div class="grid">
+                    <div class="cell"><div class="l">내신 평균</div><div class="v">${c.naesin.avg ?? '-'}</div></div>
+                    <div class="cell"><div class="l">모의 평균</div><div class="v">${c.mock.avg ?? '-'}</div></div>
+                    <div class="cell"><div class="l">수시 비중</div><div class="v">${c.track.susi_weight}%</div></div>
+                    <div class="cell"><div class="l">정시 비중</div><div class="v">${c.track.jeongsi_weight}%</div></div>
+                </div>
+                <h2>진학 전략 판정</h2><div class="body"><p><b>${escapeHtml(c.track.verdict)}</b></p><p>${escapeHtml(c.track.reason)}</p>
+                ${tierLine('수시 가능 라인', c.tiers.susi)}${tierLine('정시 가능 라인', c.tiers.jeongsi)}</div>
+                ${sec('종합 소견', mdLite((c.summary || {}).text))}
+                ${sec('진학 상담 분석', mdLite((c.analysis || {}).text))}
+                ${sec('학습 성향 해석', mdLite((c.tendency || {}).analysis))}
+                ${sec('학생부 정성 평가', mdLite(c.record_eval))}
+                <div class="foot">로지에듀 최준용 국어</div>
+            </body></html>`;
+            const w = window.open('', '_blank');
+            if (!w) return alert("팝업이 차단되었습니다. 주소창 오른쪽에서 팝업을 허용해주세요.");
+            w.document.write(html); w.document.close();
+            setTimeout(() => { w.focus(); w.print(); }, 400);
+        }
+
+        // ── 대학 라인 기준표 ─────────────────────────
+        async function openAdmissionTable() {
+            showLoader("기준표 불러오는 중...");
+            const r = await adminGet('/api/admin/counsel/admission_table');
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            ADMISSION_TABLE = r.data.table;
+            window.__admissionDefault = r.data.default;
+            renderAdmissionRows();
+            showModal('admission');
+        }
+
+        function tableRowHtml(kind, row) {
+            const numKey = kind === 'susi' ? 'upto' : 'from_pct';
+            return `<div class="grid grid-cols-12 gap-1" data-trow="${kind}">
+                <input type="number" step="0.1" data-k="${numKey}" value="${escAttr(String(row[numKey] ?? ''))}" class="col-span-2 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                <input type="text" data-k="tier" value="${escAttr(row.tier || '')}" placeholder="구간 이름" class="col-span-3 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                <input type="text" data-k="examples" value="${escAttr(row.examples || '')}" placeholder="대학 이름들" class="col-span-6 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                <button onclick="this.parentElement.remove()" class="col-span-1 text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>`;
+        }
+
+        function renderAdmissionRows() {
+            document.getElementById('susi-rows').innerHTML = (ADMISSION_TABLE.susi || []).map(r => tableRowHtml('susi', r)).join('');
+            document.getElementById('jeongsi-rows').innerHTML = (ADMISSION_TABLE.jeongsi || []).map(r => tableRowHtml('jeongsi', r)).join('');
+        }
+        function addTableRow(kind) {
+            document.getElementById(kind + '-rows').insertAdjacentHTML('beforeend', tableRowHtml(kind, {}));
+        }
+        function restoreAdmissionDefault() {
+            if (!confirm("기본 기준표로 되돌립니다. 지금 화면의 수정 내용은 사라집니다.")) return;
+            ADMISSION_TABLE = JSON.parse(JSON.stringify(window.__admissionDefault));
+            renderAdmissionRows();
+        }
+
+        async function saveAdmissionTable() {
+            const grab = id => Array.from(document.getElementById(id).children).map(div => {
+                const o = {};
+                div.querySelectorAll('input[data-k]').forEach(inp => {
+                    o[inp.dataset.k] = inp.type === 'number' ? Number(inp.value) : inp.value.trim();
+                });
+                return o;
+            }).filter(o => o.tier);
+            const susi = grab('susi-rows').sort((a, b) => a.upto - b.upto);        // 낮은 등급(우수)부터
+            const jeongsi = grab('jeongsi-rows').sort((a, b) => b.from_pct - a.from_pct); // 높은 백분위부터
+            if (!susi.length || !jeongsi.length) return alert("수시와 정시 구간을 각각 하나 이상 남겨주세요.");
+            showLoader("기준표 저장 중...");
+            const r = await adminPost('/api/admin/counsel/admission_table', { susi: susi, jeongsi: jeongsi, note: ADMISSION_TABLE.note || '' });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            ADMISSION_TABLE = r.data.table;
+            closeModal('admission-modal');
+            alert("기준표가 저장되었습니다.");
+            if (COUNSEL_TARGET) await reloadCounsel();
+        }
+
+        // ── 학생이 보는 나의 진학 상담 ───────────────
+        async function loadMyCounsel() {
+            const box = document.getElementById('my-counsel-body');
+            if (!box) return;
+            if (!currentUser) { box.innerHTML = '<p class="text-gray-500 text-sm">로그인이 필요합니다.</p>'; return; }
+            box.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">불러오는 중...</p>';
+            let c = null;
+            try {
+                const res = await fetch(`${API_URL}/api/counsel/me/${encodeURIComponent(currentUser.name)}`);
+                const data = await res.json();
+                c = data.success ? data.counsel : null;
+            } catch (e) { }
+            if (!c) { box.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">상담 자료를 불러오지 못했습니다.</p>'; return; }
+
+            const t = c.track, has = c.naesin.avg !== null || c.mock.avg !== null;
+            const tendency = c.tendency;
+            const chip = (l, v, u, tone) => `<div class="bg-[#151922] border border-gray-700 rounded-lg p-3 text-center">
+                <div class="text-[10px] text-gray-500 mb-1">${l}</div>
+                <div class="text-xl font-black ${v === null || v === undefined ? 'text-gray-600' : tone}">${v === null || v === undefined ? '-' : v + (u || '')}</div></div>`;
+
+            box.innerHTML = `
+                <div class="bg-gradient-to-r from-pink-900/40 to-purple-900/30 border border-pink-700/50 rounded-xl p-5 mb-5">
+                    <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-clipboard-question mr-2 text-pink-400"></i>학습 성향 검사</h3>
+                    ${tendency && tendency.axes
+                    ? `<p class="text-xs text-gray-300 mb-3">${escapeHtml(tendency.submitted_at || '')}에 검사를 마쳤습니다.</p>
+                           <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                             ${tendency.axes.map(a => `<div class="bg-black/30 rounded p-2 text-center">
+                                <div class="text-[10px] text-gray-400">${escapeHtml(a.name)}</div>
+                                <div class="text-lg font-black ${a.score >= 70 ? 'text-emerald-400' : a.score >= 45 ? 'text-yellow-400' : 'text-red-400'}">${a.score}</div></div>`).join('')}
+                           </div>
+                           <button onclick="openTendencyTest('${escAttr(currentUser.name)}')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-white text-xs font-bold transition">다시 검사하기</button>`
+                    : `<p class="text-xs text-gray-300 mb-3">28문항 · 약 5분. 내 공부 습관의 강점과 약점을 진단해 드립니다.</p>
+                           <button onclick="openTendencyTest('${escAttr(currentUser.name)}')" class="bg-pink-600 hover:bg-pink-700 px-5 py-2.5 rounded text-white font-bold text-sm transition">검사 시작하기</button>`}
+                </div>
+
+                ${has ? `
+                <h3 class="text-white font-bold mb-2"><i class="fa-solid fa-chart-simple mr-2 text-blue-400"></i>나의 성적과 전략</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    ${chip('내신 평균', c.naesin.avg, '등급', 'text-blue-400')}
+                    ${chip('주요과목', c.naesin.main_avg, '등급', 'text-blue-300')}
+                    ${chip('모의 평균', c.mock.avg, '등급', 'text-yellow-400')}
+                    ${chip('모의 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
+                </div>
+                <div class="bg-[#151922] border border-gray-700 rounded-lg p-4 mb-3">
+                    <div class="flex h-7 rounded overflow-hidden mb-2 text-[11px] font-bold">
+                        <div class="bg-blue-600 flex items-center justify-center text-white" style="width:${t.susi_weight}%">수시 ${t.susi_weight}%</div>
+                        <div class="bg-yellow-600 flex items-center justify-center text-white" style="width:${t.jeongsi_weight}%">정시 ${t.jeongsi_weight}%</div>
+                    </div>
+                    <p class="text-xs text-gray-400 leading-relaxed">${escapeHtml(t.reason)}</p>
+                    <p class="text-[10px] text-gray-600 mt-2">수시와 정시는 둘 다 준비하는 것이 전제입니다. 위 숫자는 '어디에 더 힘을 쏟을지'의 비중입니다.</p>
+                </div>
+                ${c.tiers.susi || c.tiers.jeongsi ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-5">
+                    ${c.tiers.susi ? `<div class="bg-[#151922] border border-blue-700/50 rounded-lg p-3"><div class="text-[10px] text-gray-500 mb-1">수시 가능 라인</div><div class="text-white font-bold text-sm">${escapeHtml(c.tiers.susi.tier)}</div><div class="text-xs text-gray-400 mt-1">${escapeHtml(c.tiers.susi.examples)}</div></div>` : ''}
+                    ${c.tiers.jeongsi ? `<div class="bg-[#151922] border border-yellow-700/50 rounded-lg p-3"><div class="text-[10px] text-gray-500 mb-1">정시 가능 라인</div><div class="text-white font-bold text-sm">${escapeHtml(c.tiers.jeongsi.tier)}</div><div class="text-xs text-gray-400 mt-1">${escapeHtml(c.tiers.jeongsi.examples)}</div></div>` : ''}
+                </div>` : ''}`
+                    : `<p class="text-gray-500 text-sm text-center py-6 mb-4">아직 성적이 등록되지 않았습니다. 원장님께 상담을 요청해 주세요.</p>`}
+
+                ${aiBox('나의 진학 상담 결과', (c.summary || {}).text, (c.summary || {}).at)}
+                ${aiBox('학습 성향 해석', (tendency || {}).analysis, (tendency || {}).analyzed_at)}
+                ${aiBox('진학 전략 분석', (c.analysis || {}).text, (c.analysis || {}).at)}
+
+                ${(c.logs || []).length ? `
+                <h3 class="text-white font-bold mt-6 mb-2"><i class="fa-solid fa-clock-rotate-left mr-2 text-emerald-400"></i>나의 학습 기록
+                    ${c.log_avg !== null && c.log_avg !== undefined ? `<span class="text-xs text-emerald-400 font-normal ml-2">평균 ${c.log_avg}%</span>` : ''}</h3>
+                <div class="space-y-1">${c.logs.slice(0, 20).map(l => `
+                    <div class="bg-[#151922] border border-gray-700 rounded p-3">
+                        <div class="flex justify-between gap-2">
+                            <span class="text-white text-sm font-bold truncate">${escapeHtml(l.title)}</span>
+                            ${l.score !== '' && l.max_score !== '' ? `<span class="text-emerald-400 font-bold text-sm shrink-0">${escapeHtml(String(l.score))}/${escapeHtml(String(l.max_score))}</span>` : ''}
+                        </div>
+                        <div class="text-[10px] text-gray-500">${escapeHtml(l.date || '')}</div>
+                        ${l.memo ? `<p class="text-[11px] text-pink-300 mt-1">${escapeHtml(l.memo)}</p>` : ''}
+                    </div>`).join('')}</div>` : ''}`;
+        }
+
         // ─────────────────────────────────────────────
         // 반(班) 관리 — 반별 명단 + 수업 요일/시간
         //   반 정보는 학생 로그인(학교+학년+이름)과 완전히 분리되어 있다.
@@ -1369,6 +2190,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 서버 응답을 사람이 읽을 수 있는 말로 바꿔주는 공통 처리.
         // 예전에는 서버가 404를 주면 FastAPI가 보낸 'Not Found'가 그대로 떠서
         // 무슨 일인지 알 수 없었음 — 특히 새 기능이 배포되기 전 몇 분 동안.
+        async function adminGet(path) {
+            let res;
+            try { res = await fetch(`${API_URL}${path}`); }
+            catch(e) { return {ok:false, message:"서버에 연결하지 못했습니다. 인터넷 연결을 확인해주세요."}; }
+            if (res.status === 404) return {ok:false, message:"서버에 새 기능이 아직 반영되지 않았습니다.\n1~2분 뒤에 다시 시도해주세요."};
+            if (res.status === 401 || res.status === 403) return {ok:false, message:"관리자 로그인이 풀렸습니다. 다시 로그인해주세요."};
+            if (!res.ok) return {ok:false, message:`서버 오류가 발생했습니다. (${res.status})`};
+            let data;
+            try { data = await res.json(); } catch(e) { return {ok:false, message:"서버 응답을 읽지 못했습니다."}; }
+            if (!data.success) return {ok:false, message: data.detail || "불러오지 못했습니다."};
+            return {ok:true, data:data};
+        }
+
         async function adminPost(path, body) {
             let res;
             try {
