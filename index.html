@@ -839,7 +839,15 @@
                                 <label class="text-white font-bold text-sm">기준 지문 입력</label>
                                 <button onclick="openKnowledgeImportModal()" class="text-blue-400 hover:text-blue-300 font-bold text-sm transition bg-blue-900/30 px-3 py-1 rounded"><i class="fa-solid fa-file-import mr-1"></i>자료학습 데이터 가져오기</button>
                             </div>
-                            <textarea id="gen-text" oninput="renderSourceCounts()" class="w-full h-44 shrink-0 resize-y bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="직접 기준 지문을 입력하거나 위 버튼을 눌러 기존 자료를 불러오세요."></textarea>
+                            <p class="text-[11px] text-gray-500 mb-2">지문이 여러 편이면 한 칸에 몰아 넣지 말고 <b class="text-gray-400">지문마다 칸을 따로</b> 만들어 주세요. 지문별로 몇 문항씩 낼지 정할 수 있습니다.</p>
+
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[11px] font-bold text-yellow-400">지문 1</span>
+                                <button onclick="document.getElementById('gen-text').value=''; renderSourceCounts(true);" class="text-[11px] text-gray-500 hover:text-gray-300 transition">비우기</button>
+                            </div>
+                            <textarea id="gen-text" oninput="renderSourceCounts()" class="w-full h-44 shrink-0 resize-y bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-2 outline-none" placeholder="직접 기준 지문을 입력하거나 위 버튼을 눌러 기존 자료를 불러오세요."></textarea>
+                            <div id="gen-extra-texts" class="space-y-2"></div>
+                            <button onclick="addPassageBox()" class="w-full mb-4 border border-dashed border-gray-600 hover:border-yellow-500 hover:text-yellow-400 text-gray-500 py-2 rounded text-xs font-bold transition"><i class="fa-solid fa-plus mr-1"></i>지문 칸 추가</button>
 
                             <label class="text-white font-bold text-sm block mb-2">출제 원칙 (선택)</label>
                             <textarea id="gen-principle" class="w-full h-32 shrink-0 resize-y bg-[#1e2430] border border-gray-600 p-3 rounded text-white mb-4 outline-none" placeholder="예: 지문의 3문단 내용을 반드시 1문제 이상 포함시켜줘 / 선지는 최대한 헷갈리게 구성해줘 / 어휘 문제는 제외해줘 등, AI가 문제를 낼 때 지켜야 할 원칙을 적어주세요."></textarea>
@@ -1021,12 +1029,60 @@
                 .reduce((sum, id) => sum + (parseInt(document.getElementById(id).value) || 0), 0);
         }
 
-        // 백엔드가 기대하는 순서와 똑같이: 직접 입력한 지문 → 파일 순서대로
+        // 지문 칸들을 화면에 놓인 순서 그대로 모은다 (첫 칸은 기존 gen-text)
+        let PASSAGE_UID = 0;
+
+        function passageBoxes() {
+            const list = [];
+            const first = document.getElementById('gen-text');
+            if (first) list.push({ key: '__text__', el: first });
+            document.querySelectorAll('#gen-extra-texts textarea[data-pid]').forEach(
+                el => list.push({ key: '__text_' + el.dataset.pid + '__', el: el }));
+            return list;
+        }
+
+        // 비어 있지 않은 지문만
+        // 지문 분석·해설자료처럼 '전체를 한 덩어리로' 봐야 하는 기능용
+        function allPassagesJoined() {
+            return genPassages().map((p, i) => genPassages().length > 1 ? `[지문 ${i + 1}]\n${p.text}` : p.text).join('\n\n');
+        }
+
+        function genPassages() {
+            return passageBoxes()
+                .map(p => ({ key: p.key, text: (p.el.value || '').trim() }))
+                .filter(p => p.text);
+        }
+
+        function addPassageBox() {
+            const pid = ++PASSAGE_UID;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[11px] font-bold text-yellow-400">지문 <span class="pnum"></span></span>
+                    <button onclick="this.closest('div').parentElement.remove(); renderSourceCounts(true); renumberPassages();" class="text-[11px] text-red-400 hover:text-red-300 transition">이 지문 삭제</button>
+                </div>
+                <textarea data-pid="${pid}" oninput="renderSourceCounts()" class="w-full h-40 resize-y bg-[#1e2430] border border-gray-600 p-3 rounded text-white outline-none" placeholder="여기에 또 다른 지문을 붙여넣으세요."></textarea>`;
+            document.getElementById('gen-extra-texts').appendChild(wrap);
+            renumberPassages();
+            wrap.querySelector('textarea').focus();
+            renderSourceCounts(true);
+            return wrap.querySelector('textarea');
+        }
+
+        function renumberPassages() {
+            document.querySelectorAll('#gen-extra-texts .pnum').forEach((el, i) => { el.innerText = i + 2; });
+        }
+
+        // 백엔드가 기대하는 순서와 똑같이: 지문들 → 파일 순서대로
         function genSources() {
             const list = [];
-            const t = (document.getElementById('gen-text') || {}).value || '';
-            if (t.trim()) list.push({ key: '__text__', name: '직접 입력한 지문', sub: t.trim().length.toLocaleString() + '자' });
-            genFiles.forEach(f => list.push({ key: f.name + '|' + f.size, name: f.name, sub: Math.round(f.size / 1024).toLocaleString() + 'KB' }));
+            passageBoxes().forEach((p, i) => {
+                const t = (p.el.value || '').trim();
+                if (!t) return;
+                const head = t.replace(/\s+/g, ' ').slice(0, 20);
+                list.push({ key: p.key, kind: 'text', name: `지문 ${i + 1} — ${head}…`, sub: t.length.toLocaleString() + '자' });
+            });
+            genFiles.forEach(f => list.push({ key: f.name + '|' + f.size, kind: 'file', name: f.name, sub: Math.round(f.size / 1024).toLocaleString() + 'KB' }));
             return list;
         }
 
@@ -1097,7 +1153,7 @@
                     ${sources.map(s => `
                         <div class="flex items-center gap-2">
                             <span class="flex-grow min-w-0 truncate text-xs text-white" title="${escAttr(s.name)}">
-                                ${s.key === '__text__' ? '<i class="fa-solid fa-pen-to-square mr-1 text-blue-400"></i>' : '<i class="fa-solid fa-file-pdf mr-1 text-red-400"></i>'}${escapeHtml(s.name)}
+                                ${s.kind === 'text' ? '<i class="fa-solid fa-pen-to-square mr-1 text-blue-400"></i>' : '<i class="fa-solid fa-file-pdf mr-1 text-red-400"></i>'}${escapeHtml(s.name)}
                                 <span class="text-gray-600 ml-1">${escapeHtml(s.sub)}</span>
                             </span>
                             <input type="number" min="0" value="${SOURCE_COUNTS[s.key]}"
@@ -1325,7 +1381,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             } catch(e) { c.innerHTML = '<div class="text-red-400 text-center py-10 border border-red-900 rounded-xl bg-gray-800">서버 통신 오류.</div>'; }
         }
 
-        function importKnowledgeText(encodedContent) { document.getElementById('gen-text').value = decodeURIComponent(encodedContent); closeModal('knowledge-import-modal'); showToast("자료가 기준 지문에 성공적으로 입력되었습니다."); }
+        // 💡 여러 자료를 이어서 가져오면 덮어쓰지 않고 지문 칸을 하나씩 새로 만든다.
+        //    자료 6개를 불러오면 별개의 지문 6개가 되어 각각 문항 수를 정할 수 있다.
+        function importKnowledgeText(encodedContent) {
+            const text = decodeURIComponent(encodedContent);
+            const empty = passageBoxes().find(p => !(p.el.value || '').trim());
+            const target = empty ? empty.el : addPassageBox();
+            target.value = text;
+            closeModal('knowledge-import-modal');
+            renderSourceCounts(true);
+            const n = passageBoxes().findIndex(p => p.el === target) + 1;
+            showToast(`자료를 지문 ${n}번 칸에 넣었습니다.`);
+        }
 
 
         // 💡 레벨/아바타 표시용 참고 테이블 — 백엔드 main.py의 LEVELS와 동일하게 유지 (변경 시 양쪽 다 수정)
@@ -3590,7 +3657,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function analyzeTextStream() {
             const btn = document.querySelector('button[onclick="analyzeTextStream()"]');
             if(btn) { btn.disabled = true; btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>분석 중..."; }
-            const fd = new FormData(); fd.append("q_mode", "분석"); fd.append("q_types", "지문 분석"); fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); fd.append("q_text", document.getElementById('gen-text').value); genFiles.forEach(f => fd.append("files", f));
+            const fd = new FormData(); fd.append("q_mode", "분석"); fd.append("q_types", "지문 분석"); fd.append("cnt_killer", 0); fd.append("cnt_semi", 0); fd.append("cnt_high", 0); fd.append("cnt_mid", 0); fd.append("cnt_low", 0); fd.append("q_text", allPassagesJoined()); genFiles.forEach(f => fd.append("files", f));
             document.getElementById('gen-result-area').style.display = 'flex'; const r = document.getElementById('gen-result-text'); r.value = "⏳ AI 지문 분석 중... (서버와 통신하고 있습니다)"; r.classList.add('animate-pulse');
             try {
                 const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd}); r.classList.remove('animate-pulse');
@@ -3602,7 +3669,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         async function generateExplainer() {
-            const qText = document.getElementById('gen-text').value.trim();
+            const qText = allPassagesJoined().trim();
             if(!qText && genFiles.length === 0) return alert("해설자료를 만들 지문을 입력하거나 자료 파일을 업로드해주세요.");
 
             const btn = document.querySelector('button[onclick="generateExplainer()"]');
@@ -3672,6 +3739,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("cnt_mid", m);
             fd.append("cnt_low", l);
             fd.append("q_text", document.getElementById('gen-text').value);
+            fd.append("q_texts", JSON.stringify(genPassages().map(p => p.text)));
             fd.append("q_principle", document.getElementById('gen-principle').value);
             fd.append("start_num", parseInt(document.getElementById('c-start-num').value) || 1);
             fd.append("source_counts", JSON.stringify(currentSourceCounts()));
