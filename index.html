@@ -974,8 +974,21 @@
                                     <input type="number" id="qz-limit" placeholder="예: 10" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
                                 </div>
                             </div>
+                            <!-- 📸 문제지를 파일이나 캡처로 올리면 AI가 읽어 문항을 채워준다 -->
+                            <div id="qz-capture-drop" onclick="document.getElementById('qz-capture-input').click()"
+                                 class="mt-4 border-2 border-dashed border-orange-700/60 hover:border-orange-500 rounded-lg p-4 text-center cursor-pointer transition">
+                                <i class="fa-solid fa-file-import text-orange-400 text-2xl mb-1"></i>
+                                <p class="text-orange-300 text-sm font-bold">문제지 파일이나 캡처로 불러오기</p>
+                                <p class="text-[11px] text-gray-500 mt-1">여기를 눌러 파일(이미지·PDF)을 고르거나, <b class="text-gray-400">캡처한 뒤 Ctrl+V</b>로 바로 붙여넣으세요.</p>
+                                <input type="file" id="qz-capture-input" accept="image/*,.pdf" multiple class="hidden" onchange="handleQuizCapture(Array.from(this.files)); this.value='';">
+                            </div>
+                            <div id="qz-capture-preview" class="flex flex-wrap gap-2 mt-2"></div>
+
                             <div class="mt-4 border-t border-gray-700 pt-4">
-                                <h4 class="text-sm font-bold text-white mb-2">문제 목록 (5지 선다형)</h4>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-sm font-bold text-white">문제 목록 (5지 선다형)</h4>
+                                    <button onclick="clearQuizQuestions()" class="text-[11px] text-red-400 hover:text-red-300 transition">전체 비우기</button>
+                                </div>
                                 <div id="qz-questions-board" class="space-y-4 max-h-[400px] overflow-y-auto mb-4 pr-2"></div>
                                 <button onclick="addQuizQuestionUI()" class="w-full bg-gray-700 hover:bg-gray-600 transition py-3 text-white rounded font-bold text-sm">+ 문제 1개 추가</button>
                             </div>
@@ -5114,6 +5127,93 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             `;
             container.appendChild(div);
         }
+
+        // ─────────────────────────────────────────────
+        // 📸 문제지 파일·캡처 → 퀴즈 문항 자동 입력
+        //   문제와 보기를 하나하나 타이핑하지 않아도 되도록.
+        // ─────────────────────────────────────────────
+        function clearQuizQuestions() {
+            const board = document.getElementById('qz-questions-board');
+            if (!board.children.length) return;
+            if (!confirm("지금 만들어 둔 문제를 모두 지울까요?")) return;
+            board.innerHTML = '';
+            document.getElementById('qz-capture-preview').innerHTML = '';
+        }
+
+        // 읽어낸 문항 하나를 문제 목록에 채워 넣는다
+        function fillQuizQuestion(q) {
+            addQuizQuestionUI();
+            const board = document.getElementById('qz-questions-board');
+            const item = board.lastElementChild;
+            if (!item) return;
+            item.querySelector('.quiz-q-text').value = q.q_text || '';
+            const opts = item.querySelectorAll('.quiz-q-opt');
+            (q.options || []).forEach((o, i) => { if (opts[i]) opts[i].value = o || ''; });
+            const ansEl = item.querySelector('.quiz-q-ans');
+            const scoreEl = item.querySelector('.quiz-q-score');
+            if (q.answer) {
+                ansEl.value = q.answer;
+                ansEl.classList.remove('ring-2', 'ring-red-500');
+            } else {
+                // 정답을 못 읽은 문항은 눈에 띄게 표시해 직접 채우게 한다
+                ansEl.value = '';
+                ansEl.classList.add('ring-2', 'ring-red-500');
+                ansEl.placeholder = '정답 직접 입력';
+            }
+            scoreEl.value = q.score || 2;
+        }
+
+        async function handleQuizCapture(files) {
+            const usable = (files || []).filter(f => f && (
+                (f.type && f.type.startsWith('image/')) || /\.pdf$/i.test(f.name || '')));
+            if (!usable.length) return alert("이미지나 PDF 파일만 올릴 수 있습니다.");
+
+            const prev = document.getElementById('qz-capture-preview');
+            prev.innerHTML = usable.map(f => f.type && f.type.startsWith('image/')
+                ? `<img src="${URL.createObjectURL(f)}" class="h-20 rounded border border-gray-600" alt="문제지 캡처">`
+                : `<span class="bg-gray-800 text-gray-300 px-2 py-1 rounded text-xs"><i class="fa-solid fa-file-pdf text-red-400 mr-1"></i>${escapeHtml(f.name)}</span>`
+            ).join('');
+
+            showLoader(`문제지를 읽는 중입니다... (${usable.length}개, 30초 정도 걸립니다)`);
+            const fd = new FormData();
+            usable.forEach(f => fd.append("files", f, f.name || 'capture.png'));
+
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_quiz`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) {
+                hideLoader();
+                return alert("파일을 보내지 못했습니다. 인터넷 연결을 확인해주세요.");
+            }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "문제를 읽지 못했습니다.");
+
+            const board = document.getElementById('qz-questions-board');
+            const had = board.children.length;
+            if (had && !confirm(`이미 만들어 둔 문제 ${had}개가 있습니다.\n읽어낸 ${data.count}개를 뒤에 이어 붙일까요?\n\n[취소]를 누르면 기존 문제를 지우고 새로 채웁니다.`)) {
+                board.innerHTML = '';
+            }
+            (data.questions || []).forEach(fillQuizQuestion);
+
+            let msg = `${data.count}개 문항을 읽어 채웠습니다.`;
+            if (data.no_answer) msg += `\n\n그중 ${data.no_answer}개는 자료에 정답이 없어 비워 두었습니다.\n빨갛게 표시된 칸에 정답을 직접 넣어주세요.`;
+            msg += `\n\n내용이 맞는지 한 번 훑어봐 주세요.`;
+            alert(msg);
+            board.scrollTop = 0;
+        }
+
+        // 퀴즈 탭에서 Ctrl+V로 캡처를 바로 붙여넣기
+        document.addEventListener('paste', (e) => {
+            const tab = document.getElementById('admin-quiz');
+            if (!tab || tab.style.display === 'none' || !tab.offsetParent) return;
+            const items = Array.from((e.clipboardData || {}).items || []);
+            const files = items.filter(it => it.type && it.type.startsWith('image/'))
+                               .map(it => it.getAsFile()).filter(Boolean);
+            if (!files.length) return;
+            e.preventDefault();
+            handleQuizCapture(files);
+        });
 
         async function createQuiz() {
             const title = document.getElementById('qz-title').value.trim();
