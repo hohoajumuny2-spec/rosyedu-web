@@ -160,6 +160,25 @@
         </div>
     </div>
 
+    <!-- 🎓 대학별 가능 학과 -->
+    <div id="majors-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[88vh] shadow-2xl border border-emerald-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 id="majors-title" class="text-lg font-black text-white"></h2>
+                    <p id="majors-sub" class="text-[11px] text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="closeModal('majors-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="px-5 pt-3">
+                <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                    <input type="checkbox" id="majors-only-reach" onchange="reloadMajors()"> 지금 성적으로 <b class="text-emerald-400">가능한 학과만</b> 보기
+                </label>
+            </div>
+            <div id="majors-body" class="flex-grow overflow-y-auto p-5"></div>
+        </div>
+    </div>
+
     <!-- ✂ 시험별 등급컷 -->
     <div id="cuts-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl border border-yellow-500 flex flex-col">
@@ -865,8 +884,9 @@
                                                 </div>
                                             </div>
                                             <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                                                <span class="col-span-3">학기</span><span class="col-span-3">과목</span><span class="col-span-2">단위</span><span class="col-span-2">등급</span><span class="col-span-2">환산</span>
+                                                <span class="col-span-2">학기</span><span class="col-span-3">과목</span><span class="col-span-1">단위</span><span class="col-span-2">백분율%</span><span class="col-span-2">등급</span><span class="col-span-2">환산</span>
                                             </div>
+                                            <p class="text-[10px] text-gray-600 px-1 mb-1"><b class="text-blue-300">석차백분율(상위 몇 %)</b>을 넣으면 9등급제·5등급제 등급이 <b class="text-blue-300">정확히</b> 계산됩니다. 모르시면 등급만 넣으셔도 됩니다.</p>
                                             <div id="naesin-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
                                         </div>
                                         <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
@@ -2283,11 +2303,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const naMainOther = convertGrade(naMain, nScale, oScale);
             const sub = (v) => v === null || v === undefined ? '' :
                 `<div class="text-[10px] text-blue-300 mt-0.5">${oScale}등급제 ${v}</div>`;
-            const line = (label, tier, tone) => tier
+            // 💡 라인에 적힌 대학 이름을 하나씩 눌러 그 대학의 가능 학과를 볼 수 있게 한다
+            const univChips = (examples, kind) => String(examples || '')
+                .split(/[·,]/).map(s => s.trim()).filter(Boolean)
+                .map(u => `<button onclick="openUnivMajors('${escAttr(u)}','${kind}')"
+                        class="inline-block bg-gray-800 hover:bg-emerald-700 text-gray-300 hover:text-white px-2 py-1 rounded text-xs mr-1 mb-1 transition"
+                        title="${escAttr(u)}에서 가능한 학과 보기">${escapeHtml(u)}</button>`).join('');
+
+            const line = (label, tier, tone, kind) => tier
                 ? `<div class="bg-[#1e2430] border ${tone} rounded-lg p-3">
                        <div class="text-[10px] text-gray-500 mb-1">${label}</div>
-                       <div class="text-white font-bold text-sm mb-1">${escapeHtml(tier.tier)}</div>
-                       <div class="text-xs text-gray-400 leading-relaxed">${escapeHtml(tier.examples)}</div></div>`
+                       <div class="text-white font-bold text-sm mb-2">${escapeHtml(tier.tier)}</div>
+                       <div>${univChips(tier.examples, kind)}</div>
+                       <div class="text-[10px] text-gray-600 mt-1">대학을 누르면 가능한 학과가 나옵니다</div></div>`
                 : `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
                        <div class="text-[10px] text-gray-500 mb-1">${label}</div>
                        <div class="text-gray-600 text-sm">성적을 입력하면 계산됩니다</div></div>`;
@@ -2299,6 +2327,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     ${gradeChip('국·수·탐 평균' + (c.mock.latest ? ` (${c.mock.latest})` : ''), c.mock.avg, '등급', 'text-yellow-400')}
                     ${gradeChip('국·수·탐 평균 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
                 </div>
+                ${c.naesin.pct_avg !== null && c.naesin.pct_avg !== undefined ? `<div class="bg-[#1e2430] border border-blue-700/40 rounded-lg px-3 py-2 mb-3 text-xs">
+                    <span class="text-gray-500">내신 평균 석차백분율</span>
+                    <b class="text-blue-300 ml-2">상위 ${c.naesin.pct_avg}%</b>
+                    <span class="text-gray-600 ml-2">${c.naesin.exact ? '두 등급제 환산이 정확합니다' : `백분율을 적은 과목 ${c.naesin.pct_count}개 기준`}</span>
+                </div>` : ''}
                 ${(c.mock.abs_text || c.mock.raw_text) ? `<div class="bg-[#1e2430] border border-gray-700 rounded-lg px-3 py-2 mb-3 text-xs space-y-1">
                     ${c.mock.raw_text ? `<div><span class="text-gray-500">원점수</span><b class="text-yellow-300 ml-2">${escapeHtml(c.mock.raw_text)}</b></div>` : ''}
                     ${c.mock.abs_text ? `<div><span class="text-gray-500">절대평가</span><b class="text-yellow-300 ml-2">${escapeHtml(c.mock.abs_text)}</b>
@@ -2317,13 +2350,23 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 </div>
                 ${renderTargetGap()}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    ${line('현재 수시 지원 가능 라인', tiers.susi, 'border-blue-700/50')}
-                    ${line('현재 정시 지원 가능 라인', tiers.jeongsi, 'border-yellow-700/50')}
+                    ${line('현재 수시 지원 가능 라인', tiers.susi, 'border-blue-700/50', 'susi')}
+                    ${line('현재 정시 지원 가능 라인', tiers.jeongsi, 'border-yellow-700/50', 'jeongsi')}
                 </div>
                 <p class="text-[10px] text-gray-600 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>${escapeHtml(c.table_note || '')} 왼쪽 아래 '대학 라인 기준표 설정'에서 수정할 수 있습니다.</p>`;
         }
 
-        const NAESIN_FIELDS = [['term', '학기', 3, 'text', '1-1'], ['subject', '과목', 3, 'text', '문학'], ['unit', '단위', 2, 'number', '4'], ['grade', '등급', 2, 'number', '2']];
+        const NAESIN_FIELDS = [['term', '학기', 2, 'text', '1-1'], ['subject', '과목', 3, 'text', '문학'], ['unit', '단위', 1, 'number', '4'], ['pct', '백분율', 2, 'number', '7.2'], ['grade', '등급', 2, 'number', '2']];
+
+        // 석차백분율(상위 몇 %) → 등급. 등급 구간이 누적 비율로 정해져 있어 정확하다.
+        function naesinPctToBand(pct, scale) {
+            const v = parseFloat(pct);
+            if (isNaN(v)) return null;
+            const cuts = GRADE_CUTS[scale];
+            const c = Math.max(0, Math.min(100, v));
+            for (let i = 0; i < cuts.length; i++) if (c <= cuts[i]) return i + 1;
+            return cuts.length;
+        }
         const MOCK_FIELDS = [['date', '시행', 3, 'text', '2026-06'], ['subject', '과목', 3, 'text', '국어'], ['raw', '원점수', 2, 'number', '82'], ['grade', '등급', 2, 'number', '2'], ['percentile', '백분위', 2, 'number', '88']];
 
         // 영어·한국사 등은 절대평가라 백분위가 없다. 상대평가 과목과 섞으면
@@ -2365,7 +2408,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 : '';
             return `<div class="grid grid-cols-12 gap-1" data-row="${kind}">
                 ${fields.map(([k, label, span, type, ph]) =>
-                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0"${k === 'grade' && kind === 'naesin' ? ' oninput="updateRowConversion(this)"' : ''}${k === 'subject' && kind === 'mock' ? ' oninput="updateMockRowMode(this)"' : ''}>`
+                    `<input type="${type}" data-k="${k}" value="${escAttr(row[k] === undefined || row[k] === null ? '' : String(row[k]))}" placeholder="${ph}" class="col-span-${span} p-1.5 bg-gray-800 text-white rounded text-xs min-w-0"${(k === 'grade' || k === 'pct') && kind === 'naesin' ? ' oninput="updateRowConversion(this)"' : ''}${k === 'subject' && kind === 'mock' ? ' oninput="updateMockRowMode(this)"' : ''}>`
                 ).join('')}
                 ${conv}
                 <button onclick="this.parentElement.remove()" class="col-span-1 text-red-400 hover:text-red-300 text-xs" title="이 줄 삭제"><i class="fa-solid fa-xmark"></i></button>
@@ -2434,17 +2477,39 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const box = row && row.querySelector('[data-conv]');
             if (!box) return;
             const from = currentNaesinScale(), to = from === '9' ? '5' : '9';
-            const g = parseFloat(inp.value);
+            const pctInp = row.querySelector('input[data-k="pct"]');
+            const gradeInp = row.querySelector('input[data-k="grade"]');
+            const pct = pctInp ? parseFloat(pctInp.value) : NaN;
+
+            // 💡 석차백분율이 적혀 있으면 두 체계 모두 정확한 등급이 나온다.
+            //    이때는 등급 칸을 백분율에서 뽑은 값으로 채워 준다.
+            if (!isNaN(pct)) {
+                if (pct < 0 || pct > 100) {
+                    pctInp.classList.add('border', 'border-red-500');
+                    box.innerHTML = '<span class="text-red-400">0~100</span>';
+                    return;
+                }
+                pctInp.classList.remove('border', 'border-red-500');
+                const here = naesinPctToBand(pct, from), there = naesinPctToBand(pct, to);
+                if (gradeInp) {
+                    gradeInp.value = here;
+                    gradeInp.classList.remove('border', 'border-red-500');
+                }
+                box.innerHTML = `<span class="text-emerald-400" title="석차백분율로 정확히 계산했습니다">${there}등급</span>`;
+                return;
+            }
+            if (pctInp) pctInp.classList.remove('border', 'border-red-500');
+
+            const g = gradeInp ? parseFloat(gradeInp.value) : NaN;
             const max = GRADE_CUTS[from].length;   // 9등급제면 9, 5등급제면 5
-            // 💡 체계에 없는 등급(5등급제에 8등급 같은)은 환산하지 않고 빨갛게 알려준다.
-            //    그냥 환산하면 없는 등급이 있는 것처럼 보여 상담 자료가 틀어진다.
+            // 체계에 없는 등급(5등급제에 8등급 같은)은 환산하지 않고 빨갛게 알려준다.
             if (!isNaN(g) && (g < 1 || g > max)) {
-                inp.classList.add('border', 'border-red-500');
+                gradeInp.classList.add('border', 'border-red-500');
                 box.innerHTML = `<span class="text-red-400" title="${from}등급제는 1~${max}등급까지입니다">1~${max}만</span>`;
                 return;
             }
-            inp.classList.remove('border', 'border-red-500');
-            box.innerText = convertGradeBand(inp.value, from, to);
+            if (gradeInp) gradeInp.classList.remove('border', 'border-red-500');
+            box.innerText = convertGradeBand(gradeInp ? gradeInp.value : '', from, to);
         }
 
         function changeNaesinScale(v) {
@@ -2453,7 +2518,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const inputs = Array.from(document.querySelectorAll('#naesin-rows [data-row] input[data-k="grade"]'));
             inputs.forEach(inp => { inp.max = max; updateRowConversion(inp); });
 
-            const bad = inputs.filter(inp => { const g = parseFloat(inp.value); return !isNaN(g) && (g < 1 || g > max); });
+            // 백분율이 적힌 줄은 등급이 새로 계산되므로 범위 경고 대상이 아니다
+            const bad = inputs.filter(inp => {
+                const row = inp.closest('[data-row]');
+                const p = row && row.querySelector('input[data-k="pct"]');
+                if (p && p.value.trim() !== '') return false;
+                const g = parseFloat(inp.value); return !isNaN(g) && (g < 1 || g > max);
+            });
             if (bad.length) {
                 alert(`${from}등급제는 1~${max}등급까지입니다.
 범위를 벗어난 과목이 ${bad.length}개 있어 빨갛게 표시했습니다.
@@ -3033,12 +3104,90 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             };
 
             return `<div class="bg-[#1e2430] border border-indigo-700/50 rounded-lg p-4 mb-3">
-                <div class="text-white font-bold text-sm mb-3"><i class="fa-solid fa-bullseye mr-1 text-indigo-400"></i>목표: ${escapeHtml(g.univ)} ${escapeHtml(g.major || '')}</div>
+                <div class="text-white font-bold text-sm mb-3"><i class="fa-solid fa-bullseye mr-1 text-indigo-400"></i>목표:
+                    <button onclick="openUnivMajors('${escAttr(g.univ)}','')" class="underline decoration-dotted hover:text-emerald-400 transition" title="${escAttr(g.univ)}에서 가능한 학과 보기">${escapeHtml(g.univ)}</button>
+                    <span class="font-normal text-gray-400">${escapeHtml(g.major || '')}</span></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     ${section(g.susi, '수시', 'border-blue-700/50')}
                     ${section(g.jeongsi, '정시', 'border-yellow-700/50')}
                 </div>
             </div>`;
+        }
+
+        // ── 대학별 가능 학과 ─────────────────────────
+        //   지원 가능 라인에 뜬 대학을 누르면, 그 대학에서 지금 성적으로
+        //   어느 학과까지 되는지 입결 자료에서 찾아 보여준다.
+        let MAJORS_UNIV = '', MAJORS_KIND = '';
+
+        async function openUnivMajors(univ, kind) {
+            MAJORS_UNIV = univ;
+            MAJORS_KIND = kind || '';
+            document.getElementById('majors-title').innerHTML =
+                `<i class="fa-solid fa-graduation-cap mr-2 text-emerald-400"></i>${escapeHtml(univ)} — 가능한 학과`;
+            document.getElementById('majors-sub').innerText = '불러오는 중...';
+            document.getElementById('majors-body').innerHTML = '';
+            showModal('majors');
+            await reloadMajors();
+        }
+
+        async function reloadMajors() {
+            if (!MAJORS_UNIV) return;
+            const body = document.getElementById('majors-body');
+            body.innerHTML = '<p class="text-gray-500 text-sm text-center py-10">찾는 중...</p>';
+            const r = await adminPost('/api/admin/univ_table/majors', {
+                student_name: COUNSEL_TARGET || '',
+                univ: MAJORS_UNIV,
+                kind: MAJORS_KIND,
+                only_reachable: document.getElementById('majors-only-reach').checked
+            });
+            if (!r.ok) {
+                document.getElementById('majors-sub').innerText = '';
+                body.innerHTML = `<div class="text-center py-10">
+                    <i class="fa-solid fa-circle-info text-3xl text-gray-700 mb-3"></i>
+                    <p class="text-gray-400 text-sm whitespace-pre-line leading-relaxed">${escapeHtml(r.message)}</p></div>`;
+                return;
+            }
+            const d = r.data, mine = d.mine || {};
+            const bits = [];
+            if (mine.grade !== null && mine.grade !== undefined) bits.push(`내신 ${mine.grade}등급`);
+            if (mine.percentile !== null && mine.percentile !== undefined) bits.push(`백분위 ${mine.percentile}`);
+            if (mine.score !== null && mine.score !== undefined) bits.push(`원점수 ${mine.score}점`);
+            if (mine.eng_grade !== null && mine.eng_grade !== undefined) bits.push(`영어 ${mine.eng_grade}등급`);
+            document.getElementById('majors-sub').innerText =
+                bits.length ? `${COUNSEL_TARGET} 학생 기준 — ${bits.join(' · ')}` : '학생 성적이 없어 기준 점수만 보여줍니다';
+
+            const row = (i, good) => `
+                <div class="flex justify-between items-center ${good ? 'bg-emerald-950/25 border-emerald-900/50' : 'bg-[#151922] border-gray-700'} border rounded px-3 py-2">
+                    <span class="text-sm ${good ? 'text-white' : 'text-gray-400'} truncate">
+                        ${good ? '<i class="fa-solid fa-circle-check text-emerald-500 mr-1 text-[11px]"></i>' : ''}
+                        ${escapeHtml(i.major || '(모집단위 없음)')}
+                        ${i.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(i.type)}</span>` : ''}
+                        ${i.year ? `<span class="text-[10px] text-gray-700 ml-1">${escapeHtml(i.year)}</span>` : ''}
+                    </span>
+                    <span class="shrink-0 ml-2 text-xs font-bold ${good ? 'text-emerald-400' : 'text-yellow-500'}">
+                        ${i.cut}${i.unit}${i.eng_cut !== null && i.eng_cut !== undefined ? ` <span class="text-gray-500">영${i.eng_cut}</span>` : ''}
+                        ${i.gap === null || i.gap === undefined ? '' : ` · ${good ? '여유 ' + Math.abs(i.gap) + i.unit : Math.abs(i.gap) + i.unit + ' 부족'}`}
+                    </span>
+                </div>`;
+
+            const section = (blk, title, tone) => {
+                if (!blk || !blk.count) return '';
+                return `<div class="mb-5">
+                    <div class="flex justify-between items-center mb-2 border-b ${tone} pb-1">
+                        <h4 class="text-white font-bold text-sm">${title}</h4>
+                        <span class="text-[11px] text-gray-400">${blk.count}개 중 <b class="text-emerald-400">${blk.reach_count}개</b> 가능</span>
+                    </div>
+                    ${blk.reached.length ? `<p class="text-[11px] text-emerald-400 font-bold mb-1">지금 성적으로 가능</p>
+                        <div class="space-y-1 mb-3">${blk.reached.map(i => row(i, true)).join('')}</div>` : ''}
+                    ${blk.near.length ? `<p class="text-[11px] text-yellow-500 font-bold mb-1">조금 더 올리면</p>
+                        <div class="space-y-1 mb-3">${blk.near.map(i => row(i, false)).join('')}</div>` : ''}
+                    ${blk.unknown.length ? `<p class="text-[11px] text-gray-500 font-bold mb-1">비교할 성적이 없음</p>
+                        <div class="space-y-1">${blk.unknown.map(i => row(i, false)).join('')}</div>` : ''}
+                </div>`;
+            };
+
+            const html = section(d.susi, '수시', 'border-blue-800') + section(d.jeongsi, '정시', 'border-yellow-800');
+            body.innerHTML = html || '<p class="text-gray-500 text-sm text-center py-10">조건에 맞는 학과가 없습니다.</p>';
         }
 
         // ── 학생부 평가 기준 ─────────────────────────
