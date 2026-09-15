@@ -962,7 +962,10 @@
                     <!-- 퀴즈 탭 -->
                     <div id="admin-quiz" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
-                            <h3 class="text-lg font-bold text-orange-400 mb-4">새 퀴즈 출제</h3>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold text-orange-400">새 퀴즈 출제</h3>
+                                <span id="qz-edit-badge" class="text-[11px]"></span>
+                            </div>
                             <input type="text" id="qz-title" placeholder="퀴즈 제목" class="w-full p-3 bg-gray-800 text-white mb-2 rounded border border-gray-600">
                             <div class="flex gap-2 mb-2">
                                 <div class="w-1/2">
@@ -1084,6 +1087,10 @@
                             </div>
 
                             <div id="gen-result-area" class="hidden flex-grow flex flex-col">
+                                <div class="flex justify-between items-center mb-1 text-[11px]">
+                                    <span id="gen-edit-badge" class="text-gray-500">아직 저장되지 않았습니다</span>
+                                    <button onclick="openGenFullscreen()" class="text-blue-400 hover:text-blue-300 font-bold transition"><i class="fa-solid fa-up-right-and-down-left-from-center mr-1"></i>크게 보기</button>
+                                </div>
                                 <textarea id="gen-result-text" class="flex-grow min-h-[420px] resize-y bg-[#1e2430] text-white p-3 mb-2 rounded border border-gray-600 outline-none text-xs font-mono leading-relaxed"></textarea>
                                 <div class="flex gap-2">
                                     <button id="btn-save-gen" onclick="saveGeneratedQuestion()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition">보관함 저장</button>
@@ -1564,21 +1571,55 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             w.document.close();
         }
 
-        async function saveGeneratedQuestion() {
-            const t=document.getElementById('gen-title').value.trim(), c=document.getElementById('gen-result-text').value.trim();
-            if(!t||!c) return alert("제목과 내용을 입력하세요.");
-            const btn=document.getElementById('btn-save-gen'); const org=btn.innerHTML; btn.disabled=true; btn.innerHTML="저장 중...";
-            showLoader("보관함에 저장 중입니다...");
+        // 지금 편집 중인 출제본의 id. 있으면 저장이 '고치기'가 된다.
+        let CURRENT_QUESTION_ID = '';
+
+        function setQuestionEditState(id, title) {
+            CURRENT_QUESTION_ID = id || '';
+            const badge = document.getElementById('gen-edit-badge');
+            const btn = document.getElementById('btn-save-gen');
+            if (badge) {
+                badge.innerHTML = CURRENT_QUESTION_ID
+                    ? `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>보관함에 저장됨${title ? ' — ' + escapeHtml(title) : ''}</span>
+                       <button onclick="newQuestionDraft()" class="ml-2 text-gray-400 hover:text-white underline">새 출제본으로</button>`
+                    : '<span class="text-gray-500">아직 저장되지 않았습니다</span>';
+            }
+            if (btn) btn.innerHTML = CURRENT_QUESTION_ID ? '수정 저장' : '보관함 저장';
+        }
+
+        function newQuestionDraft() {
+            setQuestionEditState('', '');
+            showToast("이제 저장하면 새 출제본으로 들어갑니다.");
+        }
+
+        // silent=true면 알림 없이 조용히 저장한다 (출제 직후 자동 저장용)
+        async function saveGeneratedQuestion(silent) {
+            const t = document.getElementById('gen-title').value.trim();
+            const c = document.getElementById('gen-result-text').value.trim();
+            if (!t || !c) { if (!silent) alert("제목과 내용을 입력하세요."); return false; }
+            const btn = document.getElementById('btn-save-gen');
+            if (btn && !silent) { btn.disabled = true; btn.innerHTML = "저장 중..."; }
+            if (!silent) showLoader("보관함에 저장 중입니다...");
+            let okSave = false;
             try {
-                const res = await fetch(`${API_URL}/api/admin/questions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,content:c})});
-                if(!res.ok) throw new Error("서버 오류");
+                const res = await fetch(`${API_URL}/api/admin/questions`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: t, content: c, id: CURRENT_QUESTION_ID })
+                });
+                if (!res.ok) throw new Error("서버 오류");
                 const data = await res.json();
-                if(data.success) {
-                    document.getElementById('gen-title').value='';
+                if (data.success) {
+                    setQuestionEditState(data.id || CURRENT_QUESTION_ID, t);
                     loadGeneratedQuestions();
-                } else alert("오류: " + data.detail);
-            }catch(e){ alert("저장 실패: " + e.message); }
-            btn.disabled=false; btn.innerHTML=org; hideLoader();
+                    okSave = true;
+                    if (!silent) showToast(data.updated ? "수정 내용을 저장했습니다." : "보관함에 저장했습니다.");
+                } else if (!silent) alert("오류: " + data.detail);
+            } catch (e) { if (!silent) alert("저장 실패: " + e.message); }
+            // 버튼 글자는 setQuestionEditState가 상태에 맞게 정한다 (옛 글자로 되돌리면 안 됨)
+            if (btn && !silent) { btn.disabled = false; }
+            setQuestionEditState(CURRENT_QUESTION_ID, t);
+            if (!silent) hideLoader();
+            return okSave;
         }
 
         async function loadGeneratedQuestions() {
@@ -1587,13 +1628,48 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const c=document.getElementById('admin-questions-list'); c.innerHTML='';
                 if(data.success && data.questions.length>0){
                     generatedQuestionsData = data.questions;
-                    data.questions.forEach((q,i) => { c.innerHTML+=`<div class="bg-gray-800 p-3 rounded mb-2"><div class="flex justify-between items-center"><span class="text-yellow-400 cursor-pointer font-bold w-2/3 truncate hover:underline" onclick="viewGeneratedQuestion(${i})">${escapeHtml(q.title)}</span><button onclick="deleteGeneratedQuestion('${escAttr(q.id)}')" class="text-red-400 text-xs font-bold hover:text-red-300 bg-red-900/40 px-3 py-1 rounded transition">삭제</button></div></div>`; });
+                    data.questions.forEach((q,i) => {
+                        const on = CURRENT_QUESTION_ID === q.id;
+                        const when = (q.updated_at || q.created_at || '').slice(0, 16);
+                        c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 ${on ? 'ring-1 ring-emerald-500' : ''}">
+                            <div class="flex justify-between items-center gap-2">
+                                <button onclick="viewGeneratedQuestion(${i})" class="text-left min-w-0 flex-grow">
+                                    <div class="text-yellow-400 font-bold truncate hover:underline">${escapeHtml(q.title)}</div>
+                                    <div class="text-[10px] text-gray-500">${escapeHtml(when)}${q.updated_at ? ' 수정' : ''}${on ? ' · 편집 중' : ''}</div>
+                                </button>
+                                <div class="shrink-0 flex gap-1">
+                                    <button onclick="viewGeneratedQuestion(${i})" class="text-emerald-300 text-xs font-bold bg-emerald-900/40 hover:bg-emerald-900/70 px-3 py-1 rounded transition">수정</button>
+                                    <button onclick="deleteGeneratedQuestion('${escAttr(q.id)}')" class="text-red-400 text-xs font-bold hover:text-red-300 bg-red-900/40 px-3 py-1 rounded transition">삭제</button>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
                 } else { generatedQuestionsData=[]; }
             }catch(e){}
         }
 
-        function viewGeneratedQuestion(i) { const q=generatedQuestionsData[i]; if(!q) return; document.getElementById('gen-title').value=q.title; const t=document.getElementById('gen-result-text'); t.value=q.content; t.scrollTop=0; document.getElementById('gen-result-area').style.display='flex'; t.style.backgroundColor='#1e3a8a'; setTimeout(()=>t.style.backgroundColor='#1e2430',400); }
-        async function deleteGeneratedQuestion(id) { if(!confirm("해당 출제본을 삭제하시겠습니까?")) return; showLoader("삭제 중..."); try{ await fetch(`${API_URL}/api/admin/questions/${id}`,{method:'DELETE'}); loadGeneratedQuestions(); }catch(e){} hideLoader(); }
+        function viewGeneratedQuestion(i) {
+            const q = generatedQuestionsData[i];
+            if (!q) return;
+            document.getElementById('gen-title').value = q.title;
+            const t = document.getElementById('gen-result-text');
+            t.value = q.content; t.scrollTop = 0;
+            document.getElementById('gen-result-area').style.display = 'flex';
+            t.style.backgroundColor = '#1e3a8a';
+            setTimeout(() => t.style.backgroundColor = '#1e2430', 400);
+            setQuestionEditState(q.id, q.title);   // 이제 저장하면 이 출제본을 고친다
+            loadGeneratedQuestions();
+        }
+        async function deleteGeneratedQuestion(id) {
+            if(!confirm("해당 출제본을 삭제하시겠습니까?")) return;
+            showLoader("삭제 중...");
+            try {
+                await fetch(`${API_URL}/api/admin/questions/${id}`,{method:'DELETE'});
+                if (CURRENT_QUESTION_ID === id) setQuestionEditState('', '');
+                loadGeneratedQuestions();
+            } catch(e){}
+            hideLoader();
+        }
 
         function deployFromGenerator() { const t = document.getElementById('gen-title').value.trim(); const c = document.getElementById('gen-result-text').value.trim(); if(!t) return alert("제목을 먼저 입력하세요."); switchAdminTab('admin-exam'); document.getElementById('rt-title').value = t; document.getElementById('rt-exp').value = c; if(adminExamSections.length === 0) { addAdminSection('모의고사', 45); } alert("제목과 해설지가 방 개설 페이지로 완벽하게 복사되었습니다.\n이제 학생용 PDF만 첨부하고 [오픈하기]를 누르시면 됩니다!"); }
 
@@ -5169,6 +5245,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     r.scrollTop = r.scrollHeight;
                 }
                 r.classList.remove('animate-pulse');
+
+                // 💡 출제가 끝나면 알아서 보관함에 넣는다. 저장을 깜빡해 날리는 일이 없도록.
+                //    새 출제이므로 기존 편집 상태는 끊고 새 출제본으로 만든다.
+                const body = r.value.trim();
+                if (body && !body.startsWith('❌')) {
+                    CURRENT_QUESTION_ID = '';
+                    const saved = await saveGeneratedQuestion(true);
+                    if (saved) showToast("출제본을 보관함에 자동으로 저장했습니다.");
+                }
             } catch(e) {
                 r.classList.remove('animate-pulse');
                 r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`;
@@ -5376,12 +5461,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const res = await fetch(`${API_URL}/api/admin/quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions })
+                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE })
                 });
                 const data = await res.json();
                 if(data.success) {
-                    alert("퀴즈가 성공적으로 배포되었습니다!");
+                    alert(EDITING_QUIZ_TITLE ? "수정한 내용을 저장했습니다." : "퀴즈가 성공적으로 배포되었습니다!");
+                    EDITING_QUIZ_TITLE = '';
+                    updateQuizEditState();
                     document.getElementById('qz-title').value = ''; document.getElementById('qz-questions-board').innerHTML = '';
+                    const prevBox = document.getElementById('qz-capture-preview');
+                    if (prevBox) prevBox.innerHTML = '';
                     loadAdminQuizzes();
                 } else { alert("오류: " + data.detail); }
             } catch(e) { alert("서버 통신 오류: " + e.message); }
@@ -5393,14 +5482,77 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const res = await fetch(`${API_URL}/api/quizzes`); const data = await res.json();
                 const c = document.getElementById('admin-quiz-list'); c.innerHTML = '';
                 if(data.success) {
-                    data.quizzes.forEach(q => {
-                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded mb-2 border border-gray-700 flex justify-between items-center"><div><div class="font-bold text-orange-400 mb-1">${escapeHtml(q.title)}</div><div class="text-xs text-gray-400">마감: ${escapeHtml(q.deadline)}</div></div><button onclick="deleteQuiz('${escAttr(q.title)}')" class="text-red-400 text-xs bg-red-900/30 px-3 py-2 rounded hover:text-white transition">삭제</button></div>`;
+                    adminQuizData = data.quizzes;
+                    data.quizzes.forEach((q, i) => {
+                        const on = EDITING_QUIZ_TITLE === q.title;
+                        c.innerHTML += `<div class="bg-gray-800 p-4 rounded mb-2 border ${on ? 'border-orange-500' : 'border-gray-700'} flex justify-between items-center gap-2">
+                            <div class="min-w-0">
+                                <div class="font-bold text-orange-400 mb-1 truncate">${escapeHtml(q.title)}${on ? ' <span class="text-[10px] text-orange-300">· 편집 중</span>' : ''}</div>
+                                <div class="text-xs text-gray-400">마감 ${escapeHtml(q.deadline || '')} · ${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
+                            </div>
+                            <div class="shrink-0 flex gap-1">
+                                <button onclick="editQuiz(${i})" class="text-orange-300 text-xs bg-orange-900/30 hover:bg-orange-900/60 px-3 py-2 rounded transition font-bold">수정</button>
+                                <button onclick="deleteQuiz('${escAttr(q.title)}')" class="text-red-400 text-xs bg-red-900/30 px-3 py-2 rounded hover:text-white transition">삭제</button>
+                            </div>
+                        </div>`;
                     });
                 }
             } catch(e){}
         }
 
-        async function deleteQuiz(title) { if(confirm("삭제?")) { showLoader(); await fetch(`${API_URL}/api/admin/quiz/${encodeURIComponent(title)}`, {method: 'DELETE'}); loadAdminQuizzes(); hideLoader(); } }
+        let adminQuizData = [];
+        let EDITING_QUIZ_TITLE = '';      // 고치는 중인 퀴즈의 원래 제목
+
+        // 등록된 퀴즈를 출제 폼으로 불러온다
+        function editQuiz(i) {
+            const q = adminQuizData[i];
+            if (!q) return;
+            EDITING_QUIZ_TITLE = q.title;
+            document.getElementById('qz-title').value = q.title || '';
+            document.getElementById('qz-deadline').value = (q.deadline || '').slice(0, 16);
+            document.getElementById('qz-limit').value = q.time_limit || '';
+            const board = document.getElementById('qz-questions-board');
+            board.innerHTML = '';
+            (q.questions || []).forEach(x => fillQuizQuestion({
+                q_text: x.q_text, bogi: x.bogi, options: x.options,
+                answer: x.answer, score: x.score, image: x.image
+            }));
+            document.getElementById('qz-capture-preview').innerHTML = '';
+            updateQuizEditState();
+            loadAdminQuizzes();
+            document.getElementById('qz-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast(`'${q.title}' 퀴즈를 불러왔습니다. 고친 뒤 저장하세요.`);
+        }
+
+        function updateQuizEditState() {
+            const badge = document.getElementById('qz-edit-badge');
+            const btn = document.querySelector('button[onclick="createQuiz()"]');
+            if (badge) {
+                badge.innerHTML = EDITING_QUIZ_TITLE
+                    ? `<span class="text-orange-300"><i class="fa-solid fa-pen mr-1"></i>'${escapeHtml(EDITING_QUIZ_TITLE)}' 을(를) 고치는 중</span>
+                       <button onclick="newQuizDraft()" class="ml-2 text-gray-400 hover:text-white underline">새 퀴즈로</button>`
+                    : '';
+            }
+            if (btn) btn.innerHTML = EDITING_QUIZ_TITLE ? '수정한 내용 저장하기' : '퀴즈 오픈(배포)하기';
+        }
+
+        function newQuizDraft() {
+            EDITING_QUIZ_TITLE = '';
+            document.getElementById('qz-title').value = '';
+            document.getElementById('qz-questions-board').innerHTML = '';
+            document.getElementById('qz-capture-preview').innerHTML = '';
+            updateQuizEditState();
+            loadAdminQuizzes();
+        }
+
+        async function deleteQuiz(title) {
+            if(!confirm(`'${title}' 퀴즈를 삭제할까요?`)) return;
+            showLoader("삭제 중...");
+            await fetch(`${API_URL}/api/admin/quiz/${encodeURIComponent(title)}`, {method: 'DELETE'});
+            if (EDITING_QUIZ_TITLE === title) { EDITING_QUIZ_TITLE = ''; updateQuizEditState(); }
+            loadAdminQuizzes();
+            hideLoader();
+        }
 
         async function loadStudentQuizzes() {
             try {
