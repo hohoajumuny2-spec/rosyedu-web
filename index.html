@@ -176,8 +176,11 @@
                         <input type="text" id="cut-name" placeholder="예: 2026년 9월 평가원" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
                     <div><label class="text-[11px] text-gray-400 mb-1 block">시행월 (성적표의 '시행'과 똑같이)</label>
                         <input type="text" id="cut-date" placeholder="예: 2026-09" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
-                    <div class="flex items-end">
-                        <button onclick="addCutSubjectRow()" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded text-white font-bold text-xs transition">+ 과목 추가</button>
+                    <div>
+                        <label class="text-[11px] text-gray-400 mb-1 block">과목 추가</label>
+                        <select id="cut-subject-pick" onchange="addPickedCutSubject(this)" class="w-full p-2 bg-gray-800 text-white rounded text-sm">
+                            <option value="">— 골라서 추가 —</option>
+                        </select>
                     </div>
                 </div>
                 <input type="hidden" id="cut-id">
@@ -2067,7 +2070,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             ['parent_relation','학부모 관계',  'text', '예: 어머니',              1],
             ['birth',         '생년월일',      'text', '예: 2009-03-15',          1],
             ['enrolled_at',   '학원 등록일',   'date', '',                        1],
-            ['track',         '계열',          'text', '예: 인문 / 자연 / 미정',  1],
+            ['track',         '계열',          'track', '',                       1],
             ['target_univ',   '희망 대학',     'text', '예: 서울대 · 연세대',     1],
             ['target_major',  '희망 학과',     'text', '예: 국어국문학과',        1],
             ['prev_academy',  '이전 학습 이력','text', '예: ○○학원 2년, 인강 위주', 2],
@@ -2084,9 +2087,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
             const field = ([key, label, type, ph, span]) => {
                 const v = escAttr(p[key] || '');
-                const input = type === 'area'
-                    ? `<textarea id="pf-${key}" rows="3" placeholder="${ph}" class="w-full p-2 bg-gray-800 text-white rounded text-sm resize-y">${escapeHtml(p[key] || '')}</textarea>`
-                    : `<input type="${type}" id="pf-${key}" value="${v}" placeholder="${ph}" class="w-full p-2 bg-gray-800 text-white rounded text-sm">`;
+                let input;
+                if (type === 'area') {
+                    input = `<textarea id="pf-${key}" rows="3" placeholder="${ph}" class="w-full p-2 bg-gray-800 text-white rounded text-sm resize-y">${escapeHtml(p[key] || '')}</textarea>`;
+                } else if (type === 'track') {
+                    const cur = p[key] || '';
+                    const opts = TRACK_OPTIONS.map(t => `<option value="${escAttr(t)}" ${cur === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('');
+                    input = `<select id="pf-${key}" class="w-full p-2 bg-gray-800 text-white rounded text-sm">${opts}
+                        ${cur && !TRACK_OPTIONS.includes(cur) ? `<option value="${escAttr(cur)}" selected>${escapeHtml(cur)}</option>` : ''}</select>`;
+                } else {
+                    input = `<input type="${type}" id="pf-${key}" value="${v}" placeholder="${ph}" class="w-full p-2 bg-gray-800 text-white rounded text-sm">`;
+                }
                 return `<div class="${span === 2 ? 'md:col-span-2' : ''}">
                     <label class="text-[11px] text-gray-400 mb-1 block">${label}</label>${input}</div>`;
             };
@@ -2104,11 +2115,61 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${PROFILE_FIELDS.map(field).join('')}</div>
                     <button onclick="saveCounselProfile()" class="mt-4 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-floppy-disk mr-1"></i>학생 정보 저장</button>
+                </div>
+
+                <!-- 📝 상담 메모 — 여기 적은 내용은 종합 소견서에 반영된다 -->
+                <div class="bg-[#1e2430] border border-yellow-700/50 rounded-lg p-4">
+                    <h4 class="text-white font-bold text-sm mb-1"><i class="fa-solid fa-pen-to-square mr-1 text-yellow-400"></i>상담 메모</h4>
+                    <p class="text-[11px] text-gray-500 mb-3">상담하며 보고 들은 것을 적어두세요. <b class="text-yellow-500">종합 소견서를 쓸 때 AI가 이 메모를 가장 먼저 반영합니다.</b></p>
+                    <textarea id="memo-text" rows="3" placeholder="예: 어머니 상담 — 야자 때문에 화요일 지각 잦음. 본인은 국어에 자신 없어 하지만 문학 감상은 또래보다 낫다." class="w-full p-2 bg-gray-800 text-white rounded text-sm resize-y mb-2"></textarea>
+                    <button onclick="addCounselMemo()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white font-bold text-sm transition">메모 남기기</button>
+                    <div id="memo-list" class="mt-3 space-y-1 max-h-80 overflow-y-auto"></div>
                 </div>`;
+
+            renderMemos();
 
             refreshClassSelects();
             const sel = document.getElementById('pf-class');
             if (sel) { sel.value = stu.class_name || ''; if (sel.value !== (stu.class_name || '')) sel.value = ''; }
+        }
+
+        function renderMemos() {
+            const box = document.getElementById('memo-list');
+            if (!box) return;
+            const memos = (COUNSEL_DATA && COUNSEL_DATA.memos) || [];
+            box.innerHTML = memos.length
+                ? memos.map(m => `<div class="bg-[#151922] border border-gray-700 rounded p-3">
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="text-[10px] text-yellow-500 font-bold shrink-0">${escapeHtml(m.at || '')}</span>
+                            <button onclick="deleteCounselMemo('${escAttr(m.id)}')" class="text-red-500 hover:text-red-400 text-[10px] shrink-0">삭제</button>
+                        </div>
+                        <p class="text-sm text-gray-300 mt-1 whitespace-pre-wrap leading-relaxed">${escapeHtml(m.text || '')}</p>
+                    </div>`).join('')
+                : '<p class="text-gray-600 text-xs text-center py-3">아직 남긴 메모가 없습니다.</p>';
+        }
+
+        async function addCounselMemo() {
+            if (!COUNSEL_TARGET) return;
+            const el = document.getElementById('memo-text');
+            const text = el.value.trim();
+            if (!text) return alert("메모 내용을 입력해주세요.");
+            showLoader("메모 저장 중...");
+            const r = await adminPost('/api/admin/counsel/memo', { student_name: COUNSEL_TARGET, text: text });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            el.value = '';
+            COUNSEL_DATA = r.data.counsel;
+            renderMemos();
+        }
+
+        async function deleteCounselMemo(id) {
+            if (!confirm("이 메모를 지울까요?")) return;
+            showLoader("삭제 중...");
+            const r = await adminPost('/api/admin/counsel/memo/delete', { student_name: COUNSEL_TARGET, memo_id: id });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            renderMemos();
         }
 
         function collectProfile() {
@@ -2177,7 +2238,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 track: { verdict: '판단 보류', gap: null, susi_weight: 50, jeongsi_weight: 50, reason: '성적을 입력하면 계산됩니다.' },
                 tiers: { susi: null, jeongsi: null }, table_note: '',
                 tendency: null, record_text: '', record_eval: '', record_eval_at: '',
-                analysis: null, summary: null, logs: [], log_avg: null, updated_at: ''
+                analysis: null, summary: null, logs: [], log_avg: null, memos: [], updated_at: ''
             };
         }
 
@@ -2604,7 +2665,37 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         //   회차별 컷을 넣어두면 원점수만 입력해도 등급이 채워진다.
         let GRADE_CUT_SETS = [];
         let ABS_DEFAULT_CUTS = [90, 80, 70, 60, 50, 40, 30, 20];
-        const DEFAULT_CUT_SUBJECTS = ['국어', '수학', '영어', '한국사', '탐구1', '탐구2'];
+        // 2028 대입 개편으로 탐구가 통합사회·통합과학으로 바뀌므로 그 둘을 기본에 넣고,
+        // 현행 선택과목은 '과목 추가'에서 골라 넣는다 (재수생·기존 학년 대비).
+        const DEFAULT_CUT_SUBJECTS = ['국어', '수학', '영어', '한국사', '통합사회', '통합과학'];
+        let EXAM_SUBJECT_GROUPS = {
+            '공통': ['국어', '수학', '영어', '한국사'],
+            '사회탐구': ['통합사회', '생활과 윤리', '윤리와 사상', '한국지리', '세계지리',
+                       '동아시아사', '세계사', '경제', '정치와 법', '사회·문화'],
+            '과학탐구': ['통합과학', '물리학I', '물리학II', '화학I', '화학II',
+                       '생명과학I', '생명과학II', '지구과학I', '지구과학II'],
+            '기타': ['제2외국어/한문', '직업탐구'],
+        };
+        let TRACK_OPTIONS = ['미정', '인문', '자연', '예체능'];
+
+        function renderCutSubjectPicker() {
+            const sel = document.getElementById('cut-subject-pick');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">— 골라서 추가 —</option>' +
+                Object.entries(EXAM_SUBJECT_GROUPS).map(([g, list]) =>
+                    `<optgroup label="${escAttr(g)}">${list.map(s => `<option value="${escAttr(s)}">${escapeHtml(s)}</option>`).join('')}</optgroup>`
+                ).join('') + '<optgroup label="직접"><option value="__custom__">직접 입력…</option></optgroup>';
+        }
+
+        function addPickedCutSubject(sel) {
+            const v = sel.value;
+            sel.value = '';
+            if (!v) return;
+            if (v === '__custom__') { addCutSubjectRow('', []); return; }
+            const already = Array.from(document.querySelectorAll('#cut-rows [data-cut="subject"]')).some(i => i.value.trim() === v);
+            if (already) return alert(`'${v}'는 이미 들어가 있습니다.`);
+            addCutSubjectRow(v, isAbsoluteSubject(v) ? ABS_DEFAULT_CUTS : []);
+        }
 
         async function openGradeCuts() {
             showLoader("등급컷 불러오는 중...");
@@ -2613,6 +2704,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!r.ok) return alert(r.message);
             GRADE_CUT_SETS = r.data.sets || [];
             ABS_DEFAULT_CUTS = r.data.absolute_default || ABS_DEFAULT_CUTS;
+            const sj = await adminGet('/api/admin/exam_subjects');
+            if (sj.ok) {
+                EXAM_SUBJECT_GROUPS = sj.data.groups || EXAM_SUBJECT_GROUPS;
+                TRACK_OPTIONS = sj.data.tracks || TRACK_OPTIONS;
+            }
+            renderCutSubjectPicker();
             resetCutForm();
             renderCutList();
             showModal('cuts');
