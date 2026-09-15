@@ -5120,12 +5120,72 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <input type="text" placeholder="④ 보기 4" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
                     <input type="text" placeholder="⑤ 보기 5" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 mb-2">
                     <input type="number" placeholder="정답 (1~5)" min="1" max="5" class="w-1/2 p-2 bg-gray-800 text-orange-400 font-bold rounded quiz-q-ans outline-none">
                     <input type="number" placeholder="배점" value="2" class="w-1/2 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score outline-none">
                 </div>
+                <div class="border-t border-gray-700 pt-2">
+                    <input type="hidden" class="quiz-q-img">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="pickQuizImage(this)" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-image mr-1"></i>그림 붙이기</button>
+                        <span class="text-[10px] text-gray-500">지문·도표 캡처를 넣을 수 있습니다. 이 칸을 누른 뒤 <b class="text-gray-400">Ctrl+V</b>도 됩니다.</span>
+                    </div>
+                    <div class="quiz-q-img-preview mt-2"></div>
+                </div>
             `;
             container.appendChild(div);
+            // 문항 칸 안에서 붙여넣으면 그 문항의 그림이 된다
+            div.addEventListener('paste', (e) => {
+                const items = Array.from((e.clipboardData || {}).items || []);
+                const f = items.filter(it => it.type && it.type.startsWith('image/')).map(it => it.getAsFile()).filter(Boolean)[0];
+                if (!f) return;
+                e.preventDefault();
+                e.stopPropagation();
+                uploadQuizImage(div, f);
+            });
+        }
+
+        // ── 문항 그림 ────────────────────────────────
+        function pickQuizImage(btn) {
+            const item = btn.closest('.quiz-q-item');
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*';
+            inp.onchange = () => { if (inp.files[0]) uploadQuizImage(item, inp.files[0]); };
+            inp.click();
+        }
+
+        async function uploadQuizImage(item, file) {
+            if (!file.type || !file.type.startsWith('image/')) return alert("그림 파일만 붙일 수 있습니다.");
+            showLoader("그림 올리는 중...");
+            const fd = new FormData();
+            fd.append("file", file, file.name || 'capture.png');
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/quiz/image`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("그림을 올리지 못했습니다."); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "그림을 올리지 못했습니다.");
+            item.querySelector('.quiz-q-img').value = data.url;
+            renderQuizImagePreview(item);
+        }
+
+        function renderQuizImagePreview(item) {
+            const url = item.querySelector('.quiz-q-img').value;
+            const box = item.querySelector('.quiz-q-img-preview');
+            box.innerHTML = url
+                ? `<div class="relative inline-block">
+                       <img src="${API_URL}${encodeURI(url)}" class="max-h-40 rounded border border-gray-600" alt="문항 그림">
+                       <button type="button" onclick="removeQuizImage(this)" class="absolute top-1 right-1 bg-red-600 hover:bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold transition" title="그림 빼기">✕</button>
+                   </div>`
+                : '';
+        }
+
+        function removeQuizImage(btn) {
+            const item = btn.closest('.quiz-q-item');
+            item.querySelector('.quiz-q-img').value = '';
+            renderQuizImagePreview(item);
         }
 
         // ─────────────────────────────────────────────
@@ -5161,6 +5221,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 ansEl.placeholder = '정답 직접 입력';
             }
             scoreEl.value = q.score || 2;
+            const imgEl = item.querySelector('.quiz-q-img');
+            if (imgEl) { imgEl.value = q.image || ''; renderQuizImagePreview(item); }
         }
 
         async function handleQuizCapture(files) {
@@ -5229,8 +5291,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
                 const ans = parseInt(item.querySelector('.quiz-q-ans').value);
                 const score = parseInt(item.querySelector('.quiz-q-score').value);
+                const img = (item.querySelector('.quiz-q-img') || {}).value || '';
                 if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
-                questions.push({ q_text: text, options: opts, answer: ans, score: score });
+                questions.push({ q_text: text, options: opts, answer: ans, score: score, image: img });
             }
 
             showLoader("퀴즈 배포 중...");
@@ -5293,7 +5356,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     if(!opt) return;
                     optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeHtml(opt)}</span></label>`;
                 });
-                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div><div>${optsHtml}</div></div>`;
+                const imgHtml = q.image
+                    ? `<div class="mb-4"><img src="${API_URL}${encodeURI(q.image)}" class="max-w-full rounded-lg border border-gray-600" alt="문항 그림"></div>`
+                    : '';
+                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = currentActiveQuiz.time_limit * 60; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
@@ -5344,6 +5410,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${d.ok ? 'bg-emerald-600' : 'bg-red-600'} text-white">${d.ok ? 'O' : 'X'}</span>
                             <p class="text-white text-sm font-bold leading-relaxed">${d.no}. ${escapeHtml(d.q_text || '')}</p>
                         </div>
+                        ${d.image ? `<div class="pl-8 mb-2"><img src="${API_URL}${encodeURI(d.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : ''}
                         <div class="pl-8 space-y-1 text-sm">
                             <div class="${d.ok ? 'text-emerald-300' : 'text-red-300'}">
                                 <span class="text-gray-500 text-xs mr-1">내 답</span>
