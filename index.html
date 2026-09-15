@@ -160,6 +160,47 @@
         </div>
     </div>
 
+    <!-- ✂ 시험별 등급컷 -->
+    <div id="cuts-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl border border-yellow-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-scissors mr-2 text-yellow-400"></i>시험별 등급컷</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">모의고사는 회차마다 난이도가 달라 같은 원점수라도 등급이 다릅니다. 회차별로 컷을 넣어두면 원점수만 입력해도 등급이 채워집니다.</p>
+                </div>
+                <button onclick="closeModal('cuts-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div><label class="text-[11px] text-gray-400 mb-1 block">시험 이름</label>
+                        <input type="text" id="cut-name" placeholder="예: 2026년 9월 평가원" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
+                    <div><label class="text-[11px] text-gray-400 mb-1 block">시행월 (성적표의 '시행'과 똑같이)</label>
+                        <input type="text" id="cut-date" placeholder="예: 2026-09" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
+                    <div class="flex items-end">
+                        <button onclick="addCutSubjectRow()" class="w-full bg-gray-700 hover:bg-gray-600 py-2 rounded text-white font-bold text-xs transition">+ 과목 추가</button>
+                    </div>
+                </div>
+                <input type="hidden" id="cut-id">
+                <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
+                    <span class="col-span-2">과목</span>
+                    <span class="col-span-1 text-center">1등급</span><span class="col-span-1 text-center">2등급</span>
+                    <span class="col-span-1 text-center">3등급</span><span class="col-span-1 text-center">4등급</span>
+                    <span class="col-span-1 text-center">5등급</span><span class="col-span-1 text-center">6등급</span>
+                    <span class="col-span-1 text-center">7등급</span><span class="col-span-1 text-center">8등급</span>
+                    <span class="col-span-2"></span>
+                </div>
+                <div id="cut-rows" class="space-y-1 mb-2"></div>
+                <p class="text-[10px] text-gray-600 mb-3">각 칸에는 <b class="text-gray-400">그 등급을 받는 최저 원점수</b>를 넣으세요. 예: 1등급 85 → 85점 이상이면 1등급. 영어·한국사는 비워두면 90/80/70…을 씁니다.</p>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="saveGradeCuts()" class="bg-yellow-600 hover:bg-yellow-700 px-5 py-2 rounded text-white font-bold text-sm transition">이 회차 등급컷 저장</button>
+                    <button onclick="resetCutForm()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white font-bold text-sm transition">새로 만들기</button>
+                </div>
+                <h3 class="text-white font-bold text-sm mb-2 border-t border-gray-700 pt-4">저장된 회차</h3>
+                <div id="cut-list" class="space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- 📊 입결 자료 (엑셀) -->
     <div id="univ-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl border border-indigo-500 flex flex-col">
@@ -190,6 +231,13 @@
                             <div>
                                 <label class="text-[11px] text-gray-400 mb-1 block">제목(열 이름) 줄</label>
                                 <select id="univ-hrow" onchange="reloadUnivPreview()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600"></select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-indigo-300 font-bold mb-1 block">이 자료는 수시인가요, 정시인가요? *</label>
+                                <select id="univ-kind" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-indigo-600">
+                                    <option value="susi">수시 — 내신 등급과 견줍니다</option>
+                                    <option value="jeongsi">정시 — 수능 백분위·원점수와 견줍니다</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="text-[11px] text-gray-400 mb-1 block">제목이 두 줄로 나뉘어 있나요?</label>
@@ -821,12 +869,15 @@
                                         <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
                                             <div class="flex justify-between items-center mb-2">
                                                 <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-chart-line mr-1 text-yellow-400"></i>모의고사 성적</h4>
-                                                <button onclick="addMockRow()" class="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
+                                                <div class="flex items-center gap-1">
+                                                    <button onclick="openGradeCuts()" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-[11px] text-white font-bold transition" title="시험 회차마다 원점수 등급컷을 정합니다"><i class="fa-solid fa-scissors mr-1"></i>등급컷</button>
+                                                    <button onclick="addMockRow()" class="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
+                                                </div>
                                             </div>
                                             <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                                                <span class="col-span-3">시행(예 2026-06)</span><span class="col-span-3">과목</span><span class="col-span-2">등급</span><span class="col-span-3">백분위</span><span class="col-span-1"></span>
+                                                <span class="col-span-3">시행(예 2026-06)</span><span class="col-span-3">과목</span><span class="col-span-2">원점수</span><span class="col-span-2">등급</span><span class="col-span-2">백분위</span>
                                             </div>
-                                            <p class="text-[10px] text-gray-600 px-1 mb-1">영어·한국사는 절대평가라 백분위 칸이 잠깁니다. 등급만 넣으시면 됩니다.</p>
+                                            <p class="text-[10px] text-gray-600 px-1 mb-1">원점수를 넣으면 그 회차 등급컷으로 등급이 자동으로 채워집니다. 영어·한국사는 절대평가라 백분위 칸이 잠깁니다.</p>
                                             <div class="hidden">
                                             </div>
                                             <div id="mock-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
@@ -2187,10 +2238,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     ${gradeChip('국·수·탐 평균' + (c.mock.latest ? ` (${c.mock.latest})` : ''), c.mock.avg, '등급', 'text-yellow-400')}
                     ${gradeChip('국·수·탐 평균 백분위', c.mock.pct_avg, '', 'text-yellow-300')}
                 </div>
-                ${c.mock.abs_text ? `<div class="bg-[#1e2430] border border-gray-700 rounded-lg px-3 py-2 mb-3 text-xs">
-                    <span class="text-gray-500">절대평가</span>
-                    <b class="text-yellow-300 ml-2">${escapeHtml(c.mock.abs_text)}</b>
-                    <span class="text-gray-600 ml-2">백분위가 없어 위 평균에는 넣지 않았습니다</span>
+                ${(c.mock.abs_text || c.mock.raw_text) ? `<div class="bg-[#1e2430] border border-gray-700 rounded-lg px-3 py-2 mb-3 text-xs space-y-1">
+                    ${c.mock.raw_text ? `<div><span class="text-gray-500">원점수</span><b class="text-yellow-300 ml-2">${escapeHtml(c.mock.raw_text)}</b></div>` : ''}
+                    ${c.mock.abs_text ? `<div><span class="text-gray-500">절대평가</span><b class="text-yellow-300 ml-2">${escapeHtml(c.mock.abs_text)}</b>
+                        <span class="text-gray-600 ml-2">백분위가 없어 평균에는 넣지 않았습니다</span></div>` : ''}
                 </div>` : ''}
                 <div class="bg-[#1e2430] border border-pink-700/50 rounded-lg p-4 mb-3">
                     <div class="flex flex-wrap items-center gap-2 mb-2">
@@ -2212,7 +2263,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         const NAESIN_FIELDS = [['term', '학기', 3, 'text', '1-1'], ['subject', '과목', 3, 'text', '문학'], ['unit', '단위', 2, 'number', '4'], ['grade', '등급', 2, 'number', '2']];
-        const MOCK_FIELDS = [['date', '시행', 3, 'text', '2026-06'], ['subject', '과목', 3, 'text', '국어'], ['grade', '등급', 2, 'number', '2'], ['percentile', '백분위', 3, 'number', '88']];
+        const MOCK_FIELDS = [['date', '시행', 3, 'text', '2026-06'], ['subject', '과목', 3, 'text', '국어'], ['raw', '원점수', 2, 'number', '82'], ['grade', '등급', 2, 'number', '2'], ['percentile', '백분위', 2, 'number', '88']];
 
         // 영어·한국사 등은 절대평가라 백분위가 없다. 상대평가 과목과 섞으면
         // 정시 판단이 어긋나므로 입력 단계에서부터 갈라 놓는다.
@@ -2548,6 +2599,109 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
         }
 
+        // ── 시험별 등급컷 ────────────────────────────
+        //   모의고사는 회차마다 난이도가 달라 같은 원점수라도 등급이 다르다.
+        //   회차별 컷을 넣어두면 원점수만 입력해도 등급이 채워진다.
+        let GRADE_CUT_SETS = [];
+        let ABS_DEFAULT_CUTS = [90, 80, 70, 60, 50, 40, 30, 20];
+        const DEFAULT_CUT_SUBJECTS = ['국어', '수학', '영어', '한국사', '탐구1', '탐구2'];
+
+        async function openGradeCuts() {
+            showLoader("등급컷 불러오는 중...");
+            const r = await adminGet('/api/admin/grade_cuts');
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            GRADE_CUT_SETS = r.data.sets || [];
+            ABS_DEFAULT_CUTS = r.data.absolute_default || ABS_DEFAULT_CUTS;
+            resetCutForm();
+            renderCutList();
+            showModal('cuts');
+        }
+
+        function cutRowHtml(subject, cuts) {
+            const v = i => (cuts && cuts[i] !== undefined && cuts[i] !== null) ? cuts[i] : '';
+            return `<div class="grid grid-cols-12 gap-1" data-cutrow="1">
+                <input type="text" data-cut="subject" value="${escAttr(subject || '')}" placeholder="과목" class="col-span-2 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                ${[0,1,2,3,4,5,6,7].map(i => `<input type="number" step="0.1" data-cut="${i}" value="${escAttr(String(v(i)))}" class="col-span-1 p-1.5 bg-gray-800 text-white rounded text-xs text-center min-w-0">`).join('')}
+                <button onclick="this.parentElement.remove()" class="col-span-2 text-red-400 hover:text-red-300 text-xs">삭제</button>
+            </div>`;
+        }
+
+        function addCutSubjectRow(subject, cuts) {
+            document.getElementById('cut-rows').insertAdjacentHTML('beforeend', cutRowHtml(subject, cuts));
+        }
+
+        function resetCutForm() {
+            document.getElementById('cut-id').value = '';
+            document.getElementById('cut-name').value = '';
+            document.getElementById('cut-date').value = '';
+            document.getElementById('cut-rows').innerHTML = '';
+            DEFAULT_CUT_SUBJECTS.forEach(s => addCutSubjectRow(s, isAbsoluteSubject(s) ? ABS_DEFAULT_CUTS : []));
+        }
+
+        function editCutSet(id) {
+            const s = GRADE_CUT_SETS.find(x => x.id === id);
+            if (!s) return;
+            document.getElementById('cut-id').value = s.id;
+            document.getElementById('cut-name').value = s.name || '';
+            document.getElementById('cut-date').value = s.date || '';
+            document.getElementById('cut-rows').innerHTML = '';
+            (s.subjects || []).forEach(x => addCutSubjectRow(x.subject, x.cuts));
+            document.getElementById('cut-name').focus();
+        }
+
+        function renderCutList() {
+            const box = document.getElementById('cut-list');
+            if (!GRADE_CUT_SETS.length) {
+                box.innerHTML = '<p class="text-gray-600 text-xs text-center py-4">아직 저장한 회차가 없습니다.</p>';
+                return;
+            }
+            box.innerHTML = GRADE_CUT_SETS.map(s => `
+                <div class="flex justify-between items-center bg-[#151922] border border-gray-700 rounded px-3 py-2">
+                    <div class="min-w-0">
+                        <div class="text-white text-sm font-bold truncate">${escapeHtml(s.name)} <span class="text-yellow-400 font-normal">${escapeHtml(s.date)}</span></div>
+                        <div class="text-[10px] text-gray-500">${(s.subjects || []).map(x => escapeHtml(x.subject)).join(' · ')}</div>
+                    </div>
+                    <div class="shrink-0 flex gap-1">
+                        <button onclick="editCutSet('${escAttr(s.id)}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">수정</button>
+                        <button onclick="deleteCutSet('${escAttr(s.id)}')" class="bg-red-700 hover:bg-red-600 px-2 py-1 rounded text-[11px] text-white font-bold transition">삭제</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function saveGradeCuts() {
+            const name = document.getElementById('cut-name').value.trim();
+            const date = document.getElementById('cut-date').value.trim();
+            if (!name || !date) return alert("시험 이름과 시행월을 모두 입력해주세요.\n시행월은 성적 표의 '시행' 칸과 똑같이 적어야 이어집니다. (예: 2026-09)");
+            const subjects = Array.from(document.querySelectorAll('#cut-rows [data-cutrow]')).map(row => {
+                const subj = row.querySelector('[data-cut="subject"]').value.trim();
+                const cuts = [0,1,2,3,4,5,6,7].map(i => row.querySelector(`[data-cut="${i}"]`).value.trim()).filter(v => v !== '');
+                return { subject: subj, cuts: cuts };
+            }).filter(s => s.subject && s.cuts.length);
+            if (!subjects.length) return alert("과목과 등급컷을 하나 이상 넣어주세요.");
+
+            showLoader("등급컷 저장 중...");
+            const r = await adminPost('/api/admin/grade_cuts', {
+                id: document.getElementById('cut-id').value, name: name, date: date, subjects: subjects
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            GRADE_CUT_SETS = r.data.sets || [];
+            renderCutList();
+            resetCutForm();
+            alert(`'${name}' 등급컷을 저장했습니다.\n이제 시행 '${date}' 성적에 원점수만 넣으면 등급이 채워집니다.`);
+        }
+
+        async function deleteCutSet(id) {
+            if (!confirm("이 회차의 등급컷을 지울까요?")) return;
+            showLoader("삭제 중...");
+            const r = await adminPost('/api/admin/grade_cuts/delete', { id: id });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            GRADE_CUT_SETS = r.data.sets || [];
+            renderCutList();
+        }
+
         // ── 입결 자료 (엑셀) ─────────────────────────
         //   원장님이 쓰시던 엑셀을 그대로 올린다. 파일마다 열 구성이 달라서,
         //   열 이름을 먼저 보여주고 무엇이 무엇인지 짝지어 받은 뒤 저장한다.
@@ -2709,6 +2863,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("header_row", document.getElementById('univ-hrow').value);
             fd.append("header_span", document.getElementById('univ-hspan').value);
             fd.append("append", document.getElementById('univ-append').checked ? "true" : "false");
+            fd.append("kind", document.getElementById('univ-kind').value);
             let data;
             try {
                 const res = await uploadFormData(`${API_URL}/api/admin/univ_table/import`, fd);
@@ -2743,31 +2898,48 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3 mb-3 text-xs text-gray-500">
                     <i class="fa-solid fa-bullseye mr-1"></i>${escapeHtml(g.message || '목표 대학 정보가 없습니다.')}</div>`;
             }
-            const c = g.closest;
-            let head = '';
-            if (c && c.gap !== null && c.gap !== undefined) {
-                head = c.reach
-                    ? `<span class="text-emerald-400 font-bold">이미 기준을 넘었습니다</span>
-                       <span class="text-gray-400 ml-2">기준 ${c.cut}${c.unit} · 현재 ${c.mine}${c.unit}</span>`
-                    : `<span class="text-yellow-400 font-bold">${Math.abs(c.gap)}${c.unit} 더 필요합니다</span>
-                       <span class="text-gray-400 ml-2">기준 ${c.cut}${c.unit} · 현재 ${c.mine}${c.unit}</span>`;
-            } else {
-                head = '<span class="text-gray-500">성적을 입력하면 목표까지의 거리를 계산합니다</span>';
-            }
+
+            const section = (blk, title, tone) => {
+                if (!blk || !blk.count) {
+                    return `<div class="bg-[#151922] border border-gray-700 rounded-lg p-3">
+                        <div class="text-[11px] text-gray-500 mb-1">${title}</div>
+                        <div class="text-gray-600 text-xs">이 대학의 ${title} 자료가 없습니다</div></div>`;
+                }
+                const c = blk.closest;
+                let head;
+                if (!c || c.gap === null || c.gap === undefined) {
+                    head = '<span class="text-gray-500 text-xs">성적을 입력하면 계산됩니다</span>';
+                } else if (c.reach) {
+                    head = `<span class="text-emerald-400 font-bold text-sm">이미 기준을 넘었습니다</span>
+                            <div class="text-[11px] text-gray-400 mt-0.5">기준 ${c.cut}${c.unit} · 현재 ${c.mine}${c.unit}</div>`;
+                } else {
+                    head = `<span class="text-yellow-400 font-bold text-sm">${Math.abs(c.gap)}${c.unit} 더 필요합니다</span>
+                            <div class="text-[11px] text-gray-400 mt-0.5">기준 ${c.cut}${c.unit} · 현재 ${c.mine}${c.unit}</div>`;
+                }
+                return `<div class="bg-[#151922] border ${tone} rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[11px] text-gray-400 font-bold">${title}</span>
+                        <span class="text-[10px] text-gray-500">${blk.total}건 중 <b class="text-emerald-400">${blk.reachable}건</b> 도달</span>
+                    </div>
+                    ${head}
+                    <div class="space-y-1 max-h-32 overflow-y-auto mt-2">
+                        ${blk.items.filter(i => i.gap !== null && i.gap !== undefined).map(i => `
+                            <div class="flex justify-between items-center bg-[#1e2430] rounded px-2 py-1 text-[11px]">
+                                <span class="text-gray-300 truncate">${escapeHtml(i.major || i.univ)}
+                                    ${i.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(i.type)}</span>` : ''}</span>
+                                <span class="shrink-0 ml-2 ${i.reach ? 'text-emerald-400' : 'text-yellow-400'} font-bold">
+                                    ${i.cut}${i.unit}${i.eng_cut !== null && i.eng_cut !== undefined ? ` <span class="text-gray-500">영${i.eng_cut}</span>` : ''}
+                                    · ${i.reach ? '도달' : Math.abs(i.gap) + i.unit + ' 부족'}</span>
+                            </div>`).join('')}
+                    </div>
+                </div>`;
+            };
+
             return `<div class="bg-[#1e2430] border border-indigo-700/50 rounded-lg p-4 mb-3">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <span class="text-white font-bold text-sm"><i class="fa-solid fa-bullseye mr-1 text-indigo-400"></i>목표: ${escapeHtml(g.univ)} ${escapeHtml(g.major || '')}</span>
-                    <span class="text-[11px] text-gray-400">자료 ${g.total}건 중 <b class="text-emerald-400">${g.reachable}건</b> 도달</span>
-                </div>
-                <div class="text-xs mb-3">${head}</div>
-                <div class="space-y-1 max-h-40 overflow-y-auto">
-                    ${g.items.filter(i => i.gap !== null && i.gap !== undefined).map(i => `
-                        <div class="flex justify-between items-center bg-[#151922] rounded px-2 py-1.5 text-xs">
-                            <span class="text-gray-300 truncate">${escapeHtml(i.univ)} ${escapeHtml(i.major || '')}
-                                ${i.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(i.type)}</span>` : ''}</span>
-                            <span class="shrink-0 ml-2 ${i.reach ? 'text-emerald-400' : 'text-yellow-400'} font-bold">
-                                ${i.cut}${i.unit} · ${i.reach ? '도달' : Math.abs(i.gap) + i.unit + ' 부족'}</span>
-                        </div>`).join('')}
+                <div class="text-white font-bold text-sm mb-3"><i class="fa-solid fa-bullseye mr-1 text-indigo-400"></i>목표: ${escapeHtml(g.univ)} ${escapeHtml(g.major || '')}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    ${section(g.susi, '수시', 'border-blue-700/50')}
+                    ${section(g.jeongsi, '정시', 'border-yellow-700/50')}
                 </div>
             </div>`;
         }
