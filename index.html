@@ -180,6 +180,31 @@
                 </div>
 
                 <div id="univ-map" class="hidden">
+                    <div class="bg-[#151922] border border-gray-700 rounded-lg p-3 mb-4">
+                        <h3 class="text-white font-bold text-sm mb-2">먼저 시트와 제목 줄을 고르세요</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-[11px] text-gray-400 mb-1 block">시트</label>
+                                <select id="univ-sheet" onchange="reloadUnivPreview()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600"></select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-400 mb-1 block">제목(열 이름) 줄</label>
+                                <select id="univ-hrow" onchange="reloadUnivPreview()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600"></select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-400 mb-1 block">제목이 두 줄로 나뉘어 있나요?</label>
+                                <select id="univ-hspan" onchange="reloadUnivPreview()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
+                                    <option value="0">한 줄</option>
+                                    <option value="1">두 줄 (예: 위 '교과 등급' + 아래 '70% cut')</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3 overflow-x-auto">
+                            <p class="text-[11px] text-gray-500 mb-1">파일 앞부분 — 어느 줄이 열 이름인지 보고 위에서 골라주세요</p>
+                            <table class="text-[10px] text-gray-400 w-full"><tbody id="univ-head"></tbody></table>
+                        </div>
+                        <p id="univ-rowcount" class="text-[11px] text-emerald-400 mt-2 font-bold"></p>
+                    </div>
                     <h3 class="text-white font-bold text-sm mb-1">어느 열이 무엇인지 골라주세요</h3>
                     <p class="text-[11px] text-gray-500 mb-3">대학과 기준 점수만 고르면 됩니다. 나머지는 비워두셔도 됩니다.</p>
                     <div id="univ-map-fields" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4"></div>
@@ -189,7 +214,10 @@
                     </div>
                     <div class="flex gap-2">
                         <input type="text" id="univ-label" placeholder="자료 이름 (예: 2026 수시 입결)" class="flex-grow p-2 bg-gray-800 text-white rounded text-sm">
-                        <button onclick="importUnivFile()" class="bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded text-white font-bold text-sm transition">저장하기</button>
+                        <label class="flex items-center gap-1 text-[11px] text-gray-400 shrink-0 cursor-pointer">
+                            <input type="checkbox" id="univ-append"> 기존 자료에 <b class="text-gray-300">덧붙이기</b>
+                        </label>
+                        <button onclick="importUnivFile()" class="bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded text-white font-bold text-sm transition shrink-0">저장하기</button>
                     </div>
                 </div>
 
@@ -2525,12 +2553,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         //   열 이름을 먼저 보여주고 무엇이 무엇인지 짝지어 받은 뒤 저장한다.
         let UNIV_FILE = null;
         const UNIV_MAP_FIELDS = [
-            ['univ',  '대학 이름',   true],
-            ['cut',   '기준 점수',   true],
-            ['major', '모집단위·학과', false],
-            ['type',  '전형 이름',   false],
-            ['track', '계열',        false],
-            ['note',  '비고',        false],
+            ['univ',       '대학 이름',        true],
+            ['cut',        '기준 점수',        true],
+            ['major',      '모집단위·학과',     false],
+            ['type',       '전형 이름',        false],
+            ['track',      '계열 (인문/자연)',  false],
+            ['region',     '소재지',           false],
+            ['year',       '연도',             false],
+            ['eng',        '영어 등급',        false],
+            ['metric_col', '점수 종류가 적힌 열', false],
+            ['note',       '비고',             false],
         ];
 
         async function openUnivTable() {
@@ -2560,12 +2592,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 : (q ? '<p class="text-gray-600 text-xs text-center py-4">찾는 대학이 없습니다.</p>' : '');
         }
 
-        async function previewUnivFile(file) {
-            if (!file) return;
-            UNIV_FILE = file;
+        async function previewUnivFile(file, keepChoice) {
+            if (file) UNIV_FILE = file;
+            if (!UNIV_FILE) return;
             showLoader("파일을 읽는 중입니다...");
             const fd = new FormData();
-            fd.append("file", file, file.name);
+            fd.append("file", UNIV_FILE, UNIV_FILE.name);
+            if (keepChoice) {
+                fd.append("sheet", document.getElementById('univ-sheet').value);
+                fd.append("header_row", document.getElementById('univ-hrow').value);
+                fd.append("header_span", document.getElementById('univ-hspan').value);
+            }
             let data;
             try {
                 const res = await uploadFormData(`${API_URL}/api/admin/univ_table/preview`, fd);
@@ -2574,21 +2611,52 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
             if (!data || !data.success) return alert((data && data.detail) || "파일을 읽지 못했습니다.");
 
+            // 시트 목록 (처음 열 때만 채운다)
+            const sheetSel = document.getElementById('univ-sheet');
+            if (!keepChoice) {
+                sheetSel.innerHTML = (data.sheets || []).map(s => `<option value="${escAttr(s)}">${escapeHtml(s)}</option>`).join('');
+                sheetSel.value = data.sheet || (data.sheets || [])[0] || '';
+            }
+
+            // 제목 줄 후보 — 파일 앞 15줄
+            const hrowSel = document.getElementById('univ-hrow');
+            const head = data.head_preview || [];
+            hrowSel.innerHTML = head.map((r, i) => {
+                const txt = r.filter(c => String(c).trim()).slice(0, 4).join(' / ').slice(0, 40) || '(빈 줄)';
+                return `<option value="${i}">${i + 1}행 — ${escapeHtml(txt)}</option>`;
+            }).join('');
+            hrowSel.value = data.header_row;
+            document.getElementById('univ-hspan').value = String(data.header_span || 0);
+
+            document.getElementById('univ-head').innerHTML = head.map((r, i) => {
+                const on = i === data.header_row;
+                return `<tr class="${on ? 'bg-indigo-900/40 text-indigo-200 font-bold' : ''} border-t border-gray-800">
+                    <td class="px-1 py-0.5 text-gray-600">${i + 1}</td>
+                    ${r.map(c => `<td class="px-2 py-0.5 whitespace-nowrap">${escapeHtml(String(c).slice(0, 18))}</td>`).join('')}</tr>`;
+            }).join('');
+            document.getElementById('univ-rowcount').innerText =
+                `이 설정으로 읽히는 자료: ${(data.row_count || 0).toLocaleString()}줄`;
+
             const cols = data.columns || [];
-            const guess = (names) => {
+            const guess = (names, avoid) => {
                 for (let i = 0; i < cols.length; i++) {
                     const c = String(cols[i]);
+                    if (avoid && avoid.some(a => c.includes(a))) continue;
                     if (names.some(n => c.includes(n))) return i;
                 }
                 return '';
             };
             const guessed = {
-                univ:  guess(['대학']),
-                cut:   guess(['컷', '등급', '점수', '백분위']),
-                major: guess(['학과', '모집', '학부', '전공']),
-                type:  guess(['전형']),
-                track: guess(['계열']),
-                note:  guess(['비고', '메모']),
+                univ:   guess(['대학명', '대학']),
+                cut:    guess(['70%', '70% cut', '반영점수', '원점수', '컷', '점수'], ['총점', '최고점', '경쟁']),
+                major:  guess(['모집단위', '학과', '학부', '전공']),
+                type:   guess(['전형명', '전형']),
+                track:  guess(['계열']),
+                region: guess(['소재지', '지역']),
+                year:   guess(['연도', '학년도']),
+                eng:    guess(['영어']),
+                metric_col: guess(['점수구분', '반영기준']),
+                note:   guess(['비고', '메모']),
             };
 
             document.getElementById('univ-map-fields').innerHTML = UNIV_MAP_FIELDS.map(([key, label, req]) => `
@@ -2596,26 +2664,31 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <label class="text-[11px] ${req ? 'text-indigo-300 font-bold' : 'text-gray-400'} mb-1 block">${label}${req ? ' *' : ''}</label>
                     <select id="um-${key}" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
                         <option value="">${req ? '— 골라주세요 —' : '사용 안 함'}</option>
-                        ${cols.map((c, i) => `<option value="${i}" ${guessed[key] === i ? 'selected' : ''}>${escapeHtml(String(c))}</option>`).join('')}
+                        ${cols.map((c, i) => `<option value="${i}" ${guessed[key] === i ? 'selected' : ''}>${i + 1}. ${escapeHtml(String(c).slice(0, 40))}</option>`).join('')}
                     </select>
                 </div>`).join('') + `
                 <div class="md:col-span-2">
                     <label class="text-[11px] text-indigo-300 font-bold mb-1 block">기준 점수의 종류 *</label>
                     <select id="um-metric" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
-                        <option value="grade">내신 등급 (숫자가 낮을수록 좋음 — 수시용)</option>
-                        <option value="percentile">백분위 (숫자가 높을수록 좋음 — 정시용)</option>
+                        <option value="grade">내신 등급 — 숫자가 낮을수록 좋음 (수시 교과등급)</option>
+                        <option value="percentile">백분위 — 숫자가 높을수록 좋음 (정시)</option>
+                        <option value="score">점수 — 숫자가 높을수록 좋음 (원점수·표준점수·대학별 환산점수)</option>
                     </select>
+                    <p class="text-[10px] text-gray-500 mt-1">'점수 종류가 적힌 열'을 고르셨다면, 줄마다 그 열을 보고 알아서 갈라 넣습니다.</p>
                 </div>`;
 
             const sample = data.sample || [];
             document.getElementById('univ-sample').innerHTML =
-                `<tr class="text-indigo-300 font-bold">${cols.map(c => `<td class="px-2 py-1 whitespace-nowrap">${escapeHtml(String(c))}</td>`).join('')}</tr>` +
-                sample.map(r => `<tr class="border-t border-gray-800">${r.map(c => `<td class="px-2 py-1 whitespace-nowrap">${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('');
+                `<tr class="text-indigo-300 font-bold">${cols.map(c => `<td class="px-2 py-1 whitespace-nowrap">${escapeHtml(String(c).slice(0, 20))}</td>`).join('')}</tr>` +
+                sample.map(r => `<tr class="border-t border-gray-800">${r.map(c => `<td class="px-2 py-1 whitespace-nowrap">${escapeHtml(String(c).slice(0, 20))}</td>`).join('')}</tr>`).join('');
 
-            document.getElementById('univ-label').value = (file.name || '').replace(/\.(xlsx|csv)$/i, '');
+            if (!keepChoice) document.getElementById('univ-label').value = (UNIV_FILE.name || '').replace(/\.(xlsx|csv)$/i, '');
             document.getElementById('univ-map').classList.remove('hidden');
-            document.getElementById('univ-map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (!keepChoice) document.getElementById('univ-map').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        // 시트나 제목 줄을 바꾸면 그 설정으로 다시 읽는다
+        function reloadUnivPreview() { previewUnivFile(null, true); }
 
         async function importUnivFile() {
             if (!UNIV_FILE) return alert("먼저 파일을 올려주세요.");
@@ -2632,6 +2705,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("file", UNIV_FILE, UNIV_FILE.name);
             fd.append("mapping", JSON.stringify(mapping));
             fd.append("label", document.getElementById('univ-label').value);
+            fd.append("sheet", document.getElementById('univ-sheet').value);
+            fd.append("header_row", document.getElementById('univ-hrow').value);
+            fd.append("header_span", document.getElementById('univ-hspan').value);
+            fd.append("append", document.getElementById('univ-append').checked ? "true" : "false");
             let data;
             try {
                 const res = await uploadFormData(`${API_URL}/api/admin/univ_table/import`, fd);
@@ -2640,7 +2717,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
             if (!data || !data.success) return alert((data && data.detail) || "저장에 실패했습니다.");
 
-            let msg = `${data.count.toLocaleString()}건을 저장했습니다.`;
+            let msg = `${data.count.toLocaleString()}건을 읽어 저장했습니다.`;
+            if (data.stored && data.stored !== data.count) msg += ` (전체 보관 ${data.stored.toLocaleString()}건)`;
             if (data.warning) msg += `\n\n⚠ ${data.warning}`;
             alert(msg);
             document.getElementById('univ-map').classList.add('hidden');
