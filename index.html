@@ -5113,6 +5113,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             div.className = "bg-[#1e2430] p-4 rounded border border-gray-600 quiz-q-item";
             div.innerHTML = `
                 <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="w-full p-2 bg-gray-800 text-white rounded mb-3 quiz-q-text border border-gray-600 outline-none">
+                <textarea rows="2" placeholder="&lt;보기&gt; 상자에 들어갈 내용 (없으면 비워두세요)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-3 quiz-q-bogi text-sm resize-y border border-gray-700 outline-none focus:border-orange-500"></textarea>
                 <div class="space-y-2 mb-3 pl-2 border-l-2 border-orange-900">
                     <input type="text" placeholder="① 보기 1" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
                     <input type="text" placeholder="② 보기 2" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
@@ -5207,6 +5208,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const item = board.lastElementChild;
             if (!item) return;
             item.querySelector('.quiz-q-text').value = q.q_text || '';
+            const bogiEl = item.querySelector('.quiz-q-bogi');
+            if (bogiEl) bogiEl.value = q.bogi || '';
             const opts = item.querySelectorAll('.quiz-q-opt');
             (q.options || []).forEach((o, i) => { if (opts[i]) opts[i].value = o || ''; });
             const ansEl = item.querySelector('.quiz-q-ans');
@@ -5292,8 +5295,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const ans = parseInt(item.querySelector('.quiz-q-ans').value);
                 const score = parseInt(item.querySelector('.quiz-q-score').value);
                 const img = (item.querySelector('.quiz-q-img') || {}).value || '';
+                const bogi = ((item.querySelector('.quiz-q-bogi') || {}).value || '').trim();
                 if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
-                questions.push({ q_text: text, options: opts, answer: ans, score: score, image: img });
+                questions.push({ q_text: text, bogi: bogi, options: opts, answer: ans, score: score, image: img });
             }
 
             showLoader("퀴즈 배포 중...");
@@ -5359,7 +5363,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const imgHtml = q.image
                     ? `<div class="mb-4"><img src="${API_URL}${encodeURI(q.image)}" class="max-w-full rounded-lg border border-gray-600" alt="문항 그림"></div>`
                     : '';
-                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}<div>${optsHtml}</div></div>`;
+                // 실제 시험지처럼 <보기>는 네모 상자 안에 넣는다
+                const bogiHtml = (q.bogi || '').trim()
+                    ? `<div class="mb-4 border border-gray-500 rounded-lg p-4 bg-[#1a1e29]">
+                           <div class="text-xs text-orange-400 font-bold mb-2">&lt;보기&gt;</div>
+                           <p class="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">${escapeHtml(q.bogi)}</p>
+                       </div>`
+                    : '';
+                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = currentActiveQuiz.time_limit * 60; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
@@ -5411,6 +5422,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <p class="text-white text-sm font-bold leading-relaxed">${d.no}. ${escapeHtml(d.q_text || '')}</p>
                         </div>
                         ${d.image ? `<div class="pl-8 mb-2"><img src="${API_URL}${encodeURI(d.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : ''}
+                        ${(d.bogi || '').trim() ? `<div class="pl-8 mb-2"><div class="border border-gray-600 rounded p-3 bg-[#151922]">
+                            <div class="text-[10px] text-orange-400 font-bold mb-1">&lt;보기&gt;</div>
+                            <p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(d.bogi)}</p></div></div>` : ''}
                         <div class="pl-8 space-y-1 text-sm">
                             <div class="${d.ok ? 'text-emerald-300' : 'text-red-300'}">
                                 <span class="text-gray-500 text-xs mr-1">내 답</span>
