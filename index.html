@@ -745,10 +745,11 @@
                     <div class="flex gap-2 items-center w-full">
                         <label for="chat-file" class="cursor-pointer bg-gray-700 hover:bg-gray-600 p-3 rounded-xl text-white transition flex-shrink-0"><i class="fa-solid fa-paperclip"></i></label>
                         <input type="file" id="chat-file" class="hidden" multiple accept="image/*,.pdf" onchange="handleFileSelect(event, chatFiles, 'chat-file-visual')">
-                        <input type="text" id="chat-input" class="flex-grow bg-[#151922] border border-gray-600 text-white p-3 rounded-xl text-sm md:text-lg outline-none" placeholder="질문 입력..." onkeypress="if(event.key==='Enter') sendChat()">
+                        <input type="text" id="chat-input" class="flex-grow bg-[#151922] border border-gray-600 text-white p-3 rounded-xl text-sm md:text-lg outline-none" placeholder="질문 입력... (캡처는 Ctrl+V로 바로 붙여넣기)" onkeypress="if(event.key==='Enter') sendChat()">
                         <div id="chat-file-label" class="hidden"></div>
                         <button onclick="sendChat()" class="bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-xl text-white transition flex-shrink-0"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
+                    <p class="text-[10px] text-gray-500 px-1"><i class="fa-solid fa-camera mr-1"></i>문제집이나 화면을 캡처했다면, 파일로 저장하지 않고 <b class="text-gray-400">Ctrl+V</b>로 바로 붙여넣어 질문할 수 있어요.</p>
                 </div>
             </div>
 
@@ -4937,6 +4938,22 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 </span>
             </div>`;
         }
+
+        // 24시간 AI 채팅방에서 Ctrl+V로 캡처를 바로 붙여넣기 — 파일로 저장했다가
+        // 다시 올릴 필요 없이, 화면을 캡처한 그대로 질문에 첨부한다.
+        document.addEventListener('paste', (e) => {
+            const tab = document.getElementById('prog-chat');
+            if (!tab || tab.style.display === 'none' || !tab.offsetParent) return;
+            const items = Array.from((e.clipboardData || {}).items || []);
+            const files = items.filter(it => it.type && it.type.startsWith('image/'))
+                               .map(it => it.getAsFile()).filter(Boolean);
+            if (!files.length) return;
+            e.preventDefault();
+            files.forEach(f => {
+                if (!chatFiles.some(x => x.name === f.name && x.size === f.size)) chatFiles.push(f);
+            });
+            renderAccumulatedFiles(chatFiles, 'chat-file-visual');
+        });
 
         async function sendChat() {
             const i=document.getElementById('chat-input'); const p=i.value; if(!p) return;
