@@ -419,7 +419,23 @@
             <div id="level-up-name" class="text-white font-black text-4xl mb-2"></div>
             <div id="level-up-sub" class="text-gray-300 text-sm mb-4"></div>
             <div id="level-up-unlocked" class="mb-6"></div>
+            <button id="level-up-roulette-btn" class="hidden w-full mb-2 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 transition text-white font-black px-8 py-3 rounded-xl shadow-lg text-lg animate-pulse"><i class="fa-solid fa-dice mr-1"></i>🎰 룰렛 돌리러 가기!</button>
             <button onclick="closeLevelUpOverlay()" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 transition text-white font-bold px-8 py-3 rounded-xl shadow-lg text-lg">신난다!</button>
+        </div>
+    </div>
+
+    <!-- 🎰 레벨업 룰렛 -->
+    <div id="roulette-modal" class="hidden fixed inset-0 z-[310] items-center justify-center p-4" style="background: rgba(10,10,20,0.9); backdrop-filter: blur(4px);">
+        <div class="bg-[#1e2430] rounded-2xl p-6 max-w-sm w-full text-center border border-yellow-600/50 shadow-2xl">
+            <h3 class="text-xl font-black text-yellow-400 mb-1">🎰 레벨업 룰렛!</h3>
+            <p id="roulette-level-label" class="text-xs text-gray-400 mb-4"></p>
+            <div class="relative mx-auto mb-4" style="width:260px;height:260px;">
+                <div class="absolute left-1/2 -top-2 -translate-x-1/2 text-3xl z-10 drop-shadow-lg">🔻</div>
+                <div id="roulette-wheel" class="rounded-full border-4 border-yellow-500 relative overflow-hidden shadow-2xl" style="width:260px;height:260px;transition: transform 4s cubic-bezier(0.15,0.85,0.25,1);"></div>
+            </div>
+            <div id="roulette-result" class="min-h-[54px] mb-3"></div>
+            <button id="roulette-spin-btn" onclick="spinRoulette()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 transition text-white font-black py-3 rounded-xl text-lg shadow-lg">돌리기!</button>
+            <button onclick="closeRouletteModal()" class="mt-2 text-xs text-gray-500 hover:text-gray-300 transition">나중에 하기</button>
         </div>
     </div>
 
@@ -538,6 +554,9 @@
                 <button onclick="openProgram('mypage'); loadMyPage();" class="shrink-0 text-xs font-bold text-teal-300 border border-teal-700 px-3 py-2 rounded-lg hover:bg-teal-900/30 transition">
                     <i class="fa-solid fa-shirt mr-1"></i><span class="hidden sm:inline">아바타 </span>꾸미기
                 </button>
+                <button id="roulette-eligible-badge" class="hidden shrink-0 text-xs font-black text-white bg-gradient-to-r from-pink-500 to-yellow-500 px-3 py-2 rounded-lg animate-pulse transition">
+                    🎰 룰렛이 기다려요!
+                </button>
             </div>
 
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
@@ -547,12 +566,12 @@
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
                     <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
                 </div>
-                <div data-subject="math" onclick="openProgram('chat'); openChatSubject('math');" class="hidden bg-[#1e2430] border border-indigo-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div data-subject="math" onclick="openProgram('chat'); openChatSubject('math');" class="bg-[#1e2430] border border-indigo-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 수박</h3>
                     <p class="text-indigo-200/70 text-xs md:text-sm">수학과 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
                 </div>
-                <div data-subject="english" onclick="openProgram('chat'); openChatSubject('english');" class="hidden bg-[#1e2430] border border-cyan-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div data-subject="english" onclick="openProgram('chat'); openChatSubject('english');" class="bg-[#1e2430] border border-cyan-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 재우T</h3>
                     <p class="text-cyan-200/70 text-xs md:text-sm">영어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
@@ -852,6 +871,7 @@
                         <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="text-orange-400 font-bold border border-orange-600 px-4 py-2 rounded">퀴즈 출제</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
+                        <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
                     </div>
 
                     <!-- 명단 관리 -->
@@ -1303,8 +1323,23 @@
                             <button onclick="createBoardAdmin()" class="w-full bg-gray-600 hover:bg-gray-500 py-2 text-white font-bold rounded transition shadow-lg">공지 등록</button>
                             <div id="admin-board-view-list" class="mt-4 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
+                    </div>
 
-                    <!-- 관리자 계정 -->
+                    <!-- 레벨업 룰렛 -->
+                    <div id="admin-roulette" class="admin-tab-content grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-4">
+                        <div class="bg-[#151922] p-4 rounded">
+                            <h3 class="text-white font-bold mb-3"><i class="fa-solid fa-list-ol mr-2 text-yellow-400"></i>레벨 선택</h3>
+                            <p class="text-[11px] text-gray-500 mb-3">레벨마다 룰렛 구성이 따로 있습니다. 상위 레벨일수록 더 좋은 상품을 넣어주세요.</p>
+                            <div id="roulette-level-tabs" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+                        <div class="bg-[#151922] p-6 rounded">
+                            <h3 class="text-white font-bold mb-1">Lv.<span id="roulette-edit-level">1</span> 룰렛 상품</h3>
+                            <p class="text-[11px] text-gray-500 mb-4">칸을 추가·삭제하고 상품 내용을 직접 적어주세요. '꽝'으로 체크한 칸이 많을수록 당첨 확률이 낮아집니다. 꽝 칸과 상품 칸을 번갈아 배치하면 아깝게 꽝이 되는 느낌을 줄 수 있어요.</p>
+                            <div id="roulette-slices-editor" class="space-y-2 mb-3 max-h-96 overflow-y-auto pr-1"></div>
+                            <button onclick="addRouletteSlice()" class="w-full bg-gray-700 hover:bg-gray-600 py-2 text-white text-sm rounded mb-2 transition"><i class="fa-solid fa-plus mr-1"></i>칸 추가</button>
+                            <button onclick="saveRouletteConfig()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 text-white font-bold rounded transition">이 레벨 저장</button>
+                            <p id="roulette-odds-preview" class="text-xs text-gray-400 mt-3 text-center"></p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1953,13 +1988,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 마이페이지를 열지 않아도, 로그인하거나 학습실 첫 화면으로 돌아올 때마다
         // 상단바 미니 위젯과 환영 배너의 레벨·경험치를 최신으로 채운다.
         // 국어를 듣는 학생과 수학·영어를 듣는 학생은 구분되어야 한다.
-        // data-subject가 붙은 타일(24시간 AI ○○)을, 실제로 등록된 과목만 보이게 한다.
-        // 서버(/api/chat)에서도 같은 기준으로 다시 막으므로, 여기는 화면만 가리는 역할이다.
+        // 💡 타일 자체는 모든 학생에게 똑같이 보인다 — 어떤 과목의 AI가 있는지는 알 수 있게.
+        // 다만 실제로 등록하지 않은 과목에서는 질문을 할 수 없고, 그 안내는 채팅방을 열 때와
+        // (혹시 우회하더라도) 서버(/api/chat)가 다시 한번 확인해서 보여준다.
+        let myEnrolledSubjects = new Set(['korean']);
         function applySubjectAccess(subjects) {
-            const allowed = new Set((subjects && subjects.length) ? subjects : ['korean']);
-            document.querySelectorAll('[data-subject]').forEach(el => {
-                el.classList.toggle('hidden', !allowed.has(el.getAttribute('data-subject')));
-            });
+            myEnrolledSubjects = new Set((subjects && subjects.length) ? subjects : ['korean']);
         }
 
         async function loadHomeAvatarWidget() {
@@ -1985,7 +2019,125 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 }
             } catch (e) {}
             renderAvatarCard();
+            checkRouletteEligible();
         }
+
+        // 🎰 레벨업 룰렛 — 학생이 레벨업할 때마다, 그 레벨 전용 룰렛을 한 번 돌려 상품을 받는다.
+        //   당첨 여부는 반드시 서버가 정한다(클라이언트는 그리기만 담당). 축하창을 그냥
+        //   닫아버렸을 수도 있으니, 학습실에 들어올 때마다 아직 안 돌린 룰렛이 있는지 확인해
+        //   배지로 다시 보여준다.
+        let ROULETTE_SLICES = [];
+
+        async function checkRouletteEligible() {
+            if (!currentUser || currentUser.isAdmin) return;
+            const badge = document.getElementById('roulette-eligible-badge');
+            if (!badge) return;
+            try {
+                const res = await fetch(`${API_URL}/api/student/roulette/eligible?student_name=${encodeURIComponent(currentUser.name)}`);
+                const data = await res.json();
+                if (data.success && data.eligible) {
+                    badge.classList.remove('hidden');
+                    badge.onclick = () => openRoulette(data.level);
+                } else {
+                    badge.classList.add('hidden');
+                }
+            } catch (e) {}
+        }
+
+        async function openRoulette(level) {
+            document.getElementById('roulette-level-label').innerText = `Lv.${level} 전용 룰렛`;
+            document.getElementById('roulette-result').innerHTML = '';
+            const btn = document.getElementById('roulette-spin-btn');
+            btn.disabled = false; btn.innerText = '돌리기!'; btn.onclick = spinRoulette;
+            const wheel = document.getElementById('roulette-wheel');
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)';
+            ROULETTE_SLICES = [];
+            try {
+                const res = await fetch(`${API_URL}/api/student/roulette_config?level=${level}`);
+                const data = await res.json();
+                if (data.success) ROULETTE_SLICES = data.slices;
+            } catch (e) {}
+            renderRouletteWheel();
+            const modal = document.getElementById('roulette-modal');
+            modal.classList.remove('hidden'); modal.style.display = 'flex';
+        }
+
+        function closeRouletteModal() {
+            const modal = document.getElementById('roulette-modal');
+            modal.style.display = 'none'; modal.classList.add('hidden');
+            checkRouletteEligible();
+        }
+
+        // 상품 칸은 화려한 색, 꽝 칸은 어두운 색으로 — 어느 칸이 상품인지 한눈에 보이게
+        const ROULETTE_PRIZE_COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#22c55e', '#06b6d4', '#ef4444'];
+
+        function renderRouletteWheel() {
+            const wheel = document.getElementById('roulette-wheel');
+            const n = ROULETTE_SLICES.length;
+            if (!n) { wheel.style.background = '#374151'; wheel.innerHTML = ''; return; }
+            const sweep = 360 / n;
+            let prizeIdx = 0;
+            const colors = ROULETTE_SLICES.map((s, i) => {
+                if (s.is_miss) return i % 2 === 0 ? '#374151' : '#1f2937';
+                return ROULETTE_PRIZE_COLORS[prizeIdx++ % ROULETTE_PRIZE_COLORS.length];
+            });
+            wheel.style.background = 'conic-gradient(' +
+                colors.map((c, i) => `${c} ${(i * sweep).toFixed(2)}deg ${((i + 1) * sweep).toFixed(2)}deg`).join(', ') + ')';
+            wheel.innerHTML = ROULETTE_SLICES.map((s, i) => {
+                const mid = sweep * i + sweep / 2;
+                return `<div style="position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(${mid}deg);">
+                    <span style="display:block;position:absolute;left:0;top:0;transform:translate(-50%,-108px);width:72px;text-align:center;font-size:10px;line-height:1.2;font-weight:800;color:${s.is_miss ? '#9ca3af' : '#fff'};text-shadow:0 1px 3px rgba(0,0,0,.7);">${escapeHtml(s.label)}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function spinRoulette() {
+            const btn = document.getElementById('roulette-spin-btn');
+            btn.disabled = true; btn.innerText = '돌아가는 중...';
+            let data;
+            try {
+                const res = await fetch(`${API_URL}/api/student/roulette/spin`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_name: currentUser.name })
+                });
+                data = await res.json();
+            } catch (e) {
+                btn.disabled = false; btn.innerText = '돌리기!';
+                return alert('통신 오류가 발생했습니다.');
+            }
+            if (!data.success) {
+                btn.disabled = false; btn.innerText = '돌리기!';
+                return alert(data.detail || '지금은 룰렛을 돌릴 수 없습니다.');
+            }
+
+            // 서버가 실제로 사용한 칸 구성으로 다시 그린 뒤(그사이 바뀌었을 수 있으니), 그 칸으로 회전시킨다
+            ROULETTE_SLICES = data.slices;
+            renderRouletteWheel();
+            const n = data.slices.length;
+            const sweep = 360 / n;
+            const targetMid = sweep * data.index + sweep / 2;
+            const extraSpins = 5 + Math.floor(Math.random() * 2); // 5~6바퀴는 돌고 멈춘다
+            const finalAngle = extraSpins * 360 + (360 - targetMid);
+            const wheel = document.getElementById('roulette-wheel');
+            wheel.style.transition = 'transform 4s cubic-bezier(0.15,0.85,0.25,1)';
+            requestAnimationFrame(() => { wheel.style.transform = `rotate(${finalAngle}deg)`; });
+
+            setTimeout(() => {
+                const box = document.getElementById('roulette-result');
+                if (data.is_miss) {
+                    box.innerHTML = `<div class="text-gray-400 font-bold text-lg">😢 ${escapeHtml(data.label)}... 다음 기회에!</div>`;
+                } else {
+                    box.innerHTML = `<div class="text-yellow-300 font-black text-xl">🎉 당첨! <span class="text-white">${escapeHtml(data.label)}</span></div>
+                        <p class="text-[11px] text-gray-400 mt-1">원장님께 이 화면을 보여드리고 받아가세요!</p>`;
+                }
+                btn.innerText = '닫기';
+                btn.disabled = false;
+                btn.onclick = closeRouletteModal;
+                document.getElementById('roulette-eligible-badge').classList.add('hidden');
+            }, 4300);
+        }
+
 
         function renderAvatarCard() {
             if(!myLevelInfo) return;
@@ -2219,6 +2371,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                        <div class="flex flex-wrap justify-center gap-1">` +
                       got.map(g => `<span class="bg-white/10 rounded-lg px-2 py-1 text-[11px] text-white">${g.emoji || '🎨'} ${escapeHtml(g.label)}</span>`).join('') + '</div>'
                     : '';
+            }
+            const rBtn = document.getElementById('level-up-roulette-btn');
+            if (rBtn) {
+                rBtn.classList.remove('hidden');
+                rBtn.onclick = () => { closeLevelUpOverlay(); openRoulette(lvlUp.to); };
             }
             const ov = document.getElementById('level-up-overlay');
             ov.classList.remove('hidden'); ov.style.display = 'flex';
@@ -2512,6 +2669,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
+            if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
             if(id==='admin-generator'){loadGeneratedQuestions();}
             if(id==='admin-quiz'){loadAdminQuizzes();}
@@ -4761,7 +4919,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const titleEl = document.getElementById('chat-title');
             titleEl.innerHTML = `<i class="fa-solid fa-robot mr-2"></i>${escapeHtml(meta.title)}`;
             titleEl.className = `text-2xl md:text-3xl font-bold ${meta.color} mb-4 md:mb-6`;
-            document.getElementById('chat-history').innerHTML = `<div class="text-left mb-6">
+
+            // 💡 타일은 누구에게나 보이지만, 실제로 그 과목을 듣지 않는 학생에게는
+            // 들어오자마자 질문할 수 없다는 걸 미리 알려준다(전송 눌러보고서야 아는
+            // 것보다 낫다). 서버도 /api/chat에서 다시 한번 확인해 막는다.
+            const notEnrolled = !currentUser.isAdmin && !myEnrolledSubjects.has(currentChatSubject);
+            const noticeHtml = notEnrolled
+                ? `<div class="text-center mb-4"><span class="inline-block bg-amber-900/30 border border-amber-700/60 text-amber-300 text-xs md:text-sm px-4 py-2 rounded-xl">
+                    ⚠️ ${escapeHtml(meta.label)} 수업을 듣는 학생만 질문할 수 있어요. 궁금하시면 선생님께 문의해주세요.
+                   </span></div>`
+                : '';
+
+            document.getElementById('chat-history').innerHTML = noticeHtml + `<div class="text-left mb-6">
                 <span class="bg-gray-800 px-4 py-3 md:px-6 md:py-5 rounded-2xl text-white inline-block shadow-lg border border-gray-700">
                     <span class="block mb-2 font-bold ${meta.color} text-base md:text-xl">🤖 ${escapeHtml(meta.persona)}</span>
                     ${escapeHtml(meta.greet)}
@@ -5035,6 +5204,83 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         async function loadAdminBoardList() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('admin-board-view-list'); c.innerHTML=''; if(data.success){ data.posts.forEach((p,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a><button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
+
+        // ── 관리자 — 레벨업 룰렛 상품 편집 ──────────────────
+        let ROULETTE_ADMIN_CONFIG = {};
+        let ROULETTE_EDIT_LEVEL = 1;
+
+        async function loadRouletteAdmin() {
+            const r = await adminGet('/api/admin/roulette_config');
+            if (!r.ok) return alert(r.message);
+            ROULETTE_ADMIN_CONFIG = r.data.levels || {};
+            renderRouletteLevelTabs();
+            renderRouletteEditor();
+        }
+
+        function renderRouletteLevelTabs() {
+            const c = document.getElementById('roulette-level-tabs');
+            c.innerHTML = Array.from({ length: 10 }, (_, i) => i + 1).map(lv => `
+                <button onclick="selectRouletteLevel(${lv})" class="py-2 rounded text-sm font-bold transition ${lv === ROULETTE_EDIT_LEVEL ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}">Lv.${lv}</button>
+            `).join('');
+        }
+
+        function selectRouletteLevel(lv) {
+            ROULETTE_EDIT_LEVEL = lv;
+            renderRouletteLevelTabs();
+            renderRouletteEditor();
+        }
+
+        function renderRouletteEditor() {
+            document.getElementById('roulette-edit-level').innerText = ROULETTE_EDIT_LEVEL;
+            const slices = ROULETTE_ADMIN_CONFIG[String(ROULETTE_EDIT_LEVEL)] || [];
+            const c = document.getElementById('roulette-slices-editor');
+            c.innerHTML = slices.map((s, i) => `
+                <div class="flex items-center gap-2 bg-gray-800 p-2 rounded">
+                    <input type="text" value="${escAttr(s.label)}" oninput="updateRouletteSliceLabel(${i}, this.value)" class="flex-grow p-1.5 bg-gray-900 text-white rounded text-sm outline-none border border-gray-700 focus:border-yellow-500">
+                    <label class="flex items-center gap-1 text-xs text-gray-300 shrink-0"><input type="checkbox" ${s.is_miss ? 'checked' : ''} onchange="updateRouletteSliceMiss(${i}, this.checked)"> 꽝</label>
+                    <button onclick="removeRouletteSlice(${i})" class="text-red-400 hover:text-red-300 shrink-0 w-6"><i class="fa-solid fa-xmark"></i></button>
+                </div>`).join('') || '<p class="text-gray-500 text-sm text-center py-4">칸이 없습니다. 아래에서 추가해주세요.</p>';
+            updateRouletteOddsPreview();
+        }
+
+        function updateRouletteSliceLabel(i, v) {
+            (ROULETTE_ADMIN_CONFIG[String(ROULETTE_EDIT_LEVEL)] || [])[i].label = v;
+        }
+        function updateRouletteSliceMiss(i, v) {
+            (ROULETTE_ADMIN_CONFIG[String(ROULETTE_EDIT_LEVEL)] || [])[i].is_miss = v;
+            updateRouletteOddsPreview();
+        }
+        function removeRouletteSlice(i) {
+            const slices = ROULETTE_ADMIN_CONFIG[String(ROULETTE_EDIT_LEVEL)] || [];
+            if (slices.length <= 2) return alert('룰렛 칸은 최소 2개는 있어야 합니다.');
+            slices.splice(i, 1);
+            renderRouletteEditor();
+        }
+        function addRouletteSlice() {
+            const key = String(ROULETTE_EDIT_LEVEL);
+            const slices = ROULETTE_ADMIN_CONFIG[key] || (ROULETTE_ADMIN_CONFIG[key] = []);
+            slices.push({ label: '꽝', is_miss: true });
+            renderRouletteEditor();
+        }
+        function updateRouletteOddsPreview() {
+            const slices = ROULETTE_ADMIN_CONFIG[String(ROULETTE_EDIT_LEVEL)] || [];
+            const total = slices.length;
+            const misses = slices.filter(s => s.is_miss).length;
+            const pct = total ? Math.round(misses / total * 100) : 0;
+            document.getElementById('roulette-odds-preview').innerText =
+                total ? `전체 ${total}칸 중 꽝 ${misses}칸 — 대략 ${pct}% 확률로 꽝이 나옵니다.` : '';
+        }
+
+        async function saveRouletteConfig() {
+            const slices = ROULETTE_ADMIN_CONFIG[String(ROULETTE_EDIT_LEVEL)] || [];
+            if (!slices.length) return alert('칸을 하나 이상 추가해주세요.');
+            if (slices.some(s => !s.label.trim())) return alert('빈 칸 내용이 있습니다.');
+            showLoader('저장 중...');
+            const r = await adminPost('/api/admin/roulette_config', { level: ROULETTE_EDIT_LEVEL, slices });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            showToast(`Lv.${ROULETTE_EDIT_LEVEL} 룰렛을 저장했습니다.`);
+        }
 
         async function deleteBoardPost(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/board/${id}`,{method:'DELETE'}); loadAdminBoardList(); hideLoader(); } }
 
