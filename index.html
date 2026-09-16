@@ -87,7 +87,14 @@
             <input type="text" id="edit-name" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-3">
 
             <label class="text-xs text-gray-400 mb-1 block">반</label>
-            <select id="edit-class" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-6 class-select"><option value="">반 미배정</option></select>
+            <select id="edit-class" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-3 class-select"><option value="">반 미배정</option></select>
+
+            <label class="text-xs text-gray-400 mb-1 block">수강 과목</label>
+            <div class="flex gap-3 mb-6 text-sm">
+                <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="edit-subject-cb" value="korean" id="edit-subject-korean" checked> 국어</label>
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="edit-subject-cb" value="math" id="edit-subject-math"> 수학</label>
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="edit-subject-cb" value="english" id="edit-subject-english"> 영어</label>
+            </div>
 
             <button onclick="submitEditStudent()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg shadow-lg">수정 완료</button>
         </div>
@@ -535,17 +542,17 @@
 
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                <div onclick="openProgram('chat'); openChatSubject('korean');" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div data-subject="korean" onclick="openProgram('chat'); openChatSubject('korean');" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
                     <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
                 </div>
-                <div onclick="openProgram('chat'); openChatSubject('math');" class="bg-[#1e2430] border border-indigo-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div data-subject="math" onclick="openProgram('chat'); openChatSubject('math');" class="hidden bg-[#1e2430] border border-indigo-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 수박</h3>
                     <p class="text-indigo-200/70 text-xs md:text-sm">수학과 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
                 </div>
-                <div onclick="openProgram('chat'); openChatSubject('english');" class="bg-[#1e2430] border border-cyan-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div data-subject="english" onclick="openProgram('chat'); openChatSubject('english');" class="hidden bg-[#1e2430] border border-cyan-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 재우T</h3>
                     <p class="text-cyan-200/70 text-xs md:text-sm">영어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
@@ -858,6 +865,11 @@
                                 <input type="text" id="add-grade" placeholder="학년" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
                                 <input type="text" id="add-name" placeholder="이름" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
                                 <select id="add-class" class="w-full p-2 mb-2 bg-gray-800 text-white rounded class-select"><option value="">반 미배정</option></select>
+                                <div class="flex gap-3 mb-2 text-xs px-1">
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="add-subject-cb" value="korean" id="add-subject-korean" checked> 국어</label>
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="add-subject-cb" value="math" id="add-subject-math"> 수학</label>
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="add-subject-cb" value="english" id="add-subject-english"> 영어</label>
+                                </div>
                                 <button onclick="addSingleStudent()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded transition">추가</button>
                             </div>
 
@@ -885,9 +897,15 @@
                         <div class="col-span-4 lg:col-span-3 bg-[#151922] p-4 rounded h-[600px] flex flex-col">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-3">
                                 <h3 class="text-white font-bold"><i class="fa-solid fa-list-check mr-2 text-emerald-400"></i>반별 명단 <span class="text-gray-400 font-normal text-sm">(총 <span id="total-student-count">0</span>명)</span></h3>
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-2">
                                     <select id="bulk-class" class="p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 class-select"><option value="">반 미배정</option></select>
                                     <button onclick="assignSelectedClass()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 학생 반 배정</button>
+                                    <span class="flex items-center gap-2 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs">
+                                        <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="bulk-subject-cb" value="korean" id="bulk-subject-korean"> 국어</label>
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="bulk-subject-cb" value="math" id="bulk-subject-math"> 수학</label>
+                                    <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="bulk-subject-cb" value="english" id="bulk-subject-english"> 영어</label>
+                                        <button onclick="assignSelectedSubjects()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded font-bold transition">선택 학생 과목 배정</button>
+                                    </span>
                                     <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 삭제</button>
                                 </div>
                             </div>
@@ -1932,9 +1950,22 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         // 마이페이지를 열지 않아도, 로그인하거나 학습실 첫 화면으로 돌아올 때마다
         // 상단바 미니 위젯과 환영 배너의 레벨·경험치를 최신으로 채운다.
+        // 국어를 듣는 학생과 수학·영어를 듣는 학생은 구분되어야 한다.
+        // data-subject가 붙은 타일(24시간 AI ○○)을, 실제로 등록된 과목만 보이게 한다.
+        // 서버(/api/chat)에서도 같은 기준으로 다시 막으므로, 여기는 화면만 가리는 역할이다.
+        function applySubjectAccess(subjects) {
+            const allowed = new Set((subjects && subjects.length) ? subjects : ['korean']);
+            document.querySelectorAll('[data-subject]').forEach(el => {
+                el.classList.toggle('hidden', !allowed.has(el.getAttribute('data-subject')));
+            });
+        }
+
         async function loadHomeAvatarWidget() {
             if (!currentUser) return;
-            if (currentUser.isAdmin) return loadAdminAvatar();
+            if (currentUser.isAdmin) {
+                applySubjectAccess(['korean', 'math', 'english']);   // 원장님·관리자는 모든 과목을 볼 수 있음
+                return loadAdminAvatar();
+            }
             await loadAvatarCatalog();
             try {
                 const res = await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`);
@@ -1948,6 +1979,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     myAvatarLook = Object.assign(
                         { face: myAvatarGender, color: 'blue', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
                         prof.avatar_look || {});
+                    applySubjectAccess(prof.subjects);
                 }
             } catch (e) {}
             renderAvatarCard();
@@ -4365,15 +4397,20 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const open = !collapsedClassGroups.has(g.key);
                 const isNone = g.key === '__none__';
                 const head = isNone ? 'bg-gray-700/40 border-gray-600' : 'bg-blue-900/30 border-blue-700';
+
+                const subjectLabels = { korean: '국어', math: '수학', english: '영어' };
+                const subjectColors = { korean: 'bg-blue-900/50 text-blue-300', math: 'bg-indigo-900/50 text-indigo-300', english: 'bg-cyan-900/50 text-cyan-300' };
                 const rows = g.students.length ? g.students.map(s => {
                     const lv = computeLevelFromXp(s.xp);
+                    const subs = (s.subjects && s.subjects.length) ? s.subjects : ['korean'];
+                    const subjBadges = subs.map(sub => `<span class="text-[10px] ${subjectColors[sub]||'bg-gray-700 text-gray-300'} px-1.5 py-0.5 rounded-full ml-1">${subjectLabels[sub]||sub}</span>`).join('');
                     return `<div class="flex items-center gap-2 bg-gray-800 p-2 rounded">
                         <input type="checkbox" class="student-checkbox shrink-0" value="${escAttr(s.id)}">
                         <span class="flex-grow min-w-0 truncate text-sm text-white">${escapeHtml(s.school||'')} ${escapeHtml(s.grade||'')} <b>${escapeHtml(s.student_name)}</b>
-                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>
+                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}
                         </span>
                         <button onclick="fetchReports('${escAttr(s.student_name)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded text-xs text-white font-bold transition">이력</button>
-                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
+                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}','${escAttr(subs.join(','))}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
                     </div>`;
                 }).join('') : '<p class="text-gray-600 text-xs text-center py-3">이 반에 배정된 학생이 없습니다.</p>';
 
@@ -4390,19 +4427,36 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }).join('');
         }
 
+        function checkedSubjects(cls) {
+            const vals = Array.from(document.querySelectorAll('.' + cls + ':checked')).map(cb => cb.value);
+            return vals.length ? vals : ['korean'];
+        }
+
         async function addSingleStudent() {
             const s=document.getElementById('add-school').value, g=document.getElementById('add-grade').value, n=document.getElementById('add-name').value;
             if(!n) return;
             showLoader("명단 추가 중...");
-            await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n,class_name:document.getElementById('add-class').value})});
+            await fetch(`${API_URL}/api/admin/student`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({school:s,grade:g,name:n,class_name:document.getElementById('add-class').value,subjects:checkedSubjects('add-subject-cb')})});
             document.getElementById('add-name').value='';
             await loadAdminClassData();
             hideLoader();
         }
+
+        async function assignSelectedSubjects() {
+            const ids = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value);
+            if (!ids.length) return alert("과목을 배정할 학생을 먼저 선택해주세요.");
+            const subjects = Array.from(document.querySelectorAll('.bulk-subject-cb:checked')).map(cb=>cb.value);
+            if (!subjects.length) return alert("배정할 과목을 하나 이상 선택해주세요.");
+            showLoader("과목 배정 중...");
+            const r = await adminPost('/api/admin/student/assign_subjects', {ids:ids, subjects:subjects});
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            await loadAdminClassData();
+        }
         async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
 
         // 💡 팝업 모달을 띄우고 기존 정보를 채워넣는 함수
-        function openEditStudent(id,n,s,g,cls) {
+        function openEditStudent(id,n,s,g,cls,subs) {
             document.getElementById('edit-old-id').value=id;
             document.getElementById('edit-name').value=n;
             document.getElementById('edit-school').value=s;
@@ -4410,6 +4464,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const sel=document.getElementById('edit-class');
             sel.value=cls||'';
             if(sel.value!==(cls||'')) sel.value='';   // 지워진 반이면 '미배정'으로
+            const subjSet = new Set((subs||'korean').split(',').filter(Boolean));
+            ['korean','math','english'].forEach(k => {
+                const cb = document.getElementById('edit-subject-' + k);
+                if (cb) cb.checked = subjSet.has(k);
+            });
             showModal('edit-student');
         }
 
@@ -4417,7 +4476,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const id=document.getElementById('edit-old-id').value, n=document.getElementById('edit-name').value, s=document.getElementById('edit-school').value, g=document.getElementById('edit-grade').value;
             if(!n.trim()) return alert("이름을 입력해주세요.");
             showLoader("정보 수정 중...");
-            await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g,class_name:document.getElementById('edit-class').value})});
+            await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g,class_name:document.getElementById('edit-class').value,subjects:checkedSubjects('edit-subject-cb')})});
             closeModal('edit-student-modal');
             loadAdminStudents();
             hideLoader();
