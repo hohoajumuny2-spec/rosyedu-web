@@ -1282,6 +1282,7 @@
 
                     <!-- 관리자 계정 -->
                     <div id="admin-account" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <p id="admin-account-status" class="col-span-1 lg:col-span-2 text-xs empty:hidden"></p>
                         <div class="bg-[#151922] p-6 rounded">
                             <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-key mr-2 text-blue-400"></i>내 비밀번호 변경</h3>
                             <p class="text-[11px] text-gray-500 mb-4">지금 로그인한 <b id="my-admin-name" class="text-blue-300"></b> 계정의 비밀번호를 바꿉니다.</p>
@@ -2362,6 +2363,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function loadAdminAccounts() {
             document.getElementById('my-admin-name').innerText = currentUser.name;
             const ownerSection = document.getElementById('admin-account-owner-section');
+            const status = document.getElementById('admin-account-status');
+
+            // 💡 예전엔 실패 메시지를 관리자 전용 영역(admin-account-list) 안에 넣었는데,
+            // 그 영역 자체가 실패 시 hidden 처리돼서 이유도 없이 화면이 통째로 비어
+            // 보였다. 이제 언제나 보이는 상태 문구(status)에 진행 상황과 실패 이유를
+            // 표시한다 — 특히 서버가 재배포로 재시작되면 로그인 토큰이 풀릴 수 있는데
+            // (이제 DB에도 토큰을 저장해 최대한 안 풀리게 했지만), 혹시라도 풀렸을 때
+            // "다시 로그인해주세요"가 눈에 보이게 하기 위함.
+            status.className = 'col-span-1 lg:col-span-2 text-xs text-gray-500';
+            status.innerText = '불러오는 중...';
 
             // 💡 로그인 시 저장된 currentUser.is_owner만 믿으면, 예전 세션이 남아있는
             // 브라우저에서는 그 값이 없어(undefined) 원장님인데도 관리 영역이 계속
@@ -2371,8 +2382,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const c = document.getElementById('admin-account-list');
             if (!r.ok) {
                 ownerSection.classList.add('hidden');
-                return c.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(r.message)}</p>`;
+                status.className = 'col-span-1 lg:col-span-2 text-sm bg-red-950/30 border border-red-900/50 rounded-lg px-3 py-2 text-red-300';
+                status.innerText = r.message;
+                return;
             }
+            status.innerText = '';
             const rows = r.data.admins || [];
             const me = rows.find(a => a.name === currentUser.name);
             const isOwner = !!(me && me.is_owner);
