@@ -2346,7 +2346,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#','');
-            document.querySelectorAll('#home-view, #dashboard-screen, #program-view, .prog-content').forEach(el=>el.style.display='none');
+            // 💡 #dashboard-home(학습실 첫 화면 타일들)이 이 초기화 대상에 빠져 있어서,
+            // 프로그램(예: 관리자 화면)으로 들어가도 타일이 그대로 위에 남아있는 채
+            // 실제 내용이 1500px 가까이 아래로 밀려나 있었다 — 스크롤해야만 보이는
+            // 상태. 이제 모든 화면 전환 시 확실히 숨겼다가 필요한 곳에서만 다시 켠다.
+            document.querySelectorAll('#home-view, #dashboard-screen, #dashboard-home, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
             else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); loadHomeAvatarWidget(); }
             else {
