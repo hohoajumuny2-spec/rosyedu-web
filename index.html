@@ -430,6 +430,17 @@
                     <button onclick="showModal('auth')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs"><i class="fa-solid fa-lock mr-1"></i> 로그인</button>
                 </div>
                 <div id="user-nav" class="hidden items-center gap-3">
+                    <div id="nav-avatar-widget" class="flex items-center gap-2 cursor-pointer" onclick="openProgram('mypage'); loadMyPage();" title="나의 성장 아바타">
+                        <div class="relative shrink-0">
+                            <div id="nav-avatar-avatar-display" class="w-9 h-9 rounded-full flex items-center justify-center text-lg border-2 overflow-hidden bg-[#151922] transition-all duration-500">🌱</div>
+                            <span id="nav-avatar-avatar-level-num" class="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[9px] font-black leading-none px-1 py-0.5 rounded-full border border-[#1a1e29]">Lv.1</span>
+                        </div>
+                        <div class="hidden sm:block w-14">
+                            <div class="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                <div id="nav-avatar-avatar-progress-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
                     <span id="header-user-info" class="text-blue-400 font-bold text-xs md:text-sm"></span>
                     <button onclick="openProgram('mypage'); loadMyPage();" class="text-emerald-400 font-bold border border-emerald-600 px-3 py-1.5 rounded-lg text-xs bg-emerald-900/20" id="btn-mypage-nav" style="display:none;">마이페이지</button>
                     <button onclick="goToDashboard()" class="text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1.5 rounded-lg text-xs">학습실</button>
@@ -496,6 +507,31 @@
 
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
+            <div id="home-welcome-banner" class="bg-[#1e2430] border border-teal-700/50 rounded-2xl p-4 md:p-5 mb-6 flex items-center gap-4 md:gap-5">
+                <div class="relative shrink-0">
+                    <div id="home-avatar-avatar-halo" class="absolute left-1/2 top-1/2 text-6xl opacity-20 pointer-events-none select-none transition-all duration-700" style="transform: translate(-50%, -50%);"></div>
+                    <div id="home-avatar-avatar-display" class="relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-xl border-4 border-blue-500 transition-all duration-500 overflow-hidden">🌱</div>
+                    <span id="home-avatar-avatar-hat" class="absolute -top-2 left-1/2 -translate-x-1/2 text-xl md:text-2xl pointer-events-none"></span>
+                    <span id="home-avatar-avatar-pet" class="absolute -bottom-1 -left-2 text-lg md:text-xl pointer-events-none"></span>
+                    <span id="home-avatar-avatar-item-badge" class="absolute -bottom-1 -right-1 text-lg md:text-xl pointer-events-none"></span>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <p id="home-welcome-text" class="text-white font-black text-base md:text-lg truncate">환영합니다!</p>
+                    <div class="flex items-center gap-1.5 text-xs md:text-sm text-gray-300 mt-1">
+                        <span id="home-avatar-avatar-level-icon"></span>
+                        <span id="home-avatar-avatar-level-name" class="font-bold text-teal-300"></span>
+                        <span id="home-avatar-avatar-level-num" class="text-gray-500"></span>
+                    </div>
+                    <div class="h-2.5 bg-gray-800 rounded-full overflow-hidden mt-2 max-w-sm">
+                        <div id="home-avatar-avatar-progress-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width:0%"></div>
+                    </div>
+                    <p id="home-avatar-avatar-progress-text" class="text-[11px] text-gray-500 mt-1"></p>
+                </div>
+                <button onclick="openProgram('mypage'); loadMyPage();" class="shrink-0 text-xs font-bold text-teal-300 border border-teal-700 px-3 py-2 rounded-lg hover:bg-teal-900/30 transition">
+                    <i class="fa-solid fa-shirt mr-1"></i><span class="hidden sm:inline">아바타 </span>꾸미기
+                </button>
+            </div>
+
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
@@ -1790,6 +1826,88 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 뚜렷하게 escalate 되도록 (단순히 작은 배지 하나만 바뀌던 것을 더 눈에 띄게 개선)
         const LEVEL_GLOW = ['#a8a29e', '#4ade80', '#22c55e', '#2dd4bf', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#f472b6', '#fbbf24'];
 
+        // 💡 마이페이지의 풀 사이즈 아바타 카드뿐 아니라, 상단바의 미니 위젯과
+        // 학습실 첫 화면의 환영 배너에도 같은 정보(레벨·경험치·꾸민 모습)를 칠한다.
+        // prefix가 다른 세 군데(''=마이페이지, 'nav-avatar-'=상단바, 'home-avatar-'=환영배너)에
+        // 같은 로직을 반복하지 않도록 id를 'prefix + avatar-xxx' 규칙으로 맞춰 하나의 함수로 처리.
+        function paintAvatarPrefix(prefix) {
+            if (!myLevelInfo) return;
+            const g = suffix => document.getElementById(prefix + suffix);
+            const disp = g('avatar-display');
+            if (!disp) return;   // 이 화면에는 이 위젯이 없음
+
+            const colorDef = avatarItemDef('color', myAvatarLook.color);
+            const faceDef = avatarItemDef('face', myAvatarLook.face);
+            if (myAvatarLook.use_photo && myProfileImage) {
+                disp.innerHTML = `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-full h-full object-cover" alt="내 사진">`;
+            } else {
+                disp.innerText = faceDef ? faceDef.emoji : (myAvatarGender === 'girl' ? '👧' : '👦');
+            }
+            disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
+            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
+            disp.style.borderColor = glow;
+            disp.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
+
+            const halo = g('avatar-halo');
+            if (halo) {
+                halo.innerText = myLevelInfo.icon;
+                const haloScale = 1 + (myLevelInfo.level - 1) * 0.07;
+                halo.style.transform = `translate(-50%, -50%) scale(${haloScale.toFixed(2)})`;
+                halo.style.opacity = (0.16 + (myLevelInfo.level - 1) * 0.035).toFixed(2);
+                halo.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
+            }
+            const hatEl = g('avatar-hat'), petEl = g('avatar-pet'), badgeEl = g('avatar-item-badge');
+            if (hatEl) hatEl.innerText = (avatarItemDef('hat', myAvatarLook.hat) || {}).emoji || '';
+            if (petEl) petEl.innerText = (avatarItemDef('pet', myAvatarLook.pet) || {}).emoji || '';
+            if (badgeEl) badgeEl.innerText = (avatarItemDef('badge', myAvatarLook.badge) || {}).emoji || '';
+
+            const iconEl = g('avatar-level-icon'), nameEl = g('avatar-level-name'), numEl = g('avatar-level-num');
+            if (iconEl) iconEl.innerText = myLevelInfo.icon;
+            if (nameEl) nameEl.innerText = myLevelInfo.name;
+            if (numEl) numEl.innerText = `Lv.${myLevelInfo.level}`;
+
+            const cur = myLevelInfo.xp - myLevelInfo.current_threshold;
+            const span = myLevelInfo.is_max ? 1 : (myLevelInfo.next_threshold - myLevelInfo.current_threshold);
+            const pct = myLevelInfo.is_max ? 100 : Math.max(0, Math.min(100, Math.round((cur / span) * 100)));
+            const barEl = g('avatar-progress-bar'), textEl = g('avatar-progress-text');
+            if (barEl) barEl.style.width = pct + '%';
+            if (textEl) textEl.innerText = myLevelInfo.is_max
+                ? `최고 레벨입니다! (누적 ${myLevelInfo.xp}P)`
+                : `다음 레벨까지 ${myLevelInfo.next_threshold - myLevelInfo.xp}P 남음 (${myLevelInfo.xp}/${myLevelInfo.next_threshold})`;
+        }
+
+        function renderPersistentAvatarWidgets() {
+            paintAvatarPrefix('nav-avatar-');
+            paintAvatarPrefix('home-avatar-');
+            const nameEl = document.getElementById('home-welcome-text');
+            if (nameEl && currentUser) {
+                nameEl.innerText = currentUser.isAdmin ? '원장님, 환영합니다!' : `${currentUser.name}님, 환영합니다!`;
+            }
+        }
+
+        // 마이페이지를 열지 않아도, 로그인하거나 학습실 첫 화면으로 돌아올 때마다
+        // 상단바 미니 위젯과 환영 배너의 레벨·경험치를 최신으로 채운다.
+        async function loadHomeAvatarWidget() {
+            if (!currentUser) return;
+            if (currentUser.isAdmin) return loadAdminAvatar();
+            await loadAvatarCatalog();
+            try {
+                const res = await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`);
+                const data = await res.json();
+                if (data.success) {
+                    myLevelInfo = data.level_info || myLevelInfo;
+                    const prof = data.profile || {};
+                    myAvatarGender = prof.avatar_gender || 'boy';
+                    myAvatarItem = prof.avatar_item || 'none';
+                    myProfileImage = prof.profile_image || '';
+                    myAvatarLook = Object.assign(
+                        { face: myAvatarGender, color: 'blue', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
+                        prof.avatar_look || {});
+                }
+            } catch (e) {}
+            renderAvatarCard();
+        }
+
         function renderAvatarCard() {
             if(!myLevelInfo) return;
             const disp = document.getElementById('avatar-display');
@@ -1846,6 +1964,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     : '';
 
             renderWardrobeGrid();
+            renderPersistentAvatarWidgets();
         }
 
         function nextLevelUnlocks(level) {
@@ -2151,7 +2270,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const h = window.location.hash.replace('#','');
             document.querySelectorAll('#home-view, #dashboard-screen, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); }
+            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); loadHomeAvatarWidget(); }
             else {
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); }
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
@@ -2179,6 +2298,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(u) {
                 currentUser=JSON.parse(u);
                 document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name;
+                loadHomeAvatarWidget();
                 if(!currentUser.isAdmin) { document.getElementById('btn-mypage-nav').style.display='inline-block'; document.getElementById('mobile-mypage-btn').style.display='block'; document.getElementById('card-admin').style.display='none'; }
                 if(currentUser.isAdmin) { document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
                 document.getElementById('mobile-logout-btn').style.display='block';
