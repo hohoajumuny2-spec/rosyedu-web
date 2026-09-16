@@ -12,6 +12,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+    <!-- AI 답변의 ### 소제목, **굵게**, 목록 같은 마크다운을 실제 서식으로 그려주기 위한 marked + DOMPurify(안전 필터) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
@@ -1402,6 +1405,32 @@
                     throwOnError: false,
                 });
             } catch (e) {}
+        }
+
+        // 💡 AI 답변의 ### 소제목, **굵게**, 목록, 가로줄 같은 마크다운 서식을 실제
+        // HTML로 그려준다. $...$/$$...$$ 수식은 마크다운 문법(특히 밑줄 _..._이
+        // 이탤릭으로 오해되는 것)에 다치지 않도록 먼저 떼어놨다가 그대로 복원해서
+        // KaTeX이 나중에 처리하게 한다. AI 응답은 외부 입력이라, marked가 만든
+        // HTML은 DOMPurify로 한 번 걸러 스크립트 삽입 등을 막는다.
+        if (typeof marked !== 'undefined') marked.setOptions({ breaks: true, gfm: true });
+        function formatAIReply(raw) {
+            const text = String(raw == null ? '' : raw);
+            if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+                // 라이브러리가 아직 안 떴으면 예전 방식(굵게 + 줄바꿈)으로라도 보여준다
+                return escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>');
+            }
+            try {
+                const mathBlocks = [];
+                const protectedText = text.replace(/\$\$[\s\S]+?\$\$|\$[^\n$]+?\$/g, (m) => {
+                    mathBlocks.push(m);
+                    return `⁣MATH${mathBlocks.length - 1}⁣`;
+                });
+                let html = marked.parse(protectedText);
+                html = html.replace(/⁣MATH(\d+)⁣/g, (_, i) => escapeHtml(mathBlocks[Number(i)]));
+                return DOMPurify.sanitize(html);
+            } catch (e) {
+                return escapeHtml(text).replace(/(?:\r\n|\r|\n|\\n)/g, '<br>');
+            }
         }
 
         // 💡 전역 통신 인터셉터 (관리자 API 호출 시 자동으로 보안 토큰 장착)
@@ -4999,7 +5028,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const data = await uploadFormData(`${API_URL}/api/chat`, fd);
                 const span = document.getElementById(msgId);
                 if (data.success) {
-                    span.innerHTML = escapeHtml(data.reply).replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-300">$1</b>').replace(/(?:\r\n|\r|\n|\\n)/g, '<br>');
+                    span.innerHTML = formatAIReply(data.reply);
                     renderMathIn(span);
                     showLevelUpCelebration(data.level_up);
                 } else {
