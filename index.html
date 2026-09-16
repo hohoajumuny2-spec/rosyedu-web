@@ -179,6 +179,20 @@
         </div>
     </div>
 
+    <!-- 📊 문항별 정답률 (관리자) -->
+    <div id="qstats-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-3xl h-[88vh] shadow-2xl border border-sky-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 id="qstats-title" class="text-lg font-black text-white"></h2>
+                    <p id="qstats-sub" class="text-[11px] text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="closeModal('qstats-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="qstats-body" class="flex-grow overflow-y-auto p-5"></div>
+        </div>
+    </div>
+
     <!-- ✂ 시험별 등급컷 -->
     <div id="cuts-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl border border-yellow-500 flex flex-col">
@@ -5310,6 +5324,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             </div>
                         </div>`;
 
+                        html += questionStatsHtml(data.question_stats, det);
+
                         const wrongList = det.filter(d => !d.ok);
                         if(wrongList.length) {
                             html += `<h4 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-circle-xmark text-red-400 mr-1"></i>틀린 문제 ${wrongList.length}개</h4>
@@ -5760,6 +5776,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                 <div class="text-xs text-gray-400">마감 ${escapeHtml(q.deadline || '')} · ${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
                             </div>
                             <div class="shrink-0 flex gap-1">
+                                <button onclick="openQuestionStats('${escAttr(q.title)}', '타임어택 퀴즈')" title="문항마다 몇 명이 맞고 틀렸는지" class="text-sky-300 text-xs bg-sky-900/30 hover:bg-sky-900/60 px-3 py-2 rounded transition font-bold"><i class="fa-solid fa-chart-simple"></i></button>
                                 <button onclick="editQuiz(${i})" class="text-orange-300 text-xs bg-orange-900/30 hover:bg-orange-900/60 px-3 py-2 rounded transition font-bold">수정</button>
                                 <button onclick="deleteQuiz('${escAttr(q.title)}')" class="text-red-400 text-xs bg-red-900/30 px-3 py-2 rounded hover:text-white transition">삭제</button>
                             </div>
@@ -5870,6 +5887,92 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
 
         // 퀴즈를 내면 그 자리에서 점수와 틀린 문제를 바로 보여준다
+        // ── 문항별 정답률 ──────────────────────────────────
+        //   같은 퀴즈·시험을 푼 학생들 사이에서 이 문항을 몇 명이 맞혔는지.
+        //   myDet이 있으면 내가 맞은 문항인지도 함께 표시한다.
+        function questionStatsHtml(stats, myDet) {
+            const list = stats || [];
+            if (!list.length) return '';
+            const counted = list[0].total || 0;
+            if (counted < 1) return '';
+            const mine = {};
+            (myDet || []).forEach(d => { mine[Number(d.no)] = !!d.ok; });
+
+            const rows = list.map(s => {
+                const rate = s.rate == null ? 0 : s.rate;
+                // 정답률이 낮을수록 붉게 — 어려웠던 문항이 한눈에 보이도록
+                const bar = rate >= 70 ? 'bg-emerald-500' : rate >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+                const got = mine[s.no];
+                const badge = got === undefined
+                    ? 'bg-gray-700 text-gray-300'
+                    : got ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white';
+                return `<div class="flex items-center gap-2 py-1.5">
+                    <span class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black ${badge}">${s.no}</span>
+                    <div class="flex-grow h-2.5 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-full ${bar}" style="width:${rate}%"></div>
+                    </div>
+                    <span class="shrink-0 text-[11px] text-gray-400 w-24 text-right">
+                        <b class="text-white">${s.correct}</b>/${s.total}명
+                        <span class="text-gray-500 ml-1">${rate}%</span>
+                    </span>
+                </div>`;
+            }).join('');
+
+            const hardest = list.slice().sort((a, b) => (a.rate ?? 100) - (b.rate ?? 100))[0];
+            const note = hardest && hardest.rate != null && hardest.rate < 50
+                ? `<p class="text-[11px] text-red-300 mt-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i>가장 어려웠던 문항은 <b>${hardest.no}번</b>입니다 (정답률 ${hardest.rate}%).</p>`
+                : '';
+
+            return `<div class="bg-[#151922] border border-sky-900/60 rounded-xl p-4 mb-5">
+                <h4 class="text-sky-300 font-bold text-sm mb-1"><i class="fa-solid fa-chart-simple mr-1"></i>문항별 정답률</h4>
+                <p class="text-[11px] text-gray-500 mb-3">지금까지 푼 ${counted}명 기준입니다.${myDet ? ' 동그라미 색은 내 정답 여부입니다.' : ''}</p>
+                ${rows}
+                ${note}
+            </div>`;
+        }
+
+        // 원장님용 — 어느 학생이 틀렸는지까지
+        async function openQuestionStats(title, kind) {
+            document.getElementById('qstats-title').innerText = title;
+            document.getElementById('qstats-sub').innerText = kind + ' · 문항별 정답률';
+            document.getElementById('qstats-body').innerHTML = '<p class="text-gray-400 text-center py-10">불러오는 중...</p>';
+            document.getElementById('qstats-modal').style.display = 'flex';
+
+            const r = await adminGet(`/api/admin/stats/questions?title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
+            const box = document.getElementById('qstats-body');
+            if (!r.ok) return box.innerHTML = `<p class="text-red-400 text-center py-10">${escapeHtml(r.message)}</p>`;
+
+            const list = r.data.questions || [];
+            if (!list.length) {
+                return box.innerHTML = `<p class="text-gray-400 text-center py-10">아직 푼 학생이 없습니다.</p>`;
+            }
+            const counted = r.data.submitted || 0;
+            const students = r.data.students || counted;
+            const old = students - counted;
+
+            box.innerHTML = `<p class="text-xs text-gray-400 mb-3">제출 <b class="text-white">${counted}명</b> 기준
+                ${old > 0 ? `<span class="text-yellow-500 ml-1">(예전 기록 ${old}명은 문항 정보가 없어 제외)</span>` : ''}</p>`
+                + list.map(s => {
+                    const rate = s.rate == null ? 0 : s.rate;
+                    const bar = rate >= 70 ? 'bg-emerald-500' : rate >= 40 ? 'bg-yellow-500' : 'bg-red-500';
+                    const names = s.wrong_names || [];
+                    return `<div class="border-b border-gray-800 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="shrink-0 w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-xs font-black text-white">${s.no}</span>
+                            <div class="flex-grow h-3 bg-gray-800 rounded-full overflow-hidden">
+                                <div class="h-full ${bar}" style="width:${rate}%"></div>
+                            </div>
+                            <span class="shrink-0 text-xs text-gray-400 w-28 text-right">
+                                정답 <b class="text-emerald-400">${s.correct}</b>
+                                <span class="text-gray-600">/</span> 오답 <b class="text-red-400">${s.wrong}</b>
+                                <span class="text-white ml-1">${rate}%</span>
+                            </span>
+                        </div>
+                        ${names.length ? `<p class="text-[11px] text-gray-500 mt-1.5 pl-10">틀린 학생 · ${names.map(n => escapeHtml(n)).join(', ')}</p>` : ''}
+                    </div>`;
+                }).join('');
+        }
+
         function renderQuizResult(data) {
             const circles = ['①', '②', '③', '④', '⑤'];
             const mark = n => circles[Number(n) - 1] || n;
@@ -5922,6 +6025,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <div class="h-full ${bar}" style="width:${pct}%"></div>
                     </div>
                 </div>`;
+
+            html += questionStatsHtml(data.question_stats, det);
 
             if (!det.length) {
                 html += `<p class="text-gray-400 text-center py-6">채점 내역을 불러오지 못했습니다.</p>`;
@@ -6035,6 +6140,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center">
                             <span class="font-bold truncate w-1/2">${escapeHtml(ex.title)}</span>
                             <div class="flex gap-1">
+                                <button onclick="openQuestionStats('${escAttr(ex.title)}', '모의고사')" title="문항마다 몇 명이 맞고 틀렸는지" class="bg-sky-700 hover:bg-sky-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-chart-simple"></i></button>
                                 <button onclick="startAdminLiveByIndex(${i})" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-2 py-1 rounded font-bold text-white">실시간 감독</button>
                                 <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-camera mr-1"></i>오답률표 반영</button>
                                 <button onclick="deleteExam('${escAttr(ex.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-2 py-1 rounded transition">삭제</button>
