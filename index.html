@@ -2515,7 +2515,27 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-generator'){loadGeneratedQuestions();}
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-account'){loadAdminAccounts();}
+
+            // 💡 드물게(느린 네트워크·브라우저 확장 프로그램 간섭 등으로 추정) 이 탭이
+            // 방금 켜졌는데도 잠시 뒤 다시 보면 숨겨진 채로 남아있는 사례가 보고됐다.
+            // 원인을 확실히 재현하진 못했지만, 그때는 같은 탭을 한 번 더 켜기만 해도
+            // 바로 정상화되는 것은 확인했다 — 그 자가복구를 자동으로 해둔다. 그 사이
+            // 사용자가 다른 탭으로 옮겼다면 이 탭을 건드리지 않고, 계속 실패해도
+            // 무한히 재시도하지 않도록 2번까지만 시도한다.
+            const retryCount = (adminTabRetries[id] || 0);
+            if (retryCount < 2) {
+                setTimeout(() => {
+                    if (document.getElementById('btn-'+id)?.classList.contains('border')) return; // 이미 다른 탭으로 옮김
+                    if (getComputedStyle(tabEl).display === 'none') {
+                        adminTabRetries[id] = retryCount + 1;
+                        switchAdminTab(id);
+                    } else {
+                        adminTabRetries[id] = 0;
+                    }
+                }, 1200);
+            }
         }
+        const adminTabRetries = {};
 
         let isSignupMode = false;
         function toggleSignupMode(flag) {
