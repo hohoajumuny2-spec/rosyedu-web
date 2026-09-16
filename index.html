@@ -535,10 +535,20 @@
 
             <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                <div onclick="openProgram('chat')" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                <div onclick="openProgram('chat'); openChatSubject('korean');" class="bg-[#1e2430] border border-blue-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
                     <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 국최</h3>
                     <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+                </div>
+                <div onclick="openProgram('chat'); openChatSubject('math');" class="bg-[#1e2430] border border-indigo-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 수박</h3>
+                    <p class="text-indigo-200/70 text-xs md:text-sm">수학과 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+                </div>
+                <div onclick="openProgram('chat'); openChatSubject('english');" class="bg-[#1e2430] border border-cyan-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🤖</div>
+                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">24시간 AI 재우T</h3>
+                    <p class="text-cyan-200/70 text-xs md:text-sm">영어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
                 </div>
                 <div onclick="openProgram('mypage'); loadMyPage();" class="bg-[#1e2430] border border-teal-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
                     <div class="w-12 h-12 md:w-14 md:h-14 bg-teal-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">🌱</div>
@@ -695,7 +705,7 @@
 
             <!-- 채팅 -->
             <div id="prog-chat" class="prog-content w-full max-w-6xl mx-auto bg-[#1e2430] p-4 md:p-8 rounded-xl border border-gray-800 shadow-2xl">
-                <h2 class="text-2xl md:text-3xl font-bold text-blue-400 mb-4 md:mb-6"><i class="fa-solid fa-robot mr-2"></i>24시간 AI 국최</h2>
+                <h2 id="chat-title" class="text-2xl md:text-3xl font-bold text-blue-400 mb-4 md:mb-6"><i class="fa-solid fa-robot mr-2"></i>24시간 AI 국최</h2>
                 <div id="chat-history" class="h-[60vh] overflow-y-auto mb-4 bg-[#151922] p-4 rounded-xl border border-gray-700 text-sm md:text-lg leading-relaxed">
                     <div class="text-left mb-6">
                         <span class="bg-gray-800 px-4 py-3 md:px-6 md:py-5 rounded-2xl text-white inline-block shadow-lg border border-gray-700">
@@ -1073,6 +1083,15 @@
 
                     <!-- 자료학습 탭 -->
                     <div id="admin-knowledge" class="admin-tab-content grid grid-cols-2 gap-4">
+                        <div class="col-span-2 bg-[#151922] p-4 rounded border border-gray-700 flex items-center gap-3">
+                            <span class="text-white font-bold text-sm shrink-0"><i class="fa-solid fa-graduation-cap mr-1 text-emerald-400"></i>과목</span>
+                            <select id="kb-subject-select" onchange="switchKbSubject()" class="p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
+                                <option value="korean">국어 (국최)</option>
+                                <option value="math">수학 (수박)</option>
+                                <option value="english">영어 (재우T)</option>
+                            </select>
+                            <p class="text-[11px] text-gray-500">과목마다 자료학습과 AI 답변 원칙이 완전히 분리되어 있습니다.</p>
+                        </div>
                         <div class="col-span-2 bg-[#151922] p-6 rounded border border-yellow-600/50">
                             <h4 class="text-yellow-400 font-bold mb-2"><i class="fa-solid fa-chalkboard-user mr-2"></i>AI 답변 원칙 (수업 방식/설명 스타일)</h4>
                             <p class="text-xs text-gray-400 mb-2">여기에 적어주신 내용을 AI 질문 답변과 논술 첨삭이 최우선으로 참고합니다. 예: "문학 작품은 항상 시대적 배경을 먼저 설명한 뒤 해석한다", "비유법은 이렇게 설명한다" 등 원장님만의 설명 방식을 자유롭게 적어주세요.</p>
@@ -4613,8 +4632,36 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }
         }
 
+        // 국어(국최)뿐 아니라 수학(수박)·영어(재우T) 등 과목별 AI 튜터.
+        // 과목마다 자료학습/AI 답변 원칙이 완전히 분리되어 있어, 국어 지문이
+        // 수학·영어 질문에 섞여 들어가지 않는다.
+        const CHAT_SUBJECTS = {
+            korean:  { label: '국어', persona: '스마트 국최', title: '24시간 AI 국최', color: 'text-blue-400',
+                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 국최입니다. 국어에 대한 질문을 해주세요!' },
+            math:    { label: '수학', persona: '스마트 수박', title: '24시간 AI 수박', color: 'text-indigo-400',
+                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 수박입니다. 수학에 대한 질문을 해주세요!' },
+            english: { label: '영어', persona: '스마트 재우T', title: '24시간 AI 재우T', color: 'text-cyan-400',
+                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 재우T입니다. 영어에 대한 질문을 해주세요!' },
+        };
+        let currentChatSubject = 'korean';
+
+        function openChatSubject(subject) {
+            currentChatSubject = CHAT_SUBJECTS[subject] ? subject : 'korean';
+            const meta = CHAT_SUBJECTS[currentChatSubject];
+            const titleEl = document.getElementById('chat-title');
+            titleEl.innerHTML = `<i class="fa-solid fa-robot mr-2"></i>${escapeHtml(meta.title)}`;
+            titleEl.className = `text-2xl md:text-3xl font-bold ${meta.color} mb-4 md:mb-6`;
+            document.getElementById('chat-history').innerHTML = `<div class="text-left mb-6">
+                <span class="bg-gray-800 px-4 py-3 md:px-6 md:py-5 rounded-2xl text-white inline-block shadow-lg border border-gray-700">
+                    <span class="block mb-2 font-bold ${meta.color} text-base md:text-xl">🤖 ${escapeHtml(meta.persona)}</span>
+                    ${escapeHtml(meta.greet)}
+                </span>
+            </div>`;
+        }
+
         async function sendChat() {
             const i=document.getElementById('chat-input'); const p=i.value; if(!p) return;
+            const meta = CHAT_SUBJECTS[currentChatSubject] || CHAT_SUBJECTS.korean;
             const h=document.getElementById('chat-history'); h.innerHTML+=`<div class="text-right mb-4"><span class="bg-blue-600 p-3 rounded-lg text-white inline-block">${escapeHtml(p)}</span></div>`;
             i.value='';
 
@@ -4623,10 +4670,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("grade",currentUser.grade || "미상");
             fd.append("student_name",currentUser.name || "미상");
             fd.append("prompt",p);
+            fd.append("subject",currentChatSubject);
             chatFiles.forEach(f=>fd.append("files",f)); clearAllFiles('chat-file-visual');
 
             const msgId=`msg-${Date.now()}`;
-            h.innerHTML+=`<div class="text-left mb-4"><div class="bg-gray-800 p-4 rounded-xl text-white inline-block leading-relaxed border border-gray-700 w-full max-w-[90%]"><span class="block mb-2 font-bold text-blue-400 text-base md:text-xl">🤖 스마트 국최</span><span id="${msgId}" class="text-gray-300"><i class="fa-solid fa-spinner fa-spin mr-2"></i>답변을 작성하고 있습니다...</span></div></div>`;
+            h.innerHTML+=`<div class="text-left mb-4"><div class="bg-gray-800 p-4 rounded-xl text-white inline-block leading-relaxed border border-gray-700 w-full max-w-[90%]"><span class="block mb-2 font-bold ${meta.color} text-base md:text-xl">🤖 ${escapeHtml(meta.persona)}</span><span id="${msgId}" class="text-gray-300"><i class="fa-solid fa-spinner fa-spin mr-2"></i>답변을 작성하고 있습니다...</span></div></div>`;
             h.scrollTop=h.scrollHeight;
 
             try {
@@ -4644,6 +4692,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }
         }
 
+        function currentKbSubject() {
+            const el = document.getElementById('kb-subject-select');
+            return (el && el.value) || 'korean';
+        }
+
+        function switchKbSubject() {
+            loadKnowledgeList();
+            loadAiGuidelines();
+        }
+
         async function uploadKnowledge() {
             let t = document.getElementById('kb-title').value.trim();
             const c = document.getElementById('kb-content').value;
@@ -4654,6 +4712,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const fd = new FormData();
             fd.append("title", t);
             fd.append("content", c);
+            fd.append("subject", currentKbSubject());
             kbFiles.forEach(f => fd.append("files", f));
 
             try {
@@ -4674,6 +4733,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             showLoader(`⚡ ${files.length}개의 파일을 업로드 중입니다...\n(파일 용량이 크면 수 분이 소요될 수 있습니다. 창을 닫지 마세요!)`);
             const fd = new FormData();
             for(let i=0; i<files.length; i++) { fd.append("files", files[i]); }
+            fd.append("subject", currentKbSubject());
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/knowledge/bulk`, fd);
                 if(data.success) {
@@ -4693,7 +4753,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const c = document.getElementById('admin-kb-view-list');
             c.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><br>학습 목록을 불러오는 중입니다...</div>';
             try {
-                const res = await fetch(`${API_URL}/api/knowledge`);
+                const res = await fetch(`${API_URL}/api/knowledge?subject=${currentKbSubject()}`);
                 const data = await res.json();
                 KB_LIST = (data.success && data.knowledge) ? data.knowledge : [];
                 if (!KB_LIST.length) {
@@ -4755,7 +4815,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadAiGuidelines() {
             try {
-                const res = await fetch(`${API_URL}/api/admin/ai_guidelines`);
+                const res = await fetch(`${API_URL}/api/admin/ai_guidelines?subject=${currentKbSubject()}`);
                 const data = await res.json();
                 if(data.success) document.getElementById('ai-guidelines-text').value = data.text || '';
             } catch(e) {}
@@ -4763,9 +4823,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function saveAiGuidelines() {
             const text = document.getElementById('ai-guidelines-text').value;
+            const subject = currentKbSubject();
             showLoader("AI 답변 원칙 저장 중...");
             try {
-                const res = await fetch(`${API_URL}/api/admin/ai_guidelines`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+                const res = await fetch(`${API_URL}/api/admin/ai_guidelines`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text, subject})});
                 const data = await res.json();
                 if(data.success) showToast("AI 답변 원칙이 저장됐습니다!");
                 else alert("저장 실패: " + (data.detail || ""));
