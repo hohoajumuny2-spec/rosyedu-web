@@ -338,8 +338,20 @@
                 <button onclick="closeModal('admission-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="flex-grow overflow-y-auto p-5 space-y-5">
+                <div class="bg-[#151922] border border-gray-700 rounded-lg p-3 mb-4">
+                    <label class="text-[11px] text-blue-300 font-bold mb-1 block">이 기준표는 어느 등급제로 적혀 있나요?</label>
+                    <div class="flex items-center gap-2">
+                        <select id="admission-scale" onchange="changeAdmissionScale(this.value)" class="p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
+                            <option value="9">9등급제</option>
+                            <option value="5">5등급제</option>
+                        </select>
+                        <span class="text-[11px] text-gray-500">바꾸면 아래 수시 구간 숫자를 그 등급제로 <b class="text-gray-400">자동 환산</b>합니다.</span>
+                    </div>
+                    <p class="text-[10px] text-gray-600 mt-2">학생 내신이 다른 등급제로 입력되어 있어도, 이 기준표 쪽 등급제로 맞춰서 대조합니다.</p>
+                </div>
+
                 <div>
-                    <h3 class="text-white font-bold text-sm mb-2">수시 — 내신 등급 기준</h3>
+                    <h3 class="text-white font-bold text-sm mb-2">수시 — 내신 등급 기준 <span id="admission-scale-label" class="text-blue-300 font-normal">(9등급제)</span></h3>
                     <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
                         <span class="col-span-2">이 등급까지</span><span class="col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
                     </div>
@@ -2454,6 +2466,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     ${line('현재 수시 지원 가능 라인', tiers.susi, 'border-blue-700/50', 'susi')}
                     ${line('현재 정시 지원 가능 라인', tiers.jeongsi, 'border-yellow-700/50', 'jeongsi')}
                 </div>
+                ${tiers.converted ? `<p class="text-[10px] text-blue-300 mt-2">
+                    <i class="fa-solid fa-right-left mr-1"></i>기준표가 ${tiers.table_scale}등급제라, 학생 내신 ${naAvg}등급(${nScale}등급제)을
+                    <b>${tiers.converted.value}등급</b>으로 환산해 대조했습니다.</p>` : ''}
                 <p class="text-[10px] text-gray-600 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>${escapeHtml(c.table_note || '')} 왼쪽 아래 '대학 라인 기준표 설정'에서 수정할 수 있습니다.</p>`;
         }
 
@@ -3497,6 +3512,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!r.ok) return alert(r.message);
             ADMISSION_TABLE = r.data.table;
             window.__admissionDefault = r.data.default;
+            const sel = document.getElementById('admission-scale');
+            if (sel) sel.value = ADMISSION_TABLE.scale === '5' ? '5' : '9';
             renderAdmissionRows();
             showModal('admission');
         }
@@ -3511,7 +3528,39 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             </div>`;
         }
 
+        // 기준표 등급제를 바꾸면 수시 구간 숫자를 그 등급제로 환산해 준다.
+        // (정시 구간은 백분위라 등급제와 무관하므로 건드리지 않는다)
+        function changeAdmissionScale(to) {
+            const from = (ADMISSION_TABLE.scale === '5') ? '5' : '9';
+            const label = document.getElementById('admission-scale-label');
+            if (label) label.innerText = `(${to}등급제)`;
+            if (from === to) { ADMISSION_TABLE.scale = to; return; }
+
+            const rows = Array.from(document.querySelectorAll('#susi-rows [data-trow]'));
+            const before = rows.map(r => r.querySelector('[data-k="upto"]').value);
+            rows.forEach(r => {
+                const inp = r.querySelector('[data-k="upto"]');
+                const v = parseFloat(inp.value);
+                if (isNaN(v)) return;
+                const max = GRADE_CUTS[to].length;
+                const conv = convertGrade(v, from, to);
+                inp.value = (conv === null ? v : Math.min(max, conv));
+            });
+            ADMISSION_TABLE.scale = to;
+
+            const after = rows.map(r => r.querySelector('[data-k="upto"]').value);
+            const lines = rows.map((r, i) => {
+                const tier = r.querySelector('[data-k="tier"]').value || '(이름 없음)';
+                return `  ${tier}: ${before[i]} → ${after[i]}`;
+            }).join('\n');
+            alert(`수시 구간을 ${to}등급제로 환산했습니다.\n\n${lines}\n\n` +
+                  `등급제가 다르면 구간 폭도 달라지니, 실제 입결에 맞게 다듬어 주세요.\n` +
+                  `저장해야 반영됩니다.`);
+        }
+
         function renderAdmissionRows() {
+            const label = document.getElementById('admission-scale-label');
+            if (label) label.innerText = `(${ADMISSION_TABLE.scale === '5' ? '5' : '9'}등급제)`;
             document.getElementById('susi-rows').innerHTML = (ADMISSION_TABLE.susi || []).map(r => tableRowHtml('susi', r)).join('');
             document.getElementById('jeongsi-rows').innerHTML = (ADMISSION_TABLE.jeongsi || []).map(r => tableRowHtml('jeongsi', r)).join('');
         }
@@ -3521,6 +3570,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function restoreAdmissionDefault() {
             if (!confirm("기본 기준표로 되돌립니다. 지금 화면의 수정 내용은 사라집니다.")) return;
             ADMISSION_TABLE = JSON.parse(JSON.stringify(window.__admissionDefault));
+            const sel = document.getElementById('admission-scale');
+            if (sel) sel.value = ADMISSION_TABLE.scale === '5' ? '5' : '9';
             renderAdmissionRows();
         }
 
@@ -3536,7 +3587,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const jeongsi = grab('jeongsi-rows').sort((a, b) => b.from_pct - a.from_pct); // 높은 백분위부터
             if (!susi.length || !jeongsi.length) return alert("수시와 정시 구간을 각각 하나 이상 남겨주세요.");
             showLoader("기준표 저장 중...");
-            const r = await adminPost('/api/admin/counsel/admission_table', { susi: susi, jeongsi: jeongsi, note: ADMISSION_TABLE.note || '' });
+            const r = await adminPost('/api/admin/counsel/admission_table', {
+                susi: susi, jeongsi: jeongsi,
+                scale: document.getElementById('admission-scale').value,
+                note: ADMISSION_TABLE.note || ''
+            });
             hideLoader();
             if (!r.ok) return alert(r.message);
             ADMISSION_TABLE = r.data.table;
