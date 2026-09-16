@@ -480,7 +480,7 @@
         <div id="intro-section" class="w-full max-w-5xl mx-auto py-24 text-left border-t border-gray-800">
             <h2 class="text-3xl font-bold text-blue-400 mb-6"><i class="fa-solid fa-circle-info mr-2"></i>프로그램 소개</h2>
             <div class="bg-[#151922] p-8 rounded-2xl border border-gray-700 text-gray-300 leading-relaxed text-lg">
-                <p class="mb-4"><strong>로지에듀 스마트 플랫폼</strong>은 학생들의 완벽한 국어 학습을 위해 탄생한 AI 기반 맞춤형 학습 시스템입니다.</p>
+                <p class="mb-4"><strong>로지에듀 스마트 플랫폼</strong>은 학생들의 국어·수학·영어 학습과 학습 관리를 위해 탄생한 AI 기반 맞춤형 학습 시스템입니다.</p>
                 <ul class="list-disc pl-6 space-y-2">
                     <li><strong class="text-white">24시간 AI 튜터:</strong> 언제든 질문하고 즉각적인 답변을 받을 수 있습니다.</li>
                     <li><strong class="text-white">타임어택 퀴즈:</strong> 정해진 기한과 시간 내에 긴장감 있게 퀴즈를 풀고 실력을 점검합니다.</li>
@@ -2362,13 +2362,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function loadAdminAccounts() {
             document.getElementById('my-admin-name').innerText = currentUser.name;
             const ownerSection = document.getElementById('admin-account-owner-section');
-            if (!currentUser.is_owner) { ownerSection.classList.add('hidden'); return; }
-            ownerSection.classList.remove('hidden');
 
+            // 💡 로그인 시 저장된 currentUser.is_owner만 믿으면, 예전 세션이 남아있는
+            // 브라우저에서는 그 값이 없어(undefined) 원장님인데도 관리 영역이 계속
+            // 숨겨진 채로 있었다. 서버가 지금 돌려주는 관리자 목록에서 내 항목을
+            // 다시 찾아 진짜 오너 여부를 그때그때 확인하고, currentUser도 갱신해둔다.
             const r = await adminGet('/api/admin/admins');
             const c = document.getElementById('admin-account-list');
-            if (!r.ok) return c.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(r.message)}</p>`;
+            if (!r.ok) {
+                ownerSection.classList.add('hidden');
+                return c.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(r.message)}</p>`;
+            }
             const rows = r.data.admins || [];
+            const me = rows.find(a => a.name === currentUser.name);
+            const isOwner = !!(me && me.is_owner);
+            if (currentUser.is_owner !== isOwner) {
+                currentUser.is_owner = isOwner;
+                try { localStorage.setItem('logyedu_user', JSON.stringify(currentUser)); } catch (e) {}
+            }
+            ownerSection.classList.toggle('hidden', !isOwner);
+
             c.innerHTML = rows.map(a => `
                 <div class="flex items-center justify-between bg-gray-800 px-3 py-2 rounded mb-1.5">
                     <div>
