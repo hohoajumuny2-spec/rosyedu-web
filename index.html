@@ -58,8 +58,9 @@
             <datalist id="login-school-list"></datalist>
             <datalist id="login-grade-list"></datalist>
             <p class="text-[11px] text-gray-500 mb-2 px-1">※ 목록에서 골라 입력하면 오타 없이 정확하게 입력됩니다.</p>
-            <input type="text" id="login-name" placeholder="본명 입력" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-4">
+            <input type="text" id="login-name" placeholder="본명 입력 (관리자는 등록된 관리자 이름)" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-4">
             <input type="password" id="login-pw" placeholder="관리자 비밀번호 (학생은 비워둠)" class="w-full p-3 bg-[#151922] border border-gray-700 text-gray-400 rounded mb-4">
+            <p class="text-[11px] text-gray-500 -mt-3 mb-4">💡 원장님은 이름을 비워둬도 됩니다. 그 외 관리자는 이름과 비밀번호를 함께 입력하세요.</p>
             <input type="text" id="signup-code" placeholder="가입 코드 (원장님께 문의해서 받으세요)" class="hidden w-full p-3 bg-[#151922] border border-emerald-700 outline-none focus:border-emerald-500 rounded text-white mb-4">
             <button id="auth-primary-btn" onclick="authSubmit()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg">입장하기</button>
             <p class="text-center text-xs text-gray-400 mt-4">
@@ -834,6 +835,7 @@
                         <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="text-orange-400 font-bold border border-orange-600 px-4 py-2 rounded">퀴즈 출제</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
+                        <button onclick="switchAdminTab('admin-account')" id="btn-admin-account" class="text-gray-300 font-bold border border-gray-500 px-4 py-2 rounded">관리자 계정</button>
                     </div>
 
                     <!-- 명단 관리 -->
@@ -1240,6 +1242,30 @@
                             <button onclick="createBoardAdmin()" class="w-full bg-gray-600 hover:bg-gray-500 py-2 text-white font-bold rounded transition shadow-lg">공지 등록</button>
                             <div id="admin-board-view-list" class="mt-4 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
+
+                    <!-- 관리자 계정 -->
+                    <div id="admin-account" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="bg-[#151922] p-6 rounded">
+                            <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-key mr-2 text-blue-400"></i>내 비밀번호 변경</h3>
+                            <p class="text-[11px] text-gray-500 mb-4">지금 로그인한 <b id="my-admin-name" class="text-blue-300"></b> 계정의 비밀번호를 바꿉니다.</p>
+                            <input type="password" id="my-admin-cur-pw" placeholder="현재 비밀번호" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                            <input type="password" id="my-admin-new-pw" placeholder="새 비밀번호 (4자 이상)" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                            <input type="password" id="my-admin-new-pw2" placeholder="새 비밀번호 확인" class="w-full p-2 mb-3 bg-gray-800 text-white rounded">
+                            <button onclick="changeMyAdminPassword()" class="w-full bg-blue-600 hover:bg-blue-700 py-2 text-white font-bold rounded transition">비밀번호 변경</button>
+                        </div>
+
+                        <div id="admin-account-owner-section" class="bg-[#151922] p-6 rounded hidden">
+                            <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-user-shield mr-2 text-yellow-400"></i>관리자 계정 관리</h3>
+                            <p class="text-[11px] text-gray-500 mb-4">학습실에 관리자로 로그인할 수 있는 계정을 추가·삭제합니다. 이 계정들은 화면 안에서의 관리자 권한만 가질 뿐, 서버 코드나 배포에는 접근할 수 없습니다.</p>
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" id="new-admin-name" placeholder="이름" class="w-1/3 p-2 bg-gray-800 text-white rounded text-sm">
+                                <input type="password" id="new-admin-pw" placeholder="비밀번호" class="flex-1 p-2 bg-gray-800 text-white rounded text-sm">
+                                <input type="password" id="new-admin-pw2" placeholder="확인" class="flex-1 p-2 bg-gray-800 text-white rounded text-sm">
+                            </div>
+                            <button onclick="createAdminAccount()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-sm transition mb-4">관리자 추가</button>
+                            <div id="admin-account-list" class="space-y-1 max-h-72 overflow-y-auto"></div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -2280,6 +2306,74 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }
         });
 
+        // ── 관리자 계정 ──────────────────────────────────
+        //   비밀번호 변경은 누구나 자기 것만. 계정 추가·삭제는 원장님(is_owner)만.
+        async function loadAdminAccounts() {
+            document.getElementById('my-admin-name').innerText = currentUser.name;
+            const ownerSection = document.getElementById('admin-account-owner-section');
+            if (!currentUser.is_owner) { ownerSection.classList.add('hidden'); return; }
+            ownerSection.classList.remove('hidden');
+
+            const r = await adminGet('/api/admin/admins');
+            const c = document.getElementById('admin-account-list');
+            if (!r.ok) return c.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(r.message)}</p>`;
+            const rows = r.data.admins || [];
+            c.innerHTML = rows.map(a => `
+                <div class="flex items-center justify-between bg-gray-800 px-3 py-2 rounded mb-1.5">
+                    <div>
+                        <span class="text-white font-bold text-sm">${escapeHtml(a.name)}</span>
+                        ${a.is_owner ? '<span class="text-[10px] text-yellow-400 ml-1 font-bold">원장님</span>' : ''}
+                        <span class="text-[10px] text-gray-500 block">${escapeHtml(a.created_at || '')}</span>
+                    </div>
+                    ${a.is_owner ? '' : `<button onclick="deleteAdminAccount('${escAttr(a.name)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-2 py-1 rounded transition">삭제</button>`}
+                </div>`).join('') || '<p class="text-gray-500 text-sm">등록된 관리자가 없습니다.</p>';
+        }
+
+        async function createAdminAccount() {
+            const name = document.getElementById('new-admin-name').value.trim();
+            const pw = document.getElementById('new-admin-pw').value;
+            const pw2 = document.getElementById('new-admin-pw2').value;
+            if (!name || !pw) return alert("이름과 비밀번호를 입력해 주세요.");
+            if (pw.length < 4) return alert("비밀번호는 4자 이상이어야 합니다.");
+            if (pw !== pw2) return alert("비밀번호 확인이 일치하지 않습니다.");
+            showLoader("추가 중...");
+            const r = await adminPost('/api/admin/admins', { name, password: pw });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            document.getElementById('new-admin-name').value = '';
+            document.getElementById('new-admin-pw').value = '';
+            document.getElementById('new-admin-pw2').value = '';
+            showToast(`'${name}' 관리자를 추가했습니다.`);
+            loadAdminAccounts();
+        }
+
+        async function deleteAdminAccount(name) {
+            if (!confirm(`'${name}' 관리자를 삭제하시겠습니까?`)) return;
+            showLoader("삭제 중...");
+            const r = await adminPost('/api/admin/admins/delete', { name });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            showToast(`'${name}' 관리자를 삭제했습니다.`);
+            loadAdminAccounts();
+        }
+
+        async function changeMyAdminPassword() {
+            const cur = document.getElementById('my-admin-cur-pw').value;
+            const nw = document.getElementById('my-admin-new-pw').value;
+            const nw2 = document.getElementById('my-admin-new-pw2').value;
+            if (!cur || !nw) return alert("현재 비밀번호와 새 비밀번호를 입력해 주세요.");
+            if (nw.length < 4) return alert("새 비밀번호는 4자 이상이어야 합니다.");
+            if (nw !== nw2) return alert("새 비밀번호 확인이 일치하지 않습니다.");
+            showLoader("변경 중...");
+            const r = await adminPost('/api/admin/change_password', { current_password: cur, new_password: nw });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            document.getElementById('my-admin-cur-pw').value = '';
+            document.getElementById('my-admin-new-pw').value = '';
+            document.getElementById('my-admin-new-pw2').value = '';
+            showToast("비밀번호를 변경했습니다. 다음 로그인부터 새 비밀번호를 사용하세요.");
+        }
+
         async function loadClassAutocomplete() {
             try {
                 const res = await fetch(`${API_URL}/api/classes`); const data = await res.json();
@@ -2297,7 +2391,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const u = localStorage.getItem('logyedu_user');
             if(u) {
                 currentUser=JSON.parse(u);
-                document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?'원장님':currentUser.name;
+                document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?(currentUser.name==='원장님'?'원장님':currentUser.name+' 관리자'):currentUser.name;
                 loadHomeAvatarWidget();
                 if(!currentUser.isAdmin) { document.getElementById('btn-mypage-nav').style.display='inline-block'; document.getElementById('mobile-mypage-btn').style.display='block'; document.getElementById('card-admin').style.display='none'; }
                 if(currentUser.isAdmin) { document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
@@ -2338,6 +2432,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
             if(id==='admin-generator'){loadGeneratedQuestions();}
             if(id==='admin-quiz'){loadAdminQuizzes();}
+            if(id==='admin-account'){loadAdminAccounts();}
         }
 
         let isSignupMode = false;
@@ -2391,6 +2486,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 if(data.success) {
                     currentUser={school:s||"미상",grade:g||"미상",name:n || "원장님",isAdmin:data.is_admin};
                     if(data.admin_token) currentUser.admin_token = data.admin_token;
+                    if(data.is_admin) { currentUser.name = data.admin_name || currentUser.name; currentUser.is_owner = !!data.is_owner; }
 
                     localStorage.setItem('logyedu_user',JSON.stringify(currentUser));
                     if(data.level_up) localStorage.setItem('logyedu_pending_levelup', JSON.stringify(data.level_up));
