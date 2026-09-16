@@ -1928,6 +1928,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const f = inp.files[0];
                 if (!f) return;
                 showLoader("사진 올리는 중...");
+                if (currentUser && currentUser.isAdmin) {
+                    const afd = new FormData();
+                    afd.append("file", f, f.name);
+                    try {
+                        const res = await uploadFormData(`${API_URL}/api/admin/avatar/photo`, afd);
+                        const d = typeof res === 'string' ? JSON.parse(res) : res;
+                        if (d && d.success) { myProfileImage = d.url; myAvatarLook.use_photo = true; renderAvatarCard(); }
+                        else alert((d && d.detail) || "사진을 올리지 못했습니다.");
+                    } catch (e) { alert("사진을 올리지 못했습니다."); }
+                    hideLoader();
+                    return;
+                }
                 const fd = new FormData();
                 fd.append("student_name", currentUser.name);
                 fd.append("motto", "");
@@ -1948,6 +1960,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function saveAvatarLook() {
             showLoader("꾸미기 저장 중...");
+            if (currentUser && currentUser.isAdmin) {
+                const r = await adminPost('/api/admin/avatar', { avatar: myAvatarLook });
+                hideLoader();
+                if (!r.ok) return alert(r.message);
+                myAvatarLook = r.data.avatar;
+                myAvatarItem = myAvatarLook.badge;
+                renderAvatarCard();
+                return showToast("꾸미기를 저장했습니다.");
+            }
             try {
                 const res = await fetch(`${API_URL}/api/student/avatar`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2017,8 +2038,30 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             } catch(e) {}
         }
 
+        // 원장님은 학생 명단에 없어 xp가 없다. 늘 최고 레벨로 두어 모든 꾸미기를 쓸 수 있게 한다.
+        async function loadAdminAvatar() {
+            await loadAvatarCatalog();
+            const r = await adminGet('/api/admin/avatar');
+            if (!r.ok) return false;
+            myLevelInfo = r.data.level_info;
+            myAvatarLook = r.data.avatar;
+            myProfileImage = r.data.profile_image || '';
+            myAvatarItem = myAvatarLook.badge;
+            myAvatarGender = myAvatarLook.face === 'girl' ? 'girl' : 'boy';
+            renderAvatarCard();
+            return true;
+        }
+
         async function loadMyPage() {
             if(!currentUser) return;
+            if (currentUser.isAdmin) {
+                document.getElementById('mypage-info').innerText = `${currentUser.name} (관리자 · 최고 레벨)`;
+                await loadAdminAvatar();
+                const c = document.getElementById('mypage-history-list');
+                c.innerHTML = "<p class='text-center text-gray-500 mt-10'>관리자 계정에는 학습 기록이 쌓이지 않습니다.<br>학생 기록은 <b class='text-gray-400'>관리자 → 학생 명단</b>에서 보실 수 있습니다.</p>";
+                document.getElementById('mypage-count').innerText = '—';
+                return;
+            }
             document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
             try {
                 const res=await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`); const data=await res.json();
