@@ -852,7 +852,6 @@
                         <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="text-orange-400 font-bold border border-orange-600 px-4 py-2 rounded">퀴즈 출제</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
-                        <button onclick="switchAdminTab('admin-account')" id="btn-admin-account" class="text-gray-300 font-bold border border-gray-500 px-4 py-2 rounded">관리자 계정</button>
                     </div>
 
                     <!-- 명단 관리 -->
@@ -918,6 +917,31 @@
                                 <button onclick="fetchReports()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs rounded text-white">전체보기</button>
                             </h3>
                             <div id="student-detail-container" class="flex-grow flex flex-col overflow-y-auto pr-2 text-white"></div>
+                        </div>
+
+                        <!-- 관리자 계정 — 별도 탭에서 계속 비어 보이는 문제가 있어 이 탭 안으로 옮김 -->
+                        <div id="admin-account-in-users" class="col-span-4 grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-2">
+                            <p id="admin-account-status" class="col-span-1 lg:col-span-2 text-xs empty:hidden"></p>
+                            <div class="bg-[#151922] p-6 rounded">
+                                <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-key mr-2 text-blue-400"></i>내 비밀번호 변경</h3>
+                                <p class="text-[11px] text-gray-500 mb-4">지금 로그인한 <b id="my-admin-name" class="text-blue-300"></b> 계정의 비밀번호를 바꿉니다.</p>
+                                <input type="password" id="my-admin-cur-pw" placeholder="현재 비밀번호" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                                <input type="password" id="my-admin-new-pw" placeholder="새 비밀번호 (4자 이상)" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
+                                <input type="password" id="my-admin-new-pw2" placeholder="새 비밀번호 확인" class="w-full p-2 mb-3 bg-gray-800 text-white rounded">
+                                <button onclick="changeMyAdminPassword()" class="w-full bg-blue-600 hover:bg-blue-700 py-2 text-white font-bold rounded transition">비밀번호 변경</button>
+                            </div>
+
+                            <div id="admin-account-owner-section" class="bg-[#151922] p-6 rounded hidden">
+                                <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-user-shield mr-2 text-yellow-400"></i>관리자 계정 관리</h3>
+                                <p class="text-[11px] text-gray-500 mb-4">학습실에 관리자로 로그인할 수 있는 계정을 추가·삭제합니다. 이 계정들은 화면 안에서의 관리자 권한만 가질 뿐, 서버 코드나 배포에는 접근할 수 없습니다.</p>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" id="new-admin-name" placeholder="이름" class="w-1/3 p-2 bg-gray-800 text-white rounded text-sm">
+                                    <input type="password" id="new-admin-pw" placeholder="비밀번호" class="flex-1 p-2 bg-gray-800 text-white rounded text-sm">
+                                    <input type="password" id="new-admin-pw2" placeholder="확인" class="flex-1 p-2 bg-gray-800 text-white rounded text-sm">
+                                </div>
+                                <button onclick="createAdminAccount()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-sm transition mb-4">관리자 추가</button>
+                                <div id="admin-account-list" class="space-y-1 max-h-72 overflow-y-auto"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1281,29 +1305,6 @@
                         </div>
 
                     <!-- 관리자 계정 -->
-                    <div id="admin-account" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <p id="admin-account-status" class="col-span-1 lg:col-span-2 text-xs empty:hidden"></p>
-                        <div class="bg-[#151922] p-6 rounded">
-                            <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-key mr-2 text-blue-400"></i>내 비밀번호 변경</h3>
-                            <p class="text-[11px] text-gray-500 mb-4">지금 로그인한 <b id="my-admin-name" class="text-blue-300"></b> 계정의 비밀번호를 바꿉니다.</p>
-                            <input type="password" id="my-admin-cur-pw" placeholder="현재 비밀번호" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
-                            <input type="password" id="my-admin-new-pw" placeholder="새 비밀번호 (4자 이상)" class="w-full p-2 mb-2 bg-gray-800 text-white rounded">
-                            <input type="password" id="my-admin-new-pw2" placeholder="새 비밀번호 확인" class="w-full p-2 mb-3 bg-gray-800 text-white rounded">
-                            <button onclick="changeMyAdminPassword()" class="w-full bg-blue-600 hover:bg-blue-700 py-2 text-white font-bold rounded transition">비밀번호 변경</button>
-                        </div>
-
-                        <div id="admin-account-owner-section" class="bg-[#151922] p-6 rounded hidden">
-                            <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-user-shield mr-2 text-yellow-400"></i>관리자 계정 관리</h3>
-                            <p class="text-[11px] text-gray-500 mb-4">학습실에 관리자로 로그인할 수 있는 계정을 추가·삭제합니다. 이 계정들은 화면 안에서의 관리자 권한만 가질 뿐, 서버 코드나 배포에는 접근할 수 없습니다.</p>
-                            <div class="flex gap-2 mb-2">
-                                <input type="text" id="new-admin-name" placeholder="이름" class="w-1/3 p-2 bg-gray-800 text-white rounded text-sm">
-                                <input type="password" id="new-admin-pw" placeholder="비밀번호" class="flex-1 p-2 bg-gray-800 text-white rounded text-sm">
-                                <input type="password" id="new-admin-pw2" placeholder="확인" class="flex-1 p-2 bg-gray-800 text-white rounded text-sm">
-                            </div>
-                            <button onclick="createAdminAccount()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-sm transition mb-4">관리자 추가</button>
-                            <div id="admin-account-list" class="space-y-1 max-h-72 overflow-y-auto"></div>
-                        </div>
-                    </div>
                     </div>
                 </div>
             </div>
@@ -2506,7 +2507,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const tabEl = document.getElementById(id);
             tabEl.style.display = tabEl.classList.contains('grid') ? 'grid' : 'block';
             const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800');
-            if(id==='admin-users'){fetchReports(); loadAdminStudents();}
+            if(id==='admin-users'){fetchReports(); loadAdminStudents(); loadAdminAccounts();}
             if(id==='admin-counsel'){initCounselTab();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
@@ -2514,7 +2515,6 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
             if(id==='admin-generator'){loadGeneratedQuestions();}
             if(id==='admin-quiz'){loadAdminQuizzes();}
-            if(id==='admin-account'){loadAdminAccounts();}
 
             // 💡 드물게(느린 네트워크·브라우저 확장 프로그램 간섭 등으로 추정) 이 탭이
             // 방금 켜졌는데도 잠시 뒤 다시 보면 숨겨진 채로 남아있는 사례가 보고됐다.
