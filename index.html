@@ -395,7 +395,8 @@
             <div id="level-up-icon" class="text-[7rem] leading-none mb-2 drop-shadow-2xl" style="animation: levelUpBounce 1.1s ease-in-out infinite;">🌱</div>
             <div class="text-yellow-400 font-black text-2xl mb-1 tracking-wide">🎉 레벨 업! 🎉</div>
             <div id="level-up-name" class="text-white font-black text-4xl mb-2"></div>
-            <div id="level-up-sub" class="text-gray-300 text-sm mb-6"></div>
+            <div id="level-up-sub" class="text-gray-300 text-sm mb-4"></div>
+            <div id="level-up-unlocked" class="mb-6"></div>
             <button onclick="closeLevelUpOverlay()" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 transition text-white font-bold px-8 py-3 rounded-xl shadow-lg text-lg">신난다!</button>
         </div>
     </div>
@@ -558,8 +559,11 @@
                     <div class="flex flex-col sm:flex-row items-center gap-6">
                         <div class="relative flex-shrink-0 w-28 h-28">
                             <div id="avatar-halo" class="absolute left-1/2 top-1/2 text-8xl opacity-20 pointer-events-none select-none transition-all duration-700" style="transform: translate(-50%, -50%);"></div>
-                            <div id="avatar-display" class="relative w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 border-blue-500 transition-all duration-500">🌱</div>
+                            <div id="avatar-display" class="relative w-28 h-28 rounded-full flex items-center justify-center text-6xl shadow-2xl border-4 border-blue-500 transition-all duration-500 overflow-hidden">🌱</div>
+                            <div id="avatar-hat" class="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl drop-shadow-lg z-20 pointer-events-none"></div>
                             <div id="avatar-item-badge" class="absolute -top-1 -right-1 text-3xl drop-shadow-lg z-10"></div>
+                            <div id="avatar-pet" class="absolute -bottom-1 -left-2 text-3xl drop-shadow-lg z-10"></div>
+                            <div id="avatar-effect" class="absolute -bottom-1 -right-2 text-2xl drop-shadow-lg z-10"></div>
                         </div>
                         <div class="flex-grow w-full text-center sm:text-left">
                             <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
@@ -592,15 +596,15 @@
                     </div>
 
                     <div id="avatar-wardrobe" class="hidden mt-6 pt-6 border-t border-gray-700">
-                        <div class="mb-4">
-                            <p class="text-xs text-gray-400 mb-2 font-bold">캐릭터 선택</p>
-                            <div class="flex gap-3">
-                                <button onclick="setAvatarGender('boy')" id="gender-btn-boy" class="flex-1 py-3 rounded-xl border-2 border-gray-600 text-3xl transition">👦</button>
-                                <button onclick="setAvatarGender('girl')" id="gender-btn-girl" class="flex-1 py-3 rounded-xl border-2 border-gray-600 text-3xl transition">👧</button>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mb-2 font-bold">꾸미기 아이템 (레벨을 올려서 잠금해제하세요)</p>
-                        <div id="avatar-item-grid" class="grid grid-cols-4 sm:grid-cols-5 gap-3"></div>
+                        <div id="avatar-slot-tabs" class="flex flex-wrap gap-1 mb-3"></div>
+                        <p id="avatar-slot-hint" class="text-[11px] text-gray-500 mb-2"></p>
+                        <div id="avatar-item-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-2"></div>
+
+                        <div id="avatar-photo-box" class="mt-4 pt-4 border-t border-gray-700"></div>
+
+                        <button onclick="saveAvatarLook()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl text-white font-bold transition">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i>꾸미기 저장
+                        </button>
                     </div>
                 </div>
 
@@ -1731,6 +1735,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         let myLevelInfo = {level:1, name:"씨앗", icon:"🌰", xp:0, current_threshold:0, next_threshold:300, next_name:"새싹", is_max:false};
         let myAvatarGender = 'boy';
         let myAvatarItem = 'none';
+        // 새 꾸미기 — 갈래별로 따로 고른다
+        let AVATAR_CATALOG = null;          // 서버가 주는 항목 목록
+        let myAvatarLook = { face: 'boy', color: 'blue', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false };
+        let myProfileImage = '';            // 올려둔 내 사진 경로
+        let avatarSlotOpen = 'face';        // 지금 보고 있는 갈래
+
+        async function loadAvatarCatalog() {
+            if (AVATAR_CATALOG) return AVATAR_CATALOG;
+            try {
+                const res = await fetch(`${API_URL}/api/student/avatar_catalog`);
+                const d = await res.json();
+                if (d.success) AVATAR_CATALOG = d;
+            } catch (e) {}
+            return AVATAR_CATALOG;
+        }
+
+        function avatarItemDef(slot, id) {
+            if (!AVATAR_CATALOG) return null;
+            return (AVATAR_CATALOG.items[slot] || []).find(x => x.id === id) || null;
+        }
 
         // 관리자 화면에서 학생 xp만 가지고 레벨을 계산할 때 사용 (백엔드 compute_level_info와 동일 로직)
         function computeLevelFromXp(xp) {
@@ -1755,11 +1779,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function renderAvatarCard() {
             if(!myLevelInfo) return;
             const disp = document.getElementById('avatar-display');
-            disp.innerText = myAvatarGender === 'girl' ? '👧' : '👦';
-            disp.style.background = levelThemeGradient(myLevelInfo.level);
+            const colorDef = avatarItemDef('color', myAvatarLook.color);
+            const faceDef = avatarItemDef('face', myAvatarLook.face);
 
-            const glow = LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
+            // 사진을 쓰기로 했으면 얼굴 자리에 사진을 넣는다
+            if (myAvatarLook.use_photo && myProfileImage) {
+                disp.innerHTML = `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-full h-full object-cover" alt="내 사진">`;
+            } else {
+                disp.innerText = faceDef ? faceDef.emoji : (myAvatarGender === 'girl' ? '👧' : '👦');
+            }
+            disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
+
+            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
             disp.style.borderColor = glow;
+
+            const hatDef = avatarItemDef('hat', myAvatarLook.hat);
+            const petDef = avatarItemDef('pet', myAvatarLook.pet);
+            const effDef = avatarItemDef('effect', myAvatarLook.effect);
+            document.getElementById('avatar-hat').innerText = hatDef ? (hatDef.emoji || '') : '';
+            document.getElementById('avatar-pet').innerText = petDef ? (petDef.emoji || '') : '';
+            document.getElementById('avatar-effect').innerText = effDef ? (effDef.emoji || '') : '';
             disp.style.setProperty('--glow-color', glow + '99');
             disp.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
 
@@ -1772,8 +1811,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             halo.style.opacity = (0.16 + (myLevelInfo.level - 1) * 0.035).toFixed(2);
             halo.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
 
-            const itemDef = LEVEL_ITEMS_REF.map(l=>l.item).filter(Boolean).find(it=>it.id===myAvatarItem);
-            document.getElementById('avatar-item-badge').innerText = itemDef ? itemDef.emoji : '';
+            const badgeDef = avatarItemDef('badge', myAvatarLook.badge);
+            document.getElementById('avatar-item-badge').innerText = badgeDef ? (badgeDef.emoji || '') : '';
             document.getElementById('avatar-level-icon').innerText = myLevelInfo.icon;
             document.getElementById('avatar-level-name').innerText = myLevelInfo.name;
             document.getElementById('avatar-level-num').innerText = `Lv.${myLevelInfo.level}`;
@@ -1786,35 +1825,151 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 ? `최고 레벨을 달성했습니다! (누적 ${myLevelInfo.xp} 성장 포인트)`
                 : `다음 레벨 '${myLevelInfo.next_name}'까지 ${myLevelInfo.next_threshold - myLevelInfo.xp} 포인트 남음 (${myLevelInfo.xp}/${myLevelInfo.next_threshold})`;
 
-            const nextLv = LEVEL_ITEMS_REF.find(l => l.level === myLevelInfo.level + 1);
-            document.getElementById('avatar-next-preview').innerText = (!myLevelInfo.is_max && nextLv && nextLv.item)
-                ? `🎁 다음 레벨이 되면: ${nextLv.item.emoji} '${nextLv.item.label}' 꾸미기 아이템 잠금해제!`
-                : '';
-
-            const boyBtn = document.getElementById('gender-btn-boy'), girlBtn = document.getElementById('gender-btn-girl');
-            boyBtn.className = `flex-1 py-3 rounded-xl border-2 text-3xl transition ${myAvatarGender==='boy' ? 'border-blue-500 bg-blue-900/30' : 'border-gray-600'}`;
-            girlBtn.className = `flex-1 py-3 rounded-xl border-2 text-3xl transition ${myAvatarGender==='girl' ? 'border-pink-500 bg-pink-900/30' : 'border-gray-600'}`;
+            const nextAt = nextLevelUnlocks(myLevelInfo.level + 1);
+            document.getElementById('avatar-next-preview').innerText =
+                (!myLevelInfo.is_max && nextAt.length)
+                    ? `🎁 다음 레벨이 되면 ${nextAt.length}가지 잠금해제: ` + nextAt.slice(0, 4).map(x => (x.emoji || '🎨') + x.label).join(', ') + (nextAt.length > 4 ? ' ...' : '')
+                    : '';
 
             renderWardrobeGrid();
         }
 
-        function renderWardrobeGrid() {
-            const grid = document.getElementById('avatar-item-grid');
-            grid.innerHTML = `<button onclick="equipAvatarItem('none')" class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition ${myAvatarItem==='none' ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 bg-gray-800 hover:border-gray-500'}"><span class="text-2xl">🚫</span><span class="text-[10px] text-gray-300">없음</span></button>`;
-            LEVEL_ITEMS_REF.forEach(lv => {
-                if(!lv.item) return;
-                const unlocked = myLevelInfo.level >= lv.level;
-                const equipped = myAvatarItem === lv.item.id;
-                if(unlocked) {
-                    grid.innerHTML += `<button onclick="equipAvatarItem('${lv.item.id}')" class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition ${equipped ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 bg-gray-800 hover:border-gray-500'}"><span class="text-2xl">${lv.item.emoji}</span><span class="text-[10px] text-gray-300">${escapeHtml(lv.item.label)}</span></button>`;
-                } else {
-                    // 잠겨있어도 어떤 아이템인지 미리 보여줘서(흐리게) 동기부여가 되도록 함
-                    grid.innerHTML += `<div class="relative flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-gray-800 bg-gray-900 opacity-40 grayscale"><span class="text-2xl">${lv.item.emoji}</span><span class="text-[10px] text-gray-500">${escapeHtml(lv.item.label)}</span><span class="absolute inset-0 flex items-center justify-center text-xs bg-black/40 rounded-xl font-bold text-white">🔒 Lv.${lv.level}</span></div>`;
-                }
+        function nextLevelUnlocks(level) {
+            if (!AVATAR_CATALOG) return [];
+            const out = [];
+            Object.entries(AVATAR_CATALOG.items).forEach(([slot, items]) => {
+                items.forEach(it => { if (it.level === level) out.push({ ...it, slot }); });
             });
+            if (AVATAR_CATALOG.photo_level === level) out.push({ emoji: '📷', label: '내 사진' });
+            return out;
         }
 
-        function toggleWardrobe() { document.getElementById('avatar-wardrobe').classList.toggle('hidden'); }
+        function renderWardrobeGrid() {
+            if (!AVATAR_CATALOG || !myLevelInfo) return;
+            const lv = myLevelInfo.level;
+
+            // 갈래 탭 — 잠긴 것이 몇 개 남았는지도 보여준다
+            document.getElementById('avatar-slot-tabs').innerHTML = AVATAR_CATALOG.slots.map(s => {
+                const items = AVATAR_CATALOG.items[s.key] || [];
+                const open = items.filter(i => i.level <= lv).length;
+                const on = avatarSlotOpen === s.key;
+                return `<button onclick="openAvatarSlot('${s.key}')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${on ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}">
+                    ${s.icon} ${escapeHtml(s.name)} <span class="opacity-60">${open}/${items.length}</span></button>`;
+            }).join('');
+
+            const slot = avatarSlotOpen;
+            const items = AVATAR_CATALOG.items[slot] || [];
+            const cur = myAvatarLook[slot];
+            document.getElementById('avatar-slot-hint').innerText =
+                `레벨을 올리면 더 많은 ${(AVATAR_CATALOG.slots.find(s => s.key === slot) || {}).name || ''}이(가) 열립니다.`;
+
+            document.getElementById('avatar-item-grid').innerHTML = items.map(it => {
+                const unlocked = it.level <= lv;
+                const on = cur === it.id;
+                // 색은 이모지가 없으니 실제 색을 동그라미로 보여준다
+                const preview = (slot === 'color')
+                    ? `<span class="w-8 h-8 rounded-full border-2 block" style="background:${it.css};border-color:${it.ring}"></span>`
+                    : `<span class="text-2xl leading-none h-8 flex items-center">${it.emoji || '🚫'}</span>`;
+                if (!unlocked) {
+                    return `<div class="relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-gray-800 bg-gray-900 opacity-40 grayscale">
+                        ${preview}<span class="text-[10px] text-gray-500 text-center leading-tight">${escapeHtml(it.label)}</span>
+                        <span class="absolute inset-0 flex items-center justify-center text-[11px] bg-black/50 rounded-xl font-bold text-white">🔒 Lv.${it.level}</span></div>`;
+                }
+                return `<button onclick="pickAvatarItem('${slot}','${escAttr(it.id)}')"
+                    class="flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition ${on ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 bg-gray-800 hover:border-gray-500'}">
+                    ${preview}<span class="text-[10px] text-gray-300 text-center leading-tight">${escapeHtml(it.label)}</span></button>`;
+            }).join('');
+
+            renderAvatarPhotoBox();
+        }
+
+        function openAvatarSlot(key) { avatarSlotOpen = key; renderWardrobeGrid(); }
+
+        function pickAvatarItem(slot, id) {
+            myAvatarLook[slot] = id;
+            if (slot === 'face') { myAvatarLook.use_photo = false; myAvatarGender = (id === 'girl' ? 'girl' : 'boy'); }
+            if (slot === 'badge') myAvatarItem = id;
+            renderAvatarCard();
+        }
+
+        // 내 사진 — 정해진 레벨부터 쓸 수 있다
+        function renderAvatarPhotoBox() {
+            const box = document.getElementById('avatar-photo-box');
+            if (!box || !AVATAR_CATALOG) return;
+            const need = AVATAR_CATALOG.photo_level;
+            if (myLevelInfo.level < need) {
+                box.innerHTML = `<div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span class="text-xl grayscale opacity-50">📷</span>
+                    <span>내 사진 넣기는 <b class="text-gray-400">Lv.${need}</b>부터 쓸 수 있습니다.</span></div>`;
+                return;
+            }
+            box.innerHTML = `
+                <p class="text-xs text-gray-400 mb-2 font-bold">📷 내 사진</p>
+                <div class="flex items-center gap-3">
+                    ${myProfileImage ? `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-14 h-14 rounded-full object-cover border-2 border-gray-600" alt="내 사진">` : '<span class="w-14 h-14 rounded-full bg-gray-800 border-2 border-dashed border-gray-600 flex items-center justify-center text-gray-600 text-xl">?</span>'}
+                    <div class="flex-grow">
+                        <button onclick="pickAvatarPhoto()" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white text-xs font-bold transition">${myProfileImage ? '사진 바꾸기' : '사진 올리기'}</button>
+                        ${myProfileImage ? `<label class="ml-3 text-xs text-gray-300 cursor-pointer">
+                            <input type="checkbox" ${myAvatarLook.use_photo ? 'checked' : ''} onchange="toggleAvatarPhoto(this.checked)"> 아바타로 쓰기</label>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function toggleAvatarPhoto(on) {
+            myAvatarLook.use_photo = !!on;
+            renderAvatarCard();
+        }
+
+        function pickAvatarPhoto() {
+            const inp = document.createElement('input');
+            inp.type = 'file'; inp.accept = 'image/*';
+            inp.onchange = async () => {
+                const f = inp.files[0];
+                if (!f) return;
+                showLoader("사진 올리는 중...");
+                const fd = new FormData();
+                fd.append("student_name", currentUser.name);
+                fd.append("motto", "");
+                fd.append("avatar", "");
+                fd.append("file", f, f.name);
+                try {
+                    await uploadFormData(`${API_URL}/api/student/profile_update`, fd);
+                    const res = await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`);
+                    const d = await res.json();
+                    if (d.success) myProfileImage = (d.profile || {}).profile_image || '';
+                    myAvatarLook.use_photo = true;
+                    renderAvatarCard();
+                } catch (e) { alert("사진을 올리지 못했습니다."); }
+                hideLoader();
+            };
+            inp.click();
+        }
+
+        async function saveAvatarLook() {
+            showLoader("꾸미기 저장 중...");
+            try {
+                const res = await fetch(`${API_URL}/api/student/avatar`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_name: currentUser.name, avatar: myAvatarLook })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    myAvatarLook = d.avatar;
+                    myAvatarItem = d.avatar.badge;
+                    renderAvatarCard();
+                    showToast("꾸미기를 저장했습니다.");
+                } else alert(d.detail || "저장하지 못했습니다.");
+            } catch (e) { alert("저장 중 오류가 발생했습니다."); }
+            hideLoader();
+        }
+
+        async function toggleWardrobe() {
+            const box = document.getElementById('avatar-wardrobe');
+            const opening = box.classList.contains('hidden');
+            box.classList.toggle('hidden');
+            if (opening) { await loadAvatarCatalog(); renderWardrobeGrid(); }
+        }
         function toggleHowToLevelUp() { document.getElementById('avatar-howto').classList.toggle('hidden'); }
 
         // 🎉 레벨업 축하 화면 — API 응답에 담긴 level_up:{from,to,name,icon}을 받아서 큰 화면으로 알려줌
@@ -1823,6 +1978,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('level-up-icon').innerText = lvlUp.icon;
             document.getElementById('level-up-name').innerText = lvlUp.name;
             document.getElementById('level-up-sub').innerText = `Lv.${lvlUp.from} → Lv.${lvlUp.to}로 성장했어요!`;
+            const box = document.getElementById('level-up-unlocked');
+            if (box) {
+                const got = lvlUp.unlocked || [];
+                box.innerHTML = got.length
+                    ? `<p class="text-xs text-yellow-300 font-bold mb-2">🎁 새로 열린 꾸미기 ${got.length}가지</p>
+                       <div class="flex flex-wrap justify-center gap-1">` +
+                      got.map(g => `<span class="bg-white/10 rounded-lg px-2 py-1 text-[11px] text-white">${g.emoji || '🎨'} ${escapeHtml(g.label)}</span>`).join('') + '</div>'
+                    : '';
+            }
             const ov = document.getElementById('level-up-overlay');
             ov.classList.remove('hidden'); ov.style.display = 'flex';
         }
@@ -1861,8 +2025,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0;
                 if(data.success) {
                     myLevelInfo = data.level_info || myLevelInfo;
-                    myAvatarGender = (data.profile && data.profile.avatar_gender) || 'boy';
-                    myAvatarItem = (data.profile && data.profile.avatar_item) || 'none';
+                    const prof = data.profile || {};
+                    myAvatarGender = prof.avatar_gender || 'boy';
+                    myAvatarItem = prof.avatar_item || 'none';
+                    myProfileImage = prof.profile_image || '';
+                    await loadAvatarCatalog();
+                    // 예전에 저장된 학생은 성별·배지만 있으므로 그걸 새 구조로 옮긴다
+                    myAvatarLook = Object.assign(
+                        { face: myAvatarGender, color: 'blue', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
+                        prof.avatar_look || {});
 
                     (data.reports || []).forEach(r => {
                         if(r.school && currentUser.school && r.school !== currentUser.school) return;
