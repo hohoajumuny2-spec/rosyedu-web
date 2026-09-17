@@ -474,6 +474,7 @@
                 <a href="https://logyedu.com" target="_blank" class="hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i>로지에듀 홈페이지</a>
                 <span id="nav-student-menu" class="hidden md:flex items-center gap-6 border-l border-gray-700 pl-6">
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="hover:text-orange-400">타임어택 퀴즈</button>
+                    <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="hover:text-cyan-400">영어 단어 시험</button>
                     <button onclick="openProgram('exam-list'); loadStudentExams();" class="hover:text-yellow-400">실시간 모의고사</button>
                     <button onclick="openProgram('lecture'); loadLectures();" class="hover:text-purple-400">해설 강의실</button>
                     <button onclick="openProgram('homework'); loadHomeworks();" class="hover:text-emerald-400">과제 제출</button>
@@ -515,6 +516,7 @@
             <a href="https://logyedu.com" target="_blank" class="p-4 border-b border-gray-800 hover:text-blue-400"><i class="fa-solid fa-globe mr-1"></i>로지에듀 홈페이지</a>
             <span id="mobile-student-menu" class="hidden" style="display:none;">
                 <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
+                <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
                 <button onclick="openProgram('exam-list'); loadStudentExams(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-yellow-400 w-full">실시간 모의고사</button>
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
@@ -1048,6 +1050,27 @@
                 <div id="quiz-result-view" class="hidden text-white"></div>
             </div>
 
+            <!-- 영어 단어 시험 목록 -->
+            <div id="prog-vocab-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
+                <h2 class="text-2xl font-bold text-cyan-400 mb-4">영어 단어 시험</h2>
+                <p class="text-gray-400 text-sm mb-6">단어를 보고 뜻 쓰기, 뜻을 보고 단어 쓰기, 빈칸에 철자 채우기, 구절 해석 등 서술형으로 답을 직접 씁니다. 타이머가 0이 되면 자동 제출됩니다.</p>
+                <div id="student-vocab-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 영어 단어 시험 룸 -->
+            <div id="prog-vocab-room" class="prog-content w-full max-w-4xl mx-auto bg-[#1e2430] p-6 rounded-xl shadow-2xl relative">
+                <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4 sticky top-0 bg-[#1e2430] z-10">
+                    <h2 id="vocab-room-title" class="text-2xl font-bold text-white"></h2>
+                    <div class="text-right">
+                        <span class="text-sm text-gray-400 block mb-1">남은 시간</span>
+                        <span id="vocab-timer" class="text-3xl font-black text-cyan-400">00:00</span>
+                    </div>
+                </div>
+                <div id="vocab-questions-container" class="space-y-5 mb-8 text-white"></div>
+                <button id="btn-submit-vocab" onclick="submitVocabTestReal()" class="w-full bg-cyan-600 hover:bg-cyan-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg">답안 제출하기</button>
+                <div id="vocab-result-view" class="hidden text-white"></div>
+            </div>
+
             <!-- 모의고사 목록 -->
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
@@ -1121,6 +1144,7 @@
                         <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600 px-4 py-2 rounded">출제</button>
                         <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600 px-4 py-2 rounded">모의고사 개설</button>
                         <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="text-orange-400 font-bold border border-orange-600 px-4 py-2 rounded">퀴즈 출제</button>
+                        <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="text-cyan-400 font-bold border border-cyan-600 px-4 py-2 rounded">영어 단어 시험</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                         <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
@@ -1569,6 +1593,65 @@
                             <h3 class="font-bold text-white mb-4 border-b border-gray-700 pb-2">등록된 모의고사</h3>
                             <div id="admin-exam-list" class="flex-grow overflow-auto space-y-2"></div>
                             <input type="file" id="diff-photo-input" accept="image/*" class="hidden" onchange="handleDiffPhotoUpload(event)">
+                        </div>
+                    </div>
+
+                    <!-- 영어 단어 시험 탭 -->
+                    <div id="admin-vocab" class="admin-tab-content grid grid-cols-2 gap-4" style="display:none">
+                        <div class="space-y-4">
+                            <div class="bg-[#151922] p-6 rounded">
+                                <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2"><i class="fa-solid fa-file-arrow-up mr-2 text-cyan-400"></i>난이도별 단어장 올리기</h3>
+                                <p class="text-[11px] text-gray-500 mb-3">엑셀/CSV 파일 1열은 단어(또는 구절), 2열은 뜻으로 구성하세요. 같은 난이도에 여러 파일을 올리면 하나로 합쳐져서 무작위 출제에 쓰입니다.</p>
+                                <div class="flex gap-2 mb-2">
+                                    <select id="vocab-upload-diff" class="w-1/3 p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                        <option value="high">상</option>
+                                        <option value="mid" selected>중</option>
+                                        <option value="low">하</option>
+                                    </select>
+                                    <div onclick="document.getElementById('vocab-file-input').click()" class="w-2/3 border-2 border-dashed border-cyan-700/60 hover:border-cyan-500 rounded-lg p-2 text-center cursor-pointer transition text-cyan-300 text-sm font-bold">
+                                        <i class="fa-solid fa-upload mr-1"></i>파일 선택 (여러 개 가능)
+                                    </div>
+                                    <input type="file" id="vocab-file-input" accept=".xlsx,.csv" multiple class="hidden" onchange="startVocabUploadQueue(this.files); this.value='';">
+                                </div>
+                                <p id="vocab-upload-status" class="hidden text-[11px] text-yellow-400 font-bold mb-2"></p>
+                                <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                                    <div class="bg-[#1a1e29] rounded p-2"><p class="text-[10px] text-gray-500">상</p><p id="vocab-count-high" class="text-lg font-black text-red-400">0</p></div>
+                                    <div class="bg-[#1a1e29] rounded p-2"><p class="text-[10px] text-gray-500">중</p><p id="vocab-count-mid" class="text-lg font-black text-yellow-400">0</p></div>
+                                    <div class="bg-[#1a1e29] rounded p-2"><p class="text-[10px] text-gray-500">하</p><p id="vocab-count-low" class="text-lg font-black text-emerald-400">0</p></div>
+                                </div>
+                                <div id="vocab-file-list" class="max-h-52 overflow-auto space-y-1.5"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-[#151922] p-6 rounded">
+                                <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2"><i class="fa-solid fa-shuffle mr-2 text-cyan-400"></i>단어 시험 출제 (무작위)</h3>
+                                <input type="text" id="vt-title" placeholder="시험 제목 (저장하면 앞에 [영어]가 자동으로 붙어요)" class="w-full p-2 bg-gray-800 text-white mb-2 rounded border border-gray-600">
+                                <div class="flex gap-2 mb-2">
+                                    <div class="w-1/2">
+                                        <label class="text-xs text-gray-400 mb-1 block">마감 일시</label>
+                                        <input type="datetime-local" id="vt-deadline" class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="text-xs text-gray-400 mb-1 block">제한 시간 (분)</label>
+                                        <input type="number" id="vt-limit" placeholder="예: 15" value="15" class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                    </div>
+                                </div>
+                                <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
+                                <select id="vt-target-class" class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600 class-select mb-3"><option value="">전체 대상</option></select>
+
+                                <p class="text-xs text-gray-400 mb-1">난이도별 출제 개수 (보유한 단어 수 이내로)</p>
+                                <div class="grid grid-cols-3 gap-2 mb-3">
+                                    <div><label class="text-[10px] text-red-400 block mb-1 text-center font-bold">상</label><input type="number" id="vt-cnt-high" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                    <div><label class="text-[10px] text-yellow-400 block mb-1 text-center font-bold">중</label><input type="number" id="vt-cnt-mid" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                    <div><label class="text-[10px] text-emerald-400 block mb-1 text-center font-bold">하</label><input type="number" id="vt-cnt-low" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mb-3">단어→뜻, 뜻→단어, 스펠링 빈칸, 구절 해석 4가지 형태를 자동으로 섞어서 냅니다.</p>
+                                <button onclick="createVocabTest()" class="w-full bg-cyan-600 hover:bg-cyan-700 py-3 text-white font-bold rounded shadow-lg transition">무작위로 출제하기</button>
+                            </div>
+                            <div class="bg-[#151922] p-6 rounded h-[350px] flex flex-col">
+                                <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2">출제된 단어 시험</h3>
+                                <div id="admin-vocab-test-list" class="flex-grow overflow-auto space-y-2"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -2855,7 +2938,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             // 상태. 이제 모든 화면 전환 시 확실히 숨겼다가 필요한 곳에서만 다시 켠다.
             document.querySelectorAll('#home-view, #dashboard-screen, #dashboard-home, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); loadHomeAvatarWidget(); }
+            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); loadHomeAvatarWidget(); }
             else {
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); }
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
@@ -3008,7 +3091,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function toggleFullscreen() { const v=document.getElementById('pdf-viewer-section'); v.classList.toggle('fixed'); v.classList.toggle('inset-0'); v.classList.toggle('z-[120]'); v.classList.toggle('w-full'); v.classList.toggle('lg:w-2/3'); }
         function openProgram(id) { window.location.hash='prog-'+id; }
         function closeExamRoomStrict() { clearInterval(examTimerInterval); isDrawing=false; document.getElementById('pdf-inner-container').innerHTML=''; document.getElementById('exam-prep-overlay').style.display='none'; if(wsLive) wsLive.close(); }
-        function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); }
+        function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); }
 
         function switchAdminTab(id) {
             document.querySelectorAll('.admin-tab-content').forEach(el=>el.style.display='none'); document.querySelectorAll('#prog-admin button').forEach(b=>{if(b.id.startsWith('btn-admin-')) b.classList.replace('bg-gray-800','border');});
@@ -3026,6 +3109,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
             if(id==='admin-generator'){loadGeneratedQuestions();}
             if(id==='admin-quiz'){loadAdminQuizzes();}
+            if(id==='admin-vocab'){loadVocabAdmin();}
 
             // 💡 드물게(느린 네트워크·브라우저 확장 프로그램 간섭 등으로 추정) 이 탭이
             // 방금 켜졌는데도 잠시 뒤 다시 보면 숨겨진 채로 남아있는 사례가 보고됐다.
@@ -6906,6 +6990,178 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
         }
 
+        // ═════════════════════════════════════════════
+        // 영어 단어 시험 — 관리자: 난이도별 단어장 업로드 + 무작위 출제
+        // ═════════════════════════════════════════════
+        const VOCAB_DIFF_LABEL = { high: '상', mid: '중', low: '하' };
+        let VOCAB_UPLOAD_QUEUE = [];
+        let adminVocabTests = [];
+
+        function startVocabUploadQueue(fileList) {
+            VOCAB_UPLOAD_QUEUE = Array.from(fileList || []);
+            if (!VOCAB_UPLOAD_QUEUE.length) return;
+            advanceVocabUpload();
+        }
+
+        async function advanceVocabUpload() {
+            const statusEl = document.getElementById('vocab-upload-status');
+            if (!VOCAB_UPLOAD_QUEUE.length) { if (statusEl) statusEl.classList.add('hidden'); loadVocabAdmin(); return; }
+            const file = VOCAB_UPLOAD_QUEUE.shift();
+            if (statusEl) { statusEl.textContent = `'${file.name}' 업로드 중... (남은 파일 ${VOCAB_UPLOAD_QUEUE.length}개)`; statusEl.classList.remove('hidden'); }
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('difficulty', document.getElementById('vocab-upload-diff').value);
+            try {
+                const data = await uploadFormData(`${API_URL}/api/admin/vocab/upload`, fd);
+                if (!data.success) showToast(`⚠️ '${file.name}': ${data.detail || '업로드 실패'}`);
+                else showToast(`✅ '${file.name}' — 단어 ${data.count}개 등록됨`);
+            } catch (e) { showToast(`⚠️ '${file.name}' 업로드 중 오류`); }
+            advanceVocabUpload();
+        }
+
+        async function loadVocabAdmin() {
+            try {
+                const r = await fetch(`${API_URL}/api/admin/vocab/files`);
+                const data = await r.json();
+                if (data.success) {
+                    ['high', 'mid', 'low'].forEach(k => { document.getElementById('vocab-count-' + k).innerText = data.counts[k] || 0; });
+                    const list = document.getElementById('vocab-file-list');
+                    list.innerHTML = (data.files || []).map(f => `
+                        <div class="flex justify-between items-center bg-gray-800 p-2 rounded text-white text-xs">
+                            <span><span class="text-cyan-400 font-bold">[${VOCAB_DIFF_LABEL[f.difficulty] || f.difficulty}]</span> ${escapeHtml(f.label)} <span class="text-gray-500">(${f.count}개)</span></span>
+                            <button onclick="deleteVocabFile('${escAttr(f.id)}')" class="text-red-400 hover:text-red-300 shrink-0 ml-2"><i class="fa-solid fa-trash"></i></button>
+                        </div>`).join('') || '<p class="text-gray-500 text-xs text-center py-4">아직 올린 단어장이 없습니다.</p>';
+                }
+            } catch (e) {}
+            try {
+                const r2 = await fetch(`${API_URL}/api/vocab_tests`);
+                const data2 = await r2.json();
+                if (data2.success) {
+                    adminVocabTests = data2.tests;
+                    const list = document.getElementById('admin-vocab-test-list');
+                    list.innerHTML = adminVocabTests.map(t => `
+                        <div class="bg-gray-800 p-3 rounded text-white text-sm">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold">${escapeHtml(t.title)}</span>
+                                <button onclick="deleteVocabTest('${escAttr(t.title)}')" class="text-red-400 hover:text-red-300 text-xs shrink-0 ml-2"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <p class="text-[11px] text-gray-400">${(t.questions || []).length}문항 · 제한 ${t.time_limit}분 · 응시 대상: ${t.target_class ? escapeHtml(t.target_class) : '전체'}</p>
+                            <button onclick="printVocabBlank('${escAttr(t.title)}')" class="mt-2 text-cyan-300 text-[11px] bg-cyan-900/30 hover:bg-cyan-900/60 px-2 py-1 rounded transition"><i class="fa-solid fa-print mr-1"></i>시험지 인쇄</button>
+                        </div>`).join('') || '<p class="text-gray-500 text-xs text-center py-4">아직 출제한 단어 시험이 없습니다.</p>';
+                }
+            } catch (e) {}
+        }
+
+        async function deleteVocabFile(id) {
+            if (!confirm('이 단어장 파일을 삭제할까요? (이미 출제된 시험에는 영향이 없습니다)')) return;
+            showLoader('삭제 중...');
+            await fetch(`${API_URL}/api/admin/vocab/files/${id}`, { method: 'DELETE' });
+            loadVocabAdmin();
+            hideLoader();
+        }
+
+        async function createVocabTest() {
+            const title = document.getElementById('vt-title').value.trim();
+            const deadline = document.getElementById('vt-deadline').value;
+            const limit = parseInt(document.getElementById('vt-limit').value);
+            if (!title || !limit) return alert('제목과 제한 시간을 입력하세요.');
+            const counts = {
+                high: parseInt(document.getElementById('vt-cnt-high').value) || 0,
+                mid: parseInt(document.getElementById('vt-cnt-mid').value) || 0,
+                low: parseInt(document.getElementById('vt-cnt-low').value) || 0,
+            };
+            if (!counts.high && !counts.mid && !counts.low) return alert('난이도별로 출제할 단어 수를 1개 이상 입력하세요.');
+
+            showLoader('무작위로 출제하는 중...');
+            try {
+                const res = await fetch(`${API_URL}/api/admin/vocab_test`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, deadline, time_limit: limit, target_class: document.getElementById('vt-target-class').value, counts }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`'${data.title}' 시험이 출제되었습니다!`);
+                    document.getElementById('vt-title').value = '';
+                    loadVocabAdmin();
+                } else { alert('출제 실패: ' + data.detail); }
+            } catch (e) { alert('서버 통신 오류: ' + e.message); }
+            hideLoader();
+        }
+
+        async function deleteVocabTest(title) {
+            if (!confirm(`'${title}' 시험을 삭제할까요?`)) return;
+            showLoader('삭제 중...');
+            await fetch(`${API_URL}/api/admin/vocab_test/${encodeURIComponent(title)}`, { method: 'DELETE' });
+            loadVocabAdmin();
+            hideLoader();
+        }
+
+        // 💡 문제 유형 번호를 사람이 읽는 안내문으로 바꾼다 (시험지/결과지 공용)
+        function vocabTypeLabel(type) {
+            return { 1: '단어를 보고 뜻 쓰기', 2: '뜻을 보고 단어 쓰기', 3: '빈칸 채워 철자 완성하기', 4: '구절의 의미 쓰기' }[type] || '';
+        }
+
+        function printVocabBlank(title) {
+            const t = adminVocabTests.find(x => x.title === title);
+            if (!t) return alert('시험 정보를 찾을 수 없습니다.');
+            const rows = (t.questions || []).map(q => `
+                <div class="q">
+                    <div class="qh"><b>${q.no}.</b> <span class="tag">${vocabTypeLabel(q.type)}</span></div>
+                    <div class="prompt">${escapeHtml(q.prompt)}${q.type === 3 ? ` <span class="hint">(뜻: ${escapeHtml(q.prompt_meaning || '')})</span>` : ''}</div>
+                    <div class="ans-line">답: ________________________</div>
+                </div>`).join('');
+            const w = window.open('', '', 'width=900,height=1000');
+            w.document.write(`<html><head><title>${escapeHtml(t.title)}</title><style>
+                @media print { @page { size: A4; margin: 20mm 16mm; } }
+                body { font-family: 'Malgun Gothic', sans-serif; font-size: 12pt; color: #111; }
+                .h { text-align:center; font-size:18pt; font-weight:bold; margin-bottom:4px; }
+                .sub { text-align:center; font-size:10pt; color:#666; margin-bottom:20px; border-bottom:2px solid #111; padding-bottom:14px; }
+                .info { display:flex; justify-content:space-between; font-size:10pt; color:#333; margin-bottom:16px; }
+                .q { margin-bottom:16px; break-inside: avoid; }
+                .qh { font-size:11pt; margin-bottom:4px; } .tag { color:#0891b2; font-size:9pt; }
+                .prompt { font-size:14pt; font-weight:bold; margin-bottom:6px; }
+                .hint { font-size:10pt; font-weight:normal; color:#666; }
+                .ans-line { color:#555; }
+                </style></head><body>
+                <div class="h">${escapeHtml(t.title)}</div>
+                <div class="sub">영어 단어 시험 · 제한 시간 ${t.time_limit}분</div>
+                <div class="info"><span>이름: ________________</span><span>날짜: ________________</span></div>
+                ${rows}
+                <script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
+        }
+
+        function printVocabResult(title, result) {
+            const rows = (result.details || []).map(d => `
+                <div class="q ${d.ok ? 'ok' : 'no'}">
+                    <div class="qh"><b>${d.no}.</b> <span class="tag">${vocabTypeLabel(d.type)}</span> <span class="badge">${d.ok ? 'O' : 'X'}</span></div>
+                    <div class="prompt">${escapeHtml(d.prompt)}</div>
+                    <div class="ans-line">내 답: ${escapeHtml(d.my || '(빈칸)')} ${d.ok ? '' : ` / 정답: ${escapeHtml(d.answer)}`}</div>
+                </div>`).join('');
+            const diffRows = Object.entries(result.difficulty_stats || {}).map(([k, v]) =>
+                `<span class="dstat">${VOCAB_DIFF_LABEL[k] || k}: ${v.correct}/${v.total}</span>`).join(' &nbsp;·&nbsp; ');
+            const w = window.open('', '', 'width=900,height=1000');
+            w.document.write(`<html><head><title>${escapeHtml(title)} 채점 결과</title><style>
+                @media print { @page { size: A4; margin: 20mm 16mm; } }
+                body { font-family: 'Malgun Gothic', sans-serif; font-size: 12pt; color: #111; }
+                .h { text-align:center; font-size:18pt; font-weight:bold; margin-bottom:4px; }
+                .sub { text-align:center; font-size:10pt; color:#666; margin-bottom:10px; }
+                .score { text-align:center; font-size:22pt; font-weight:bold; margin-bottom:6px; }
+                .dstat-box { text-align:center; font-size:10pt; color:#444; margin-bottom:20px; border-bottom:2px solid #111; padding-bottom:14px; }
+                .q { margin-bottom:14px; break-inside: avoid; padding:8px; border-radius:6px; }
+                .q.no { background:#fee2e2; } .q.ok { background:#f0fdf4; }
+                .qh { font-size:11pt; margin-bottom:4px; } .tag { color:#0891b2; font-size:9pt; }
+                .badge { font-weight:bold; } .q.ok .badge { color:#16a34a; } .q.no .badge { color:#dc2626; }
+                .prompt { font-size:13pt; font-weight:bold; margin-bottom:4px; }
+                .ans-line { color:#333; font-size:11pt; }
+                </style></head><body>
+                <div class="h">${escapeHtml(title)}</div>
+                <div class="sub">채점 결과</div>
+                <div class="score">${result.correct_count} / ${result.question_count} (${result.score}점)</div>
+                <div class="dstat-box">${diffRows}</div>
+                ${rows}
+                <script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
+        }
+
         async function loadStudentQuizzes() {
             try {
                 const qs = (!currentUser || currentUser.isAdmin) ? '' : `?student_name=${encodeURIComponent(currentUser.name)}`;
@@ -7155,6 +7411,144 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             view.innerHTML = html;
             view.classList.remove('hidden');
             view.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ═════════════════════════════════════════════
+        // 영어 단어 시험 — 학생: 서술형으로 답을 직접 쓰고 자동 채점 받기
+        // ═════════════════════════════════════════════
+        let allVocabTests = [];
+        let currentVocabTest = null, vocabAnswers = [];
+        let activeVocabTimeLeft = 0, activeVocabTimer = null;
+        let lastVocabResult = null;
+
+        async function loadStudentVocabTests() {
+            try {
+                const qs = (!currentUser || currentUser.isAdmin) ? '' : `?student_name=${encodeURIComponent(currentUser.name)}`;
+                const res = await fetch(`${API_URL}/api/vocab_tests${qs}`); const data = await res.json();
+                const c = document.getElementById('student-vocab-list'); c.innerHTML = '';
+                if (data.success) {
+                    allVocabTests = data.tests;
+                    data.tests.forEach((t, i) => {
+                        const qCount = t.question_count != null ? t.question_count : (t.questions || []).length;
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-cyan-500 flex flex-col justify-between cursor-pointer shadow-lg shadow-cyan-500/20" onclick="enterVocabRoom(${i})"><div><h3 class="font-bold text-xl text-white mb-2">${escapeHtml(t.title)}</h3><p class="text-xs text-cyan-400 font-bold">${qCount}문항 · 제한 시간: ${escapeHtml(String(t.time_limit))}분</p></div><button class="bg-cyan-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">시험 시작</button></div>`;
+                    });
+                    if (!data.tests.length) c.innerHTML = '<p class="text-gray-500 col-span-2 text-center mt-6">응시할 수 있는 단어 시험이 없습니다.</p>';
+                }
+            } catch(e) {}
+        }
+
+        // 💡 타임어택 퀴즈와 같은 이유로 — 서버에 기록된 시작 시각 기준으로 남은
+        // 시간만 이어서 준다(재입장으로 타이머 리셋 불가).
+        async function enterVocabRoom(idx) {
+            currentVocabTest = allVocabTests[idx];
+            showLoader("확인 중...");
+            let startInfo;
+            try {
+                const res = await fetch(`${API_URL}/api/vocab_test/start`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ student_name: currentUser.name, title: currentVocabTest.title }) });
+                startInfo = await res.json();
+            } catch(e) { hideLoader(); return alert("서버 통신 오류. 잠시 후 다시 시도해주세요."); }
+            hideLoader();
+            if (!startInfo.success) return alert(startInfo.detail || "시험을 시작할 수 없습니다.");
+
+            currentVocabTest = startInfo.test;
+            const elapsed = Date.now() / 1000 - startInfo.started_at;
+            const remainingSec = Math.floor(startInfo.time_limit * 60 - elapsed);
+            if (remainingSec <= 0) return alert("이 시험은 제한 시간이 이미 끝나서 더 이상 응시할 수 없습니다.");
+
+            const remainMin = Math.floor(remainingSec / 60), remainRest = remainingSec % 60;
+            const already = elapsed > 5;
+            const msg = already
+                ? `[${currentVocabTest.title}]\n이미 시작한 시험입니다. 남은 시간: ${remainMin}분 ${remainRest}초\n이어서 시작하시겠습니까?`
+                : `[${currentVocabTest.title}]\n제한 시간: ${startInfo.time_limit}분\n서술형으로 직접 답을 작성합니다. 시작하시겠습니까?`;
+            if(!confirm(msg)) return;
+
+            openProgram('vocab-room');
+            document.getElementById('vocab-room-title').innerText = currentVocabTest.title;
+            document.getElementById('vocab-result-view').classList.add('hidden');
+            document.getElementById('vocab-questions-container').classList.remove('hidden');
+            document.getElementById('btn-submit-vocab').classList.remove('hidden');
+
+            vocabAnswers = Array(currentVocabTest.questions.length).fill('');
+            const typeGuide = { 1: '영단어를 보고 뜻을 쓰세요', 2: '뜻을 보고 영단어를 쓰세요', 3: '빈칸을 채워 철자를 완성하세요', 4: '구절의 뜻을 쓰세요' };
+            const c = document.getElementById('vocab-questions-container'); c.innerHTML = '';
+            currentVocabTest.questions.forEach((q, i) => {
+                c.innerHTML += `<div class="bg-[#151922] p-5 rounded-xl border border-gray-700">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-gray-800 text-cyan-300 font-bold text-xs px-2 py-1 rounded border border-cyan-900">${i+1}. ${typeGuide[q.type]}</span>
+                    </div>
+                    <p class="text-xl md:text-2xl font-bold text-white mb-1">${escapeHtml(q.prompt)}</p>
+                    ${q.type === 3 ? `<p class="text-xs text-gray-400 mb-3">힌트(뜻): ${escapeHtml(q.prompt_meaning || '')}</p>` : ''}
+                    <input type="text" placeholder="답을 입력하세요" oninput="setVocabAnswer(${i}, this.value)" class="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 outline-none focus:border-cyan-500 mt-2">
+                </div>`;
+            });
+
+            activeVocabTimeLeft = remainingSec;
+            activeVocabTimer = setInterval(() => {
+                activeVocabTimeLeft--;
+                document.getElementById('vocab-timer').innerText = Math.floor(activeVocabTimeLeft/60)+":"+(activeVocabTimeLeft%60).toString().padStart(2,'0');
+                if (activeVocabTimeLeft <= 0) submitVocabTestReal();
+            }, 1000);
+        }
+
+        function setVocabAnswer(i, v) { vocabAnswers[i] = v; }
+
+        async function submitVocabTestReal() {
+            clearInterval(activeVocabTimer); showLoader("채점 중입니다...");
+            try {
+                const res = await fetch(`${API_URL}/api/vocab_test/submit`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ school:currentUser.school, grade:currentUser.grade, student_name:currentUser.name, title:currentVocabTest.title, answers:vocabAnswers }) });
+                const data = await res.json();
+                if (data.success) {
+                    renderVocabResult(data);
+                    onXpGained(data.level_up);
+                } else {
+                    alert(data.detail || "제출 실패");
+                }
+            } catch(e) { alert("오류: " + e.message); }
+            hideLoader();
+        }
+
+        function renderVocabResult(data) {
+            lastVocabResult = data;
+            document.getElementById('vocab-questions-container').classList.add('hidden');
+            document.getElementById('btn-submit-vocab').classList.add('hidden');
+            const view = document.getElementById('vocab-result-view');
+            view.classList.remove('hidden');
+
+            const pct = data.question_count ? Math.round(data.correct_count / data.question_count * 100) : 0;
+            const tone = pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-yellow-400' : 'text-red-400';
+            const bar = pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+
+            const diffLabel = { high: '상', mid: '중', low: '하' };
+            const diffHtml = Object.entries(data.difficulty_stats || {}).map(([k, v]) =>
+                `<div class="bg-gray-800 rounded-lg p-2 text-center"><p class="text-[10px] text-gray-400">${diffLabel[k]||k} 난이도</p><p class="text-white font-bold">${v.correct}/${v.total}</p></div>`
+            ).join('');
+
+            const typeGuide = { 1: '단어→뜻', 2: '뜻→단어', 3: '철자 빈칸', 4: '구절 해석' };
+            const detailHtml = data.details.map(d => `
+                <div class="rounded-xl p-4 border ${d.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60'}">
+                    <div class="flex items-start gap-2 mb-2">
+                        <span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${d.ok ? 'bg-emerald-600' : 'bg-red-600'} text-white">${d.ok ? 'O' : 'X'}</span>
+                        <p class="text-white text-sm font-bold leading-relaxed">${d.no}. [${typeGuide[d.type]}] ${escapeHtml(d.prompt)}</p>
+                    </div>
+                    <div class="pl-8 text-sm space-y-0.5">
+                        <p class="text-gray-300">내 답: <span class="${d.ok ? 'text-emerald-400' : 'text-red-400'} font-bold">${escapeHtml(d.my || '(빈칸)')}</span></p>
+                        ${!d.ok ? `<p class="text-gray-400">정답: <span class="text-white font-bold">${escapeHtml(d.answer)}</span></p>` : ''}
+                    </div>
+                </div>`).join('');
+
+            view.innerHTML = `
+                <h3 class="text-xl font-bold text-cyan-400 mb-3 text-center">채점 결과</h3>
+                <div class="bg-[#151922] border border-gray-700 rounded-xl p-5 mb-5 text-center">
+                    <div class="${tone} font-black leading-none"><span class="text-6xl">${data.correct_count}</span><span class="text-xl text-gray-400"> / ${data.question_count}</span></div>
+                    <div class="h-2.5 bg-gray-800 rounded-full overflow-hidden mt-4"><div class="h-full ${bar}" style="width:${pct}%"></div></div>
+                    <div class="grid grid-cols-3 gap-2 mt-4">${diffHtml}</div>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="printVocabResult(currentVocabTest.title, lastVocabResult)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-print mr-1"></i>결과 인쇄</button>
+                    <button onclick="closeProgram()" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded text-white font-bold text-sm transition">학습실로 나가기</button>
+                </div>
+                <div class="space-y-3">${detailHtml}</div>
+            `;
         }
 
         async function submitQuizReal() {
