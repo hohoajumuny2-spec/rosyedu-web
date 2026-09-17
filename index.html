@@ -1624,7 +1624,11 @@
                         </div>
                         <div class="space-y-4">
                             <div class="bg-[#151922] p-6 rounded">
-                                <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2"><i class="fa-solid fa-shuffle mr-2 text-cyan-400"></i>단어 시험 출제 (무작위)</h3>
+                                <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2"><i class="fa-solid fa-pen-to-square mr-2 text-cyan-400"></i>단어 시험 출제</h3>
+                                <div class="flex gap-2 mb-3">
+                                    <button id="vt-mode-random-btn" onclick="setVocabTestMode('random')" class="flex-1 py-2 rounded font-bold text-sm transition bg-cyan-600 text-white">무작위 출제</button>
+                                    <button id="vt-mode-manual-btn" onclick="setVocabTestMode('manual')" class="flex-1 py-2 rounded font-bold text-sm transition bg-gray-800 text-gray-300">직접 선택 출제</button>
+                                </div>
                                 <input type="text" id="vt-title" placeholder="시험 제목 (저장하면 앞에 [영어]가 자동으로 붙어요)" class="w-full p-2 bg-gray-800 text-white mb-2 rounded border border-gray-600">
                                 <div class="flex gap-2 mb-2">
                                     <div class="w-1/2">
@@ -1639,14 +1643,31 @@
                                 <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
                                 <select id="vt-target-class" class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600 class-select mb-3"><option value="">전체 대상</option></select>
 
-                                <p class="text-xs text-gray-400 mb-1">난이도별 출제 개수 (보유한 단어 수 이내로)</p>
-                                <div class="grid grid-cols-3 gap-2 mb-3">
-                                    <div><label class="text-[10px] text-red-400 block mb-1 text-center font-bold">상</label><input type="number" id="vt-cnt-high" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
-                                    <div><label class="text-[10px] text-yellow-400 block mb-1 text-center font-bold">중</label><input type="number" id="vt-cnt-mid" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
-                                    <div><label class="text-[10px] text-emerald-400 block mb-1 text-center font-bold">하</label><input type="number" id="vt-cnt-low" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                <div id="vt-random-panel">
+                                    <p class="text-xs text-gray-400 mb-1">난이도별 출제 개수 (보유한 단어 수 이내로)</p>
+                                    <div class="grid grid-cols-3 gap-2 mb-3">
+                                        <div><label class="text-[10px] text-red-400 block mb-1 text-center font-bold">상</label><input type="number" id="vt-cnt-high" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                        <div><label class="text-[10px] text-yellow-400 block mb-1 text-center font-bold">중</label><input type="number" id="vt-cnt-mid" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                        <div><label class="text-[10px] text-emerald-400 block mb-1 text-center font-bold">하</label><input type="number" id="vt-cnt-low" value="0" min="0" class="w-full p-2 bg-gray-800 text-white rounded text-center border border-gray-600"></div>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 mb-3">단어→뜻, 뜻→단어, 스펠링 빈칸, 구절 해석 4가지 형태를 자동으로 섞어서 냅니다.</p>
                                 </div>
-                                <p class="text-[11px] text-gray-500 mb-3">단어→뜻, 뜻→단어, 스펠링 빈칸, 구절 해석 4가지 형태를 자동으로 섞어서 냅니다.</p>
-                                <button onclick="createVocabTest()" class="w-full bg-cyan-600 hover:bg-cyan-700 py-3 text-white font-bold rounded shadow-lg transition">무작위로 출제하기</button>
+
+                                <div id="vt-manual-panel" class="hidden">
+                                    <div class="flex gap-1 mb-2">
+                                        <button onclick="loadVocabWordBrowser('high')" id="vt-browse-high" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-red-300 border border-red-900">상</button>
+                                        <button onclick="loadVocabWordBrowser('mid')" id="vt-browse-mid" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-yellow-300 border border-yellow-900">중</button>
+                                        <button onclick="loadVocabWordBrowser('low')" id="vt-browse-low" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-emerald-300 border border-emerald-900">하</button>
+                                    </div>
+                                    <div id="vt-word-browser" class="max-h-40 overflow-auto bg-[#1a1e29] rounded p-2 space-y-1 mb-3 text-sm text-gray-300">
+                                        <p class="text-gray-500 text-xs text-center py-3">난이도를 눌러 단어 목록을 불러오세요.</p>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-1">선택된 문항 (<span id="vt-selected-count">0</span>개) — 각 문항의 출제 유형을 고르세요</p>
+                                    <div id="vt-selected-list" class="max-h-52 overflow-auto space-y-1.5 mb-3">
+                                        <p class="text-gray-500 text-xs text-center py-3">아직 선택한 단어가 없습니다.</p>
+                                    </div>
+                                </div>
+                                <button onclick="createVocabTest()" id="vt-submit-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 py-3 text-white font-bold rounded shadow-lg transition">무작위로 출제하기</button>
                             </div>
                             <div class="bg-[#151922] p-6 rounded h-[350px] flex flex-col">
                                 <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2">출제된 단어 시험</h3>
@@ -7060,28 +7081,118 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
         }
 
+        // 💡 무작위 출제만 있으니 "내가 원하는 대로" 낼 수가 없다는 요청 — 단어를
+        // 직접 골라서, 문항 유형(단어→뜻/뜻→단어/철자 빈칸/구절 해석)까지 하나하나
+        // 정해서 출제할 수 있는 모드를 추가했다.
+        let vocabTestMode = 'random';       // 'random' | 'manual'
+        let vocabWordBrowserDiff = 'high';
+        let vocabManualSelection = [];      // [{word, meaning, is_phrase, difficulty, type}]
+
+        function setVocabTestMode(mode) {
+            vocabTestMode = mode;
+            document.getElementById('vt-random-panel').classList.toggle('hidden', mode !== 'random');
+            document.getElementById('vt-manual-panel').classList.toggle('hidden', mode !== 'manual');
+            document.getElementById('vt-mode-random-btn').className = 'flex-1 py-2 rounded font-bold text-sm transition ' + (mode === 'random' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300');
+            document.getElementById('vt-mode-manual-btn').className = 'flex-1 py-2 rounded font-bold text-sm transition ' + (mode === 'manual' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300');
+            document.getElementById('vt-submit-btn').innerText = mode === 'random' ? '무작위로 출제하기' : '선택한 단어로 출제하기';
+            if (mode === 'manual' && !document.getElementById('vt-word-browser').dataset.loaded) loadVocabWordBrowser(vocabWordBrowserDiff);
+        }
+
+        const VOCAB_TYPE_LABEL = { 1: '단어→뜻', 2: '뜻→단어', 3: '철자 빈칸', 4: '구절 해석' };
+
+        async function loadVocabWordBrowser(diff) {
+            vocabWordBrowserDiff = diff;
+            ['high', 'mid', 'low'].forEach(d => {
+                document.getElementById('vt-browse-' + d).classList.toggle('bg-cyan-700', d === diff);
+                document.getElementById('vt-browse-' + d).classList.toggle('bg-gray-800', d !== diff);
+            });
+            const box = document.getElementById('vt-word-browser');
+            box.dataset.loaded = '1';
+            box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">불러오는 중...</p>';
+            try {
+                const res = await fetch(`${API_URL}/api/admin/vocab/words?difficulty=${diff}`);
+                const data = await res.json();
+                if (!data.success || !data.words.length) { box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">이 난이도에 올린 단어가 없습니다.</p>'; return; }
+                box.innerHTML = data.words.map((w, i) => {
+                    const checked = vocabManualSelection.some(s => s.word === w.word && s.meaning === w.meaning && s.difficulty === diff);
+                    return `<label class="flex items-center gap-2 hover:bg-gray-800 px-1 py-0.5 rounded cursor-pointer">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleVocabWordSelect(this, '${escAttr(w.word)}', '${escAttr(w.meaning)}', ${w.is_phrase}, '${diff}')">
+                        <span>${escapeHtml(w.word)} <span class="text-gray-500">— ${escapeHtml(w.meaning)}</span></span>
+                    </label>`;
+                }).join('');
+            } catch (e) { box.innerHTML = '<p class="text-red-400 text-xs text-center py-3">불러오지 못했습니다.</p>'; }
+        }
+
+        function toggleVocabWordSelect(cb, word, meaning, isPhrase, difficulty) {
+            if (cb.checked) {
+                if (!vocabManualSelection.some(s => s.word === word && s.meaning === meaning && s.difficulty === difficulty)) {
+                    vocabManualSelection.push({ word, meaning, is_phrase: isPhrase, difficulty, type: isPhrase ? 4 : 1 });
+                }
+            } else {
+                vocabManualSelection = vocabManualSelection.filter(s => !(s.word === word && s.meaning === meaning && s.difficulty === difficulty));
+            }
+            renderVocabSelectedList();
+        }
+
+        function removeVocabSelected(idx) {
+            vocabManualSelection.splice(idx, 1);
+            renderVocabSelectedList();
+            loadVocabWordBrowser(vocabWordBrowserDiff); // 체크 상태 다시 맞추기
+        }
+
+        function updateVocabSelectedType(idx, type) {
+            vocabManualSelection[idx].type = parseInt(type);
+        }
+
+        function renderVocabSelectedList() {
+            document.getElementById('vt-selected-count').innerText = vocabManualSelection.length;
+            const list = document.getElementById('vt-selected-list');
+            const diffLabel = { high: '상', mid: '중', low: '하' };
+            list.innerHTML = vocabManualSelection.map((s, i) => `
+                <div class="flex items-center gap-2 bg-gray-800 px-2 py-1.5 rounded text-xs">
+                    <span class="text-gray-500 shrink-0">[${diffLabel[s.difficulty]}]</span>
+                    <span class="flex-grow text-white truncate">${escapeHtml(s.word)} — ${escapeHtml(s.meaning)}</span>
+                    <select onchange="updateVocabSelectedType(${i}, this.value)" class="bg-gray-900 text-cyan-300 rounded text-[11px] px-1 py-0.5 border border-gray-700 shrink-0">
+                        ${s.is_phrase
+                            ? `<option value="1" ${s.type===1?'selected':''}>단어→뜻</option><option value="4" ${s.type===4?'selected':''}>구절 해석</option>`
+                            : `<option value="1" ${s.type===1?'selected':''}>단어→뜻</option><option value="2" ${s.type===2?'selected':''}>뜻→단어</option><option value="3" ${s.type===3?'selected':''}>철자 빈칸</option>`}
+                    </select>
+                    <button onclick="removeVocabSelected(${i})" class="text-red-400 hover:text-red-300 shrink-0"><i class="fa-solid fa-xmark"></i></button>
+                </div>`).join('') || '<p class="text-gray-500 text-xs text-center py-3">아직 선택한 단어가 없습니다.</p>';
+        }
+
         async function createVocabTest() {
             const title = document.getElementById('vt-title').value.trim();
             const deadline = document.getElementById('vt-deadline').value;
             const limit = parseInt(document.getElementById('vt-limit').value);
             if (!title || !limit) return alert('제목과 제한 시간을 입력하세요.');
-            const counts = {
-                high: parseInt(document.getElementById('vt-cnt-high').value) || 0,
-                mid: parseInt(document.getElementById('vt-cnt-mid').value) || 0,
-                low: parseInt(document.getElementById('vt-cnt-low').value) || 0,
-            };
-            if (!counts.high && !counts.mid && !counts.low) return alert('난이도별로 출제할 단어 수를 1개 이상 입력하세요.');
 
-            showLoader('무작위로 출제하는 중...');
+            const payload = { title, deadline, time_limit: limit, target_class: document.getElementById('vt-target-class').value };
+            if (vocabTestMode === 'manual') {
+                if (!vocabManualSelection.length) return alert('출제할 단어를 하나 이상 선택하세요.');
+                payload.manual_questions = vocabManualSelection;
+            } else {
+                const counts = {
+                    high: parseInt(document.getElementById('vt-cnt-high').value) || 0,
+                    mid: parseInt(document.getElementById('vt-cnt-mid').value) || 0,
+                    low: parseInt(document.getElementById('vt-cnt-low').value) || 0,
+                };
+                if (!counts.high && !counts.mid && !counts.low) return alert('난이도별로 출제할 단어 수를 1개 이상 입력하세요.');
+                payload.counts = counts;
+            }
+
+            showLoader('출제하는 중...');
             try {
                 const res = await fetch(`${API_URL}/api/admin/vocab_test`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, deadline, time_limit: limit, target_class: document.getElementById('vt-target-class').value, counts }),
+                    body: JSON.stringify(payload),
                 });
                 const data = await res.json();
                 if (data.success) {
                     alert(`'${data.title}' 시험이 출제되었습니다!`);
                     document.getElementById('vt-title').value = '';
+                    vocabManualSelection = [];
+                    renderVocabSelectedList();
                     loadVocabAdmin();
                 } else { alert('출제 실패: ' + data.detail); }
             } catch (e) { alert('서버 통신 오류: ' + e.message); }
