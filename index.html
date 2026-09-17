@@ -96,14 +96,27 @@
             <label class="text-xs text-gray-400 mb-1 block">이름</label>
             <input type="text" id="edit-name" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-3">
 
-            <label class="text-xs text-gray-400 mb-1 block">반</label>
-            <select id="edit-class" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white mb-3 class-select"><option value="">반 미배정</option></select>
-
             <label class="text-xs text-gray-400 mb-1 block">수강 과목</label>
-            <div class="flex gap-3 mb-6 text-sm">
+            <div class="flex gap-3 mb-3 text-sm">
                 <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="edit-subject-cb" value="korean" id="edit-subject-korean" checked> 국어</label>
                                     <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="edit-subject-cb" value="math" id="edit-subject-math"> 수학</label>
                                     <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="edit-subject-cb" value="english" id="edit-subject-english"> 영어</label>
+            </div>
+
+            <label class="text-xs text-gray-400 mb-1 block">반 (과목별로 따로 지정할 수 있어요)</label>
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div>
+                    <p class="text-[10px] text-blue-300 mb-1 text-center font-bold">국어반</p>
+                    <select id="edit-class-korean" class="w-full p-2 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white text-xs class-select"><option value="">미배정</option></select>
+                </div>
+                <div>
+                    <p class="text-[10px] text-indigo-300 mb-1 text-center font-bold">수학반</p>
+                    <select id="edit-class-math" class="w-full p-2 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white text-xs class-select"><option value="">미배정</option></select>
+                </div>
+                <div>
+                    <p class="text-[10px] text-cyan-300 mb-1 text-center font-bold">영어반</p>
+                    <select id="edit-class-english" class="w-full p-2 bg-[#151922] border border-gray-600 outline-none focus:border-blue-500 rounded text-white text-xs class-select"><option value="">미배정</option></select>
+                </div>
             </div>
 
             <button onclick="submitEditStudent()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg shadow-lg">수정 완료</button>
@@ -270,8 +283,9 @@
                      class="border-2 border-dashed border-indigo-700/60 hover:border-indigo-500 rounded-lg p-5 text-center cursor-pointer transition mb-4">
                     <i class="fa-solid fa-file-arrow-up text-indigo-400 text-2xl mb-2"></i>
                     <p class="text-indigo-300 text-sm font-bold">쓰시던 엑셀 파일을 그대로 올리세요</p>
-                    <p class="text-[11px] text-gray-500 mt-1">xlsx 또는 csv · 첫 줄이 열 이름이면 됩니다. 형식은 맞추지 않으셔도 됩니다.</p>
-                    <input type="file" id="univ-file" accept=".xlsx,.csv" class="hidden" onchange="previewUnivFile(this.files[0]); this.value='';">
+                    <p class="text-[11px] text-gray-500 mt-1">xlsx 또는 csv · 첫 줄이 열 이름이면 됩니다. 형식은 맞추지 않으셔도 됩니다. 여러 파일을 한 번에 선택하면 순서대로 이어서 올릴 수 있어요.</p>
+                    <p id="univ-queue-status" class="hidden text-[11px] text-yellow-400 font-bold mt-2"></p>
+                    <input type="file" id="univ-file" accept=".xlsx,.csv" multiple class="hidden" onchange="startUnivQueue(this.files); this.value='';">
                 </div>
 
                 <div id="univ-map" class="hidden">
@@ -1344,7 +1358,21 @@
                                 <h3 class="text-lg font-bold text-orange-400">새 퀴즈 출제</h3>
                                 <span id="qz-edit-badge" class="text-[11px]"></span>
                             </div>
-                            <input type="text" id="qz-title" placeholder="퀴즈 제목" class="w-full p-3 bg-gray-800 text-white mb-2 rounded border border-gray-600">
+                            <input type="text" id="qz-title" placeholder="퀴즈 제목 (저장하면 앞에 [국어]/[수학]/[영어]가 자동으로 붙어요)" class="w-full p-3 bg-gray-800 text-white mb-2 rounded border border-gray-600">
+                            <div class="flex gap-2 mb-2">
+                                <div class="w-1/2">
+                                    <label class="text-xs text-gray-400 mb-1 block">과목</label>
+                                    <select id="qz-subject" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
+                                        <option value="korean">국어</option>
+                                        <option value="math">수학</option>
+                                        <option value="english">영어</option>
+                                    </select>
+                                </div>
+                                <div class="w-1/2">
+                                    <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
+                                    <select id="qz-target-class" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600 class-select"><option value="">전체 대상</option></select>
+                                </div>
+                            </div>
                             <div class="flex gap-2 mb-2">
                                 <div class="w-1/2">
                                     <label class="text-xs text-gray-400 mb-1 block">마감 일시 (기한)</label>
@@ -1493,7 +1521,15 @@
                     <!-- 모의고사 개설 탭 -->
                     <div id="admin-exam" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
-                            <input type="text" id="rt-title" placeholder="시험 제목" class="w-full p-2 bg-gray-800 text-white mb-2 rounded border border-gray-600">
+                            <input type="text" id="rt-title" placeholder="시험 제목 (저장하면 앞에 [국어]/[수학]/[영어]가 자동으로 붙어요)" class="w-full p-2 bg-gray-800 text-white mb-2 rounded border border-gray-600">
+                            <div class="flex gap-2 mb-2">
+                                <select id="rt-subject" class="w-1/2 p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                    <option value="korean">국어</option>
+                                    <option value="math">수학</option>
+                                    <option value="english">영어</option>
+                                </select>
+                                <select id="rt-target-class" class="w-1/2 p-2 bg-gray-800 text-white rounded border border-gray-600 class-select"><option value="">전체 대상</option></select>
+                            </div>
                             <input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4 rounded border border-gray-600">
                             <div class="flex gap-2 mb-2">
                                 <input type="text" id="sec-name" class="w-1/2 p-2 bg-gray-800 text-white rounded border border-gray-600" placeholder="구간명 (예: 1교시)">
@@ -4083,6 +4119,40 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 : (q ? '<p class="text-gray-600 text-xs text-center py-4">찾는 대학이 없습니다.</p>' : '');
         }
 
+        // 💡 예전에는 파일을 하나씩 골라 매번 새로 열어야 했다. 여러 파일을 한 번에
+        // 선택하면 큐에 담아두고, 한 파일을 저장할 때마다 자동으로 다음 파일을 이어서
+        // 연다 — 두 번째 파일부터는 앞서 올린 자료가 지워지지 않도록 "덧붙이기"도 자동으로 켠다.
+        let UNIV_FILE_QUEUE = [];
+        let UNIV_QUEUE_TOTAL = 0;
+
+        function startUnivQueue(fileList) {
+            UNIV_FILE_QUEUE = Array.from(fileList || []);
+            UNIV_QUEUE_TOTAL = UNIV_FILE_QUEUE.length;
+            if (!UNIV_FILE_QUEUE.length) return;
+            advanceUnivQueue();
+        }
+
+        function advanceUnivQueue() {
+            const statusEl = document.getElementById('univ-queue-status');
+            if (!UNIV_FILE_QUEUE.length) {
+                if (statusEl) statusEl.classList.add('hidden');
+                return;
+            }
+            const next = UNIV_FILE_QUEUE.shift();
+            const idx = UNIV_QUEUE_TOTAL - UNIV_FILE_QUEUE.length;
+            if (statusEl) {
+                if (UNIV_QUEUE_TOTAL > 1) {
+                    statusEl.textContent = `여러 파일 업로드 중 — ${idx} / ${UNIV_QUEUE_TOTAL}번째 파일 (${next.name})`;
+                    statusEl.classList.remove('hidden');
+                } else {
+                    statusEl.classList.add('hidden');
+                }
+            }
+            const appendCb = document.getElementById('univ-append');
+            if (appendCb && idx > 1) appendCb.checked = true;
+            previewUnivFile(next);
+        }
+
         async function previewUnivFile(file, keepChoice) {
             if (file) UNIV_FILE = file;
             if (!UNIV_FILE) return;
@@ -4212,11 +4282,21 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             let msg = `${data.count.toLocaleString()}건을 읽어 저장했습니다.`;
             if (data.stored && data.stored !== data.count) msg += ` (전체 보관 ${data.stored.toLocaleString()}건)`;
             if (data.warning) msg += `\n\n⚠ ${data.warning}`;
-            alert(msg);
+
             document.getElementById('univ-map').classList.add('hidden');
             UNIV_FILE = null;
             await loadUnivList();
             if (COUNSEL_TARGET) await reloadCounsel();
+
+            if (UNIV_FILE_QUEUE.length) {
+                showToast(`✅ ${msg} 다음 파일을 여는 중...`);
+                advanceUnivQueue();
+            } else {
+                alert(UNIV_QUEUE_TOTAL > 1 ? `선택한 ${UNIV_QUEUE_TOTAL}개 파일을 모두 저장했습니다.\n마지막 파일: ${msg}` : msg);
+                UNIV_QUEUE_TOTAL = 0;
+                const statusEl = document.getElementById('univ-queue-status');
+                if (statusEl) statusEl.classList.add('hidden');
+            }
         }
 
         async function clearUnivTable() {
@@ -4936,7 +5016,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}
                         </span>
                         <button onclick="fetchReports('${escAttr(s.student_name)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded text-xs text-white font-bold transition">이력</button>
-                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}','${escAttr(subs.join(','))}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
+                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}','${escAttr(subs.join(','))}','${escAttr(JSON.stringify(s.class_names||{}))}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
                     </div>`;
                 }).join('') : '<p class="text-gray-600 text-xs text-center py-3">이 반에 배정된 학생이 없습니다.</p>';
 
@@ -4982,14 +5062,21 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
 
         // 💡 팝업 모달을 띄우고 기존 정보를 채워넣는 함수
-        function openEditStudent(id,n,s,g,cls,subs) {
+        function openEditStudent(id,n,s,g,cls,subs,classNamesJson) {
             document.getElementById('edit-old-id').value=id;
             document.getElementById('edit-name').value=n;
             document.getElementById('edit-school').value=s;
             document.getElementById('edit-grade').value=g;
-            const sel=document.getElementById('edit-class');
-            sel.value=cls||'';
-            if(sel.value!==(cls||'')) sel.value='';   // 지워진 반이면 '미배정'으로
+            let classNames = {};
+            try { classNames = JSON.parse(classNamesJson || '{}') || {}; } catch(e) { classNames = {}; }
+            // 💡 과목별 반을 아직 한 번도 안 나눠본 학생은(예전 방식으로 반 하나만 쓰던 학생)
+            // 국어를 대표 과목으로 보고 그 반 값을 국어반 칸에 그대로 보여준다.
+            ['korean','math','english'].forEach(k => {
+                const sel = document.getElementById('edit-class-' + k);
+                const v = classNames[k] || (k === 'korean' ? (cls || '') : '');
+                sel.value = v;
+                if (sel.value !== v) sel.value = '';   // 지워진 반이면 '미배정'으로
+            });
             const subjSet = new Set((subs||'korean').split(',').filter(Boolean));
             ['korean','math','english'].forEach(k => {
                 const cb = document.getElementById('edit-subject-' + k);
@@ -5002,7 +5089,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const id=document.getElementById('edit-old-id').value, n=document.getElementById('edit-name').value, s=document.getElementById('edit-school').value, g=document.getElementById('edit-grade').value;
             if(!n.trim()) return alert("이름을 입력해주세요.");
             showLoader("정보 수정 중...");
-            await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g,class_name:document.getElementById('edit-class').value,subjects:checkedSubjects('edit-subject-cb')})});
+            const classNames = {
+                korean: document.getElementById('edit-class-korean').value,
+                math: document.getElementById('edit-class-math').value,
+                english: document.getElementById('edit-class-english').value,
+            };
+            await fetch(`${API_URL}/api/admin/student/update`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_id:id,new_name:n,school:s,grade:g,class_name:classNames.korean,class_names:classNames,subjects:checkedSubjects('edit-subject-cb')})});
             closeModal('edit-student-modal');
             loadAdminStudents();
             hideLoader();
@@ -5957,6 +6049,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const fd=new FormData();
             fd.append("title",t);
             fd.append("objective",o);
+            fd.append("subject", document.getElementById('rt-subject').value);
+            fd.append("target_class", document.getElementById('rt-target-class').value);
             fd.append("allowed_students", "all");
             fd.append("exam_data", JSON.stringify({sections:adminExamSections, questions:adminExamQuestions}));
             fd.append("video_url",v);
@@ -6716,7 +6810,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const res = await fetch(`${API_URL}/api/admin/quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE })
+                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_class: document.getElementById('qz-target-class').value })
                 });
                 const data = await res.json();
                 if(data.success) {
@@ -6767,6 +6861,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('qz-title').value = q.title || '';
             document.getElementById('qz-deadline').value = (q.deadline || '').slice(0, 16);
             document.getElementById('qz-limit').value = q.time_limit || '';
+            document.getElementById('qz-subject').value = q.subject || 'korean';
+            document.getElementById('qz-target-class').value = q.target_class || '';
             const board = document.getElementById('qz-questions-board');
             board.innerHTML = '';
             (q.questions || []).forEach(x => fillQuizQuestion({
@@ -6812,7 +6908,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadStudentQuizzes() {
             try {
-                const res = await fetch(`${API_URL}/api/quizzes`); const data = await res.json();
+                const qs = (!currentUser || currentUser.isAdmin) ? '' : `?student_name=${encodeURIComponent(currentUser.name)}`;
+                const res = await fetch(`${API_URL}/api/quizzes${qs}`); const data = await res.json();
                 const c = document.getElementById('student-quiz-list'); c.innerHTML = '';
                 if(data.success) {
                     allQuizzes = data.quizzes;
@@ -6823,9 +6920,31 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             } catch(e){}
         }
 
-        function enterQuizRoom(idx) {
+        // 💡 예전에는 제한 시간이 브라우저 안의 카운트다운 하나뿐이어서, 퀴즈방을
+        // 나갔다가 다시 들어오면 타이머가 매번 처음부터 다시 시작돼 정해둔 제한
+        // 시간을 넘겨도 계속 풀 수 있었다. 이제 서버에 기록된 실제 시작 시각을
+        // 먼저 확인해서, 재입장해도 남은 시간만 이어서 준다(리셋 불가).
+        async function enterQuizRoom(idx) {
             currentActiveQuiz = allQuizzes[idx];
-            if(!confirm(`[${currentActiveQuiz.title}]\n제한 시간: ${currentActiveQuiz.time_limit}분\n시작하시겠습니까?`)) return;
+            showLoader("확인 중...");
+            let startInfo;
+            try {
+                const res = await fetch(`${API_URL}/api/quiz/start`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ student_name: currentUser.name, title: currentActiveQuiz.title }) });
+                startInfo = await res.json();
+            } catch(e) { hideLoader(); return alert("서버 통신 오류. 잠시 후 다시 시도해주세요."); }
+            hideLoader();
+            if (!startInfo.success) return alert(startInfo.detail || "퀴즈를 시작할 수 없습니다.");
+
+            const elapsed = Date.now() / 1000 - startInfo.started_at;
+            const remainingSec = Math.floor(startInfo.time_limit * 60 - elapsed);
+            if (remainingSec <= 0) return alert("이 퀴즈는 제한 시간이 이미 끝나서 더 이상 응시할 수 없습니다.");
+
+            const remainMin = Math.floor(remainingSec / 60), remainRest = remainingSec % 60;
+            const already = elapsed > 5; // 처음 시작이 아니라 이어서 하는 경우
+            const msg = already
+                ? `[${currentActiveQuiz.title}]\n이미 시작한 퀴즈입니다. 남은 시간: ${remainMin}분 ${remainRest}초\n이어서 시작하시겠습니까?`
+                : `[${currentActiveQuiz.title}]\n제한 시간: ${currentActiveQuiz.time_limit}분\n시작하시겠습니까?`;
+            if(!confirm(msg)) return;
             openProgram('quiz-room'); document.getElementById('quiz-room-title').innerText = currentActiveQuiz.title;
             // 앞서 본 채점 결과가 남아 있으면 치우고 새로 시작한다
             document.getElementById('quiz-result-view').classList.add('hidden');
@@ -6851,7 +6970,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     : '';
                 c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
-            activeQuizTimeLeft = currentActiveQuiz.time_limit * 60; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
+            activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
 
         function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
@@ -7078,7 +7197,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadStudentExams() {
             try {
-                const res = await fetch(`${API_URL}/api/exams`);
+                const qs = (!currentUser || currentUser.isAdmin) ? '' : `?student_name=${encodeURIComponent(currentUser.name)}`;
+                const res = await fetch(`${API_URL}/api/exams${qs}`);
                 const data = await res.json();
                 const c = document.getElementById('student-exam-list');
                 c.innerHTML = '';
