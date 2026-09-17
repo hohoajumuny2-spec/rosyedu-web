@@ -1473,7 +1473,15 @@
                     <div id="admin-generator" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-[#151922] p-6 rounded flex flex-col min-h-[800px] border border-gray-700 relative">
                             <h3 class="text-xl font-bold mb-4 text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>정밀 문제 출제 엔진</h3>
-                            <input type="text" id="gen-title" placeholder="출제할 문제집의 제목을 입력하세요" class="w-full bg-[#1e2430] border border-blue-500 p-3 rounded-lg text-white mb-4 outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="gen-title" placeholder="출제할 문제집의 제목을 입력하세요" class="flex-grow bg-[#1e2430] border border-blue-500 p-3 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500 transition shadow-lg">
+                                <select id="gen-subject" class="bg-[#1e2430] border border-blue-500 p-3 rounded-lg text-white outline-none shrink-0">
+                                    <option value="korean">국어</option>
+                                    <option value="math">수학</option>
+                                    <option value="english">영어</option>
+                                </select>
+                            </div>
+                            <button onclick="openRecombineModal()" class="w-full mb-4 border border-dashed border-indigo-600 hover:border-indigo-400 hover:bg-indigo-900/20 text-indigo-300 py-2.5 rounded text-sm font-bold transition"><i class="fa-solid fa-layer-group mr-1"></i>기존 자료에서 문항만 골라 재조합하기</button>
 
                             <div class="bg-[#1e2430] p-4 rounded border border-gray-700 mb-4">
                                 <div class="flex flex-wrap gap-3 text-sm text-white" id="gen-types">
@@ -1539,7 +1547,40 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-[#151922] p-6 rounded h-[800px] flex flex-col"><div id="admin-questions-list" class="flex-grow overflow-auto text-white space-y-2"></div></div>
+                        <div class="bg-[#151922] p-6 rounded h-[800px] flex flex-col">
+                            <div class="flex gap-1 mb-3" id="qbank-subject-tabs">
+                                <button onclick="switchQbankSubject('')" data-subj="" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-700 text-white transition">전체</button>
+                                <button onclick="switchQbankSubject('korean')" data-subj="korean" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-blue-300 transition">국어</button>
+                                <button onclick="switchQbankSubject('math')" data-subj="math" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-indigo-300 transition">수학</button>
+                                <button onclick="switchQbankSubject('english')" data-subj="english" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-cyan-300 transition">영어</button>
+                            </div>
+                            <div id="admin-questions-list" class="flex-grow overflow-auto text-white space-y-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- 문항 재조합 모달 -->
+                    <div id="recombine-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+                        <div class="bg-[#1e2430] rounded-2xl w-full max-w-3xl h-[88vh] shadow-2xl border border-indigo-500 flex flex-col">
+                            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                                <h2 class="text-lg font-black text-white"><i class="fa-solid fa-layer-group mr-2 text-indigo-400"></i>기존 자료에서 문항 재조합</h2>
+                                <button onclick="closeModal('recombine-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                            </div>
+                            <div class="flex-grow overflow-y-auto p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-xs text-gray-400 mb-2">먼저 자료를 고르면, 그 안에 있는 문항 목록이 오른쪽에 나타납니다.</p>
+                                    <div id="recombine-source-list" class="space-y-1.5 max-h-[60vh] overflow-auto"></div>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400 mb-2" id="recombine-browse-title">자료를 먼저 골라주세요.</p>
+                                    <div id="recombine-problem-list" class="space-y-1.5 max-h-64 overflow-auto bg-[#151922] rounded p-2 mb-4"></div>
+                                    <p class="text-xs text-gray-400 mb-1">선택된 문항 (<span id="recombine-selected-count">0</span>개)</p>
+                                    <div id="recombine-selected-list" class="space-y-1 max-h-48 overflow-auto"></div>
+                                </div>
+                            </div>
+                            <div class="p-5 border-t border-gray-700">
+                                <button onclick="submitRecombine()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 text-white font-bold rounded shadow-lg transition">선택한 문항으로 재조합하기</button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 모의고사 개설 탭 -->
@@ -2192,7 +2233,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             try {
                 const res = await fetch(`${API_URL}/api/admin/questions`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: t, content: c, id: CURRENT_QUESTION_ID })
+                    body: JSON.stringify({ title: t, content: c, subject: document.getElementById('gen-subject').value, id: CURRENT_QUESTION_ID })
                 });
                 if (!res.ok) throw new Error("서버 오류");
                 const data = await res.json();
@@ -2210,19 +2251,35 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             return okSave;
         }
 
+        let qbankSubjectFilter = '';
+        const QBANK_SUBJECT_LABEL = { korean: '국어', math: '수학', english: '영어' };
+
+        async function switchQbankSubject(subj) {
+            qbankSubjectFilter = subj;
+            document.querySelectorAll('#qbank-subject-tabs button').forEach(b => {
+                const on = b.dataset.subj === subj;
+                b.classList.toggle('bg-gray-700', on && subj === '');
+                b.classList.toggle('bg-indigo-700', on && subj !== '');
+                b.classList.toggle('bg-gray-800', !on);
+            });
+            await loadGeneratedQuestions();
+        }
+
         async function loadGeneratedQuestions() {
             try{
-                const res=await fetch(`${API_URL}/api/admin/questions`); const data=await res.json();
+                const qs = qbankSubjectFilter ? `?subject=${qbankSubjectFilter}` : '';
+                const res=await fetch(`${API_URL}/api/admin/questions${qs}`); const data=await res.json();
                 const c=document.getElementById('admin-questions-list'); c.innerHTML='';
                 if(data.success && data.questions.length>0){
                     generatedQuestionsData = data.questions;
                     data.questions.forEach((q,i) => {
                         const on = CURRENT_QUESTION_ID === q.id;
                         const when = (q.updated_at || q.created_at || '').slice(0, 16);
+                        const subjLabel = QBANK_SUBJECT_LABEL[q.subject] || '국어';
                         c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 ${on ? 'ring-1 ring-emerald-500' : ''}">
                             <div class="flex justify-between items-center gap-2">
                                 <button onclick="viewGeneratedQuestion(${i})" class="text-left min-w-0 flex-grow">
-                                    <div class="text-yellow-400 font-bold truncate hover:underline">${escapeHtml(q.title)}</div>
+                                    <div class="text-yellow-400 font-bold truncate hover:underline"><span class="text-[10px] text-indigo-300 font-normal">[${subjLabel}]</span> ${escapeHtml(q.title)}</div>
                                     <div class="text-[10px] text-gray-500">${escapeHtml(when)}${q.updated_at ? ' 수정' : ''}${on ? ' · 편집 중' : ''}</div>
                                 </button>
                                 <div class="shrink-0 flex gap-1">
@@ -2232,7 +2289,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             </div>
                         </div>`;
                     });
-                } else { generatedQuestionsData=[]; }
+                } else { generatedQuestionsData=[]; c.innerHTML = '<p class="text-gray-500 text-xs text-center py-6">저장된 출제본이 없습니다.</p>'; }
             }catch(e){}
         }
 
@@ -2240,6 +2297,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const q = generatedQuestionsData[i];
             if (!q) return;
             document.getElementById('gen-title').value = q.title;
+            document.getElementById('gen-subject').value = q.subject || 'korean';
             const t = document.getElementById('gen-result-text');
             t.value = q.content; t.scrollTop = 0;
             document.getElementById('gen-result-area').style.display = 'flex';
@@ -2260,6 +2318,118 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         function deployFromGenerator() { const t = document.getElementById('gen-title').value.trim(); const c = document.getElementById('gen-result-text').value.trim(); if(!t) return alert("제목을 먼저 입력하세요."); switchAdminTab('admin-exam'); document.getElementById('rt-title').value = t; document.getElementById('rt-exp').value = c; if(adminExamSections.length === 0) { addAdminSection('모의고사', 45); } alert("제목과 해설지가 방 개설 페이지로 완벽하게 복사되었습니다.\n이제 학생용 PDF만 첨부하고 [오픈하기]를 누르시면 됩니다!"); }
+
+        // ═════════════════════════════════════════════
+        // 문항 재조합 — 무작위로 새로 뽑는 게 아니라, 이미 보관함에 저장해둔
+        // 여러 출제본에서 원하는 문항 번호만 골라 새 자료 하나로 다시 엮는다.
+        // ═════════════════════════════════════════════
+        let recombineSelection = [];   // [{sourceId, sourceTitle, no, preview}]
+        let recombineActiveSource = null;
+
+        function openRecombineModal() {
+            recombineSelection = [];
+            recombineActiveSource = null;
+            document.getElementById('recombine-browse-title').innerText = '자료를 먼저 골라주세요.';
+            document.getElementById('recombine-problem-list').innerHTML = '';
+            renderRecombineSelected();
+            showModal('recombine');
+            loadRecombineSourceList();
+        }
+
+        async function loadRecombineSourceList() {
+            const box = document.getElementById('recombine-source-list');
+            box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">불러오는 중...</p>';
+            try {
+                const res = await fetch(`${API_URL}/api/admin/questions`);
+                const data = await res.json();
+                if (!data.success || !data.questions.length) { box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">저장된 출제본이 없습니다.</p>'; return; }
+                box.innerHTML = data.questions.map(q => `
+                    <button onclick="selectRecombineSource('${escAttr(q.id)}', '${escAttr(q.title)}')" class="w-full text-left bg-gray-800 hover:bg-gray-700 p-2 rounded text-xs text-white transition">
+                        <span class="text-indigo-300">[${QBANK_SUBJECT_LABEL[q.subject] || '국어'}]</span> ${escapeHtml(q.title)}
+                    </button>`).join('');
+            } catch (e) { box.innerHTML = '<p class="text-red-400 text-xs text-center py-3">불러오지 못했습니다.</p>'; }
+        }
+
+        async function selectRecombineSource(id, title) {
+            recombineActiveSource = { id, title };
+            document.getElementById('recombine-browse-title').innerText = `'${title}' — 원하는 문항을 고르세요.`;
+            const box = document.getElementById('recombine-problem-list');
+            box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">불러오는 중...</p>';
+            try {
+                const res = await fetch(`${API_URL}/api/admin/questions/${id}/parsed`);
+                const data = await res.json();
+                if (!data.success) { box.innerHTML = `<p class="text-red-400 text-xs text-center py-3">${escapeHtml(data.detail || '문항을 찾지 못했습니다.')}</p>`; return; }
+                if (!data.problems.length) { box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">이 자료에서 번호가 매겨진 문항을 찾지 못했습니다.</p>'; return; }
+                box.innerHTML = data.problems.map(p => {
+                    const checked = recombineSelection.some(s => s.sourceId === id && s.no === p.no);
+                    const preview = p.text.replace(/\s+/g, ' ').slice(0, 50);
+                    return `<label class="flex items-start gap-2 hover:bg-gray-800 px-1 py-1 rounded cursor-pointer text-xs text-gray-300">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRecombineProblem(this, '${escAttr(id)}', '${escAttr(title)}', ${p.no}, '${escAttr(preview)}')">
+                        <span><b class="text-white">${p.no}.</b> ${escapeHtml(preview)}${p.text.length > 50 ? '…' : ''}</span>
+                    </label>`;
+                }).join('');
+            } catch (e) { box.innerHTML = '<p class="text-red-400 text-xs text-center py-3">불러오지 못했습니다.</p>'; }
+        }
+
+        function toggleRecombineProblem(cb, sourceId, sourceTitle, no, preview) {
+            if (cb.checked) {
+                if (!recombineSelection.some(s => s.sourceId === sourceId && s.no === no)) {
+                    recombineSelection.push({ sourceId, sourceTitle, no, preview });
+                }
+            } else {
+                recombineSelection = recombineSelection.filter(s => !(s.sourceId === sourceId && s.no === no));
+            }
+            renderRecombineSelected();
+        }
+
+        function removeRecombineSelected(idx) {
+            const removed = recombineSelection[idx];
+            recombineSelection.splice(idx, 1);
+            renderRecombineSelected();
+            if (recombineActiveSource && removed && recombineActiveSource.id === removed.sourceId) {
+                selectRecombineSource(recombineActiveSource.id, recombineActiveSource.title);
+            }
+        }
+
+        function renderRecombineSelected() {
+            document.getElementById('recombine-selected-count').innerText = recombineSelection.length;
+            const list = document.getElementById('recombine-selected-list');
+            list.innerHTML = recombineSelection.map((s, i) => `
+                <div class="flex items-center gap-2 bg-gray-800 px-2 py-1 rounded text-[11px]">
+                    <span class="text-indigo-300 shrink-0">${escapeHtml(s.sourceTitle)} ${s.no}번</span>
+                    <span class="flex-grow text-gray-400 truncate">${escapeHtml(s.preview)}</span>
+                    <button onclick="removeRecombineSelected(${i})" class="text-red-400 hover:text-red-300 shrink-0"><i class="fa-solid fa-xmark"></i></button>
+                </div>`).join('') || '<p class="text-gray-500 text-xs text-center py-3">아직 선택한 문항이 없습니다.</p>';
+        }
+
+        async function submitRecombine() {
+            if (!recombineSelection.length) return alert('재조합할 문항을 하나 이상 선택하세요.');
+            const bySource = {};
+            recombineSelection.forEach(s => {
+                bySource[s.sourceId] = bySource[s.sourceId] || [];
+                bySource[s.sourceId].push(s.no);
+            });
+            const sources = Object.keys(bySource).map(id => ({ id, numbers: bySource[id] }));
+
+            showLoader('재조합하는 중...');
+            try {
+                const res = await fetch(`${API_URL}/api/admin/questions/recombine`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sources }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeModal('recombine-modal');
+                    setQuestionEditState('', '');   // 새 출제본으로 취급 — 원본을 덮어쓰지 않고 새로 저장됨
+                    document.getElementById('gen-title').value = '재조합 자료 ' + new Date().toLocaleDateString('ko-KR');
+                    const t = document.getElementById('gen-result-text');
+                    t.value = data.content;
+                    document.getElementById('gen-result-area').style.display = 'flex';
+                    showToast(`✅ ${data.count}개 문항을 재조합했습니다. 검토 후 보관함에 저장하세요.`);
+                } else { alert('재조합 실패: ' + data.detail); }
+            } catch (e) { alert('서버 통신 오류: ' + e.message); }
+            hideLoader();
+        }
 
         async function openKnowledgeImportModal() {
             showModal('knowledge-import');
