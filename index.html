@@ -460,6 +460,7 @@
                     <button onclick="openProgram('exam-list'); loadStudentExams();" class="hover:text-yellow-400">실시간 모의고사</button>
                     <button onclick="openProgram('lecture'); loadLectures();" class="hover:text-purple-400">해설 강의실</button>
                     <button onclick="openProgram('homework'); loadHomeworks();" class="hover:text-emerald-400">과제 제출</button>
+                    <button onclick="openProgram('essay')" class="hover:text-pink-400">AI 논술/요약 첨삭</button>
                 </span>
             </div>
             <div class="flex items-center gap-3">
@@ -500,6 +501,7 @@
                 <button onclick="openProgram('exam-list'); loadStudentExams(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-yellow-400 w-full">실시간 모의고사</button>
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
+                <button onclick="openProgram('essay'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
             </span>
             <button onclick="openProgram('mypage'); loadMyPage(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-emerald-400 w-full" id="mobile-mypage-btn" style="display:none;">마이페이지</button>
             <button onclick="openProgram('counsel'); loadMyCounsel(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-pink-400 w-full" id="mobile-counsel-btn" style="display:none;">나의 진학 상담</button>
@@ -600,18 +602,14 @@
                 </div>
             </div>
 
-            <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                <div onclick="openProgram('essay')" class="bg-[#1e2430] border border-pink-600/50 p-6 md:p-8 rounded-2xl cursor-pointer app-card">
-                    <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">✍️</div>
-                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">AI 논술/요약 첨삭</h3>
-                    <p class="text-pink-200/70 text-xs md:text-sm">손글씨/PDF 논술문을 올리면 AI가 직접 빨간펜 첨삭을 해줍니다.</p>
-                </div>
-
-                <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
-                    <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⚙️</div>
-                    <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
-                    <p class="text-red-300 text-xs md:text-sm">출제, 시험/과제 오픈, 학생 명단을 관리합니다.</p>
+            <div id="admin-smart-room" class="hidden">
+                <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div id="card-admin" onclick="openProgram('admin')" class="hidden bg-[#1e2430] border border-red-500 p-6 md:p-8 rounded-2xl cursor-pointer app-card flex-col items-start">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-4 md:mb-6">⚙️</div>
+                        <h3 class="text-lg md:text-xl font-bold mb-2 text-white">시스템 통합 관리</h3>
+                        <p class="text-red-300 text-xs md:text-sm">출제, 시험/과제 오픈, 학생 명단을 관리합니다.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1966,6 +1964,22 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 학습실 첫 화면의 환영 배너에도 같은 정보(레벨·경험치·꾸민 모습)를 칠한다.
         // prefix가 다른 세 군데(''=마이페이지, 'nav-avatar-'=상단바, 'home-avatar-'=환영배너)에
         // 같은 로직을 반복하지 않도록 id를 'prefix + avatar-xxx' 규칙으로 맞춰 하나의 함수로 처리.
+        // 💡 style.width를 0%에서 바로 목표치로 바꾸면, 브라우저가 그 사이의 0% 상태를
+        // 한 번도 화면에 그리지 않고 최종값으로 건너뛰어버려서(같은 프레임 내 변경은
+        // reflow가 없으면 transition이 생략됨) 게이지가 "차오르는" 모습 없이 그냥
+        // 이미 채워진 채로 나타난다. 0%를 강제로 한 번 그리게(reflow) 만든 뒤,
+        // 다음 프레임에서 목표 %로 바꿔야 CSS transition이 실제로 재생된다.
+        function animateProgressBar(el, pct) {
+            if (!el) return;
+            el.style.transition = 'none';
+            el.style.width = '0%';
+            void el.offsetWidth;
+            el.style.transition = '';
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                el.style.width = pct + '%';
+            }));
+        }
+
         function paintAvatarPrefix(prefix) {
             if (!myLevelInfo) return;
             const g = suffix => document.getElementById(prefix + suffix);
@@ -2006,7 +2020,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const span = myLevelInfo.is_max ? 1 : (myLevelInfo.next_threshold - myLevelInfo.current_threshold);
             const pct = myLevelInfo.is_max ? 100 : Math.max(0, Math.min(100, Math.round((cur / span) * 100)));
             const barEl = g('avatar-progress-bar'), textEl = g('avatar-progress-text');
-            if (barEl) barEl.style.width = pct + '%';
+            animateProgressBar(barEl, pct);
             if (textEl) textEl.innerText = myLevelInfo.is_max
                 ? `최고 레벨입니다! (누적 ${myLevelInfo.xp}P)`
                 : `다음 레벨까지 ${myLevelInfo.next_threshold - myLevelInfo.xp}P 남음 (${myLevelInfo.xp}/${myLevelInfo.next_threshold})`;
@@ -2219,7 +2233,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const cur = myLevelInfo.xp - myLevelInfo.current_threshold;
             const span = myLevelInfo.is_max ? 1 : (myLevelInfo.next_threshold - myLevelInfo.current_threshold);
             const pct = myLevelInfo.is_max ? 100 : Math.max(0, Math.min(100, Math.round((cur/span)*100)));
-            document.getElementById('avatar-progress-bar').style.width = pct + '%';
+            animateProgressBar(document.getElementById('avatar-progress-bar'), pct);
             document.getElementById('avatar-progress-text').innerText = myLevelInfo.is_max
                 ? `최고 레벨을 달성했습니다! (누적 ${myLevelInfo.xp} 성장 포인트)`
                 : `다음 레벨 '${myLevelInfo.next_name}'까지 ${myLevelInfo.next_threshold - myLevelInfo.xp} 포인트 남음 (${myLevelInfo.xp}/${myLevelInfo.next_threshold})`;
@@ -2678,7 +2692,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     document.getElementById('mobile-student-menu').style.display='block';
                     document.getElementById('card-admin').style.display='none';
                 }
-                if(currentUser.isAdmin) { document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
+                if(currentUser.isAdmin) { document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
                 document.getElementById('mobile-logout-btn').style.display='block';
                 if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup();
 
@@ -4970,7 +4984,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const notEnrolled = !currentUser.isAdmin && !myEnrolledSubjects.has(currentChatSubject);
             const noticeHtml = notEnrolled
                 ? `<div class="text-center mb-4"><span class="inline-block bg-amber-900/30 border border-amber-700/60 text-amber-300 text-xs md:text-sm px-4 py-2 rounded-xl">
-                    ⚠️ ${escapeHtml(meta.label)} 수업을 듣는 학생만 질문할 수 있어요. 궁금하시면 선생님께 문의해주세요.
+                    ⚠️ 아직 ${escapeHtml(meta.label)} 수업에 등록되어 있지 않아 질문할 수 없어요. ${escapeHtml(meta.label)}에 등록하면 이 AI를 포함한 다양한 학습 프로그램을 이용할 수 있으니, 선생님께 등록을 문의해보세요!
                    </span></div>`
                 : '';
 
