@@ -1642,7 +1642,7 @@
                         <div class="space-y-4">
                             <div class="bg-[#151922] p-6 rounded">
                                 <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2"><i class="fa-solid fa-file-arrow-up mr-2 text-cyan-400"></i>난이도별 단어장 올리기</h3>
-                                <p class="text-[11px] text-gray-500 mb-3">엑셀/CSV 파일 1열은 단어(또는 구절), 2열은 뜻으로 구성하세요. 같은 난이도에 여러 파일을 올리면 하나로 합쳐져서 무작위 출제에 쓰입니다.</p>
+                                <p class="text-[11px] text-gray-500 mb-3">엑셀/CSV는 단어(또는 구절)와 뜻이 같은 줄에 있으면 되고(열 순서·순번 열이 섞여 있어도 괜찮습니다), 손글씨·인쇄물 사진이나 PDF를 올리면 AI가 단어와 뜻을 직접 읽어서 등록합니다. 같은 난이도에 여러 파일을 올리면 하나로 합쳐져서 무작위 출제에 쓰입니다.</p>
                                 <div class="flex gap-2 mb-2">
                                     <select id="vocab-upload-diff" class="w-1/3 p-2 bg-gray-800 text-white rounded border border-gray-600">
                                         <option value="high">상</option>
@@ -1650,9 +1650,9 @@
                                         <option value="low">하</option>
                                     </select>
                                     <div onclick="document.getElementById('vocab-file-input').click()" class="w-2/3 border-2 border-dashed border-cyan-700/60 hover:border-cyan-500 rounded-lg p-2 text-center cursor-pointer transition text-cyan-300 text-sm font-bold">
-                                        <i class="fa-solid fa-upload mr-1"></i>파일 선택 (여러 개 가능)
+                                        <i class="fa-solid fa-upload mr-1"></i>파일 선택 (엑셀·사진·PDF, 여러 개 가능)
                                     </div>
-                                    <input type="file" id="vocab-file-input" accept=".xlsx,.csv" multiple class="hidden" onchange="startVocabUploadQueue(this.files); this.value='';">
+                                    <input type="file" id="vocab-file-input" accept=".xlsx,.csv,.pdf,image/*" multiple class="hidden" onchange="startVocabUploadQueue(this.files); this.value='';">
                                 </div>
                                 <p id="vocab-upload-status" class="hidden text-[11px] text-yellow-400 font-bold mb-2"></p>
                                 <div class="grid grid-cols-3 gap-2 text-center mb-3">
@@ -7198,7 +7198,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const statusEl = document.getElementById('vocab-upload-status');
             if (!VOCAB_UPLOAD_QUEUE.length) { if (statusEl) statusEl.classList.add('hidden'); loadVocabAdmin(); return; }
             const file = VOCAB_UPLOAD_QUEUE.shift();
-            if (statusEl) { statusEl.textContent = `'${file.name}' 업로드 중... (남은 파일 ${VOCAB_UPLOAD_QUEUE.length}개)`; statusEl.classList.remove('hidden'); }
+            const isExcel = /\.(xlsx|csv)$/i.test(file.name);
+            if (statusEl) { statusEl.textContent = `'${file.name}' ${isExcel ? '업로드' : 'AI가 읽는'} 중... (남은 파일 ${VOCAB_UPLOAD_QUEUE.length}개)`; statusEl.classList.remove('hidden'); }
             const fd = new FormData();
             fd.append('file', file);
             fd.append('difficulty', document.getElementById('vocab-upload-diff').value);
