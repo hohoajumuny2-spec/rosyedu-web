@@ -4056,7 +4056,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     ${t && t.axes ? '<span class="text-emerald-400 ml-1">●</span>' : '<span class="text-gray-600 ml-1">○</span>'}
                 </button>`;
             }).join('');
-            const head = `<div class="flex flex-wrap gap-1 mb-3">${tabs}</div>`;
+            // 💡 학생이 마음대로 자율 응시하지 못하도록, 원장님이 미리 허락을 켜고 끌 수 있는 줄.
+            const allowed = !!(COUNSEL_DATA && COUNSEL_DATA.tendency_allowed);
+            const allowBar = `<div class="flex items-center justify-between bg-[#1a2030] border border-gray-700 rounded-lg px-3 py-2 mb-3">
+                <span class="text-xs ${allowed ? 'text-emerald-400' : 'text-gray-500'}"><i class="fa-solid ${allowed ? 'fa-lock-open' : 'fa-lock'} mr-1"></i>학생 자율 응시(집·자습실에서 스스로 검사): ${allowed ? '허용됨' : '잠김'}</span>
+                <button onclick="toggleTendencyAllow(${!allowed})" class="px-3 py-1 rounded text-[11px] font-bold transition ${allowed ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}">${allowed ? '승인 취소' : '자율 응시 승인'}</button>
+            </div>`;
+            const head = `<div class="flex flex-wrap gap-1 mb-3">${tabs}</div>` + allowBar;
 
             const meta = sets.find(s => s.key === TENDENCY_SET) || {};
             const t = done[TENDENCY_SET];
@@ -4066,7 +4072,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <i class="fa-solid fa-clipboard-question text-4xl text-gray-700 mb-4"></i>
                     <p class="text-gray-500 text-sm mb-1">${escapeHtml(COUNSEL_TARGET)} 학생이 아직 <b class="text-gray-300">${escapeHtml(meta.name || '')}</b> 검사를 하지 않았습니다.</p>
                     <p class="text-gray-600 text-xs mb-5">${escapeHtml(meta.desc || '')} · ${meta.count || 28}문항</p>
-                    <button onclick="openTendencyTest('${escAttr(COUNSEL_TARGET)}','${escAttr(TENDENCY_SET)}')" class="bg-pink-600 hover:bg-pink-700 px-5 py-2.5 rounded text-white font-bold text-sm transition">지금 검사 진행하기</button>
+                    <button onclick="openTendencyTest('${escAttr(COUNSEL_TARGET)}','${escAttr(TENDENCY_SET)}',true)" class="bg-pink-600 hover:bg-pink-700 px-5 py-2.5 rounded text-white font-bold text-sm transition">지금 검사 진행하기</button>
                 </div>`;
                 return;
             }
@@ -4087,7 +4093,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <p class="text-[11px] text-gray-500">검사일 ${escapeHtml(t.submitted_at || '')} · 100점에 가까울수록 잘 갖춰진 상태</p>
                     <div class="flex gap-2">
                         <button onclick="runTendencyAnalysis()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-robot mr-1"></i>AI 해석</button>
-                        <button onclick="openTendencyTest('${escAttr(COUNSEL_TARGET)}','${escAttr(TENDENCY_SET)}')" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-white font-bold text-xs transition">다시 검사</button>
+                        <button onclick="openTendencyTest('${escAttr(COUNSEL_TARGET)}','${escAttr(TENDENCY_SET)}',true)" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-white font-bold text-xs transition">다시 검사</button>
                     </div>
                 </div>
                 <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-4 mb-3">${t.axes.map(bar).join('')}</div>
@@ -4109,6 +4115,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             renderTendency();
         }
 
+        async function toggleTendencyAllow(allow) {
+            showLoader(allow ? "자율 응시를 승인하는 중..." : "승인을 취소하는 중...");
+            const r = await adminPost('/api/admin/student/tendency_allow', { student_name: COUNSEL_TARGET, allow });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA.tendency_allowed = r.data.allowed;
+            renderTendency();
+        }
+
         async function runTendencyAnalysis() {
             showLoader("AI가 학습 성향을 해석하고 있습니다...");
             const r = await adminPost('/api/admin/counsel/tendency_analyze', { student_name: COUNSEL_TARGET, set: TENDENCY_SET });
@@ -4123,10 +4138,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         // ── 성향 검사 모달 (학생 · 원장님 공용) ───────
-        async function openTendencyTest(forName, setKey) {
+        async function openTendencyTest(forName, setKey, isAdmin) {
             TENDENCY_FOR = forName;
             TENDENCY_SET = setKey || TENDENCY_SET || 'korean';
             TENDENCY_ANSWERS = {};
+            // 💡 원장님이 직접 옆에서 검사를 진행시키는 경우에는, 학생이 마음대로 못 하게 막는
+            // 승인 게이트가 원장님 본인의 진행까지 막지 않도록 그 자리에서 바로 승인 처리한다.
+            if (isAdmin) await adminPost('/api/admin/student/tendency_allow', { student_name: forName, allow: true });
             showLoader("검사 문항 불러오는 중...");
             let info = {};
             try {
@@ -4985,10 +5003,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         // 검사지 하나하나를 카드로. 마친 것은 점수를, 안 한 것은 시작 버튼을 보여준다.
+        // 💡 원장님의 사전 승인(tendency_allowed) 없이는 학생이 마음대로 시작/재검사를 못 하도록 잠근다.
         function myTendencyCards(c) {
             const done = (c && c.tendencies) || {};
+            const allowed = !!(c && c.tendency_allowed);
             const sets = TENDENCY_SET_LIST.length ? TENDENCY_SET_LIST : [
                 { key: 'korean', name: '국어 학습 성향', icon: '📖', desc: '', count: 28 }];
+            const lockedBtn = `<div class="bg-white/5 px-3 py-1.5 rounded text-gray-500 text-[11px] font-bold text-center"><i class="fa-solid fa-lock mr-1"></i>선생님 승인 대기 중</div>`;
             return sets.map(s => {
                 const t = done[s.key];
                 if (t && t.axes) {
@@ -5005,7 +5026,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             </div>`).join('')}
                         </div>
                         ${low ? `<p class="text-[11px] text-gray-400 mb-2">가장 약한 영역: <b class="text-red-300">${escapeHtml(low.name)} ${low.score}점</b></p>` : ''}
-                        <button onclick="openTendencyTest('${escAttr(currentUser.name)}','${escAttr(s.key)}')" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded text-white text-[11px] font-bold transition">다시 검사</button>
+                        ${allowed ? `<button onclick="openTendencyTest('${escAttr(currentUser.name)}','${escAttr(s.key)}')" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded text-white text-[11px] font-bold transition">다시 검사</button>` : lockedBtn}
                     </div>`;
                 }
                 return `<div class="bg-black/20 border border-dashed border-white/20 rounded-lg p-3 flex flex-col justify-between">
@@ -5013,7 +5034,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <div class="text-white font-bold text-sm mb-1">${s.icon} ${escapeHtml(s.name)}</div>
                         <p class="text-[11px] text-gray-400 mb-3">${escapeHtml(s.desc || '')} · ${s.count || 28}문항</p>
                     </div>
-                    <button onclick="openTendencyTest('${escAttr(currentUser.name)}','${escAttr(s.key)}')" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white font-bold text-xs transition">검사 시작하기</button>
+                    ${allowed ? `<button onclick="openTendencyTest('${escAttr(currentUser.name)}','${escAttr(s.key)}')" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white font-bold text-xs transition">검사 시작하기</button>` : lockedBtn}
                 </div>`;
             }).join('');
         }
