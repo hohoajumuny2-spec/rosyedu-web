@@ -1701,6 +1701,13 @@
                                         <button onclick="loadVocabWordBrowser('mid')" id="vt-browse-mid" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-yellow-300 border border-yellow-900">중</button>
                                         <button onclick="loadVocabWordBrowser('low')" id="vt-browse-low" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-emerald-300 border border-emerald-900">하</button>
                                     </div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <p class="text-[11px] text-gray-500">지금 보이는 목록 기준</p>
+                                        <div class="flex gap-2">
+                                            <button onclick="selectAllVocabWords()" class="text-[11px] text-cyan-300 hover:text-cyan-200 underline">전체 선택</button>
+                                            <button onclick="deselectAllVocabWords()" class="text-[11px] text-gray-400 hover:text-gray-300 underline">전체 해제</button>
+                                        </div>
+                                    </div>
                                     <div id="vt-word-browser" class="max-h-40 overflow-auto bg-[#1a1e29] rounded p-2 space-y-1 mb-3 text-sm text-gray-300">
                                         <p class="text-gray-500 text-xs text-center py-3">난이도를 눌러 단어 목록을 불러오세요.</p>
                                     </div>
@@ -7257,6 +7264,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 정해서 출제할 수 있는 모드를 추가했다.
         let vocabTestMode = 'random';       // 'random' | 'manual'
         let vocabWordBrowserDiff = 'all';
+        let vocabWordBrowserWords = [];     // 지금 목록에 보이는 단어들(전체 선택/해제용)
         let vocabManualSelection = [];      // [{word, meaning, is_phrase, difficulty, type}]
 
         function setVocabTestMode(mode) {
@@ -7283,7 +7291,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             try {
                 const res = await fetch(`${API_URL}/api/admin/vocab/words?difficulty=${diff}`);
                 const data = await res.json();
-                if (!data.success || !data.words.length) { box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">단어가 없습니다.</p>'; return; }
+                if (!data.success || !data.words.length) { vocabWordBrowserWords = []; box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">단어가 없습니다.</p>'; return; }
+                vocabWordBrowserWords = data.words;
                 // 💡 '전체' 탭에서는 여러 난이도가 섞여 나오므로, 체크/선택 시 그 탭의
                 // 고정 난이도가 아니라 단어마다 실제로 매겨진 난이도(w.difficulty)를 써야 한다.
                 box.innerHTML = data.words.map((w, i) => {
@@ -7294,7 +7303,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <span>${tag}${escapeHtml(w.word)} <span class="text-gray-500">— ${escapeHtml(w.meaning)}</span></span>
                     </label>`;
                 }).join('');
-            } catch (e) { box.innerHTML = '<p class="text-red-400 text-xs text-center py-3">불러오지 못했습니다.</p>'; }
+            } catch (e) { vocabWordBrowserWords = []; box.innerHTML = '<p class="text-red-400 text-xs text-center py-3">불러오지 못했습니다.</p>'; }
+        }
+
+        // 💡 단어를 하나하나 체크하지 않고, 지금 보이는 목록(난이도 탭 기준) 전체를
+        // 한 번에 선택/해제할 수 있게 — '전체' 탭에서 누르면 올려둔 단어 전부가 대상이 된다.
+        function selectAllVocabWords() {
+            vocabWordBrowserWords.forEach(w => {
+                if (!vocabManualSelection.some(s => s.word === w.word && s.meaning === w.meaning && s.difficulty === w.difficulty)) {
+                    vocabManualSelection.push({ word: w.word, meaning: w.meaning, is_phrase: w.is_phrase, difficulty: w.difficulty, type: w.is_phrase ? 4 : 1 });
+                }
+            });
+            renderVocabSelectedList();
+            loadVocabWordBrowser(vocabWordBrowserDiff);
+        }
+
+        function deselectAllVocabWords() {
+            const shownKeys = new Set(vocabWordBrowserWords.map(w => `${w.word} ${w.meaning} ${w.difficulty}`));
+            vocabManualSelection = vocabManualSelection.filter(s => !shownKeys.has(`${s.word} ${s.meaning} ${s.difficulty}`));
+            renderVocabSelectedList();
+            loadVocabWordBrowser(vocabWordBrowserDiff);
         }
 
         function toggleVocabWordSelect(cb, word, meaning, isPhrase, difficulty) {
