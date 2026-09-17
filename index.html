@@ -1696,6 +1696,7 @@
 
                                 <div id="vt-manual-panel" class="hidden">
                                     <div class="flex gap-1 mb-2">
+                                        <button onclick="loadVocabWordBrowser('all')" id="vt-browse-all" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-300 border border-gray-600">전체</button>
                                         <button onclick="loadVocabWordBrowser('high')" id="vt-browse-high" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-red-300 border border-red-900">상</button>
                                         <button onclick="loadVocabWordBrowser('mid')" id="vt-browse-mid" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-yellow-300 border border-yellow-900">중</button>
                                         <button onclick="loadVocabWordBrowser('low')" id="vt-browse-low" class="flex-1 py-1.5 rounded text-xs font-bold bg-gray-800 text-emerald-300 border border-emerald-900">하</button>
@@ -7256,7 +7257,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 직접 골라서, 문항 유형(단어→뜻/뜻→단어/철자 빈칸/구절 해석)까지 하나하나
         // 정해서 출제할 수 있는 모드를 추가했다.
         let vocabTestMode = 'random';       // 'random' | 'manual'
-        let vocabWordBrowserDiff = 'high';
+        let vocabWordBrowserDiff = 'all';
         let vocabManualSelection = [];      // [{word, meaning, is_phrase, difficulty, type}]
 
         function setVocabTestMode(mode) {
@@ -7273,7 +7274,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadVocabWordBrowser(diff) {
             vocabWordBrowserDiff = diff;
-            ['high', 'mid', 'low'].forEach(d => {
+            ['all', 'high', 'mid', 'low'].forEach(d => {
                 document.getElementById('vt-browse-' + d).classList.toggle('bg-cyan-700', d === diff);
                 document.getElementById('vt-browse-' + d).classList.toggle('bg-gray-800', d !== diff);
             });
@@ -7283,12 +7284,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             try {
                 const res = await fetch(`${API_URL}/api/admin/vocab/words?difficulty=${diff}`);
                 const data = await res.json();
-                if (!data.success || !data.words.length) { box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">이 난이도에 올린 단어가 없습니다.</p>'; return; }
+                if (!data.success || !data.words.length) { box.innerHTML = '<p class="text-gray-500 text-xs text-center py-3">단어가 없습니다.</p>'; return; }
+                // 💡 '전체' 탭에서는 여러 난이도가 섞여 나오므로, 체크/선택 시 그 탭의
+                // 고정 난이도가 아니라 단어마다 실제로 매겨진 난이도(w.difficulty)를 써야 한다.
                 box.innerHTML = data.words.map((w, i) => {
-                    const checked = vocabManualSelection.some(s => s.word === w.word && s.meaning === w.meaning && s.difficulty === diff);
+                    const checked = vocabManualSelection.some(s => s.word === w.word && s.meaning === w.meaning && s.difficulty === w.difficulty);
+                    const tag = diff === 'all' ? `<span class="text-cyan-400">[${VOCAB_DIFF_LABEL[w.difficulty] || w.difficulty}]</span> ` : '';
                     return `<label class="flex items-center gap-2 hover:bg-gray-800 px-1 py-0.5 rounded cursor-pointer">
-                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleVocabWordSelect(this, '${escAttr(w.word)}', '${escAttr(w.meaning)}', ${w.is_phrase}, '${diff}')">
-                        <span>${escapeHtml(w.word)} <span class="text-gray-500">— ${escapeHtml(w.meaning)}</span></span>
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleVocabWordSelect(this, '${escAttr(w.word)}', '${escAttr(w.meaning)}', ${w.is_phrase}, '${w.difficulty}')">
+                        <span>${tag}${escapeHtml(w.word)} <span class="text-gray-500">— ${escapeHtml(w.meaning)}</span></span>
                     </label>`;
                 }).join('');
             } catch (e) { box.innerHTML = '<p class="text-red-400 text-xs text-center py-3">불러오지 못했습니다.</p>'; }
@@ -7305,10 +7309,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             renderVocabSelectedList();
         }
 
-        function removeVocabSelected(idx) {
+        async function removeVocabSelected(idx) {
             vocabManualSelection.splice(idx, 1);
             renderVocabSelectedList();
-            loadVocabWordBrowser(vocabWordBrowserDiff); // 체크 상태 다시 맞추기
+            await loadVocabWordBrowser(vocabWordBrowserDiff); // 체크 상태 다시 맞추기
         }
 
         function updateVocabSelectedType(idx, type) {
