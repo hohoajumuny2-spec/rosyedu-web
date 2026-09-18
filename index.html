@@ -172,6 +172,60 @@
         </div>
     </div>
 
+    <!-- 📎 모의고사에 붙인 파일 관리 -->
+    <div id="examfiles-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-lg shadow-2xl border border-yellow-600 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-paperclip mr-2 text-yellow-400"></i>붙여둔 파일</h2>
+                    <p class="text-[11px] text-gray-400 mt-1"><span id="examfiles-title"></span></p>
+                </div>
+                <button onclick="closeModal('examfiles-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="examfiles-list" class="p-5 space-y-2"></div>
+            <div class="px-5 pb-5">
+                <p class="text-[11px] text-gray-500">파일만 떼어내며, 모의고사와 문항·정답은 그대로 남습니다. 새 파일은 '방 개설하기'에서 다시 올리시면 됩니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📝 과제 OMR 제출 -->
+    <div id="hwomr-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl border border-emerald-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-list-ol mr-2 text-emerald-400"></i><span id="hw-omr-title"></span></h2>
+                    <p class="text-[11px] text-gray-400 mt-1"><span id="hw-omr-kind"></span> · <span id="hw-omr-progress"></span></p>
+                </div>
+                <button onclick="closeModal('hwomr-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="hw-omr-sheet" class="flex-grow overflow-y-auto p-5 space-y-1.5"></div>
+            <div class="p-4 border-t border-gray-700">
+                <div id="hw-omr-result" class="mb-2"></div>
+                <button id="hw-omr-submit-btn" onclick="submitHomeworkOmr()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 text-white font-bold rounded transition">제출하고 채점받기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🗂 맡겨둔 작업 (화면을 떠나도 서버가 계속 진행) -->
+    <div id="jobs-badge" onclick="openJobs()"
+         class="hidden fixed bottom-5 right-5 z-[150] bg-gray-700 hover:brightness-110 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg cursor-pointer transition">
+        <span id="jobs-badge-text"></span>
+    </div>
+
+    <div id="jobs-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-2xl max-h-[85vh] shadow-2xl border border-yellow-600 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-list-check mr-2 text-yellow-400"></i>맡겨둔 작업</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">출제·영상 만들기는 서버가 대신 합니다. 이 창을 닫거나 다른 일을 하셔도 계속 진행됩니다.</p>
+                </div>
+                <button onclick="closeModal('jobs-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="jobs-list" class="flex-grow overflow-y-auto p-5 space-y-2"></div>
+        </div>
+    </div>
+
     <!-- 🎬 해설 영상 자동 생성 (원장님 전용) -->
     <div id="video-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-purple-500 flex flex-col">
@@ -1012,6 +1066,16 @@
 
                 <div class="grid grid-cols-2 gap-4 mb-4"><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-info" class="text-lg text-white font-bold"></p></div><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-count" class="text-xl text-emerald-400 font-black">0건</p></div></div>
                 <div id="mypage-history-list" class="space-y-2 bg-[#151922] p-4 rounded-xl h-[400px] overflow-y-auto text-gray-300"></div>
+
+                <!-- ❌ 내가 틀린 문제 모아보기 -->
+                <div class="mt-6">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                        <h3 class="text-lg font-bold text-red-300"><i class="fa-solid fa-circle-xmark mr-2"></i>내가 틀린 문제</h3>
+                        <span id="mypage-wrong-count" class="text-xs text-gray-500"></span>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mb-2">퀴즈 · 모의고사 · 과제에서 틀린 문항을 모았습니다. 제목을 누르면 문항이 펼쳐집니다.</p>
+                    <div id="mypage-wrong-list" class="space-y-2 bg-[#151922] p-4 rounded-xl max-h-[420px] overflow-y-auto text-gray-300"></div>
+                </div>
             </div>
 
             <!-- 공지사항 -->
@@ -1851,7 +1915,21 @@
                     <div id="admin-hw" class="admin-tab-content grid grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded">
                             <h3 class="text-white font-bold mb-4">과제/정답 배포</h3>
-                            <input type="text" id="hw-title" placeholder="과제명" class="w-full p-2 mb-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500">
+                            <div class="flex gap-2 mb-2">
+                                <select id="hw-kind" class="w-1/3 p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                    <option value="class">수업 과제</option>
+                                    <option value="clinic">클리닉 과제</option>
+                                </select>
+                                <input type="text" id="hw-title" placeholder="과제명" class="w-2/3 p-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500">
+                            </div>
+                            <label class="text-[11px] text-emerald-300 font-bold block mb-1">정답표 (넣어두면 학생이 OMR로 답만 마킹해도 자동 채점됩니다)</label>
+                            <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4  또는  1번 3 / 2번 1  (줄바꿈·쉼표 모두 됩니다)" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span id="hw-answers-count" class="text-[11px] text-gray-500">정답표를 넣으면 OMR 자동 채점이 켜집니다.</span>
+                                <button onclick="document.getElementById('hw-ans-capture').click()" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-bold shrink-0"><i class="fa-solid fa-image mr-1"></i>정답표 사진으로 넣기</button>
+                                <input type="file" id="hw-ans-capture" accept="image/*,.pdf" multiple class="hidden" onchange="extractHomeworkAnswers(this.files); this.value='';">
+                            </div>
+                            <label class="text-[11px] text-gray-400 block mb-1">해답지 파일 (선택)</label>
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual')">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <button onclick="createHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded transition shadow-lg">배포하기</button>
@@ -3164,6 +3242,54 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             return true;
         }
 
+        // ── 내가 틀린 문제 모아보기 ──────────────────────
+        //   점수만 남으면 무엇을 틀렸는지 알 수 없어 복습이 안 된다.
+        //   채점 때 남겨둔 틀린 문항 번호로 원래 문제를 되짚어 보여준다.
+        async function loadMyWrongQuestions() {
+            const box = document.getElementById('mypage-wrong-list');
+            const cnt = document.getElementById('mypage-wrong-count');
+            if (!box || !currentUser) return;
+            box.innerHTML = '<p class="text-center text-gray-600 text-sm py-6">불러오는 중...</p>';
+            let data;
+            try {
+                const res = await fetch(`${API_URL}/api/student/wrong_questions/${encodeURIComponent(currentUser.name)}`);
+                data = await res.json();
+            } catch (e) {
+                box.innerHTML = '<p class="text-center text-gray-600 text-sm py-6">불러오지 못했습니다.</p>';
+                return;
+            }
+            const tasks = (data && data.tasks) || [];
+            cnt.innerText = tasks.length ? `${data.task_count}개 시험·과제 · 모두 ${data.total_wrong}문항` : '';
+            if (!tasks.length) {
+                box.innerHTML = '<p class="text-center text-emerald-400 text-sm py-8">아직 틀린 문제가 없습니다. 잘하고 있어요!</p>';
+                return;
+            }
+            box.innerHTML = tasks.map((t, ti) => {
+                const items = (t.items || []).map(q => {
+                    const ansText = q.answer_text ? `${q.answer}번 — ${escapeHtml(q.answer_text)}` : (q.answer ? `${escapeHtml(q.answer)}번` : '');
+                    return `<div class="border-t border-gray-800 py-2">
+                        <div class="flex gap-2">
+                            <span class="shrink-0 text-red-400 font-bold text-xs w-8">${q.no}번</span>
+                            <div class="min-w-0 text-xs">
+                                ${q.text ? `<div class="text-gray-200 leading-relaxed">${escapeHtml(q.text)}</div>` : '<div class="text-gray-500">문제 내용은 시험지를 확인해주세요.</div>'}
+                                ${ansText ? `<div class="text-emerald-400 mt-1">정답 ${ansText}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+                return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
+                    <div class="flex justify-between items-center gap-2 cursor-pointer" onclick="document.getElementById('wrongbox-${ti}').classList.toggle('hidden')">
+                        <div class="min-w-0">
+                            <div class="text-white font-bold text-sm truncate">${escapeHtml(t.title)}</div>
+                            <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ` · ${escapeHtml(String(t.score))}` : ''}</div>
+                        </div>
+                        <span class="shrink-0 text-xs font-bold text-red-300">${t.wrong_count}문항 <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i></span>
+                    </div>
+                    <div id="wrongbox-${ti}" class="hidden mt-1">${items}</div>
+                </div>`;
+            }).join('');
+        }
+
         async function loadMyPage() {
             if(!currentUser) return;
             if (currentUser.isAdmin) {
@@ -3198,6 +3324,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     });
                     document.getElementById('mypage-count').innerText=`${cnt}건`;
                     if(cnt===0) c.innerHTML="<p class='text-center text-gray-500 mt-10'>기록 없음</p>";
+                    loadMyWrongQuestions();
                 } else {
                     console.warn('마이페이지 정보를 불러오지 못했습니다:', data);
                 }
@@ -3409,6 +3536,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); }
 
         function switchAdminTab(id) {
+            // 💡 관리자 화면에 들어오면 맡겨둔 작업이 어떻게 되어가는지 계속 지켜본다 —
+            //    출제를 맡겨놓고 다른 탭으로 옮겨도 끝나면 알려주기 위함.
+            if (!JOB_TIMER) startJobPolling();
             document.querySelectorAll('.admin-tab-content').forEach(el=>el.style.display='none'); document.querySelectorAll('#prog-admin button').forEach(b=>{if(b.id.startsWith('btn-admin-')) b.classList.replace('bg-gray-800','border');});
             // 💡 탭 내용은 대부분 grid 레이아웃인데 display:'block'으로 덮어써서
             //    칸이 옆으로 나뉘지 않고 전부 위아래로 쌓여버리던 문제 수정
@@ -6668,19 +6798,82 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function deleteBoardPost(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/board/${id}`,{method:'DELETE'}); loadAdminBoardList(); hideLoader(); } }
 
         async function createHomework() {
-            const t = document.getElementById('hw-title').value;
-            if(!t || hwFilesAdmin.length === 0) return alert("과제명과 정답 파일을 모두 입력해주세요.");
-            showLoader("과제 및 정답 파일을 서버에 업로드 중입니다...");
+            const t = document.getElementById('hw-title').value.trim();
+            const answers = document.getElementById('hw-answers').value.trim();
+            if (!t) return alert("과제명을 입력해주세요.");
+            if (!answers && hwFilesAdmin.length === 0)
+                return alert("정답표를 넣거나 해답지 파일을 올려주세요.\n(정답표를 넣으면 학생이 OMR로 답만 마킹해도 자동 채점됩니다)");
+            showLoader("과제를 배포하는 중입니다...");
             const fd = new FormData();
-            fd.append("title", t); fd.append("desc", ""); fd.append("answer_text", ""); fd.append("answer_file", hwFilesAdmin[0]);
+            fd.append("title", t); fd.append("desc", ""); fd.append("answer_text", "");
+            fd.append("kind", document.getElementById('hw-kind').value);
+            fd.append("answers", answers);
+            if (hwFilesAdmin.length) fd.append("answer_file", hwFilesAdmin[0]);
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
-                if(data.success) {
-                    loadAdminHWList(); alert("과제 배포가 완료되었습니다!");
-                    document.getElementById('hw-title').value=''; clearAllFiles('hw-ans-file-visual');
+                if (data.success) {
+                    loadAdminHWList();
+                    alert(data.question_count
+                        ? `과제를 배포했습니다. 정답 ${data.question_count}문항이 등록되어 OMR 자동 채점이 됩니다.`
+                        : "과제를 배포했습니다. (정답표가 없어 자동 채점은 되지 않습니다)");
+                    document.getElementById('hw-title').value = '';
+                    document.getElementById('hw-answers').value = '';
+                    updateHomeworkAnswerCount();
+                    clearAllFiles('hw-ans-file-visual');
                 } else { alert("업로드 실패: " + data.detail); }
-            } catch(e) { alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message + "\n(첨부파일 용량이 너무 크면 막힐 수 있습니다)"); }
+            } catch(e) { alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message); }
             hideLoader();
+        }
+
+        function updateHomeworkAnswerCount() {
+            const el = document.getElementById('hw-answers');
+            const out = document.getElementById('hw-answers-count');
+            if (!el || !out) return;
+            const n = parseAnswerListJS(el.value).length;
+            out.innerText = n ? `정답 ${n}문항이 인식되었습니다.` : '정답표를 넣으면 OMR 자동 채점이 켜집니다.';
+        }
+
+        // 서버와 같은 규칙으로 미리 세어 보여준다 (원문자 / '1번 3' / 쉼표 / 줄바꿈)
+        function parseAnswerListJS(raw) {
+            const circled = '①②③④⑤';
+            const out = [];
+            String(raw || '').split(/[\n,]/).forEach(line => {
+                let it = line.trim();
+                if (!it) return;
+                const m = it.match(/^\s*\d{1,3}\s*(?:번|[.)])\s*(.+)$/);
+                if (m) it = m[1].trim();
+                const only = it.replace(/\s/g, '');
+                if (only.length > 1 && [...only].every(c => circled.includes(c))) {
+                    [...only].forEach(c => out.push(String(circled.indexOf(c) + 1)));
+                    return;
+                }
+                const parts = it.split(/\s+/);
+                if (parts.length > 1 && parts.every(p => /^[1-5]$/.test(p))) { out.push(...parts); return; }
+                [...circled].forEach((c, i) => { it = it.split(c).join(String(i + 1)); });
+                out.push(it.trim());
+            });
+            return out.filter(Boolean);
+        }
+
+        // 정답표를 사진으로 올리면 AI가 읽어 채워준다 (모의고사에서 쓰던 방식 그대로)
+        async function extractHomeworkAnswers(fileList) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            showLoader("정답표를 읽는 중입니다...");
+            const fd = new FormData();
+            files.forEach(f => fd.append('files', f, f.name || 'capture.png'));
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_answers_image`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("정답표를 보내지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "정답표를 읽지 못했습니다.");
+            const list = data.answers || [];
+            if (!list.length) return alert("사진에서 정답을 찾지 못했습니다.");
+            document.getElementById('hw-answers').value = list.join(', ');
+            updateHomeworkAnswerCount();
+            showToast(`정답 ${list.length}문항을 읽었습니다.`);
         }
 
         // 💡 iOS Safari는 fetch()로 큰 파일이 담긴 FormData를 보낼 때 간헐적으로
@@ -6765,15 +6958,28 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             answerLinkHtml = `<a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" class="flex-1 md:flex-none text-center bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition text-white block"><i class="fa-solid fa-file-arrow-down mr-1"></i>정답/해설 자료 열람</a>`;
                         }
 
-                        let submitBtnHtml = isSubmitted
-                            ? `<button disabled class="flex-1 md:flex-none bg-gray-600 px-4 py-2 rounded-lg text-sm font-bold text-gray-400 cursor-not-allowed border border-gray-500">제출 완료</button>`
-                            : `<button onclick="document.getElementById('hw-submit-area').style.display='block'; document.getElementById('hw-target-title').innerText='${escAttr(h.title)}'; document.getElementById('hw-target-title').dataset.idx='${i}';" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">과제 제출하기</button>`;
+                        const hasOmr = (h.question_count || 0) > 0;
+                        const kindLabel = h.kind === 'clinic' ? '클리닉 과제' : '수업 과제';
+                        const kindTone = h.kind === 'clinic' ? 'bg-purple-900/60 text-purple-200' : 'bg-blue-900/60 text-blue-200';
+
+                        let submitBtnHtml;
+                        if (isSubmitted) {
+                            submitBtnHtml = `<button disabled class="flex-1 md:flex-none bg-gray-600 px-4 py-2 rounded-lg text-sm font-bold text-gray-400 cursor-not-allowed border border-gray-500">제출 완료</button>`;
+                        } else if (hasOmr) {
+                            // 정답이 등록된 과제는 OMR로 답만 마킹하면 그 자리에서 채점된다
+                            submitBtnHtml = `<button onclick="openHomeworkOmr('${escAttr(h.title)}', ${h.question_count}, '${escAttr(kindLabel)}')" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">OMR로 제출하기</button>`;
+                        } else {
+                            submitBtnHtml = `<button onclick="document.getElementById('hw-submit-area').style.display='block'; document.getElementById('hw-target-title').innerText='${escAttr(h.title)}'; document.getElementById('hw-target-title').dataset.idx='${i}';" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">과제 제출하기</button>`;
+                        }
 
                         c.innerHTML += `
                         <div id="${hwId}" class="bg-[#151922] p-5 rounded-xl border ${isSubmitted ? 'border-gray-600' : 'border-emerald-700'} shadow flex flex-col md:flex-row justify-between items-start md:items-center text-white gap-4 mb-3">
                             <div class="flex-grow">
-                                <span class="font-bold text-lg text-emerald-400 block mb-1"><i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}</span>
-                                <span class="text-xs text-gray-400">${isSubmitted ? '과제를 성공적으로 제출했습니다. 정답과 해설을 확인하세요.' : '파일을 첨부하여 과제를 제출하면 해설 자료가 오픈됩니다.'}</span>
+                                <span class="font-bold text-lg text-emerald-400 block mb-1">
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full mr-2 align-middle ${kindTone}">${kindLabel}</span>
+                                    <i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}</span>
+                                <span class="text-xs text-gray-400">${isSubmitted ? '과제를 성공적으로 제출했습니다. 정답과 해설을 확인하세요.'
+                                    : (hasOmr ? `${h.question_count}문항 · 답만 마킹하면 바로 채점됩니다.` : '파일을 첨부하여 과제를 제출하면 해설 자료가 오픈됩니다.')}</span>
                             </div>
                             <div class="flex gap-2 w-full md:w-auto flex-col md:flex-row">
                                 <span id="answer-link-${i}">${answerLinkHtml}</span>
@@ -6785,7 +6991,110 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             } catch(e){}
         }
 
-        async function loadAdminHWList() { try{ const res=await fetch(`${API_URL}/api/homeworks`); const data=await res.json(); const c=document.getElementById('admin-hw-view-list'); c.innerHTML=''; if(data.success){ data.homeworks.forEach((h,i) => c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-file-arrow-down mr-2"></i>${escapeHtml(h.title)}</a><button onclick="deleteHomework('${escAttr(h.title)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
+        async function loadAdminHWList() {
+            try {
+                const res = await fetch(`${API_URL}/api/homeworks`);
+                const data = await res.json();
+                const c = document.getElementById('admin-hw-view-list');
+                c.innerHTML = '';
+                if (!data.success) return;
+                data.homeworks.forEach(h => {
+                    const kindLabel = h.kind === 'clinic' ? '클리닉' : '수업';
+                    const kindTone = h.kind === 'clinic' ? 'bg-purple-900/60 text-purple-200' : 'bg-blue-900/60 text-blue-200';
+                    c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white">
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="min-w-0">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full mr-1 ${kindTone}">${kindLabel}</span>
+                                ${h.answer_file
+                                    ? `<a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" class="hover:text-blue-400 font-bold underline cursor-pointer">${escapeHtml(h.title)}</a>`
+                                    : `<span class="font-bold">${escapeHtml(h.title)}</span>`}
+                                <div class="text-[10px] text-gray-400 mt-0.5">
+                                    ${h.question_count ? `정답 ${h.question_count}문항 · OMR 자동 채점` : '정답표 없음 · 파일 제출 방식'}
+                                    ${h.answer_file ? ' · 해답 파일 있음' : ''}</div>
+                            </div>
+                            <div class="flex gap-1 shrink-0">
+                                ${h.answer_file ? `<button onclick="deleteHomeworkFile('${escAttr(h.title)}')" class="text-yellow-400 text-[11px] bg-yellow-900/30 hover:bg-yellow-900/50 px-2 py-1 rounded transition" title="과제는 두고 해답 파일만 뗍니다">파일만 삭제</button>` : ''}
+                                <button onclick="deleteHomework('${escAttr(h.title)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            } catch (e) {}
+        }
+
+        async function deleteHomeworkFile(title) {
+            if (!confirm(`'${title}'에 붙은 해답 파일만 뗍니다.\n과제와 정답표는 그대로 남습니다. 계속할까요?`)) return;
+            const r = await adminPost('/api/admin/homework/file/delete', { title: title });
+            if (!r.ok) return alert(r.message);
+            showToast("해답 파일을 뗐습니다.");
+            loadAdminHWList();
+        }
+
+        // ── 과제 OMR 제출 (수업·클리닉 공통) ──────────────
+        let HW_OMR = { title: '', count: 0, answers: [] };
+
+        function openHomeworkOmr(title, count, kindLabel) {
+            HW_OMR = { title: title, count: count, answers: new Array(count).fill('') };
+            document.getElementById('hw-omr-title').innerText = title;
+            document.getElementById('hw-omr-kind').innerText = kindLabel || '';
+            document.getElementById('hw-omr-result').innerHTML = '';
+            renderHomeworkOmr();
+            showModal('hwomr');
+        }
+
+        function renderHomeworkOmr() {
+            const box = document.getElementById('hw-omr-sheet');
+            box.innerHTML = HW_OMR.answers.map((v, i) => `
+                <div class="flex items-center gap-2 bg-[#151922] border border-gray-700 rounded px-2 py-1.5">
+                    <span class="text-gray-400 text-xs w-7 shrink-0 text-right">${i + 1}</span>
+                    ${[1, 2, 3, 4, 5].map(n => `<button onclick="pickHomeworkOmr(${i}, '${n}')"
+                        class="w-7 h-7 rounded-full text-[11px] font-bold transition ${String(v) === String(n)
+                            ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}">${n}</button>`).join('')}
+                </div>`).join('');
+            const done = HW_OMR.answers.filter(Boolean).length;
+            document.getElementById('hw-omr-progress').innerText = `${done} / ${HW_OMR.count}문항 마킹`;
+        }
+
+        function pickHomeworkOmr(idx, val) {
+            HW_OMR.answers[idx] = String(HW_OMR.answers[idx]) === String(val) ? '' : String(val);
+            renderHomeworkOmr();
+        }
+
+        async function submitHomeworkOmr() {
+            const blank = HW_OMR.answers.filter(a => !a).length;
+            if (blank && !confirm(`${blank}문항이 비어 있습니다. 그대로 제출할까요?`)) return;
+            showLoader("채점하는 중입니다...");
+            const r = await adminPostPublic('/api/homework/omr_submit', {
+                school: currentUser.school, grade: currentUser.grade,
+                student_name: currentUser.name, title: HW_OMR.title, answers: HW_OMR.answers,
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            const d = r.data;
+            document.getElementById('hw-omr-result').innerHTML = `
+                <div class="bg-emerald-900/30 border border-emerald-600 rounded-xl p-4 text-center">
+                    <p class="text-emerald-300 font-black text-lg mb-1">${d.correct} / ${d.total}문항 정답 (${d.score}점)</p>
+                    ${d.wrongs && d.wrongs.length
+                        ? `<p class="text-xs text-red-300">틀린 문항: ${d.wrongs.join(', ')}번</p>` : '<p class="text-xs text-emerald-400">모두 맞혔습니다!</p>'}
+                    <p class="text-[11px] text-gray-400 mt-2">정답: ${(d.answers || []).map((a, i) => `${i + 1}.${a}`).join('  ')}</p>
+                </div>`;
+            document.getElementById('hw-omr-submit-btn').disabled = true;
+            loadHomeworks();
+        }
+
+        // 학생 화면에서 쓰는 JSON 요청 (관리자 토큰이 필요 없는 주소용)
+        async function adminPostPublic(path, body) {
+            let res;
+            try {
+                res = await fetch(`${API_URL}${path}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+                });
+            } catch (e) { return { ok: false, message: "서버에 연결하지 못했습니다." }; }
+            let data;
+            try { data = await res.json(); } catch (e) { return { ok: false, message: "서버 응답을 읽지 못했습니다." }; }
+            if (!data.success) return { ok: false, message: data.detail || "처리하지 못했습니다." };
+            return { ok: true, data: data };
+        }
 
         async function deleteHomework(title) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(title)}`,{method:'DELETE'}); loadAdminHWList(); hideLoader(); } }
 
@@ -7540,17 +7849,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append('text', text);
             fd.append('title', title);
             fd.append('question_no', String(questionNo || 0));
+            // 💡 영상 만들기는 1~2분 걸린다. 서버에 맡겨두고 이 창을 닫아도 계속 만들어진다.
             try {
-                const res = await fetch(`${API_URL}/api/admin/generate_video`, { method: 'POST', body: fd });
+                const res = await fetch(`${API_URL}/api/admin/jobs/video`, { method: 'POST', body: fd });
                 const data = await res.json();
                 if (!data.success) {
-                    document.getElementById('video-gen-status').innerHTML = `<span class="text-red-400">❌ ${escapeHtml(data.detail || '영상 생성에 실패했습니다.')}</span>`;
+                    document.getElementById('video-gen-status').innerHTML = `<span class="text-red-400">❌ ${escapeHtml(data.detail || '영상 만들기를 맡기지 못했습니다.')}</span>`;
                 } else {
-                    document.getElementById('video-gen-status').innerHTML = `<span class="text-emerald-400">✅ 영상이 완성되었습니다 (장면 ${data.scene_count}개)</span>`;
-                    const fullUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
-                    document.getElementById('video-gen-player').src = fullUrl;
-                    document.getElementById('video-gen-download').href = fullUrl;
-                    document.getElementById('video-gen-result').classList.remove('hidden');
+                    document.getElementById('video-gen-status').innerHTML =
+                        `<span class="text-emerald-400">✅ 영상 만들기를 서버에 맡겼습니다. 이 창을 닫으셔도 됩니다.</span>` +
+                        `<span class="text-gray-500"> 다 되면 오른쪽 아래 '작업'에서 받아보실 수 있습니다.</span>`;
+                    startJobPolling(true);
                     loadVideoLibrary();
                 }
             } catch (e) {
@@ -7637,55 +7946,183 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("source_counts", JSON.stringify(currentSourceCounts()));
             genFiles.forEach(f => fd.append("files", f));
 
+            fd.append("title", title);
+
+            // 💡 출제는 서버에 '작업'으로 맡긴다. 맡기고 나면 이 화면을 떠나도, 다른 문제를
+            //    출제하거나 상담을 보고 있어도 서버가 계속 만든다. 결과는 작업 목록에서 받는다.
             document.getElementById('gen-result-area').style.display = 'flex';
             const r = document.getElementById('gen-result-text');
-            const nSrc = genSources().length;
-            r.value = nSrc >= 2
-                ? `⏳ AI 출제 중... (자료 ${nSrc}개를 하나씩 순서대로 출제합니다. 자료가 끝날 때마다 아래에 문항이 추가됩니다. 창을 닫지 마세요!)`
-                : `⏳ AI 출제 중... (20문항씩 나눠서 순서대로 출제합니다. ${total}문항이면 ${Math.ceil(total/20)}회에 나눠 진행되며, 회차가 끝날 때마다 아래에 문항이 추가됩니다. 창을 닫지 마세요!)`;
+            r.value = "⏳ 출제를 서버에 맡기는 중...";
             r.classList.add('animate-pulse');
 
+            let data;
             try {
-                const res = await fetch(`${API_URL}/api/admin/generate_stream`, {method: 'POST', body: fd});
-                if(!res.ok) {
-                    r.classList.remove('animate-pulse');
-                    const err = await res.text();
-                    r.value = `❌ 서버 거부 (상태코드: ${res.status})\n\n[원인]\n${err}`;
-                    if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
-                    return;
-                }
-                const reader = res.body.getReader();
-                const dec = new TextDecoder("utf-8");
-                // 💡 첫 회차 생성에는 시간이 걸리므로, 실제 내용이 도착할 때까지 안내 문구를 지우지 않는다
-                let gotFirstChunk = false;
-                while(true) {
-                    const {done, value} = await reader.read();
-                    if(done) break;
-                    const text = dec.decode(value, {stream: true});
-                    if(!gotFirstChunk) {
-                        if(!text.trim()) continue;
-                        gotFirstChunk = true;
-                        r.classList.remove('animate-pulse');
-                        r.value = "";
-                    }
-                    r.value += text;
-                    r.scrollTop = r.scrollHeight;
-                }
+                const res = await uploadFormData(`${API_URL}/api/admin/jobs/questions`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) {
                 r.classList.remove('animate-pulse');
-
-                // 💡 출제가 끝나면 알아서 보관함에 넣는다. 저장을 깜빡해 날리는 일이 없도록.
-                //    새 출제이므로 기존 편집 상태는 끊고 새 출제본으로 만든다.
-                const body = r.value.trim();
-                if (body && !body.startsWith('❌')) {
-                    CURRENT_QUESTION_ID = '';
-                    const saved = await saveGeneratedQuestion(true);
-                    if (saved) showToast("출제본을 보관함에 자동으로 저장했습니다.");
-                }
-            } catch(e) {
-                r.classList.remove('animate-pulse');
-                r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`;
+                r.value = `❌ 통신 실패: 서버 연결을 확인해주세요.
+(에러 내용: ${e.message})`;
+                if (btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+                return;
             }
-            if(btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+            r.classList.remove('animate-pulse');
+            if (!data || !data.success) {
+                r.value = `❌ ${(data && data.detail) || '출제를 맡기지 못했습니다.'}`;
+                if (btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+                return;
+            }
+
+            WATCH_JOB_ID = data.job_id;
+            r.value = `⏳ '${title}' 출제를 서버에 맡겼습니다.
+
+` +
+                `이 화면을 떠나거나 다른 일을 하셔도 서버가 계속 만듭니다.
+` +
+                `다 되면 오른쪽 아래 '작업' 단추에 표시되고, 눌러서 결과를 가져오시면 됩니다.
+` +
+                `(이 화면에 그대로 계시면 다 되는 대로 여기에 자동으로 채워집니다)`;
+            if (btn) { btn.disabled = false; btn.innerHTML = "AI 정밀 출제"; }
+            startJobPolling();
+        }
+
+        // ── 맡겨둔 작업 (출제 · 영상) ────────────────────
+        //   오래 걸리는 일은 서버에 맡겨두고 화면을 떠나도 된다.
+        //   여기서는 그 작업들이 어떻게 되어가는지 지켜보고, 끝나면 결과를 가져온다.
+        let JOB_LIST = [];
+        let JOB_TIMER = null;
+        let WATCH_JOB_ID = '';      // 지금 화면에서 기다리고 있는 출제 작업
+
+        function startJobPolling(fast) {
+            if (JOB_TIMER) clearInterval(JOB_TIMER);
+            refreshJobs();
+            JOB_TIMER = setInterval(refreshJobs, fast ? 3000 : 5000);
+        }
+
+        function stopJobPollingIfIdle() {
+            if (JOB_TIMER && !JOB_LIST.some(j => j.status === 'running')) {
+                clearInterval(JOB_TIMER);
+                JOB_TIMER = null;
+            }
+        }
+
+        async function refreshJobs() {
+            if (!currentUser || !currentUser.admin_token) return;
+            const r = await adminGet('/api/admin/jobs?limit=20');
+            if (!r.ok) return;
+            const before = JOB_LIST;
+            JOB_LIST = r.data.jobs || [];
+            renderJobBadge();
+            if (document.getElementById('jobs-modal').style.display === 'flex') renderJobList();
+
+            // 기다리던 출제가 끝났으면 결과를 화면에 바로 채워준다
+            if (WATCH_JOB_ID) {
+                const job = JOB_LIST.find(j => j.id === WATCH_JOB_ID);
+                if (job && job.status !== 'running') {
+                    const id = WATCH_JOB_ID;
+                    WATCH_JOB_ID = '';
+                    if (job.status === 'done') await loadJobResult(id, true);
+                    else {
+                        const area = document.getElementById('gen-result-text');
+                        if (area) area.value = `❌ 출제에 실패했습니다.\n\n${job.detail || ''}`;
+                    }
+                }
+            }
+            // 끝난 작업이 새로 생겼으면 알려준다
+            const justDone = JOB_LIST.filter(j => j.status === 'done' &&
+                before.some(b => b.id === j.id && b.status === 'running'));
+            justDone.forEach(j => showToast(`'${j.title}' 작업이 끝났습니다.`));
+            stopJobPollingIfIdle();
+        }
+
+        function renderJobBadge() {
+            const wrap = document.getElementById('jobs-badge');
+            if (!wrap) return;
+            const running = JOB_LIST.filter(j => j.status === 'running').length;
+            const done = JOB_LIST.filter(j => j.status === 'done').length;
+            if (!JOB_LIST.length) { wrap.classList.add('hidden'); return; }
+            wrap.classList.remove('hidden');
+            document.getElementById('jobs-badge-text').innerHTML = running
+                ? `<i class="fa-solid fa-spinner fa-spin mr-1"></i>진행 중 ${running}`
+                : `<i class="fa-solid fa-clipboard-check mr-1"></i>작업 ${done}`;
+            wrap.className = wrap.className.replace(/bg-\w+-\d+/g, '') +
+                (running ? ' bg-yellow-600' : ' bg-gray-700');
+        }
+
+        const JOB_KIND_LABEL = { questions: '문제 출제', video: '해설 영상' };
+        const JOB_STATUS = {
+            running: ['진행 중', 'text-yellow-400'],
+            done: ['완료', 'text-emerald-400'],
+            error: ['실패', 'text-red-400'],
+            stalled: ['멈춤', 'text-gray-400'],
+        };
+
+        function openJobs() {
+            showModal('jobs');
+            renderJobList();
+            startJobPolling(true);
+        }
+
+        function renderJobList() {
+            const box = document.getElementById('jobs-list');
+            if (!JOB_LIST.length) {
+                box.innerHTML = '<p class="text-gray-600 text-sm text-center py-10">맡겨둔 작업이 없습니다.</p>';
+                return;
+            }
+            box.innerHTML = JOB_LIST.map(j => {
+                const [label, tone] = JOB_STATUS[j.status] || ['—', 'text-gray-400'];
+                return `<div class="bg-[#151922] border border-gray-700 rounded p-3">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0">
+                            <div class="text-white font-bold text-sm truncate">
+                                <span class="text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded mr-1">${escapeHtml(JOB_KIND_LABEL[j.kind] || j.kind)}</span>
+                                ${escapeHtml(j.title || '제목 없음')}</div>
+                            <div class="text-[11px] ${tone} mt-0.5">${label} · ${escapeHtml(j.progress || '')}</div>
+                            ${j.detail ? `<div class="text-[10px] text-red-300 mt-0.5">${escapeHtml(j.detail)}</div>` : ''}
+                            <div class="text-[10px] text-gray-600 mt-0.5">${escapeHtml(j.created_at || '')} · ${escapeHtml(j.admin_name || '')}</div>
+                        </div>
+                        <div class="flex flex-col gap-1 shrink-0">
+                            ${j.status === 'done' && j.kind === 'questions'
+                                ? `<button onclick="loadJobResult('${escAttr(j.id)}')" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-white text-[11px] font-bold transition">결과 가져오기</button>` : ''}
+                            ${j.status === 'done' && j.kind === 'video'
+                                ? `<a href="${escAttr((j.result || '').startsWith('http') ? j.result : API_URL + (j.result || ''))}" target="_blank" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-white text-[11px] font-bold transition text-center">영상 열기</a>` : ''}
+                            <button onclick="deleteJob('${escAttr(j.id)}')" class="text-red-400 hover:text-red-300 text-[10px]">지우기</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 끝난 출제 작업의 결과를 출제 화면으로 가져온다
+        async function loadJobResult(jobId, quiet) {
+            const r = await adminGet(`/api/admin/jobs/${encodeURIComponent(jobId)}`);
+            if (!r.ok) return alert(r.message);
+            const job = r.data.job || {};
+            if (!job.result) return alert("아직 결과가 없습니다.");
+            if (job.kind === 'video') {
+                window.open((job.result.startsWith('http') ? job.result : API_URL + job.result), '_blank');
+                return;
+            }
+            switchAdminTab('admin-generator');
+            const titleEl = document.getElementById('gen-title');
+            if (titleEl && job.title && !titleEl.value.trim()) titleEl.value = job.title;
+            document.getElementById('gen-result-area').style.display = 'flex';
+            const area = document.getElementById('gen-result-text');
+            area.value = job.result;
+            area.classList.remove('animate-pulse');
+            closeModal('jobs-modal');
+
+            // 출제가 끝났으니 보관함에도 자동으로 넣어둔다 (저장을 깜빡해 날리지 않도록)
+            CURRENT_QUESTION_ID = '';
+            const saved = await saveGeneratedQuestion(true);
+            showToast(saved ? "결과를 가져와 보관함에도 저장했습니다." : "결과를 가져왔습니다.");
+        }
+
+        async function deleteJob(jobId) {
+            if (!confirm("이 작업 기록을 지울까요?\n(이미 만들어진 결과물은 그대로 남습니다)")) return;
+            await fetch(`${API_URL}/api/admin/jobs/${encodeURIComponent(jobId)}`, { method: 'DELETE' });
+            await refreshJobs();
+            renderJobList();
         }
 
         // 퀴즈 관련 추가 함수 복구
@@ -8735,6 +9172,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                 <button onclick="openQuestionStats('${escAttr(ex.title)}', '모의고사')" title="문항마다 몇 명이 맞고 틀렸는지" class="bg-sky-700 hover:bg-sky-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-chart-simple"></i></button>
                                 <button onclick="startAdminLiveByIndex(${i})" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-2 py-1 rounded font-bold text-white">실시간 감독</button>
                                 <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-camera mr-1"></i>오답률표 반영</button>
+                                <button onclick="openExamFiles('${escAttr(ex.title)}')" title="붙여둔 시험지·해답지 파일만 떼어냅니다" class="bg-yellow-700 hover:bg-yellow-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-paperclip"></i></button>
                                 <button onclick="deleteExam('${escAttr(ex.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-2 py-1 rounded transition">삭제</button>
                             </div>
                         </div>`;
@@ -8744,6 +9182,37 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         async function deleteExam(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/exam/${id}`,{method:'DELETE'}); loadAdminExams(); hideLoader(); } }
+
+        // ── 모의고사에 붙인 파일만 떼어내기 ─────────────
+        //   잘못 올렸을 때 시험을 통째로 지웠다가 다시 만들지 않아도 되도록.
+        function openExamFiles(title) {
+            const ex = (studentExamsList || []).find(e => e.title === title) || {};
+            const row = (label, which, url) => `
+                <div class="flex justify-between items-center bg-[#151922] border border-gray-700 rounded px-3 py-2">
+                    <div class="min-w-0">
+                        <div class="text-white text-sm font-bold">${label}</div>
+                        <div class="text-[11px] text-gray-500 truncate">${url ? escapeHtml(url) : '붙어 있는 파일 없음'}</div>
+                    </div>
+                    ${url ? `<button onclick="deleteExamFile('${escAttr(title)}','${which}')" class="shrink-0 bg-red-900/40 hover:bg-red-900/60 text-red-300 text-[11px] font-bold px-3 py-1.5 rounded transition">떼어내기</button>`
+                          : '<span class="text-[11px] text-gray-600 shrink-0">—</span>'}
+                </div>`;
+            document.getElementById('examfiles-title').innerText = title;
+            document.getElementById('examfiles-list').innerHTML =
+                row('학생용 시험지', 'pdf', ex.pdf_url) +
+                row('해답지', 'ans', ex.ans_pdf_url) +
+                row('해설 영상 주소', 'video', ex.video_url);
+            showModal('examfiles');
+        }
+
+        async function deleteExamFile(title, which) {
+            const label = { pdf: '학생용 시험지', ans: '해답지', video: '해설 영상 주소' }[which] || '파일';
+            if (!confirm(`'${title}'에서 ${label}만 떼어냅니다.\n모의고사와 문항·정답은 그대로 남습니다. 계속할까요?`)) return;
+            const r = await adminPost('/api/admin/exam/file/delete', { title: title, which: which });
+            if (!r.ok) return alert(r.message);
+            showToast(`${label}을(를) 뗐습니다.`);
+            await loadAdminExams();
+            openExamFiles(title);
+        }
 
         let diffPhotoTargetExamId = null;
         function triggerDiffPhotoUpload(examId) {
