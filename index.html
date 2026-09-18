@@ -243,11 +243,25 @@
     <div id="video-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-purple-500 flex flex-col">
             <div class="p-5 border-b border-gray-700 flex justify-between items-center">
-                <h2 class="text-lg font-black text-white"><i class="fa-solid fa-clapperboard mr-2 text-purple-400"></i>해설 영상 자동 생성</h2>
+                <h2 class="text-lg font-black text-white"><i class="fa-solid fa-clapperboard mr-2 text-purple-400"></i>해설 영상 만들기</h2>
                 <button onclick="closeModal('video-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="flex-grow overflow-y-auto p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="flex flex-col">
+                    <!-- 💡 대본을 AI에게 맡기면 사용료가 든다. 기본은 직접 만들기(무료)로 두고,
+                         필요할 때만 AI에게 맡기도록 고르게 한다. 음성·화면 렌더링은 어느 쪽이든 공짜다. -->
+                    <label class="text-xs text-gray-400 mb-1 block">대본을 어떻게 만들까요?</label>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <button id="video-mode-manual" onclick="setVideoMode('manual')" class="py-2.5 px-2 rounded-lg border text-xs font-bold transition bg-emerald-600 border-emerald-400 text-white">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i>직접 만들기
+                            <span class="block text-[10px] font-normal opacity-80 mt-0.5">AI 사용료 0원</span>
+                        </button>
+                        <button id="video-mode-ai" onclick="setVideoMode('ai')" class="py-2.5 px-2 rounded-lg border text-xs font-bold transition bg-[#232a36] border-gray-600 text-gray-300">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AI에게 맡기기
+                            <span class="block text-[10px] font-normal opacity-80 mt-0.5">사용료 발생</span>
+                        </button>
+                    </div>
+
                     <label class="text-xs text-gray-400 mb-1 block">영상 제목</label>
                     <input type="text" id="video-title" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-purple-500 rounded text-white mb-3">
 
@@ -260,9 +274,21 @@
                         <summary class="text-xs text-gray-400 cursor-pointer select-none">전체 내용으로 만들기 (문항 구분 없이, 자막 중심)</summary>
                         <div class="mt-2 flex flex-col">
                             <textarea id="video-text" class="w-full min-h-[180px] p-3 bg-[#151922] border border-gray-600 outline-none focus:border-purple-500 rounded text-white text-sm leading-relaxed resize-y font-mono"></textarea>
-                            <button id="btn-make-video" onclick="submitGenerateVideo(0)" class="w-full mt-2 bg-gray-700 hover:bg-gray-600 py-2.5 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>전체 내용으로 영상 만들기</button>
+                            <button id="btn-make-video" onclick="startVideo(0)" class="w-full mt-2 bg-gray-700 hover:bg-gray-600 py-2.5 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>전체 내용으로 영상 만들기</button>
                         </div>
                     </details>
+
+                    <!-- 직접 만들기용 대본 편집 칸 -->
+                    <div id="video-script-box" class="hidden mt-3 bg-[#151922] border border-emerald-700 rounded-lg p-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-xs font-bold text-emerald-300"><i class="fa-solid fa-pen-to-square mr-1"></i><span id="video-script-title">대본</span></p>
+                            <button onclick="closeVideoScript()" class="text-gray-500 hover:text-white text-xs">닫기</button>
+                        </div>
+                        <div id="video-script-fields" class="space-y-3 max-h-[320px] overflow-y-auto pr-1"></div>
+                        <button id="video-script-make" onclick="submitManualVideo()" class="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 py-2.5 text-white font-bold rounded transition text-sm">
+                            <i class="fa-solid fa-film mr-1"></i>이 대본으로 영상 만들기 (무료)
+                        </button>
+                    </div>
 
                     <div id="video-gen-status" class="text-xs text-gray-400 mt-2"></div>
                     <div id="video-gen-result" class="hidden mt-3">
@@ -7915,14 +7941,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('video-title').value = document.getElementById('gen-title').value.trim() || '해설영상';
             document.getElementById('video-text').value = extractExplanationForVideo(full);
             document.getElementById('video-gen-result').classList.add('hidden');
-            document.getElementById('video-gen-status').innerText = '';
+            setVideoMode('manual');   // 기본은 사용료가 들지 않는 직접 만들기
 
             const nums = detectQuestionNumbers(full);
             const qnoSection = document.getElementById('video-qno-section');
             if (nums.length) {
                 qnoSection.classList.remove('hidden');
                 document.getElementById('video-qno-chips').innerHTML = nums.map(n =>
-                    `<button id="video-qno-chip-${n}" onclick="submitGenerateVideo(${n})" class="bg-fuchsia-700 hover:bg-fuchsia-600 px-4 py-2 rounded text-white text-sm font-bold transition">${n}번</button>`
+                    `<button id="video-qno-chip-${n}" onclick="startVideo(${n})" class="bg-fuchsia-700 hover:bg-fuchsia-600 px-4 py-2 rounded text-white text-sm font-bold transition">${n}번</button>`
                 ).join('');
             } else {
                 qnoSection.classList.add('hidden');
@@ -7931,7 +7957,143 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             loadVideoLibrary();
         }
 
-        async function submitGenerateVideo(questionNo) {
+        // ── 해설 영상: 직접 만들기(무료) / AI에게 맡기기 ──────────
+        // 💡 대본을 AI에게 뽑게 하면 사용료가 든다. 기본은 직접 만들기로 두고,
+        //    초안은 서버가 문장 부호 기준으로 공짜로 나눠주니 그걸 고쳐 쓰면 된다.
+        let VIDEO_MODE = 'manual';
+        let VIDEO_DRAFT = null;      // 지금 고치고 있는 대본
+        let VIDEO_DRAFT_QNO = 0;
+
+        // 고른 방식에 따라 '대본 뽑기'로 갈지 '바로 AI에게 맡기기'로 갈지 나눈다
+        function startVideo(questionNo) {
+            if (VIDEO_MODE === 'manual') return loadVideoDraft(questionNo);
+            return submitGenerateVideo(questionNo);
+        }
+
+        function setVideoMode(mode) {
+            VIDEO_MODE = mode;
+            const on = ['bg-emerald-600', 'border-emerald-400', 'text-white'];
+            const off = ['bg-[#232a36]', 'border-gray-600', 'text-gray-300'];
+            const man = document.getElementById('video-mode-manual');
+            const ai = document.getElementById('video-mode-ai');
+            const aiOn = ['bg-purple-600', 'border-purple-400', 'text-white'];
+            man.classList.remove(...on, ...off);
+            ai.classList.remove(...aiOn, ...off);
+            man.classList.add(...(mode === 'manual' ? on : off));
+            ai.classList.add(...(mode === 'ai' ? aiOn : off));
+            closeVideoScript();
+            document.getElementById('video-gen-status').innerHTML = mode === 'manual'
+                ? '<span class="text-emerald-400">문항이나 전체 내용을 고르시면 대본 초안을 공짜로 뽑아드립니다. 고쳐서 그대로 영상으로 만드시면 됩니다.</span>'
+                : '<span class="text-amber-400">AI가 대본을 만듭니다. 문항 하나당 AI 사용료가 조금씩 발생합니다.</span>';
+        }
+
+        function closeVideoScript() {
+            document.getElementById('video-script-box').classList.add('hidden');
+            VIDEO_DRAFT = null;
+        }
+
+        function escAttrVal(v) {
+            return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        }
+
+        // 대본 초안을 서버에서 받아온다 (AI 안 씀)
+        async function loadVideoDraft(questionNo) {
+            const text = questionNo > 0 ? VIDEO_SOURCE_TEXT : document.getElementById('video-text').value.trim();
+            if (!text) return alert("영상으로 만들 내용을 입력해주세요.");
+            const status = document.getElementById('video-gen-status');
+            status.innerText = "대본 초안을 뽑는 중...";
+            const fd = new FormData();
+            fd.append('text', text);
+            fd.append('question_no', String(questionNo || 0));
+            let data;
+            try {
+                const res = await fetch(`${API_URL}/api/admin/video_draft`, { method: 'POST', body: fd });
+                data = await res.json();
+            } catch (e) {
+                status.innerHTML = `<span class="text-red-400">통신 실패: ${escapeHtml(e.message)}</span>`;
+                return;
+            }
+            if (!data.success) {
+                status.innerHTML = `<span class="text-red-400">${escapeHtml(data.detail || '대본을 뽑지 못했습니다.')}</span>`;
+                return;
+            }
+            VIDEO_DRAFT = data;
+            VIDEO_DRAFT_QNO = questionNo || 0;
+            renderVideoScript();
+            status.innerHTML = '<span class="text-emerald-400">대본을 고친 뒤 아래 단추를 누르시면 영상이 만들어집니다. AI 사용료는 들지 않습니다.</span>';
+        }
+
+        function renderVideoScript() {
+            const box = document.getElementById('video-script-box');
+            const fields = document.getElementById('video-script-fields');
+            const d = VIDEO_DRAFT;
+            document.getElementById('video-script-title').innerText =
+                VIDEO_DRAFT_QNO > 0 ? `${VIDEO_DRAFT_QNO}번 문항 대본` : '전체 내용 대본';
+
+            if (VIDEO_DRAFT_QNO > 0) {
+                const reasons = Object.keys(d.wrong_reasons || {}).sort((a, b) => a - b);
+                fields.innerHTML = `
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">지문에서 정답의 근거가 되는 문장 <span class="text-gray-600">(그대로 옮겨 적으면 화면에서 그 부분이 강조됩니다)</span></label>
+                        <textarea id="vs-evidence" rows="2" class="w-full p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none focus:border-emerald-500 resize-y"></textarea>
+                        <details class="mt-1">
+                            <summary class="text-[10px] text-gray-500 cursor-pointer">지문 보기 (복사해서 붙여넣으세요)</summary>
+                            <p class="text-[11px] text-gray-400 mt-1 max-h-24 overflow-y-auto whitespace-pre-line bg-[#1e2430] p-2 rounded">${escapeHtml(d.preamble || '')}</p>
+                        </details>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">오답인 이유 <span class="text-gray-600">(12자 안팎으로 짧게 · 정답 ${d.correct || '?'}번은 제외)</span></label>
+                        <div class="space-y-1">
+                            ${reasons.map(n => `<div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400 w-5 shrink-0">${n}번</span>
+                                <input type="text" id="vs-reason-${n}" maxlength="40" placeholder="예: 지문에 없는 내용"
+                                    class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none focus:border-emerald-500">
+                            </div>`).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">읽어줄 내레이션 <span class="text-gray-600">(한 줄이 한 장면 · 20~50자 정도로)</span></label>
+                        <textarea id="vs-narration" rows="5" class="w-full p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs leading-relaxed outline-none focus:border-emerald-500 resize-y">${escapeHtml((d.narration || []).join('\n'))}</textarea>
+                    </div>`;
+            } else {
+                fields.innerHTML = `
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">장면별 대사 <span class="text-gray-600">(한 줄이 한 장면 · 20~60자 정도로 끊으면 보기 좋습니다)</span></label>
+                        <textarea id="vs-scenes" rows="10" class="w-full p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs leading-relaxed outline-none focus:border-emerald-500 resize-y">${escapeHtml((d.scenes || []).join('\n'))}</textarea>
+                    </div>`;
+            }
+            box.classList.remove('hidden');
+        }
+
+        function collectVideoScript() {
+            if (VIDEO_DRAFT_QNO > 0) {
+                const reasons = {};
+                document.querySelectorAll('[id^="vs-reason-"]').forEach(el => {
+                    const n = el.id.replace('vs-reason-', '');
+                    if (el.value.trim()) reasons[n] = el.value.trim();
+                });
+                const narration = document.getElementById('vs-narration').value
+                    .split('\n').map(x => x.trim()).filter(Boolean);
+                return {
+                    evidence_quote: document.getElementById('vs-evidence').value.trim(),
+                    wrong_reasons: reasons,
+                    narration: narration,
+                };
+            }
+            const scenes = document.getElementById('vs-scenes').value
+                .split('\n').map(x => x.trim()).filter(Boolean);
+            return { scenes: scenes };
+        }
+
+        async function submitManualVideo() {
+            const script = collectVideoScript();
+            const isQ = VIDEO_DRAFT_QNO > 0;
+            if (isQ && !script.narration.length) return alert("읽어줄 내레이션을 한 줄 이상 적어주세요.");
+            if (!isQ && !script.scenes.length) return alert("장면별 대사를 한 줄 이상 적어주세요.");
+            await submitGenerateVideo(VIDEO_DRAFT_QNO, JSON.stringify(script));
+        }
+
+        async function submitGenerateVideo(questionNo, script) {
             const title = document.getElementById('video-title').value.trim();
             const isQuestionMode = questionNo > 0;
             const text = isQuestionMode ? VIDEO_SOURCE_TEXT : document.getElementById('video-text').value.trim();
@@ -7945,14 +8107,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const label = btn ? btn.innerHTML : '';
             if (btn) btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i>";
 
-            document.getElementById('video-gen-status').innerText = isQuestionMode
-                ? `${questionNo}번 문항 영상을 만들고 있어요. 지문 근거와 선택지 분석까지 함께 만드느라 1~2분 정도 걸릴 수 있습니다.`
-                : "장면을 나누고 음성을 입혀 영상을 만들고 있어요. 내용 길이에 따라 1~2분 정도 걸릴 수 있습니다.";
+            document.getElementById('video-gen-status').innerText = script
+                ? "적어주신 대본 그대로 음성을 입혀 영상을 만들고 있어요. (AI 사용료 없음)"
+                : (isQuestionMode
+                    ? `${questionNo}번 문항 영상을 만들고 있어요. 지문 근거와 선택지 분석까지 함께 만드느라 1~2분 정도 걸릴 수 있습니다.`
+                    : "장면을 나누고 음성을 입혀 영상을 만들고 있어요. 내용 길이에 따라 1~2분 정도 걸릴 수 있습니다.");
             document.getElementById('video-gen-result').classList.add('hidden');
             const fd = new FormData();
             fd.append('text', text);
             fd.append('title', title);
             fd.append('question_no', String(questionNo || 0));
+            if (script) fd.append('script', script);   // 손수 만든 대본이면 AI를 부르지 않는다
             // 💡 영상 만들기는 1~2분 걸린다. 서버에 맡겨두고 이 창을 닫아도 계속 만들어진다.
             try {
                 const res = await fetch(`${API_URL}/api/admin/jobs/video`, { method: 'POST', body: fd });
