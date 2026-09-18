@@ -16,6 +16,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- 상담 화면의 '지원 가능 대학 지도'에 쓰는 행정구역 데이터 -->
+    <script src="korea-map.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
     <style>
@@ -318,14 +320,28 @@
                 <button onclick="closeModal('univ-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="flex-grow overflow-y-auto p-5">
+                <div class="bg-[#151922] border border-emerald-700/50 rounded-lg p-4 mb-4">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                        <h3 class="text-emerald-300 font-bold text-sm"><i class="fa-solid fa-table-list mr-1"></i>표준 양식으로 넣기 (권장)</h3>
+                        <button onclick="downloadUnivTemplate()" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded text-white font-bold text-xs transition shrink-0"><i class="fa-solid fa-download mr-1"></i>표준 양식 엑셀 내려받기</button>
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        내려받은 파일의 <b class="text-gray-300">첫 줄(열 이름)은 그대로 두고</b> 2번째 줄부터 채워서 올리시면,
+                        열을 하나하나 짝지을 필요 없이 바로 저장됩니다.
+                        <b class="text-emerald-300">대학 · 학과 · 기준점수</b>는 꼭 필요하고, 나머지는 선택입니다.
+                        <b class="text-emerald-300">소재지</b>를 채우면 상담 화면에서 지원 가능 대학이 <b class="text-emerald-300">지도</b> 위에 표시됩니다.
+                    </p>
+                </div>
+
                 <div onclick="document.getElementById('univ-file').click()"
                      class="border-2 border-dashed border-indigo-700/60 hover:border-indigo-500 rounded-lg p-5 text-center cursor-pointer transition mb-4">
                     <i class="fa-solid fa-file-arrow-up text-indigo-400 text-2xl mb-2"></i>
-                    <p class="text-indigo-300 text-sm font-bold">쓰시던 엑셀 파일을 그대로 올리세요</p>
-                    <p class="text-[11px] text-gray-500 mt-1">xlsx 또는 csv · 첫 줄이 열 이름이면 됩니다. 형식은 맞추지 않으셔도 됩니다. 여러 파일을 한 번에 선택하면 순서대로 이어서 올릴 수 있어요.</p>
+                    <p class="text-indigo-300 text-sm font-bold">표준 양식 파일 또는 쓰시던 엑셀을 올리세요</p>
+                    <p class="text-[11px] text-gray-500 mt-1">xlsx 또는 csv · 표준 양식이면 열 짝짓기가 자동으로 끝납니다. 다른 형식이어도 열만 골라주시면 됩니다. 여러 파일을 한 번에 선택하면 순서대로 이어서 올릴 수 있어요.</p>
                     <p id="univ-queue-status" class="hidden text-[11px] text-yellow-400 font-bold mt-2"></p>
                     <input type="file" id="univ-file" accept=".xlsx,.csv" multiple class="hidden" onchange="startUnivQueue(this.files); this.value='';">
                 </div>
+                <div id="univ-auto-note" class="hidden bg-emerald-900/30 border border-emerald-700/50 rounded-lg px-3 py-2 mb-4 text-xs text-emerald-300"></div>
 
                 <div id="univ-map" class="hidden">
                     <div class="bg-[#151922] border border-gray-700 rounded-lg p-3 mb-4">
@@ -343,6 +359,7 @@
                                 <label class="text-[11px] text-indigo-300 font-bold mb-1 block">이 자료는 수시인가요, 정시인가요? *</label>
                                 <select id="univ-kind" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-indigo-600">
                                     <option value="susi">수시 — 내신 등급과 견줍니다</option>
+                                    <option value="nonsul">논술 — 논술전형 입결과 견줍니다</option>
                                     <option value="jeongsi">정시 — 수능 백분위·원점수와 견줍니다</option>
                                 </select>
                             </div>
@@ -1326,6 +1343,27 @@
 
                                 <div id="cs-grades" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
                                     <div id="counsel-strategy" class="mb-4"></div>
+
+                                    <!-- 지원 가능 대학 지도 : 전국 → 시도 → 시군구 순으로 파고든다 -->
+                                    <div class="bg-[#1e2430] p-3 rounded border border-gray-700 mb-4">
+                                        <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                                            <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-map-location-dot mr-1 text-emerald-400"></i>지원 가능 대학 지도</h4>
+                                            <div class="flex flex-wrap items-center gap-1">
+                                                <select id="map-kind" onchange="loadUnivMap()" class="p-1 bg-gray-800 text-white rounded text-[11px] border border-gray-600">
+                                                    <option value="susi">수시 — 내신으로</option>
+                                                    <option value="nonsul">논술 — 논술전형으로</option>
+                                                    <option value="jeongsi">정시 — 수능으로</option>
+                                                </select>
+                                                <select id="map-scope" onchange="loadUnivMap()" class="p-1 bg-gray-800 text-white rounded text-[11px] border border-gray-600">
+                                                    <option value="1">지금 닿는 대학만</option>
+                                                    <option value="0">입결 자료에 있는 전체</option>
+                                                </select>
+                                                <button onclick="loadUnivMap()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-rotate mr-1"></i>지도 보기</button>
+                                            </div>
+                                        </div>
+                                        <div id="univ-map-view"><p class="text-gray-600 text-xs text-center py-8">위 <b class="text-emerald-400">지도 보기</b>를 누르면 지금 성적으로 갈 수 있는 대학이 지역별로 표시됩니다.</p></div>
+                                    </div>
+
                                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                         <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
                                             <div class="flex justify-between items-center mb-2">
@@ -1348,6 +1386,8 @@
                                             <div class="flex justify-between items-center mb-2">
                                                 <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-chart-line mr-1 text-yellow-400"></i>모의고사 성적</h4>
                                                 <div class="flex items-center gap-1">
+                                                    <button onclick="document.getElementById('mock-sheet-file').click()" class="bg-sky-700 hover:bg-sky-600 px-2 py-1 rounded text-[11px] text-white font-bold transition" title="성적표 사진·캡처·PDF를 올리면 AI가 읽어 바로 채웁니다"><i class="fa-solid fa-camera mr-1"></i>성적표로 넣기</button>
+                                                    <input type="file" id="mock-sheet-file" accept="image/*,.pdf,.xlsx,.csv" multiple class="hidden" onchange="extractMockFromFiles(this.files); this.value='';">
                                                     <button onclick="openGradeCuts()" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-[11px] text-white font-bold transition" title="시험 회차마다 원점수 등급컷을 정합니다"><i class="fa-solid fa-scissors mr-1"></i>등급컷</button>
                                                     <button onclick="addMockRow()" class="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-[11px] text-white font-bold transition">+ 과목 추가</button>
                                                 </div>
@@ -1356,6 +1396,7 @@
                                                 <span class="col-span-3">시행(예 2026-06)</span><span class="col-span-3">과목</span><span class="col-span-2">원점수</span><span class="col-span-2">등급</span><span class="col-span-2">백분위</span>
                                             </div>
                                             <p class="text-[10px] text-gray-600 px-1 mb-1">원점수를 넣으면 그 회차 등급컷으로 등급이 자동으로 채워집니다. 영어·한국사는 절대평가라 백분위 칸이 잠깁니다.</p>
+                                            <p class="text-[10px] text-sky-400 px-1 mb-1"><i class="fa-solid fa-paste mr-1"></i>성적표를 <b>캡처해서 이 칸에 Ctrl+V로 붙여넣어도</b> 바로 성적이 채워집니다.</p>
                                             <div class="hidden">
                                             </div>
                                             <div id="mock-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
@@ -1381,9 +1422,27 @@
                                     </div>
                                     <label class="text-xs text-gray-400 mb-1 block">희망 전공 (선택)</label>
                                     <input type="text" id="cs-major" placeholder="예: 국어국문학과, 미디어커뮤니케이션" class="w-full p-2 mb-3 bg-gray-800 text-white rounded text-sm">
-                                    <label class="text-xs text-gray-400 mb-1 block">학생부 내용 붙여넣기 (세특 · 창체 · 행발 등)</label>
-                                    <textarea id="cs-record-text" rows="12" class="w-full p-3 bg-gray-800 text-white rounded text-sm leading-relaxed resize-y" placeholder="학생부에서 평가받고 싶은 부분을 그대로 붙여넣으세요."></textarea>
-                                    <button onclick="runRecordEval()" class="mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-file-circle-check mr-1"></i>AI 정성 평가 실행</button>
+                                    <label class="text-xs text-gray-400 mb-1 block">학생부 내용 붙여넣기 (세특 · 창체 · 행발 · 출결 · 독서 등)</label>
+                                    <textarea id="cs-record-text" rows="12" class="w-full p-3 bg-gray-800 text-white rounded text-sm leading-relaxed resize-y" placeholder="학생부에서 평가받고 싶은 부분을 그대로 붙여넣으세요. 출결·봉사·독서까지 함께 넣으면 아래에서 따로 정리해 보여드립니다."></textarea>
+                                    <div class="flex flex-wrap gap-2 mt-2">
+                                        <button onclick="runRecordEval()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-file-circle-check mr-1"></i>AI 정성 평가 실행</button>
+                                        <button onclick="runRecordFacts()" class="bg-sky-700 hover:bg-sky-600 px-4 py-2 rounded text-white font-bold text-sm transition"><i class="fa-solid fa-clipboard-list mr-1"></i>출결 · 봉사 · 독서 정리</button>
+                                    </div>
+
+                                    <!-- 출결 / 봉사 / 독서 -->
+                                    <div id="cs-record-facts" class="mt-4"></div>
+
+                                    <!-- 학생부 안에서 낱말 찾기 -->
+                                    <div class="bg-[#1e2430] p-3 rounded border border-gray-700 mt-4">
+                                        <h4 class="text-white font-bold text-sm mb-1"><i class="fa-solid fa-magnifying-glass mr-1 text-yellow-400"></i>학생부에서 찾아보기</h4>
+                                        <p class="text-[11px] text-gray-500 mb-2">찾을 낱말을 넣으면 학생부 원문에서 그 대목을 앞뒤 내용까지 그대로 보여줍니다. 쉼표로 여러 개를 한 번에 찾을 수 있습니다. (예: 봉사, 리더십, 탐구)</p>
+                                        <div class="flex gap-2">
+                                            <input type="text" id="cs-record-keyword" placeholder="예: 독서, 프로그래밍, 학급회장" class="flex-grow p-2 bg-gray-800 text-white rounded text-sm" onkeypress="if(event.key==='Enter') runRecordSearch()">
+                                            <button onclick="runRecordSearch()" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white font-bold text-sm transition shrink-0">찾기</button>
+                                        </div>
+                                        <div id="cs-record-search-result" class="mt-3"></div>
+                                    </div>
+
                                     <div id="cs-record-result" class="mt-4"></div>
                                 </div>
 
@@ -3569,6 +3628,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('cs-major').value = COUNSEL_DATA.target_major || document.getElementById('cs-major').value || '';
             document.getElementById('cs-record-text').value = c.record_text || '';
             document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', c.record_eval, c.record_eval_at);
+            // 💡 학생을 바꿨는데 앞 학생의 지도·검색 결과가 남아 있으면 안 된다
+            UNIV_MAP_DATA = null; MAP_SIDO = ''; MAP_SIGUNGU = '';
+            document.getElementById('univ-map-view').innerHTML =
+                '<p class="text-gray-600 text-xs text-center py-8">위 <b class="text-emerald-400">지도 보기</b>를 누르면 지금 성적으로 갈 수 있는 대학이 지역별로 표시됩니다.</p>';
+            renderRecordFacts(c.record_facts);
+            document.getElementById('cs-record-search-result').innerHTML = '';
             document.getElementById('counsel-analysis').innerHTML = aiBox('AI 진학 상담 분석', (c.analysis || {}).text, (c.analysis || {}).at);
             renderCounselLogs();
             document.getElementById('cs-summary-result').innerHTML =
@@ -3852,6 +3917,181 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <i class="fa-solid fa-right-left mr-1"></i>기준표가 ${tiers.table_scale}등급제라, 학생 내신 ${naAvg}등급(${nScale}등급제)을
                     <b>${tiers.converted.value}등급</b>으로 환산해 대조했습니다.</p>` : ''}
                 <p class="text-[10px] text-gray-600 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>${escapeHtml(c.table_note || '')} 왼쪽 아래 '대학 라인 기준표 설정'에서 수정할 수 있습니다.</p>`;
+        }
+
+        // ── 지원 가능 대학 지도 ──────────────────────────
+        //   전국 지도에서 시도를 누르면 그 도의 시군구 지도로, 시군구를 누르면
+        //   그 안의 대학 목록으로 파고든다. 지도 모양은 korea-map.js에 있다.
+        let UNIV_MAP_DATA = null;
+        let MAP_SIDO = '';       // 파고든 시도 코드 ('' 이면 전국)
+        let MAP_SIGUNGU = '';    // 고른 시군구 이름
+
+        async function loadUnivMap() {
+            if (!COUNSEL_TARGET) return;
+            const kind = document.getElementById('map-kind').value;
+            const only = document.getElementById('map-scope').value === '1';
+            showLoader("지원 가능 대학을 찾는 중입니다...");
+            const r = await adminPost('/api/admin/counsel/univ_map', {
+                student_name: COUNSEL_TARGET, kind: kind, only_reachable: only,
+            });
+            hideLoader();
+            if (!r.ok) {
+                UNIV_MAP_DATA = null;
+                document.getElementById('univ-map-view').innerHTML =
+                    `<p class="text-yellow-400 text-xs text-center py-8">${escapeHtml(r.message)}</p>`;
+                return;
+            }
+            UNIV_MAP_DATA = r.data;
+            MAP_SIDO = ''; MAP_SIGUNGU = '';
+            renderUnivMapView();
+        }
+
+        // 대학이 적어 온 시군구 이름을 지도 위 도형과 짝짓는다.
+        // '수원시'처럼 구까지 안 적혀 있어도(지도에는 '수원시영통구'로 나뉘어 있어도) 찾아낸다.
+        function matchSigunguShape(sidoCode, name) {
+            const list = (window.KOREA_MAP && KOREA_MAP.municipalities[sidoCode]) || [];
+            const n = String(name || '').replace(/\s/g, '');
+            if (!n) return null;
+            return list.find(m => m.name === n)
+                || list.find(m => m.name.startsWith(n))
+                || list.find(m => n.startsWith(m.name))
+                || null;
+        }
+
+        function mapDrillSido(code) { MAP_SIDO = code; MAP_SIGUNGU = ''; renderUnivMapView(); }
+        function mapPickSigungu(name) { MAP_SIGUNGU = (MAP_SIGUNGU === name ? '' : name); renderUnivMapView(); }
+        function mapBackToNation() { MAP_SIDO = ''; MAP_SIGUNGU = ''; renderUnivMapView(); }
+
+        function mapFillColor(count, max) {
+            if (!count) return '#262d3b';
+            const t = max <= 1 ? 1 : Math.min(1, 0.25 + 0.75 * (count / max));
+            return `rgba(16,185,129,${t.toFixed(2)})`;   // emerald
+        }
+
+        function renderUnivMapView() {
+            const box = document.getElementById('univ-map-view');
+            const M = window.KOREA_MAP;
+            if (!UNIV_MAP_DATA) return;
+            if (!M) { box.innerHTML = '<p class="text-yellow-400 text-xs py-6 text-center">지도 데이터를 불러오지 못했습니다. 새로고침(Ctrl+F5) 후 다시 시도해주세요.</p>'; return; }
+
+            const all = UNIV_MAP_DATA.univs || [];
+            const unknown = UNIV_MAP_DATA.unknown || [];
+            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[UNIV_MAP_DATA.kind] || '수시';
+
+            let svg = '', legend = '', crumb = '', listTitle = '', shown = [];
+
+            if (!MAP_SIDO) {
+                // ── 전국 지도 ──
+                const cnt = {};
+                all.forEach(u => { cnt[u.sido_code] = (cnt[u.sido_code] || 0) + 1; });
+                const max = Math.max(1, ...Object.values(cnt));
+                svg = M.provinces.map(p => {
+                    const n = cnt[p.code] || 0;
+                    return `<path d="${p.d}" fill="${mapFillColor(n, max)}" stroke="#4b5a72" stroke-width="0.8"
+                                ${n ? `class="cursor-pointer hover:brightness-125" onclick="mapDrillSido('${p.code}')"` : ''}>
+                                <title>${escapeHtml(p.name)} · ${n}개 대학</title></path>`;
+                }).join('') + M.provinces.map(p => {
+                    const n = cnt[p.code] || 0;
+                    if (!n) return '';
+                    return `<text x="${p.cx}" y="${p.cy}" text-anchor="middle" font-size="20" font-weight="bold" fill="#06281c"
+                                 class="pointer-events-none">${escapeHtml(p.short)}</text>
+                            <text x="${p.cx}" y="${p.cy + 20}" text-anchor="middle" font-size="19" font-weight="bold" fill="#0b1220"
+                                 class="pointer-events-none">${n}</text>`;
+                }).join('');
+                crumb = `<span class="text-emerald-400 font-bold">전국</span>`;
+                listTitle = `전국 ${all.length}개 대학`;
+                shown = all;
+                legend = '지역을 누르면 그 도의 시·군·구 지도로 들어갑니다.';
+            } else {
+                // ── 시도 지도 (서울이면 25개 구) ──
+                const items = M.municipalities[MAP_SIDO] || [];
+                const mine = all.filter(u => u.sido_code === MAP_SIDO);
+                const cnt = {};
+                const noShape = [];
+                mine.forEach(u => {
+                    const shape = matchSigunguShape(MAP_SIDO, u.sigungu);
+                    if (shape) cnt[shape.name] = (cnt[shape.name] || 0) + 1;
+                    else noShape.push(u);
+                });
+                const max = Math.max(1, ...Object.values(cnt));
+                svg = items.map(m => {
+                    const n = cnt[m.name] || 0;
+                    const on = MAP_SIGUNGU === m.name;
+                    return `<path d="${m.d}" fill="${mapFillColor(n, max)}"
+                                stroke="${on ? '#fbbf24' : '#4b5a72'}" stroke-width="${on ? 2.2 : 0.7}"
+                                ${n ? `class="cursor-pointer hover:brightness-125" onclick="mapPickSigungu('${escAttr(m.name)}')"` : ''}>
+                                <title>${escapeHtml(m.name)} · ${n}개 대학</title></path>`;
+                }).join('') + items.map(m => {
+                    const n = cnt[m.name] || 0;
+                    if (!n) return '';
+                    return `<text x="${m.cx}" y="${m.cy}" text-anchor="middle" font-size="16" font-weight="bold" fill="#06281c"
+                                 class="pointer-events-none">${escapeHtml(m.name.replace(/시(.+구)$/, '$1'))}</text>
+                            <text x="${m.cx}" y="${m.cy + 16}" text-anchor="middle" font-size="15" font-weight="bold" fill="#0b1220"
+                                 class="pointer-events-none">${n}</text>`;
+                }).join('');
+                const sidoName = (M.provinces.find(p => p.code === MAP_SIDO) || {}).name || '';
+                crumb = `<button onclick="mapBackToNation()" class="text-gray-400 hover:text-white underline">전국</button>
+                         <span class="text-gray-600 mx-1">›</span>
+                         <span class="text-emerald-400 font-bold">${escapeHtml(sidoName)}</span>`
+                      + (MAP_SIGUNGU ? `<span class="text-gray-600 mx-1">›</span><span class="text-yellow-400 font-bold">${escapeHtml(MAP_SIGUNGU)}</span>` : '');
+                if (MAP_SIGUNGU) {
+                    const shape = matchSigunguShape(MAP_SIDO, MAP_SIGUNGU);
+                    shown = mine.filter(u => {
+                        const s = matchSigunguShape(MAP_SIDO, u.sigungu);
+                        return s && shape && s.name === shape.name;
+                    });
+                    listTitle = `${MAP_SIGUNGU} ${shown.length}개 대학`;
+                } else {
+                    shown = mine;
+                    listTitle = `${sidoName} ${mine.length}개 대학`;
+                }
+                legend = noShape.length
+                    ? `시·군·구를 누르면 그 안의 대학만 봅니다. (소재지가 시·군·구까지 적혀 있지 않은 대학 ${noShape.length}곳은 아래 목록에만 나옵니다)`
+                    : '시·군·구를 누르면 그 안의 대학만 봅니다.';
+            }
+
+            const card = (u) => `
+                <div class="bg-[#151922] border border-gray-700 rounded p-2">
+                    <div class="flex justify-between items-start gap-2 cursor-pointer" onclick="this.parentElement.querySelector('[data-majors]').classList.toggle('hidden')">
+                        <div class="min-w-0">
+                            <div class="text-white font-bold text-xs truncate">${escapeHtml(u.univ)}</div>
+                            <div class="text-[10px] text-gray-500">${escapeHtml(u.sido || '')} ${escapeHtml(u.sigungu || '')}</div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-[11px] font-bold ${u.reachable ? 'text-emerald-400' : 'text-gray-500'}">${u.reachable}/${u.total} 학과</div>
+                            <div class="text-[10px] ${u.gap <= 0 ? 'text-emerald-300' : 'text-red-300'}">${u.gap <= 0 ? '여유 ' : '부족 '}${Math.abs(u.gap)}${escapeHtml(u.unit || '')}</div>
+                        </div>
+                    </div>
+                    <div data-majors class="hidden mt-2 pt-2 border-t border-gray-800 space-y-0.5">
+                        ${(u.majors || []).map(m => `<div class="flex justify-between text-[10px] gap-2">
+                            <span class="text-gray-300 truncate">${escapeHtml(m.major || '(학과 미상)')}${m.type ? `<span class="text-gray-600 ml-1">${escapeHtml(m.type)}</span>` : ''}</span>
+                            <span class="shrink-0 ${m.reach ? 'text-emerald-400' : 'text-red-400'}">${m.cut}${escapeHtml(m.unit || '')}</span>
+                        </div>`).join('') || '<div class="text-[10px] text-gray-600">학과 정보가 없습니다.</div>'}
+                    </div>
+                </div>`;
+
+            box.innerHTML = `
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-xs">
+                    <div>${crumb}</div>
+                    <div class="text-[10px] text-gray-500">${kindLabel} 기준 · 초록이 진할수록 갈 수 있는 대학이 많은 지역입니다</div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-[#151922] border border-gray-700 rounded-lg p-2">
+                        <svg viewBox="0 0 ${M.w} ${M.h}" class="w-full h-auto" style="max-height:460px">${svg}</svg>
+                        <p class="text-[10px] text-gray-500 mt-1">${escapeHtml(legend)}</p>
+                    </div>
+                    <div class="flex flex-col min-h-0">
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">${escapeHtml(listTitle)} <span class="text-gray-600 font-normal">· 대학을 누르면 학과가 펼쳐집니다</span></div>
+                        <div class="space-y-1 overflow-y-auto pr-1" style="max-height:440px">
+                            ${shown.length ? shown.map(card).join('')
+                                : '<p class="text-gray-600 text-xs text-center py-6">이 지역에는 해당하는 대학이 없습니다.</p>'}
+                            ${(!MAP_SIDO && unknown.length) ? `<div class="mt-2 pt-2 border-t border-gray-800">
+                                <div class="text-[10px] text-yellow-400 font-bold mb-1">소재지를 몰라 지도에 못 올린 대학 ${unknown.length}곳</div>
+                                <p class="text-[10px] text-gray-500 mb-1">입결 엑셀의 <b class="text-gray-400">소재지</b> 칸을 채우면 지도에 함께 표시됩니다.</p>
+                                ${unknown.map(card).join('')}</div>` : ''}
+                        </div>
+                    </div>
+                </div>`;
         }
 
         const NAESIN_FIELDS = [['term', '학기', 2, 'text', '1-1'], ['subject', '과목', 3, 'text', '문학'], ['unit', '단위', 1, 'number', '4'], ['pct', '백분율', 2, 'number', '7.2'], ['grade', '등급', 2, 'number', '2']];
@@ -4279,6 +4519,211 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
         }
 
+        // ── 학생부에서 출결 · 봉사 · 독서만 따로 뽑아 보여주기 ──
+        async function runRecordFacts() {
+            if (!COUNSEL_TARGET) return;
+            const body = document.getElementById('cs-record-text').value.trim();
+            if (body.length < 30) return alert("학생부 내용을 먼저 붙여넣어 주세요.");
+            showLoader("출결 · 봉사 · 독서를 정리하고 있습니다...");
+            const r = await adminPost('/api/admin/counsel/record_facts', {
+                student_name: COUNSEL_TARGET, record_text: body,
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA.record_facts = r.data.facts;
+            COUNSEL_DATA.record_text = body;
+            renderRecordFacts(r.data.facts);
+            // 💡 학생부에 교과 성적이 들어 있으면 내신 성적표를 바로 채운다.
+            //    이미 넣어둔 성적이 있으면 덮어쓰기 전에 물어본다.
+            const found = (r.data.facts.naesin || []).length;
+            if (found) {
+                const had = (COUNSEL_DATA.naesin_rows || []).length;
+                if (!had || confirm(`학생부에서 교과 성적 ${found}과목을 찾았습니다.\n\n지금 내신 성적표에 ${had}과목이 들어 있습니다.\n학생부 내용으로 바꿔 넣을까요?`)) {
+                    await applyNaesinFromRecord();
+                }
+            }
+        }
+
+        // ── 모의고사 성적표(사진·캡처·PDF·엑셀)를 읽어 성적을 바로 채운다 ──
+        async function extractMockFromFiles(fileList) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            if (!COUNSEL_TARGET) return alert("학생을 먼저 선택해주세요.");
+            const fd = new FormData();
+            fd.append('student_name', COUNSEL_TARGET);
+            files.forEach(f => fd.append('files', f, f.name || 'capture.png'));
+            await sendMockExtract(fd, files.length > 1 ? `성적표 ${files.length}장` : (files[0].name || '성적표'));
+        }
+
+        async function sendMockExtract(fd, label) {
+            showLoader(`${label}을(를) 읽는 중입니다...`);
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/counsel/mock_extract`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("성적표를 보내지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "성적표를 읽지 못했습니다.");
+
+            const rows = data.rows || [];
+            const had = collectRows('mock-rows').length;
+            const when = (data.dates || []).join(' · ');
+            const msg = `성적표에서 ${rows.length}과목${when ? ` (${when})` : ''}을 읽었습니다.\n\n` +
+                (had ? `지금 모의고사 표에 ${had}과목이 들어 있습니다.\n[확인] 이어붙이기 / [취소] 그만두기`
+                     : '모의고사 성적표에 넣을까요?');
+            if (!confirm(msg)) return;
+
+            // 이미 있는 줄은 지우지 않고 뒤에 이어붙인다 — 회차가 쌓이는 게 자연스럽다
+            COUNSEL_DATA.mock_rows = collectRows('mock-rows').concat(rows);
+            renderGradeRows();
+            showLoader("모의고사 성적을 저장하는 중입니다...");
+            const r = await adminPost('/api/admin/counsel/grades', {
+                student_name: COUNSEL_TARGET,
+                naesin: collectRows('naesin-rows'),
+                mock: COUNSEL_DATA.mock_rows,
+                naesin_scale: currentNaesinScale(),
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            renderCounselCard();
+            switchCounselTab('cs-grades');
+            alert(`모의고사 ${rows.length}과목을 성적표에 넣고 저장했습니다.`);
+        }
+
+        // 캡처 이미지를 Ctrl+V로 바로 붙여넣을 수 있게 — 상담 화면이 열려 있을 때만 받는다
+        document.addEventListener('paste', async (e) => {
+            const tab = document.getElementById('cs-grades');
+            if (!tab || tab.classList.contains('hidden') || !COUNSEL_TARGET) return;
+            const items = Array.from((e.clipboardData || {}).items || []);
+            const imgs = items.filter(i => i.type && i.type.startsWith('image/'))
+                              .map(i => i.getAsFile()).filter(Boolean);
+            if (!imgs.length) return;
+            e.preventDefault();
+            const fd = new FormData();
+            fd.append('student_name', COUNSEL_TARGET);
+            imgs.forEach((f, i) => fd.append('files', f, f.name || `capture_${i + 1}.png`));
+            await sendMockExtract(fd, '붙여넣은 성적표 캡처');
+        });
+
+        // 학생부에서 뽑은 교과 성적을 내신 성적표에 넣고 그대로 저장한다
+        async function applyNaesinFromRecord() {
+            const rows = ((COUNSEL_DATA.record_facts || {}).naesin) || [];
+            if (!rows.length) return alert("학생부에서 교과 성적을 찾지 못했습니다.");
+            COUNSEL_DATA.naesin_rows = rows;
+            renderGradeRows();
+            showLoader("내신 성적을 저장하는 중입니다...");
+            const r = await adminPost('/api/admin/counsel/grades', {
+                student_name: COUNSEL_TARGET,
+                naesin: rows,
+                mock: collectRows('mock-rows'),
+                naesin_scale: currentNaesinScale(),
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            COUNSEL_DATA = r.data.counsel;
+            renderCounselCard();
+            switchCounselTab('cs-grades');
+            alert(`학생부에서 찾은 교과 성적 ${rows.length}과목을 내신 성적표에 넣고 저장했습니다.`);
+        }
+
+        function renderRecordFacts(f) {
+            const box = document.getElementById('cs-record-facts');
+            if (!box) return;
+            if (!f) {
+                box.innerHTML = `<p class="text-[11px] text-gray-600">위 <b class="text-sky-400">출결 · 봉사 · 독서 정리</b>를 누르면 학생부에 적힌 출결 상황, 봉사 시간, 읽은 책을 표로 정리해 보여줍니다.</p>`;
+                return;
+            }
+            const s = f.summary || {};
+            const at = s && f.at ? f.at : '';
+            const att = f.attendance || [], vol = f.volunteer || [], books = f.books || [];
+            const t = s.attendance_total || {};
+            const num = v => (v === null || v === undefined || v === '') ? '-' : v;
+
+            const chip = (label, value, tone) => `
+                <div class="bg-[#151922] border border-gray-700 rounded p-2 text-center">
+                    <div class="text-[10px] text-gray-500">${label}</div>
+                    <div class="text-base font-black ${tone}">${value}</div>
+                </div>`;
+
+            box.innerHTML = `
+                <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-clipboard-list mr-1 text-sky-400"></i>출결 · 봉사 · 독서</h4>
+                        <span class="text-[10px] text-gray-500">${escapeHtml(at)} 정리 · 학생부 원문에 적힌 내용만 옮겼습니다</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+                        ${chip('교과 성적', `${num(s.naesin_count)}과목`, 'text-blue-400')}
+                        ${chip('미인정 결석', num(t.absence_unauth), (t.absence_unauth ? 'text-red-400' : 'text-emerald-400'))}
+                        ${chip('지각 · 조퇴 · 결과', `${num(t.late)} · ${num(t.leave_early)} · ${num(t.result)}`, 'text-gray-200')}
+                        ${chip('봉사 시간', `${num(s.volunteer_total)}시간`, 'text-emerald-400')}
+                        ${chip('읽은 책', `${num(s.book_count)}권`, 'text-yellow-400')}
+                    </div>
+                    ${(f.naesin || []).length ? `<div class="bg-[#151922] border border-blue-800/50 rounded p-2 mb-3 flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-[11px] text-blue-300"><i class="fa-solid fa-table-cells mr-1"></i>학생부에서 교과 성적 <b>${f.naesin.length}과목</b>을 찾았습니다
+                            ${(s.naesin_terms || []).length ? `<span class="text-gray-500">(${(s.naesin_terms || []).map(escapeHtml).join(' · ')})</span>` : ''}</span>
+                        <button onclick="applyNaesinFromRecord()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-white font-bold text-[11px] transition shrink-0">내신 성적표에 다시 넣기</button>
+                    </div>` : ''}
+                    ${s.attendance_clean ? `<p class="text-[11px] text-emerald-400 mb-3"><i class="fa-solid fa-circle-check mr-1"></i>미인정 결석·지각·조퇴·결과가 하나도 없습니다. 학종에서 성실성 근거로 쓸 수 있습니다.</p>` : ''}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div>
+                            <div class="text-[11px] text-gray-400 font-bold mb-1">출결 상황</div>
+                            ${att.length ? `<div class="overflow-x-auto"><table class="w-full text-[11px]">
+                                <tr class="text-gray-500"><td class="py-1">학년</td><td>수업일수</td><td>질병</td><td>미인정</td><td>기타</td><td>지각</td><td>조퇴</td><td>결과</td></tr>
+                                ${att.map(a => `<tr class="border-t border-gray-800 text-gray-300">
+                                    <td class="py-1 text-white font-bold">${escapeHtml(String(a.grade || ''))}</td>
+                                    <td>${num(a.school_days)}</td><td>${num(a.absence_illness)}</td>
+                                    <td class="${a.absence_unauth ? 'text-red-400 font-bold' : ''}">${num(a.absence_unauth)}</td>
+                                    <td>${num(a.absence_etc)}</td><td>${num(a.late)}</td>
+                                    <td>${num(a.leave_early)}</td><td>${num(a.result)}</td></tr>`).join('')}
+                            </table></div>` : '<p class="text-[11px] text-gray-600">학생부에서 출결 내용을 찾지 못했습니다.</p>'}
+
+                            <div class="text-[11px] text-gray-400 font-bold mt-3 mb-1">봉사활동</div>
+                            ${vol.length ? vol.map(v => `<div class="flex justify-between gap-2 text-[11px] border-t border-gray-800 py-1">
+                                    <span class="text-gray-300 truncate">${escapeHtml(String(v.grade || ''))}학년 ${escapeHtml(v.detail || '')}</span>
+                                    <b class="text-emerald-400 shrink-0">${num(v.hours)}시간</b>
+                                </div>`).join('') : '<p class="text-[11px] text-gray-600">봉사활동 기록을 찾지 못했습니다.</p>'}
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-gray-400 font-bold mb-1">읽은 책 ${books.length ? `<span class="text-gray-600 font-normal">${books.length}권 · ${(s.book_subjects || []).map(escapeHtml).join(' · ')}</span>` : ''}</div>
+                            ${books.length ? `<div class="space-y-0.5 max-h-56 overflow-y-auto pr-1">
+                                ${books.map(b => `<div class="flex justify-between gap-2 text-[11px] border-t border-gray-800 py-1">
+                                    <span class="text-gray-200 truncate">${escapeHtml(b.title || '')}
+                                        ${b.author ? `<span class="text-gray-500">${escapeHtml(b.author)}</span>` : ''}</span>
+                                    <span class="text-[10px] text-gray-500 shrink-0">${escapeHtml(String(b.grade || ''))}학년 ${escapeHtml(b.subject || '')}</span>
+                                </div>`).join('')}</div>` : '<p class="text-[11px] text-gray-600">독서활동 기록을 찾지 못했습니다.</p>'}
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // ── 학생부 원문에서 낱말 찾기 ────────────────────
+        async function runRecordSearch() {
+            if (!COUNSEL_TARGET) return;
+            const kw = document.getElementById('cs-record-keyword').value.trim();
+            if (!kw) return alert("찾을 낱말을 입력해주세요.");
+            const box = document.getElementById('cs-record-search-result');
+            box.innerHTML = '<p class="text-[11px] text-gray-500">찾는 중...</p>';
+            const r = await adminPost('/api/admin/counsel/record_search', {
+                student_name: COUNSEL_TARGET, keyword: kw,
+            });
+            if (!r.ok) { box.innerHTML = `<p class="text-[11px] text-yellow-400">${escapeHtml(r.message)}</p>`; return; }
+            const groups = r.data.groups || [];
+            box.innerHTML = `
+                <p class="text-[11px] text-gray-500 mb-2">모두 <b class="text-yellow-400">${r.data.total}군데</b>에서 찾았습니다.</p>
+                ${groups.map(g => `
+                    <div class="mb-3">
+                        <div class="text-[11px] font-bold mb-1 ${g.count ? 'text-yellow-300' : 'text-gray-600'}">
+                            ${escapeHtml(g.keyword)} — ${g.count}군데</div>
+                        ${g.count ? g.hits.map(h => `
+                            <div class="bg-[#151922] border border-gray-700 rounded px-2 py-1.5 mb-1 text-[11px] leading-relaxed text-gray-400">
+                                ${escapeHtml(h.before)}<b class="bg-yellow-500/30 text-yellow-200 px-0.5 rounded">${escapeHtml(h.match)}</b>${escapeHtml(h.after)}
+                            </div>`).join('')
+                        : '<p class="text-[11px] text-gray-600">학생부에 이 낱말이 없습니다.</p>'}
+                    </div>`).join('')}`;
+        }
+
         // ── 시험별 등급컷 ────────────────────────────
         //   모의고사는 회차마다 난이도가 달라 같은 원점수라도 등급이 다르다.
         //   회차별 컷을 넣어두면 원점수만 입력해도 등급이 채워진다.
@@ -4438,8 +4883,30 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function openUnivTable() {
             UNIV_FILE = null;
             document.getElementById('univ-map').classList.add('hidden');
+            document.getElementById('univ-auto-note').classList.add('hidden');
             showModal('univ');
             await loadUnivList();
+        }
+
+        // 표준 양식 엑셀 내려받기 — 관리자 토큰이 필요해서 링크가 아니라 fetch로 받는다
+        async function downloadUnivTemplate() {
+            showLoader("표준 양식을 만드는 중입니다...");
+            try {
+                const res = await fetch(`${API_URL}/api/admin/univ_table/template`);
+                if (!res.ok) { hideLoader(); return alert(`양식을 받지 못했습니다. (${res.status})`); }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '입결자료_표준양식.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+            } catch (e) {
+                alert("양식을 받지 못했습니다: " + e.message);
+            }
+            hideLoader();
         }
 
         async function loadUnivList() {
@@ -4562,6 +5029,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 metric_col: guess(['점수구분', '반영기준']),
                 note:   guess(['비고', '메모']),
             };
+            // 💡 서버가 표준 양식 기준으로 짝지어 준 결과를 먼저 쓴다 — 표준 양식이면 이걸로 끝난다.
+            Object.entries(data.auto_mapping || {}).forEach(([k, v]) => { guessed[k] = v; });
+            const autoNote = document.getElementById('univ-auto-note');
+            if (data.is_template) {
+                autoNote.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i>표준 양식으로 확인했습니다. 열 짝짓기가 이미 끝났으니 아래에서 <b>수시/정시</b>만 고르고 바로 저장하시면 됩니다.';
+                autoNote.classList.remove('hidden');
+            } else {
+                autoNote.classList.add('hidden');
+            }
 
             document.getElementById('univ-map-fields').innerHTML = UNIV_MAP_FIELDS.map(([key, label, req]) => `
                 <div>
@@ -4699,8 +5175,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <div class="text-white font-bold text-sm mb-3"><i class="fa-solid fa-bullseye mr-1 text-indigo-400"></i>목표:
                     <button onclick="openUnivMajors('${escAttr(g.univ)}','')" class="underline decoration-dotted hover:text-emerald-400 transition" title="${escAttr(g.univ)}에서 가능한 학과 보기">${escapeHtml(g.univ)}</button>
                     <span class="font-normal text-gray-400">${escapeHtml(g.major || '')}</span></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                     ${section(g.susi, '수시', 'border-blue-700/50')}
+                    ${section(g.nonsul, '논술', 'border-purple-700/50')}
                     ${section(g.jeongsi, '정시', 'border-yellow-700/50')}
                 </div>
             </div>`;
@@ -4778,7 +5255,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 </div>`;
             };
 
-            const html = section(d.susi, '수시', 'border-blue-800') + section(d.jeongsi, '정시', 'border-yellow-800');
+            const html = section(d.susi, '수시', 'border-blue-800') + section(d.nonsul, '논술', 'border-purple-800') + section(d.jeongsi, '정시', 'border-yellow-800');
             body.innerHTML = html || '<p class="text-gray-500 text-sm text-center py-10">조건에 맞는 학과가 없습니다.</p>';
         }
 
