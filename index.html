@@ -190,19 +190,32 @@
     </div>
 
     <!-- 📝 과제 OMR 제출 -->
-    <div id="hwomr-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
-        <div class="bg-[#1e2430] rounded-2xl w-full max-w-lg max-h-[90vh] shadow-2xl border border-emerald-500 flex flex-col">
-            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
-                <div>
-                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-list-ol mr-2 text-emerald-400"></i><span id="hw-omr-title"></span></h2>
-                    <p class="text-[11px] text-gray-400 mt-1"><span id="hw-omr-kind"></span> · <span id="hw-omr-progress"></span></p>
+    <!-- 💡 폰에서 답을 마킹하기 어렵다는 이야기가 많았다. 화면을 꽉 채우고,
+         선택지 단추를 손가락 크기(최소 44px)로 키워 가로 폭을 다 쓰도록 다시 짰다. -->
+    <div id="hwomr-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-stretch md:items-center justify-center md:p-4">
+        <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-2xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-emerald-500 flex flex-col">
+            <div class="px-4 pt-3 pb-2 border-b border-gray-700 shrink-0" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+                <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-list-ol mr-2 text-emerald-400"></i><span id="hw-omr-title"></span></h2>
+                        <p class="text-[11px] text-gray-400 mt-0.5"><span id="hw-omr-kind"></span></p>
+                    </div>
+                    <button onclick="closeModal('hwomr-modal')" aria-label="닫기" class="shrink-0 w-11 h-11 -mr-2 -mt-1 flex items-center justify-center text-gray-400 hover:text-white active:bg-gray-700 rounded-full"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
-                <button onclick="closeModal('hwomr-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="mt-2 flex items-center gap-2">
+                    <div class="flex-grow h-2 bg-gray-700 rounded-full overflow-hidden">
+                        <div id="hw-omr-bar" class="h-full bg-emerald-500 transition-all duration-200" style="width:0%"></div>
+                    </div>
+                    <span id="hw-omr-progress" class="text-[11px] text-gray-300 font-bold shrink-0 tabular-nums"></span>
+                </div>
+                <button id="hw-omr-next-blank" onclick="jumpToBlankOmr()" class="hidden w-full mt-2 py-2 rounded-lg bg-amber-900/40 border border-amber-700 text-amber-200 text-xs font-bold active:bg-amber-900/70">
+                    <i class="fa-solid fa-arrow-down mr-1"></i>아직 안 푼 첫 문항으로
+                </button>
             </div>
-            <div id="hw-omr-sheet" class="flex-grow overflow-y-auto p-5 space-y-1.5"></div>
-            <div class="p-4 border-t border-gray-700">
+            <div id="hw-omr-sheet" class="flex-grow overflow-y-auto px-3 py-2 space-y-1.5 md:grid md:grid-cols-2 md:gap-2 md:space-y-0 md:content-start" style="-webkit-overflow-scrolling: touch;"></div>
+            <div class="px-4 pt-3 border-t border-gray-700 shrink-0" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
                 <div id="hw-omr-result" class="mb-2"></div>
-                <button id="hw-omr-submit-btn" onclick="submitHomeworkOmr()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 text-white font-bold rounded transition">제출하고 채점받기</button>
+                <button id="hw-omr-submit-btn" onclick="submitHomeworkOmr()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 py-4 text-white font-bold rounded-xl transition text-base">제출하고 채점받기</button>
             </div>
         </div>
     </div>
@@ -7053,22 +7066,74 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             showModal('hwomr');
         }
 
+        // 💡 폰에서 쓰기 좋게 다시 짰다.
+        //    · 단추를 가로 폭 전체에 펼쳐 최소 44px(손가락 크기)을 넘긴다
+        //    · 탭할 때마다 전체를 다시 그리면 문항이 많을수록 버벅이므로, 누른 줄만 고친다
+        //    · 진행 막대와 '안 푼 문항으로' 단추로 어디까지 했는지 늘 보이게 한다
+        const OMR_MARK_CLASS = ['bg-emerald-600', 'text-white', 'border-emerald-400'];
+        const OMR_PLAIN_CLASS = ['bg-[#232a36]', 'text-gray-300', 'border-gray-600'];
+
+        function omrOptionBtn(i, n, marked) {
+            const on = marked ? OMR_MARK_CLASS.join(' ') : OMR_PLAIN_CLASS.join(' ');
+            return `<button id="hwomr-btn-${i}-${n}" onclick="pickHomeworkOmr(${i}, '${n}')"
+                aria-label="${i + 1}번 ${n}번 선택지" style="touch-action: manipulation;"
+                class="h-11 rounded-lg border font-bold text-base flex items-center justify-center transition active:scale-95 ${on}">${n}</button>`;
+        }
+
         function renderHomeworkOmr() {
             const box = document.getElementById('hw-omr-sheet');
             box.innerHTML = HW_OMR.answers.map((v, i) => `
-                <div class="flex items-center gap-2 bg-[#151922] border border-gray-700 rounded px-2 py-1.5">
-                    <span class="text-gray-400 text-xs w-7 shrink-0 text-right">${i + 1}</span>
-                    ${[1, 2, 3, 4, 5].map(n => `<button onclick="pickHomeworkOmr(${i}, '${n}')"
-                        class="w-7 h-7 rounded-full text-[11px] font-bold transition ${String(v) === String(n)
-                            ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}">${n}</button>`).join('')}
+                <div id="hwomr-row-${i}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-1.5 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <span id="hwomr-no-${i}" class="text-gray-400 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
+                        <div class="grid grid-cols-5 gap-1.5 flex-grow">
+                            ${[1, 2, 3, 4, 5].map(n => omrOptionBtn(i, n, String(v) === String(n))).join('')}
+                        </div>
+                    </div>
                 </div>`).join('');
+            updateHomeworkOmrProgress();
+        }
+
+        function paintHomeworkOmrRow(idx) {
+            const v = HW_OMR.answers[idx];
+            for (let n = 1; n <= 5; n++) {
+                const b = document.getElementById(`hwomr-btn-${idx}-${n}`);
+                if (!b) continue;
+                const marked = String(v) === String(n);
+                b.classList.remove(...OMR_MARK_CLASS, ...OMR_PLAIN_CLASS);
+                b.classList.add(...(marked ? OMR_MARK_CLASS : OMR_PLAIN_CLASS));
+            }
+            const no = document.getElementById(`hwomr-no-${idx}`);
+            if (no) no.className = `text-sm font-bold w-7 shrink-0 text-right tabular-nums ${v ? 'text-emerald-400' : 'text-gray-400'}`;
+        }
+
+        function updateHomeworkOmrProgress() {
             const done = HW_OMR.answers.filter(Boolean).length;
-            document.getElementById('hw-omr-progress').innerText = `${done} / ${HW_OMR.count}문항 마킹`;
+            const total = HW_OMR.count || 1;
+            const bar = document.getElementById('hw-omr-bar');
+            if (bar) bar.style.width = Math.round(done / total * 100) + '%';
+            const txt = document.getElementById('hw-omr-progress');
+            if (txt) txt.innerText = `${done}/${HW_OMR.count}`;
+            const jump = document.getElementById('hw-omr-next-blank');
+            if (jump) jump.classList.toggle('hidden', done === 0 || done >= HW_OMR.count);
         }
 
         function pickHomeworkOmr(idx, val) {
             HW_OMR.answers[idx] = String(HW_OMR.answers[idx]) === String(val) ? '' : String(val);
-            renderHomeworkOmr();
+            paintHomeworkOmrRow(idx);
+            updateHomeworkOmrProgress();
+            // 폰에서 눌렸는지 손끝으로도 알 수 있게 아주 짧게 진동
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+        }
+
+        function jumpToBlankOmr() {
+            const idx = HW_OMR.answers.findIndex(a => !a);
+            if (idx < 0) return;
+            const row = document.getElementById(`hwomr-row-${idx}`);
+            if (!row) return;
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.classList.add('ring-2', 'ring-amber-400');
+            setTimeout(() => row.classList.remove('ring-2', 'ring-amber-400'), 1200);
         }
 
         async function submitHomeworkOmr() {
