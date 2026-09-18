@@ -323,13 +323,19 @@
                 <div class="bg-[#151922] border border-emerald-700/50 rounded-lg p-4 mb-4">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                         <h3 class="text-emerald-300 font-bold text-sm"><i class="fa-solid fa-table-list mr-1"></i>표준 양식으로 넣기 (권장)</h3>
-                        <button onclick="downloadUnivTemplate()" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded text-white font-bold text-xs transition shrink-0"><i class="fa-solid fa-download mr-1"></i>표준 양식 엑셀 내려받기</button>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="downloadUnivTemplate('susi')" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-download mr-1"></i>수시 양식</button>
+                            <button onclick="downloadUnivTemplate('jeongsi')" class="bg-yellow-700 hover:bg-yellow-600 px-4 py-2 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-download mr-1"></i>정시 양식</button>
+                        </div>
                     </div>
-                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                    <p class="text-[11px] text-gray-400 leading-relaxed mb-1">
                         내려받은 파일의 <b class="text-gray-300">첫 줄(열 이름)은 그대로 두고</b> 2번째 줄부터 채워서 올리시면,
-                        열을 하나하나 짝지을 필요 없이 바로 저장됩니다.
-                        <b class="text-emerald-300">대학 · 학과 · 기준점수</b>는 꼭 필요하고, 나머지는 선택입니다.
-                        <b class="text-emerald-300">소재지</b>를 채우면 상담 화면에서 지원 가능 대학이 <b class="text-emerald-300">지도</b> 위에 표시됩니다.
+                        열을 하나하나 짝지을 필요 없이 바로 저장됩니다. 합격선은 <b class="text-emerald-300">70%컷</b>을 기준으로 판단합니다.
+                    </p>
+                    <p class="text-[11px] text-gray-500 leading-relaxed">
+                        <b class="text-blue-300">수시</b> — 대학 · 소재지 · 학과 · 전형 · 인원 · 50%컷 · 70%컷 · 수능최저 · 경쟁률 &nbsp;/&nbsp;
+                        <b class="text-yellow-300">정시</b> — 대학 · 소재지 · 학과 · 전형 · 50%컷 · 70%컷 · 영어등급<br>
+                        <b class="text-emerald-300">소재지</b>를 채우면 상담 화면 <b class="text-emerald-300">지도</b>에 지원 가능 대학이 표시됩니다. (논술 자료는 수시 양식을 쓰고, 올릴 때 '논술'을 골라주세요)
                     </p>
                 </div>
 
@@ -1350,6 +1356,7 @@
                                             <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-map-location-dot mr-1 text-emerald-400"></i>지원 가능 대학 지도</h4>
                                             <div class="flex flex-wrap items-center gap-1">
                                                 <select id="map-kind" onchange="loadUnivMap()" class="p-1 bg-gray-800 text-white rounded text-[11px] border border-gray-600">
+                                                    <option value="all">수시 · 정시 함께 보기</option>
                                                     <option value="susi">수시 — 내신으로</option>
                                                     <option value="nonsul">논술 — 논술전형으로</option>
                                                     <option value="jeongsi">정시 — 수능으로</option>
@@ -3971,10 +3978,29 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function mapPickSigungu(name) { MAP_SIGUNGU = (MAP_SIGUNGU === name ? '' : name); renderUnivMapView(); }
         function mapBackToNation() { MAP_SIDO = ''; MAP_SIGUNGU = ''; renderUnivMapView(); }
 
-        function mapFillColor(count, max) {
+        // 전형 갈래별 색 — 수시 파랑 / 논술 보라 / 정시 노랑, 섞이면 초록
+        const MAP_KIND_RGB = { susi: '59,130,246', nonsul: '168,85,247', jeongsi: '234,179,8', mixed: '16,185,129' };
+        const MAP_KIND_LABEL = { susi: '수시', nonsul: '논술', jeongsi: '정시' };
+        const MAP_KIND_TEXT = { susi: 'text-blue-300', nonsul: 'text-purple-300', jeongsi: 'text-yellow-300' };
+        const MAP_KIND_BG = { susi: 'bg-blue-900/50 text-blue-200', nonsul: 'bg-purple-900/50 text-purple-200', jeongsi: 'bg-yellow-900/50 text-yellow-200' };
+
+        // 그 지역에 어떤 갈래가 있는지로 색을 정한다. 한 갈래뿐이면 그 갈래 색,
+        // 두 갈래 넘게 섞이면 초록. 진하기는 대학이 많을수록 짙어진다.
+        function mapFillColor(count, max, kinds) {
             if (!count) return '#262d3b';
             const t = max <= 1 ? 1 : Math.min(1, 0.25 + 0.75 * (count / max));
-            return `rgba(16,185,129,${t.toFixed(2)})`;   // emerald
+            const present = Object.keys(kinds || {}).filter(k => kinds[k]);
+            const rgb = present.length === 1 ? (MAP_KIND_RGB[present[0]] || MAP_KIND_RGB.mixed)
+                      : present.length ? MAP_KIND_RGB.mixed : MAP_KIND_RGB.mixed;
+            return `rgba(${rgb},${t.toFixed(2)})`;
+        }
+
+        // 지역 이름표 아래에 갈래별 개수를 '수3 정2'처럼 적어준다
+        function mapKindCounts(kinds) {
+            return ['susi', 'nonsul', 'jeongsi']
+                .filter(k => kinds && kinds[k])
+                .map(k => `${MAP_KIND_LABEL[k][0]}${kinds[k]}`)
+                .join(' ');
         }
 
         function renderUnivMapView() {
@@ -3985,27 +4011,33 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
             const all = UNIV_MAP_DATA.univs || [];
             const unknown = UNIV_MAP_DATA.unknown || [];
-            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[UNIV_MAP_DATA.kind] || '수시';
+            const kindLabel = UNIV_MAP_DATA.kind === 'all' ? '수시 · 논술 · 정시' : (MAP_KIND_LABEL[UNIV_MAP_DATA.kind] || '수시');
 
             let svg = '', legend = '', crumb = '', listTitle = '', shown = [];
 
             if (!MAP_SIDO) {
                 // ── 전국 지도 ──
-                const cnt = {};
-                all.forEach(u => { cnt[u.sido_code] = (cnt[u.sido_code] || 0) + 1; });
+                const cnt = {}, kindsBy = {};
+                all.forEach(u => {
+                    cnt[u.sido_code] = (cnt[u.sido_code] || 0) + 1;
+                    const k = kindsBy[u.sido_code] || (kindsBy[u.sido_code] = {});
+                    k[u.kind] = (k[u.kind] || 0) + 1;
+                });
                 const max = Math.max(1, ...Object.values(cnt));
                 svg = M.provinces.map(p => {
                     const n = cnt[p.code] || 0;
-                    return `<path d="${p.d}" fill="${mapFillColor(n, max)}" stroke="#4b5a72" stroke-width="0.8"
+                    const detail = mapKindCounts(kindsBy[p.code]);
+                    return `<path d="${p.d}" fill="${mapFillColor(n, max, kindsBy[p.code])}" stroke="#4b5a72" stroke-width="0.8"
                                 ${n ? `class="cursor-pointer hover:brightness-125" onclick="mapDrillSido('${p.code}')"` : ''}>
-                                <title>${escapeHtml(p.name)} · ${n}개 대학</title></path>`;
+                                <title>${escapeHtml(p.name)} · ${n}개 대학${detail ? ' (' + detail + ')' : ''}</title></path>`;
                 }).join('') + M.provinces.map(p => {
                     const n = cnt[p.code] || 0;
                     if (!n) return '';
+                    const detail = mapKindCounts(kindsBy[p.code]);
                     return `<text x="${p.cx}" y="${p.cy}" text-anchor="middle" font-size="20" font-weight="bold" fill="#06281c"
                                  class="pointer-events-none">${escapeHtml(p.short)}</text>
-                            <text x="${p.cx}" y="${p.cy + 20}" text-anchor="middle" font-size="19" font-weight="bold" fill="#0b1220"
-                                 class="pointer-events-none">${n}</text>`;
+                            <text x="${p.cx}" y="${p.cy + 20}" text-anchor="middle" font-size="18" font-weight="bold" fill="#0b1220"
+                                 class="pointer-events-none">${escapeHtml(detail || String(n))}</text>`;
                 }).join('');
                 crumb = `<span class="text-emerald-400 font-bold">전국</span>`;
                 listTitle = `전국 ${all.length}개 대학`;
@@ -4015,28 +4047,32 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 // ── 시도 지도 (서울이면 25개 구) ──
                 const items = M.municipalities[MAP_SIDO] || [];
                 const mine = all.filter(u => u.sido_code === MAP_SIDO);
-                const cnt = {};
+                const cnt = {}, kindsBy = {};
                 const noShape = [];
                 mine.forEach(u => {
                     const shape = matchSigunguShape(MAP_SIDO, u.sigungu);
-                    if (shape) cnt[shape.name] = (cnt[shape.name] || 0) + 1;
-                    else noShape.push(u);
+                    if (!shape) { noShape.push(u); return; }
+                    cnt[shape.name] = (cnt[shape.name] || 0) + 1;
+                    const k = kindsBy[shape.name] || (kindsBy[shape.name] = {});
+                    k[u.kind] = (k[u.kind] || 0) + 1;
                 });
                 const max = Math.max(1, ...Object.values(cnt));
                 svg = items.map(m => {
                     const n = cnt[m.name] || 0;
                     const on = MAP_SIGUNGU === m.name;
-                    return `<path d="${m.d}" fill="${mapFillColor(n, max)}"
+                    const detail = mapKindCounts(kindsBy[m.name]);
+                    return `<path d="${m.d}" fill="${mapFillColor(n, max, kindsBy[m.name])}"
                                 stroke="${on ? '#fbbf24' : '#4b5a72'}" stroke-width="${on ? 2.2 : 0.7}"
                                 ${n ? `class="cursor-pointer hover:brightness-125" onclick="mapPickSigungu('${escAttr(m.name)}')"` : ''}>
-                                <title>${escapeHtml(m.name)} · ${n}개 대학</title></path>`;
+                                <title>${escapeHtml(m.name)} · ${n}개 대학${detail ? ' (' + detail + ')' : ''}</title></path>`;
                 }).join('') + items.map(m => {
                     const n = cnt[m.name] || 0;
                     if (!n) return '';
+                    const detail = mapKindCounts(kindsBy[m.name]);
                     return `<text x="${m.cx}" y="${m.cy}" text-anchor="middle" font-size="16" font-weight="bold" fill="#06281c"
                                  class="pointer-events-none">${escapeHtml(m.name.replace(/시(.+구)$/, '$1'))}</text>
-                            <text x="${m.cx}" y="${m.cy + 16}" text-anchor="middle" font-size="15" font-weight="bold" fill="#0b1220"
-                                 class="pointer-events-none">${n}</text>`;
+                            <text x="${m.cx}" y="${m.cy + 16}" text-anchor="middle" font-size="14" font-weight="bold" fill="#0b1220"
+                                 class="pointer-events-none">${escapeHtml(detail || String(n))}</text>`;
                 }).join('');
                 const sidoName = (M.provinces.find(p => p.code === MAP_SIDO) || {}).name || '';
                 crumb = `<button onclick="mapBackToNation()" class="text-gray-400 hover:text-white underline">전국</button>
@@ -4059,11 +4095,25 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     : '시·군·구를 누르면 그 안의 대학만 봅니다.';
             }
 
+            // 학과 한 줄 — 컷·인원·경쟁률·수능최저·영어등급 중 있는 것만 붙여 보여준다
+            const majorLine = (m) => {
+                const bits = [];
+                if (m.cut70 !== null && m.cut70 !== undefined) bits.push(`70%컷 ${m.cut70}`);
+                if (m.cut50 !== null && m.cut50 !== undefined) bits.push(`50%컷 ${m.cut50}`);
+                if (!bits.length) bits.push(`${m.cut}${m.unit || ''}`);
+                if (m.quota) bits.push(`${m.quota}명`);
+                if (m.rate) bits.push(`경쟁률 ${m.rate}`);
+                if (m.eng_cut !== null && m.eng_cut !== undefined) bits.push(`영어 ${m.eng_cut}등급`);
+                return bits.join(' · ');
+            };
+
             const card = (u) => `
                 <div class="bg-[#151922] border border-gray-700 rounded p-2">
                     <div class="flex justify-between items-start gap-2 cursor-pointer" onclick="this.parentElement.querySelector('[data-majors]').classList.toggle('hidden')">
                         <div class="min-w-0">
-                            <div class="text-white font-bold text-xs truncate">${escapeHtml(u.univ)}</div>
+                            <div class="text-white font-bold text-xs truncate">
+                                <span class="inline-block px-1.5 rounded text-[9px] font-bold mr-1 ${MAP_KIND_BG[u.kind] || 'bg-gray-700 text-gray-300'}">${escapeHtml(MAP_KIND_LABEL[u.kind] || '')}</span>
+                                ${escapeHtml(u.univ)}</div>
                             <div class="text-[10px] text-gray-500">${escapeHtml(u.sido || '')} ${escapeHtml(u.sigungu || '')}</div>
                         </div>
                         <div class="text-right shrink-0">
@@ -4071,10 +4121,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <div class="text-[10px] ${u.gap <= 0 ? 'text-emerald-300' : 'text-red-300'}">${u.gap <= 0 ? '여유 ' : '부족 '}${Math.abs(u.gap)}${escapeHtml(u.unit || '')}</div>
                         </div>
                     </div>
-                    <div data-majors class="hidden mt-2 pt-2 border-t border-gray-800 space-y-0.5">
-                        ${(u.majors || []).map(m => `<div class="flex justify-between text-[10px] gap-2">
-                            <span class="text-gray-300 truncate">${escapeHtml(m.major || '(학과 미상)')}${m.type ? `<span class="text-gray-600 ml-1">${escapeHtml(m.type)}</span>` : ''}</span>
-                            <span class="shrink-0 ${m.reach ? 'text-emerald-400' : 'text-red-400'}">${m.cut}${escapeHtml(m.unit || '')}</span>
+                    <div data-majors class="hidden mt-2 pt-2 border-t border-gray-800 space-y-1">
+                        ${(u.majors || []).map(m => `<div class="text-[10px]">
+                            <div class="flex justify-between gap-2">
+                                <span class="text-gray-300 truncate">${escapeHtml(m.major || '(학과 미상)')}${m.type ? `<span class="text-gray-600 ml-1">${escapeHtml(m.type)}</span>` : ''}</span>
+                                <span class="shrink-0 ${m.reach ? 'text-emerald-400' : 'text-red-400'}">${escapeHtml(majorLine(m))}</span>
+                            </div>
+                            ${m.min_suneung ? `<div class="text-[10px] text-gray-500">수능최저 ${escapeHtml(m.min_suneung)}</div>` : ''}
                         </div>`).join('') || '<div class="text-[10px] text-gray-600">학과 정보가 없습니다.</div>'}
                     </div>
                 </div>`;
@@ -4082,7 +4135,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             box.innerHTML = `
                 <div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-xs">
                     <div>${crumb}</div>
-                    <div class="text-[10px] text-gray-500">${kindLabel} 기준 · 초록이 진할수록 갈 수 있는 대학이 많은 지역입니다</div>
+                    <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
+                        <span>${escapeHtml(kindLabel)} 기준 · 색이 진할수록 갈 수 있는 대학이 많습니다</span>
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-square" style="color:rgb(59,130,246)"></i>수시</span>
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-square" style="color:rgb(168,85,247)"></i>논술</span>
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-square" style="color:rgb(234,179,8)"></i>정시</span>
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-square" style="color:rgb(16,185,129)"></i>섞임</span>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="bg-[#151922] border border-gray-700 rounded-lg p-2">
@@ -4091,6 +4150,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     </div>
                     <div class="flex flex-col min-h-0">
                         <div class="text-[11px] text-gray-400 font-bold mb-1">${escapeHtml(listTitle)} <span class="text-gray-600 font-normal">· 대학을 누르면 학과가 펼쳐집니다</span></div>
+                        ${(() => { const rs = UNIV_MAP_DATA.region_sources || {};
+                            return (rs.file || rs.table || rs.unknown) ? `<div class="text-[10px] text-gray-600 mb-1">
+                                소재지 출처 — 엑셀 <b class="text-gray-400">${rs.file || 0}</b> · 내장자료 <b class="text-gray-400">${rs.table || 0}</b>${rs.unknown ? ` · <b class="text-yellow-500">미상 ${rs.unknown}</b>` : ''}</div>` : ''; })()}
                         <div class="space-y-1 overflow-y-auto pr-1" style="max-height:440px">
                             ${shown.length ? shown.map(card).join('')
                                 : '<p class="text-gray-600 text-xs text-center py-6">이 지역에는 해당하는 대학이 없습니다.</p>'}
@@ -4918,16 +4980,21 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         //   열 이름을 먼저 보여주고 무엇이 무엇인지 짝지어 받은 뒤 저장한다.
         let UNIV_FILE = null;
         const UNIV_MAP_FIELDS = [
-            ['univ',       '대학 이름',        true],
-            ['cut',        '기준 점수',        true],
-            ['major',      '모집단위·학과',     false],
-            ['type',       '전형 이름',        false],
-            ['track',      '계열 (인문/자연)',  false],
-            ['region',     '소재지',           false],
-            ['year',       '연도',             false],
-            ['eng',        '영어 등급',        false],
-            ['metric_col', '점수 종류가 적힌 열', false],
-            ['note',       '비고',             false],
+            ['univ',        '대학 이름',         true],
+            ['major',       '모집단위·학과',      false],
+            ['cut70',       '70%컷 (합격선 기준)', false],
+            ['cut50',       '50%컷',            false],
+            ['cut',         '기준 점수 (컷이 한 칸일 때)', false],
+            ['region',      '소재지',            false],
+            ['type',        '전형 이름',         false],
+            ['quota',       '모집 인원',         false],
+            ['min_suneung', '수능 최저',         false],
+            ['rate',        '경쟁률',            false],
+            ['eng',         '영어 등급',         false],
+            ['track',       '계열 (인문/자연)',   false],
+            ['year',        '연도',              false],
+            ['metric_col',  '점수 종류가 적힌 열', false],
+            ['note',        '비고',              false],
         ];
 
         async function openUnivTable() {
@@ -4959,8 +5026,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
         }
 
-        function downloadUnivTemplate() {
-            return downloadTemplateFile('/api/admin/univ_table/template', '입결자료_표준양식.xlsx');
+        function downloadUnivTemplate(kind) {
+            const k = kind === 'jeongsi' ? 'jeongsi' : 'susi';
+            const name = k === 'jeongsi' ? '입결자료_정시양식.xlsx' : '입결자료_수시양식.xlsx';
+            return downloadTemplateFile(`/api/admin/univ_table/template?kind=${k}`, name);
         }
 
         function downloadVocabTemplate() {
@@ -5135,6 +5204,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const v = document.getElementById('um-' + key).value;
                 if (req && v === '') return alert(`'${label}' 열을 골라주세요.`);
                 mapping[key] = v === '' ? -1 : parseInt(v);
+            }
+            // 합격선으로 쓸 숫자가 한 칸도 지정되지 않으면 저장해도 쓸 수가 없다
+            if (mapping.cut70 < 0 && mapping.cut50 < 0 && mapping.cut < 0) {
+                return alert("합격선으로 쓸 열을 하나는 골라주세요.\n(70%컷 · 50%컷 · 기준 점수 중 하나)");
             }
             mapping.metric = document.getElementById('um-metric').value;
 
