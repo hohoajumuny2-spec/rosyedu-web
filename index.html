@@ -8013,9 +8013,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const before = JOB_LIST;
             JOB_LIST = r.data.jobs || [];
             renderJobBadge();
+            if (PEEK_JOB_ID) await refreshJobPeek();
             if (document.getElementById('jobs-modal').style.display === 'flex') renderJobList();
 
-            // 기다리던 출제가 끝났으면 결과를 화면에 바로 채워준다
+            // 기다리던 출제가 끝났으면 결과를 화면에 바로 채워준다.
+            // 아직 진행 중이면, 여기까지 만들어진 문제를 계속 흘려보내 준다.
             if (WATCH_JOB_ID) {
                 const job = JOB_LIST.find(j => j.id === WATCH_JOB_ID);
                 if (job && job.status !== 'running') {
@@ -8026,8 +8028,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         const area = document.getElementById('gen-result-text');
                         if (area) area.value = `❌ 출제에 실패했습니다.\n\n${job.detail || ''}`;
                     }
+                } else if (job) {
+                    await showJobPartial(job.id, job.progress);
                 }
             }
+
             // 끝난 작업이 새로 생겼으면 알려준다
             const justDone = JOB_LIST.filter(j => j.status === 'done' &&
                 before.some(b => b.id === j.id && b.status === 'running'));
@@ -8082,6 +8087,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <div class="text-[10px] text-gray-600 mt-0.5">${escapeHtml(j.created_at || '')} · ${escapeHtml(j.admin_name || '')}</div>
                         </div>
                         <div class="flex flex-col gap-1 shrink-0">
+                            ${j.status === 'running' && j.kind === 'questions'
+                                ? `<button onclick="toggleJobPeek('${escAttr(j.id)}')" class="bg-sky-700 hover:bg-sky-600 px-3 py-1 rounded text-white text-[11px] font-bold transition">${PEEK_JOB_ID === j.id ? '접기' : '지금까지 만든 문제'}</button>` : ''}
                             ${j.status === 'done' && j.kind === 'questions'
                                 ? `<button onclick="loadJobResult('${escAttr(j.id)}')" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-white text-[11px] font-bold transition">결과 가져오기</button>` : ''}
                             ${j.status === 'done' && j.kind === 'video'
@@ -8089,8 +8096,53 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <button onclick="deleteJob('${escAttr(j.id)}')" class="text-red-400 hover:text-red-300 text-[10px]">지우기</button>
                         </div>
                     </div>
+                    ${PEEK_JOB_ID === j.id ? `<pre id="job-peek-${escAttr(j.id)}" class="mt-2 max-h-64 overflow-auto bg-[#0f1319] border border-gray-800 rounded p-2 text-[11px] text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(PEEK_TEXT || '불러오는 중...')}</pre>` : ''}
                 </div>`;
             }).join('');
+        }
+
+        // 진행 중인 출제에서 '여기까지 만들어진 문제'를 가져와 출제 화면에 보여준다
+        async function showJobPartial(jobId, progress) {
+            const area = document.getElementById('gen-result-text');
+            if (!area) return;
+            const r = await adminGet(`/api/admin/jobs/${encodeURIComponent(jobId)}`);
+            if (!r.ok) return;
+            const job = r.data.job || {};
+            const head = `⏳ 출제 중입니다 — ${progress || ''}\n` +
+                `(이 화면을 떠나셔도 서버가 계속 만듭니다. 아래는 지금까지 만들어진 문제입니다)\n` +
+                `────────────────────────────\n\n`;
+            area.value = job.partial
+                ? head + job.partial
+                : `⏳ 출제 중입니다 — ${progress || '첫 회차를 만드는 중'}\n\n` +
+                  `AI가 첫 묶음을 만들고 있습니다. 잠시 뒤 여기에 문제가 하나씩 나타납니다.`;
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // 작업 창에서 진행 중인 출제를 펼쳐 볼 때 쓰는 자리.
+        // 💡 5초마다 목록을 다시 그리는데, 그때마다 펼친 내용이 '불러오는 중'으로
+        //    돌아가 깜빡이던 문제가 있어 마지막으로 받은 내용을 들고 있는다.
+        let PEEK_JOB_ID = '';
+        let PEEK_TEXT = '';
+
+        async function toggleJobPeek(jobId) {
+            PEEK_JOB_ID = (PEEK_JOB_ID === jobId) ? '' : jobId;
+            PEEK_TEXT = '';
+            renderJobList();
+            if (PEEK_JOB_ID) await refreshJobPeek();
+        }
+
+        async function refreshJobPeek() {
+            if (!PEEK_JOB_ID) return;
+            const r = await adminGet(`/api/admin/jobs/${encodeURIComponent(PEEK_JOB_ID)}`);
+            if (!r.ok) return;
+            const job = r.data.job || {};
+            PEEK_TEXT = job.partial || job.result || '';
+            // 아직 자리가 안 그려졌을 수도 있다 — 내용은 들고 있다가 그릴 때 쓰면 된다
+            const box = document.getElementById(`job-peek-${PEEK_JOB_ID}`);
+            if (box) {
+                box.textContent = PEEK_TEXT || 'AI가 첫 묶음을 만들고 있습니다. 잠시만 기다려주세요...';
+                box.scrollTop = box.scrollHeight;
+            }
         }
 
         // 끝난 출제 작업의 결과를 출제 화면으로 가져온다
