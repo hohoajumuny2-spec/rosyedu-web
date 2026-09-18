@@ -1701,6 +1701,10 @@
                             <div class="flex gap-2 mb-4">
                                 <button onclick="generateExplainer()" class="w-full bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-book-open mr-1"></i>학생용 해설자료 만들기 (바로 배포용)</button>
                             </div>
+                            <div id="ai-status-wrap" class="hidden mb-4">
+                                <button onclick="checkAiStatus()" class="w-full bg-slate-700 hover:bg-slate-600 py-2.5 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-heart-pulse mr-1"></i>출제 전 AI 상태 확인 (원장님 전용)</button>
+                                <p id="ai-status-msg" class="hidden text-xs mt-2 p-3 rounded leading-relaxed whitespace-pre-line"></p>
+                            </div>
                             <div id="video-gen-trigger-wrap" class="hidden flex gap-2 mb-4">
                                 <button onclick="openVideoModal()" class="w-full bg-fuchsia-700 hover:bg-fuchsia-600 py-3 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-clapperboard mr-1"></i>해설 영상 만들기 (원장님 전용)</button>
                             </div>
@@ -3552,7 +3556,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
             if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
-            if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner);}
+            if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner); document.getElementById('ai-status-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-vocab'){loadVocabAdmin();}
 
@@ -7802,6 +7806,34 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         let VIDEO_SOURCE_TEXT = '';
+
+        // 💡 크레딧이 떨어진 줄 모르고 30분짜리 출제를 맡겼다가 뒤늦게 실패를 보는 일이
+        //    있었다. 시작하기 전에 1초 만에 확인할 수 있게 한다.
+        async function checkAiStatus() {
+            const box = document.getElementById('ai-status-msg');
+            box.classList.remove('hidden');
+            box.className = "text-xs mt-2 p-3 rounded leading-relaxed whitespace-pre-line bg-gray-800 text-gray-300";
+            box.textContent = "확인하는 중...";
+            try {
+                const res = await fetch(`${API_URL}/api/admin/ai_status`, { method: "POST" });
+                const data = await res.json();
+                if (!data.success) {
+                    box.className = "text-xs mt-2 p-3 rounded leading-relaxed whitespace-pre-line bg-gray-800 text-gray-300";
+                    box.textContent = data.detail || "확인하지 못했습니다.";
+                    return;
+                }
+                if (data.ok) {
+                    box.className = "text-xs mt-2 p-3 rounded leading-relaxed whitespace-pre-line bg-emerald-900/40 border border-emerald-700 text-emerald-200";
+                    box.textContent = "✅ " + data.message + (data.model ? "\n(사용 중인 모델: " + data.model.replace("models/", "") + ")" : "");
+                } else {
+                    box.className = "text-xs mt-2 p-3 rounded leading-relaxed whitespace-pre-line bg-red-900/40 border border-red-700 text-red-200";
+                    box.textContent = "⚠️ " + data.message;
+                }
+            } catch (e) {
+                box.className = "text-xs mt-2 p-3 rounded leading-relaxed whitespace-pre-line bg-red-900/40 border border-red-700 text-red-200";
+                box.textContent = "서버에 연결하지 못했습니다: " + e;
+            }
+        }
 
         function openVideoModal() {
             if (!currentUser.is_owner) return alert("이 기능은 원장님 계정만 사용할 수 있습니다.");
