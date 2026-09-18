@@ -170,6 +170,37 @@
         </div>
     </div>
 
+    <!-- 🎬 해설 영상 자동 생성 (원장님 전용) -->
+    <div id="video-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-purple-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-lg font-black text-white"><i class="fa-solid fa-clapperboard mr-2 text-purple-400"></i>해설 영상 자동 생성</h2>
+                <button onclick="closeModal('video-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="flex flex-col">
+                    <label class="text-xs text-gray-400 mb-1 block">영상 제목</label>
+                    <input type="text" id="video-title" class="w-full p-3 bg-[#151922] border border-gray-600 outline-none focus:border-purple-500 rounded text-white mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs text-gray-400">영상으로 만들 해설 내용</label>
+                        <span class="text-[10px] text-gray-600">AI가 알아서 장면을 나누고 음성을 입힙니다</span>
+                    </div>
+                    <textarea id="video-text" class="w-full flex-grow min-h-[280px] p-3 bg-[#151922] border border-gray-600 outline-none focus:border-purple-500 rounded text-white text-sm leading-relaxed resize-y font-mono"></textarea>
+                    <button id="btn-make-video" onclick="submitGenerateVideo()" class="w-full mt-3 bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded transition"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>영상 만들기 (1~2분 소요)</button>
+                    <div id="video-gen-status" class="text-xs text-gray-400 mt-2"></div>
+                    <div id="video-gen-result" class="hidden mt-3">
+                        <video id="video-gen-player" controls class="w-full max-h-64 rounded bg-black"></video>
+                        <a id="video-gen-download" href="#" target="_blank" class="block text-center mt-2 text-purple-300 hover:text-purple-200 text-xs font-bold">새 탭에서 열기 / 다운로드</a>
+                    </div>
+                </div>
+                <div class="flex flex-col border-t md:border-t-0 md:border-l border-gray-700 pt-4 md:pt-0 md:pl-5">
+                    <h3 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-clock-rotate-left mr-1 text-gray-500"></i>이전에 만든 영상</h3>
+                    <div id="video-library-list" class="flex-grow overflow-y-auto space-y-2 text-white text-xs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 🧭 학습 성향 검사 -->
     <div id="tendency-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-3xl h-[92vh] shadow-2xl border border-pink-500 flex flex-col">
@@ -1531,6 +1562,9 @@
                             </div>
                             <div class="flex gap-2 mb-4">
                                 <button onclick="generateExplainer()" class="w-full bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-book-open mr-1"></i>학생용 해설자료 만들기 (바로 배포용)</button>
+                            </div>
+                            <div id="video-gen-trigger-wrap" class="hidden flex gap-2 mb-4">
+                                <button onclick="openVideoModal()" class="w-full bg-fuchsia-700 hover:bg-fuchsia-600 py-3 text-white font-bold rounded transition text-sm"><i class="fa-solid fa-clapperboard mr-1"></i>해설 영상 만들기 (원장님 전용)</button>
                             </div>
 
                             <div id="gen-result-area" class="hidden flex-grow flex flex-col">
@@ -3306,7 +3340,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
             if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
-            if(id==='admin-generator'){loadGeneratedQuestions();}
+            if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-vocab'){loadVocabAdmin();}
 
@@ -6818,6 +6852,96 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 while(true) { const {done, value} = await reader.read(); if(done) break; r.value += dec.decode(value, {stream: true}); r.scrollTop = r.scrollHeight; }
             } catch(e) { r.classList.remove('animate-pulse'); r.value = `❌ 통신 실패: 렌더(Render) 서버 연결을 확인해주세요.\n(에러 내용: ${e.message})`; }
             if(btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+        }
+
+        // 💡 문제 출제/해설자료 결과에서 [정답 및 해설] 구간만 뽑아 영상 대본의 기본값으로 쓴다.
+        // 마커가 없으면(형식이 다른 텍스트를 직접 붙여넣은 경우) 전체를 그대로 쓴다.
+        function extractExplanationForVideo(text) {
+            const marker = '[정답 및 해설]';
+            const idx = text.indexOf(marker);
+            if (idx === -1) return text.trim();
+            let rest = text.slice(idx + marker.length);
+            const tableIdx = rest.indexOf('[정답표]');
+            if (tableIdx !== -1) rest = rest.slice(0, tableIdx);
+            return rest.trim();
+        }
+
+        function openVideoModal() {
+            if (!currentUser.is_owner) return alert("이 기능은 원장님 계정만 사용할 수 있습니다.");
+            const full = document.getElementById('gen-result-text').value.trim();
+            if (!full) return alert("먼저 문제를 출제하거나 해설자료를 만들어주세요.");
+            document.getElementById('video-title').value = document.getElementById('gen-title').value.trim() || '해설영상';
+            document.getElementById('video-text').value = extractExplanationForVideo(full);
+            document.getElementById('video-gen-result').classList.add('hidden');
+            document.getElementById('video-gen-status').innerText = '';
+            showModal('video');
+            loadVideoLibrary();
+        }
+
+        async function submitGenerateVideo() {
+            const title = document.getElementById('video-title').value.trim();
+            const text = document.getElementById('video-text').value.trim();
+            if (!text) return alert("영상으로 만들 내용을 입력해주세요.");
+            const btn = document.getElementById('btn-make-video');
+            const label = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i>영상 만드는 중...";
+            document.getElementById('video-gen-status').innerText = "장면을 나누고 음성을 입혀 영상을 만들고 있어요. 내용 길이에 따라 1~2분 정도 걸릴 수 있습니다.";
+            document.getElementById('video-gen-result').classList.add('hidden');
+            const fd = new FormData();
+            fd.append('text', text);
+            fd.append('title', title);
+            try {
+                const res = await fetch(`${API_URL}/api/admin/generate_video`, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!data.success) {
+                    document.getElementById('video-gen-status').innerHTML = `<span class="text-red-400">❌ ${escapeHtml(data.detail || '영상 생성에 실패했습니다.')}</span>`;
+                } else {
+                    document.getElementById('video-gen-status').innerHTML = `<span class="text-emerald-400">✅ 영상이 완성되었습니다 (장면 ${data.scene_count}개)</span>`;
+                    const fullUrl = data.url.startsWith('http') ? data.url : `${API_URL}${data.url}`;
+                    document.getElementById('video-gen-player').src = fullUrl;
+                    document.getElementById('video-gen-download').href = fullUrl;
+                    document.getElementById('video-gen-result').classList.remove('hidden');
+                    loadVideoLibrary();
+                }
+            } catch (e) {
+                document.getElementById('video-gen-status').innerHTML = `<span class="text-red-400">❌ 통신 실패: ${escapeHtml(e.message)}</span>`;
+            }
+            btn.disabled = false;
+            btn.innerHTML = label;
+        }
+
+        async function loadVideoLibrary() {
+            const box = document.getElementById('video-library-list');
+            box.innerHTML = '<p class="text-gray-600">불러오는 중...</p>';
+            try {
+                const res = await fetch(`${API_URL}/api/admin/explain_videos`);
+                const data = await res.json();
+                if (!data.success) { box.innerHTML = `<p class="text-red-400">${escapeHtml(data.detail || '불러오지 못했습니다.')}</p>`; return; }
+                if (!data.videos.length) { box.innerHTML = '<p class="text-gray-600">아직 만든 영상이 없습니다.</p>'; return; }
+                box.innerHTML = data.videos.map(v => {
+                    const fullUrl = (v.url || '').startsWith('http') ? v.url : `${API_URL}${v.url}`;
+                    return `<div class="bg-[#151922] border border-gray-700 rounded p-2">
+                        <div class="flex justify-between items-center gap-2">
+                            <a href="${escAttr(fullUrl)}" target="_blank" class="text-purple-300 hover:text-purple-200 font-bold truncate">${escapeHtml(v.title || '')}</a>
+                            <button onclick="deleteVideoLib('${escAttr(v.id)}')" class="text-red-400 hover:text-red-300 text-[10px] shrink-0">삭제</button>
+                        </div>
+                        <div class="text-[10px] text-gray-500 mt-0.5">${escapeHtml(v.created_at || '')} · 장면 ${v.scene_count || 0}개</div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                box.innerHTML = `<p class="text-red-400">통신 실패: ${escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        async function deleteVideoLib(id) {
+            if (!confirm("이 영상을 목록에서 삭제할까요?")) return;
+            try {
+                const res = await fetch(`${API_URL}/api/admin/explain_video/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (!data.success) return alert(data.detail || "삭제하지 못했습니다.");
+                loadVideoLibrary();
+            } catch (e) { alert("통신 실패: " + e.message); }
         }
 
         async function generateStreamQuestions() {
