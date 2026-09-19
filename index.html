@@ -1312,7 +1312,27 @@
                         <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="text-cyan-400 font-bold border border-cyan-600 px-4 py-2 rounded">영어 단어 시험</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
+                        <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="text-amber-400 font-bold border border-amber-600 px-4 py-2 rounded">모른다고 한 문항</button>
                         <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
+                    </div>
+
+                    <!-- 학생이 '모르겠다'고 표시한 문항 모아보기 -->
+                    <!-- 💡 찍어서 맞힌 문항은 점수에 묻혀 보이지 않는다. 학생이 스스로
+                         모른다고 누른 것만 모으면 무엇을 다시 가르쳐야 할지 드러난다. -->
+                    <div id="admin-unsure" class="admin-tab-content grid grid-cols-1 lg:grid-cols-3 gap-4" style="display:none">
+                        <div class="lg:col-span-1 bg-[#151922] p-4 rounded-xl border border-gray-700 flex flex-col">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-sm font-black text-amber-300"><i class="fa-solid fa-circle-question mr-1"></i>학생별 모름 개수</h3>
+                                <button onclick="loadUnsureReport()" class="text-[11px] text-gray-400 hover:text-white"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mb-2">이름을 누르면 어떤 문항인지 볼 수 있습니다.</p>
+                            <div id="unsure-student-list" class="flex-grow overflow-y-auto space-y-1 max-h-[520px]"></div>
+                        </div>
+                        <div class="lg:col-span-2 bg-[#151922] p-4 rounded-xl border border-gray-700 flex flex-col">
+                            <h3 id="unsure-detail-title" class="text-sm font-black text-white mb-2">여러 학생이 함께 모른 문항</h3>
+                            <p id="unsure-detail-hint" class="text-[11px] text-gray-500 mb-2">두 명 이상이 모른다고 표시한 문항입니다. 수업에서 다시 다루거나 클리닉으로 묶기 좋습니다.</p>
+                            <div id="unsure-detail" class="flex-grow overflow-y-auto space-y-2 max-h-[520px]"></div>
+                        </div>
                     </div>
 
                     <!-- 명단 관리 -->
@@ -3649,6 +3669,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
             if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
+            if(id==='admin-unsure'){loadUnsureReport();}
             if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner); document.getElementById('ai-status-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-vocab'){loadVocabAdmin();}
@@ -9330,6 +9351,91 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
+        }
+
+        // ── 학생이 '모르겠다'고 표시한 문항 모아보기 ─────────────
+        let UNSURE_DATA = null;
+
+        async function loadUnsureReport() {
+            const list = document.getElementById('unsure-student-list');
+            const detail = document.getElementById('unsure-detail');
+            if (!list) return;
+            list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
+            detail.innerHTML = '';
+            const data = await adminGet('/api/admin/unsure_report');
+            if (!data || !data.success) {
+                list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오지 못했습니다.</p>';
+                return;
+            }
+            UNSURE_DATA = data;
+
+            const students = data.students || [];
+            list.innerHTML = students.length ? students.map(st => `
+                <button onclick="loadUnsureForStudent('${escAttr(st.name)}')"
+                    class="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-[#1e2430] border border-gray-700 hover:border-amber-600 transition text-left">
+                    <span class="text-white text-sm font-bold truncate">${escapeHtml(st.name)}</span>
+                    <span class="shrink-0 text-amber-300 text-xs font-black ml-2">${st.count}문항</span>
+                </button>`).join('')
+                : '<p class="text-xs text-gray-600 py-4 text-center">아직 모른다고 표시한 학생이 없습니다.</p>';
+
+            renderUnsureHotspots();
+        }
+
+        function renderUnsureHotspots() {
+            const data = UNSURE_DATA || {};
+            const detail = document.getElementById('unsure-detail');
+            document.getElementById('unsure-detail-title').innerText = '여러 학생이 함께 모른 문항';
+            document.getElementById('unsure-detail-hint').innerText =
+                '두 명 이상이 모른다고 표시한 문항입니다. 수업에서 다시 다루거나 클리닉으로 묶기 좋습니다.';
+            const hot = data.hotspots || [];
+            detail.innerHTML = hot.length ? hot.map(h => `
+                <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0">
+                            <div class="text-white font-bold text-sm">${escapeHtml(h.title)} <span class="text-amber-300">${h.no}번</span></div>
+                            <div class="text-[10px] text-gray-500">${escapeHtml(h.type || '')}</div>
+                        </div>
+                        <span class="shrink-0 text-xs font-black text-amber-300">${h.count}명</span>
+                    </div>
+                    <div class="text-[11px] text-gray-400 mt-1">${(h.students || []).map(escapeHtml).join(', ')}</div>
+                    ${h.explanation ? `<details class="mt-1"><summary class="text-[11px] text-sky-300 cursor-pointer">해설 보기</summary>
+                        <p class="text-[11px] text-gray-300 mt-1 whitespace-pre-line leading-relaxed">${escapeHtml(h.explanation)}</p></details>` : ''}
+                </div>`).join('')
+                : '<p class="text-xs text-gray-600 py-6 text-center">두 명 이상이 함께 모른 문항은 아직 없습니다.</p>';
+        }
+
+        async function loadUnsureForStudent(name) {
+            const detail = document.getElementById('unsure-detail');
+            detail.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
+            document.getElementById('unsure-detail-title').innerHTML =
+                `${escapeHtml(name)} 학생이 모른다고 한 문항 <button onclick="renderUnsureHotspots()" class="ml-2 text-[11px] font-normal text-gray-400 hover:text-white">← 전체로</button>`;
+            document.getElementById('unsure-detail-hint').innerText =
+                '찍지 않고 모른다고 표시한 문항입니다. 상담이나 클리닉 편성에 쓰세요.';
+            const data = await adminGet('/api/admin/unsure_report?student_name=' + encodeURIComponent(name));
+            if (!data || !data.success) {
+                detail.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오지 못했습니다.</p>';
+                return;
+            }
+            const tasks = data.tasks || [];
+            detail.innerHTML = tasks.length ? `<p class="text-[11px] text-gray-400 mb-1">모두 ${data.total}문항 · ${data.task_count}건</p>` + tasks.map(t => `
+                <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
+                    <div class="flex justify-between items-start gap-2 mb-1">
+                        <div class="min-w-0">
+                            <div class="text-white font-bold text-sm truncate">${escapeHtml(t.title)}</div>
+                            <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ' · ' + escapeHtml(String(t.score)) : ''}</div>
+                        </div>
+                        <span class="shrink-0 text-xs font-black text-amber-300">${t.count}문항</span>
+                    </div>
+                    ${(t.items || []).map(it => `
+                        <div class="border-t border-gray-800 pt-1 mt-1">
+                            <span class="text-amber-300 text-xs font-bold">${it.no}번</span>
+                            ${it.explanation
+                                ? `<details class="inline ml-2"><summary class="text-[11px] text-sky-300 cursor-pointer inline">해설 보기</summary>
+                                    <p class="text-[11px] text-gray-300 mt-1 whitespace-pre-line leading-relaxed">${escapeHtml(it.explanation)}</p></details>`
+                                : '<span class="text-[11px] text-gray-600 ml-2">해설 없음</span>'}
+                        </div>`).join('')}
+                </div>`).join('')
+                : '<p class="text-xs text-gray-600 py-6 text-center">이 학생은 모른다고 표시한 문항이 없습니다.</p>';
         }
 
         function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
