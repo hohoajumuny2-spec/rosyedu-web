@@ -7421,6 +7421,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!data || !data.success) return alert((data && data.detail) || "정답을 읽지 못했습니다.");
 
             const answers = data.answers || {};
+            // 💡 해설은 정답을 읽은 '그 한 번의 호출'에서 같이 왔다 — 추가 비용 없음.
+            //    저장해두면 학생이 채점 뒤 문항을 눌러 바로 볼 수 있다.
+            EXAM_EXPLANATIONS = data.explanations || {};
             const nums = Object.keys(answers).map(Number).filter(n => n > 0);
             if (!nums.length) return alert("이미지에서 정답을 찾지 못했습니다.");
             const maxNo = Math.max(data.max_no || 0, ...nums);
@@ -7579,6 +7582,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("exam_data", JSON.stringify({sections:adminExamSections, questions:adminExamQuestions}));
             fd.append("video_url",v);
             fd.append("explanation_text",x);
+            fd.append("explanations", JSON.stringify(EXAM_EXPLANATIONS || {}));
             fd.append("file",f);
             if (ans_f) fd.append("ans_file", ans_f);
 
@@ -7814,6 +7818,31 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             inner.style.width = (100 / examPaperZoom) + '%';
         }
 
+        // 모의고사 결과에서 문항을 눌렀을 때 내 답·정답·해설을 보여준다
+        let EXAM_RESULT = null;
+        // 모의고사를 만들 때 읽어둔 문항별 해설 (정답표 사진에서 같이 온다)
+        let EXAM_EXPLANATIONS = {};
+
+        function showExamExplain(no) {
+            const data = EXAM_RESULT || {};
+            const box = document.getElementById('exam-explain-box');
+            if (!box) return;
+            const d = (data.details || []).find(x => Number(x.no) === Number(no)) || {};
+            const text = (data.explanations || {})[String(no)] || '';
+            const verdict = d.unsure ? '<span class="text-amber-300">모름</span>'
+                : (d.ok ? '<span class="text-emerald-300">맞음</span>' : '<span class="text-red-300">틀림</span>');
+            const mineLabel = d.unsure ? '모르겠다고 표시' : (d.blank ? '무응답' : (d.my || '-'));
+            box.innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <p class="text-sm font-bold text-white">${no}번 ${verdict}</p>
+                    <button onclick="document.getElementById('exam-explain-box').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs">닫기</button>
+                </div>
+                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(d.ans || '-'))}</p>
+                ${text ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(text)}</p>`
+                       : '<p class="text-xs text-gray-500">이 문항은 해설이 등록되어 있지 않습니다.</p>'}`;
+            box.classList.remove('hidden');
+        }
+
         function setOmrAnswer(qIdx, opt) {
             studentOmrAnswers[qIdx] = opt;
             for(let i=1; i<=5; i++) {
@@ -7922,14 +7951,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         html += questionStatsHtml(data.question_stats, det);
 
                         const wrongList = det.filter(d => !d.ok);
+                        const unsureCount = det.filter(d => d.unsure).length;
+                        if (unsureCount) {
+                            html += `<p class="text-[11px] text-amber-300 mb-2 text-center">모르겠다고 표시한 문항 ${unsureCount}개 — 해설을 꼭 보세요.</p>`;
+                        }
                         if(wrongList.length) {
                             html += `<h4 class="text-white font-bold text-sm mb-2"><i class="fa-solid fa-circle-xmark text-red-400 mr-1"></i>틀린 문제 ${wrongList.length}개</h4>
                             <div class="space-y-1 mb-4">` + wrongList.map(d => `
-                                <div class="flex items-center justify-between bg-red-950/30 border border-red-900/50 rounded-lg px-3 py-2">
-                                    <span class="text-white font-bold text-sm">${d.no}번</span>
+                                <div class="flex items-center justify-between ${d.unsure ? 'bg-amber-950/30 border-amber-900/50' : 'bg-red-950/30 border-red-900/50'} border rounded-lg px-3 py-2">
+                                    <span class="text-white font-bold text-sm">${d.no}번${d.unsure ? '<span class="text-[10px] text-amber-400 ml-1">모름</span>' : ''}</span>
                                     <span class="text-xs">
                                         <span class="text-gray-400">내 답</span>
-                                        <b class="text-red-400 mx-1">${d.blank ? '무응답' : d.my}</b>
+                                        <b class="${d.unsure ? 'text-amber-400' : 'text-red-400'} mx-1">${d.unsure ? '모르겠음' : (d.blank ? '무응답' : d.my)}</b>
                                         <span class="text-gray-600">→</span>
                                         <span class="text-gray-400 ml-1">정답</span>
                                         <b class="text-emerald-400 ml-1">${escapeHtml(String(d.ans || '-'))}</b>
@@ -7939,13 +7972,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             html += `<p class="text-center text-emerald-400 font-bold mb-4 py-3">🎉 전부 맞혔습니다!</p>`;
                         }
 
-                        html += `<h4 class="text-white font-bold text-sm mb-2">전체 문항</h4>
-                        <div class="grid grid-cols-6 gap-1.5 mb-4">` + det.map(d => `
-                            <div class="aspect-square rounded-md flex flex-col items-center justify-center border ${d.ok ? 'bg-emerald-900/40 border-emerald-700' : 'bg-red-900/30 border-red-800'}"
-                                 title="${d.no}번 — 내 답 ${d.blank ? '무응답' : d.my} / 정답 ${escapeHtml(String(d.ans || '-'))}">
-                                <span class="text-[11px] font-bold ${d.ok ? 'text-emerald-300' : 'text-red-300'}">${d.no}</span>
-                                <span class="text-[10px] ${d.ok ? 'text-emerald-400' : 'text-red-400'}">${d.ok ? 'O' : 'X'}</span>
-                            </div>`).join('') + `</div>`;
+                        // 💡 맞은 문제도 눌러 해설을 볼 수 있어야 한다. 찍어서 맞힌 것을
+                        //    스스로 걸러내려면 '왜 맞았는지'까지 확인해야 하기 때문.
+                        EXAM_RESULT = data;
+                        const anyExpl = Object.keys(data.explanations || {}).length > 0;
+                        html += `<h4 class="text-white font-bold text-sm mb-1">전체 문항</h4>
+                        <p class="text-[11px] text-gray-500 mb-2">${anyExpl ? '문항을 누르면 해설을 볼 수 있어요 (맞은 문제도)' : '문항을 누르면 내 답과 정답을 볼 수 있어요'}</p>
+                        <div class="grid grid-cols-6 gap-1 mb-2">` + det.map(d => {
+                            const tone = d.unsure ? 'bg-amber-900/40 border-amber-700'
+                                : (d.ok ? 'bg-emerald-900/40 border-emerald-700' : 'bg-red-900/30 border-red-800');
+                            const fg = d.unsure ? 'text-amber-300' : (d.ok ? 'text-emerald-300' : 'text-red-300');
+                            const mark = d.unsure ? '?' : (d.ok ? 'O' : 'X');
+                            const has = !!(data.explanations || {})[String(d.no)];
+                            return `<button onclick="showExamExplain(${d.no})" style="touch-action:manipulation;"
+                                class="relative aspect-square rounded-md flex flex-col items-center justify-center border transition active:scale-95 ${tone}">
+                                <span class="text-[11px] font-bold ${fg}">${d.no}</span>
+                                <span class="text-[10px] ${fg}">${mark}</span>
+                                ${has ? '<span class="absolute top-0 right-0.5 text-[7px] text-sky-300">해설</span>' : ''}
+                            </button>`;
+                        }).join('') + `</div>
+                        <div id="exam-explain-box" class="hidden mb-4 bg-[#1e2430] border border-gray-600 rounded-lg p-3"></div>`;
                     } else html+=`<p class="text-sm text-gray-300 mb-4">자기주도형 시험 종료.</p>`;
 
                     if(currentExamData.ans_pdf_url) {
