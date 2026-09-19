@@ -189,6 +189,29 @@
         </div>
     </div>
 
+    <!-- 🔁 오답 다시 풀기 (학생) -->
+    <div id="retry-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
+        <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-2xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
+            <div class="px-4 pt-3 pb-2 border-b border-gray-700 shrink-0" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+                <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-rotate-left mr-2 text-sky-400"></i><span id="retry-title"></span></h2>
+                        <p id="retry-sub" class="text-[11px] text-gray-400 mt-0.5"></p>
+                    </div>
+                    <button onclick="closeModal('retry-modal')" aria-label="닫기" class="shrink-0 w-11 h-11 -mr-2 -mt-1 flex items-center justify-center text-gray-400 hover:text-white active:bg-gray-700 rounded-full"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+            </div>
+            <div id="retry-sheet" class="flex-grow overflow-y-auto px-3 py-2 space-y-2" style="-webkit-overflow-scrolling: touch;"></div>
+            <div class="px-4 pt-3 border-t border-gray-700 shrink-0" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                <div id="retry-result" class="mb-2"></div>
+                <button id="retry-submit-btn" onclick="submitRetry()" class="w-full bg-sky-600 hover:bg-sky-700 active:bg-sky-800 py-4 text-white font-bold rounded-xl transition text-base">
+                    <i class="fa-solid fa-check-double mr-1"></i>다시 채점받기
+                </button>
+                <p class="text-[10px] text-gray-500 text-center mt-1.5">다시 풀어도 원래 점수는 바뀌지 않아요. 연습용입니다.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- 📚 보관함에서 출제본 고르기 -->
     <div id="bankpick-modal" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-3">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-lg max-h-[80vh] shadow-2xl border border-sky-600 flex flex-col">
@@ -3484,15 +3507,24 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     </div>`;
                 }).join('');
                 const unsureNote = t.unsure_count ? `<span class="text-amber-400 ml-1">· 모름 ${t.unsure_count}</span>` : '';
+                const rt = t.retry || {};
+                const retryNote = rt.count
+                    ? `<span class="text-sky-400 ml-1">· 다시 풀어 ${(rt.fixed || []).length}개 맞힘</span>` : '';
+                const retryBtn = (t.can_retry && t.wrong_count)
+                    ? `<button onclick="event.stopPropagation(); openRetry('${escAttr(t.title)}', '${escAttr(t.type)}')"
+                        class="w-full py-2 mb-1 rounded bg-sky-900/40 border border-sky-700 text-sky-200 text-[11px] font-bold active:bg-sky-900/70">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>틀린 문항 다시 풀기${rt.count ? ' (' + rt.count + '번째)' : ''}
+                    </button>` : '';
                 return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
                     <div class="flex justify-between items-center gap-2 cursor-pointer" onclick="toggleMyTaskBox(${ti})">
                         <div class="min-w-0">
                             <div class="text-white font-bold text-sm truncate">${escapeHtml(t.title)}</div>
-                            <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ` · ${escapeHtml(String(t.score))}` : ''}${unsureNote}</div>
+                            <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ` · ${escapeHtml(String(t.score))}` : ''}${unsureNote}${retryNote}</div>
                         </div>
                         <span class="shrink-0 text-xs font-bold ${perfect ? 'text-emerald-300' : 'text-red-300'}">${perfect ? '전부 맞힘' : t.wrong_count + '문항'} <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i></span>
                     </div>
                     <div id="wrongbox-${ti}" class="${keepOpen === ti ? '' : 'hidden'} mt-1">
+                        ${retryBtn}
                         ${(!perfect && t.all_items && t.all_items.length) ? `<button onclick="toggleMyTaskScope(${ti})" class="w-full py-1.5 mb-1 rounded bg-[#151922] border border-gray-600 text-[11px] font-bold ${showAll ? 'text-sky-300' : 'text-gray-400'}">
                             ${showAll ? '틀린 문제만 보기' : `맞은 문제까지 전부 보기 (${t.question_count}문항)`}
                         </button>` : ''}
@@ -9500,6 +9532,95 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
+        }
+
+        // ── 오답 다시 풀기 (학생) ───────────────────────────────
+        // 💡 틀린 문항만 다시 풀어 볼 수 있다. 원래 점수 기록은 그대로 두고
+        //    다시 푼 결과만 따로 쌓이므로, 마음 편히 여러 번 해도 된다.
+        let RETRY = { title: '', kind: '', nos: [], answers: {}, expl: {} };
+
+        async function openRetry(title, kind) {
+            const r = await adminPostPublic('/api/student/retry_info', {
+                student_name: currentUser.name, title: title, kind: kind,
+            });
+            if (!r.ok) return alert(r.message);
+            const d = r.data;
+            if (!d.success) return alert(d.detail || "다시 풀 수 없습니다.");
+            if (!(d.wrongs || []).length) return alert("이 시험은 틀린 문항이 없습니다.");
+
+            RETRY = { title: title, kind: kind, nos: d.wrongs, answers: {}, expl: d.explanations || {} };
+            document.getElementById('retry-title').innerText = title;
+            document.getElementById('retry-sub').innerText =
+                `틀린 ${d.wrongs.length}문항 다시 풀기${d.retry_count ? ' · 지금까지 ' + d.retry_count + '번 다시 풀었어요' : ''}`;
+            document.getElementById('retry-result').innerHTML = '';
+            document.getElementById('retry-submit-btn').disabled = false;
+            renderRetrySheet();
+            showModal('retry');
+        }
+
+        function renderRetrySheet() {
+            const box = document.getElementById('retry-sheet');
+            box.innerHTML = RETRY.nos.map(no => {
+                const expl = RETRY.expl[String(no)] || '';
+                return `
+                <div id="retry-row-${no}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-2">
+                    <div class="flex items-center gap-2">
+                        <span id="retry-no-${no}" class="text-red-300 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${no}</span>
+                        <div class="grid grid-cols-6 gap-1 flex-grow">
+                            ${[1, 2, 3, 4, 5, '?'].map(v => `<button onclick="pickRetry(${no}, '${v}')" id="retry-btn-${no}-${v}"
+                                style="touch-action:manipulation;"
+                                class="h-11 rounded-lg border border-gray-600 bg-[#232a36] text-gray-300 font-bold ${v === '?' ? 'text-[10px]' : 'text-base'} transition active:scale-95">${v === '?' ? '모름' : v}</button>`).join('')}
+                        </div>
+                    </div>
+                    ${expl ? `<details class="mt-1 ml-9"><summary class="text-[11px] text-sky-300 cursor-pointer">힌트 — 해설 보기</summary>
+                        <p class="text-[11px] text-gray-300 mt-1 whitespace-pre-line leading-relaxed">${escapeHtml(expl)}</p></details>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function pickRetry(no, v) {
+            RETRY.answers[no] = String(RETRY.answers[no]) === String(v) ? '' : String(v);
+            [1, 2, 3, 4, 5, '?'].forEach(x => {
+                const b = document.getElementById(`retry-btn-${no}-${x}`);
+                if (!b) return;
+                const on = String(RETRY.answers[no]) === String(x);
+                b.classList.remove('bg-emerald-600', 'bg-amber-600', 'border-emerald-400', 'border-amber-400',
+                                   'text-white', 'bg-[#232a36]', 'text-gray-300', 'border-gray-600');
+                if (on && x === '?') b.classList.add('bg-amber-600', 'border-amber-400', 'text-white');
+                else if (on) b.classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
+                else b.classList.add('bg-[#232a36]', 'text-gray-300', 'border-gray-600');
+            });
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+        }
+
+        async function submitRetry() {
+            const picked = {};
+            Object.keys(RETRY.answers).forEach(k => { if (RETRY.answers[k]) picked[k] = RETRY.answers[k]; });
+            if (!Object.keys(picked).length) return alert("다시 풀 답을 골라주세요.");
+            showLoader("다시 채점하는 중...");
+            const r = await adminPostPublic('/api/student/retry_submit', {
+                student_name: currentUser.name, title: RETRY.title, kind: RETRY.kind, answers: picked,
+            });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            const d = r.data;
+            if (!d.success) return alert(d.detail || "다시 채점하지 못했습니다.");
+
+            const fixed = d.newly_fixed || [];
+            const still = d.still_wrong || [];
+            document.getElementById('retry-result').innerHTML = `
+                <div class="bg-sky-900/30 border border-sky-700 rounded-lg p-3 text-xs">
+                    ${fixed.length ? `<p class="text-emerald-300 font-bold">이번에 맞힌 문항: ${fixed.join(', ')}번</p>` : '<p class="text-gray-300">이번에는 새로 맞힌 문항이 없어요.</p>'}
+                    ${still.length ? `<p class="text-red-300 mt-1">아직 더 봐야 할 문항: ${still.join(', ')}번</p>`
+                                   : '<p class="text-emerald-300 mt-1">틀렸던 문항을 모두 맞혔어요! 잘했습니다.</p>'}
+                    <p class="text-gray-500 mt-1">고친 문항 ${d.fixed_total} / 원래 틀린 ${d.wrong_total}문항 · ${d.retry_count}번째 도전</p>
+                </div>`;
+            // 맞힌 문항은 표시를 바꿔 준다
+            fixed.forEach(no => {
+                const el = document.getElementById('retry-no-' + no);
+                if (el) el.className = 'text-emerald-400 text-sm font-bold w-7 shrink-0 text-right tabular-nums';
+            });
+            loadMyWrongQuestions();
         }
 
         // ── 탭마다 '누가 · 무엇을 · 몇 점' 현황 ──────────────────
