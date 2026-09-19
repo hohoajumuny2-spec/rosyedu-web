@@ -3379,7 +3379,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const tasks = (data && data.tasks) || [];
             cnt.innerText = tasks.length ? `${data.task_count}개 시험·과제 · 모두 ${data.total_wrong}문항` : '';
             if (!tasks.length) {
-                box.innerHTML = '<p class="text-center text-emerald-400 text-sm py-8">아직 틀린 문제가 없습니다. 잘하고 있어요!</p>';
+                box.innerHTML = '<p class="text-center text-emerald-400 text-sm py-8">아직 되짚어 볼 문제가 없습니다. 잘하고 있어요!</p>';
                 return;
             }
             MY_TASKS = tasks;
@@ -3410,7 +3410,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const box = document.getElementById('mypage-wrong-list');
             if (!box) return;
             box.innerHTML = MY_TASKS.map((t, ti) => {
-                const showAll = !!MY_SHOW_ALL[ti];
+                // 다 맞은 시험은 보여줄 '틀린 문제'가 없으므로 처음부터 전체를 편다
+                const perfect = !t.wrong_count;
+                const showAll = perfect || !!MY_SHOW_ALL[ti];
                 const source = showAll ? (t.all_items && t.all_items.length ? t.all_items : t.items) : t.items;
                 const items = (source || []).map(q => {
                     const ansText = q.answer_text ? `${q.answer}번 — ${escapeHtml(q.answer_text)}`
@@ -3439,10 +3441,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <div class="text-white font-bold text-sm truncate">${escapeHtml(t.title)}</div>
                             <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ` · ${escapeHtml(String(t.score))}` : ''}${unsureNote}</div>
                         </div>
-                        <span class="shrink-0 text-xs font-bold text-red-300">${t.wrong_count}문항 <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i></span>
+                        <span class="shrink-0 text-xs font-bold ${perfect ? 'text-emerald-300' : 'text-red-300'}">${perfect ? '전부 맞힘' : t.wrong_count + '문항'} <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i></span>
                     </div>
                     <div id="wrongbox-${ti}" class="${keepOpen === ti ? '' : 'hidden'} mt-1">
-                        ${(t.all_items && t.all_items.length) ? `<button onclick="toggleMyTaskScope(${ti})" class="w-full py-1.5 mb-1 rounded bg-[#151922] border border-gray-600 text-[11px] font-bold ${showAll ? 'text-sky-300' : 'text-gray-400'}">
+                        ${(!perfect && t.all_items && t.all_items.length) ? `<button onclick="toggleMyTaskScope(${ti})" class="w-full py-1.5 mb-1 rounded bg-[#151922] border border-gray-600 text-[11px] font-bold ${showAll ? 'text-sky-300' : 'text-gray-400'}">
                             ${showAll ? '틀린 문제만 보기' : `맞은 문제까지 전부 보기 (${t.question_count}문항)`}
                         </button>` : ''}
                         ${items}
