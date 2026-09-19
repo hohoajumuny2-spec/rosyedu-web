@@ -1976,6 +1976,10 @@
                             <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4  또는  1번 3 / 2번 1  (줄바꿈·쉼표 모두 됩니다)" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span id="hw-answers-count" class="text-[11px] text-gray-500">정답표를 넣으면 OMR 자동 채점이 켜집니다.</span>
+                                <button onclick="pullFromQuestionBank()" class="ml-2 text-[11px] font-bold text-sky-300 hover:text-sky-200">
+                                    <i class="fa-solid fa-wand-sparkles mr-1"></i>출제한 문제에서 정답·해설 가져오기
+                                </button>
+                                <span id="hw-expl-count" class="block text-[11px] text-gray-500 mt-1"></span>
                                 <button onclick="document.getElementById('hw-ans-capture').click()" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-bold shrink-0"><i class="fa-solid fa-image mr-1"></i>정답표 사진으로 넣기</button>
                                 <input type="file" id="hw-ans-capture" accept="image/*,.pdf" multiple class="hidden" onchange="extractHomeworkAnswers(this.files); this.value='';">
                             </div>
@@ -3314,28 +3318,71 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 box.innerHTML = '<p class="text-center text-emerald-400 text-sm py-8">아직 틀린 문제가 없습니다. 잘하고 있어요!</p>';
                 return;
             }
-            box.innerHTML = tasks.map((t, ti) => {
-                const items = (t.items || []).map(q => {
-                    const ansText = q.answer_text ? `${q.answer}번 — ${escapeHtml(q.answer_text)}` : (q.answer ? `${escapeHtml(q.answer)}번` : '');
+            MY_TASKS = tasks;
+            renderMyWrongTasks();
+        }
+
+        // 💡 맞은 문제도 해설을 보고 싶다는 이야기가 있었다. 찍어서 맞힌 것도 있으니
+        //    '틀린 것만'과 '전체'를 골라 볼 수 있게 한다.
+        let MY_TASKS = [];
+        let MY_SHOW_ALL = {};
+
+        function toggleMyTaskScope(ti) {
+            MY_SHOW_ALL[ti] = !MY_SHOW_ALL[ti];
+            renderMyWrongTasks(ti);
+        }
+
+        function toggleMyTaskBox(ti) {
+            const el = document.getElementById(`wrongbox-${ti}`);
+            if (el) el.classList.toggle('hidden');
+        }
+
+        function toggleMyExplain(ti, no) {
+            const el = document.getElementById(`myexpl-${ti}-${no}`);
+            if (el) el.classList.toggle('hidden');
+        }
+
+        function renderMyWrongTasks(keepOpen) {
+            const box = document.getElementById('mypage-wrong-list');
+            if (!box) return;
+            box.innerHTML = MY_TASKS.map((t, ti) => {
+                const showAll = !!MY_SHOW_ALL[ti];
+                const source = showAll ? (t.all_items && t.all_items.length ? t.all_items : t.items) : t.items;
+                const items = (source || []).map(q => {
+                    const ansText = q.answer_text ? `${q.answer}번 — ${escapeHtml(q.answer_text)}`
+                                                  : (q.answer ? `${escapeHtml(String(q.answer))}번` : '');
+                    const tone = q.is_unsure ? 'text-amber-400' : (q.is_wrong === false ? 'text-emerald-400' : 'text-red-400');
+                    const badge = q.is_unsure ? '모름' : (q.is_wrong === false ? '맞음' : '틀림');
                     return `<div class="border-t border-gray-800 py-2">
                         <div class="flex gap-2">
-                            <span class="shrink-0 text-red-400 font-bold text-xs w-8">${q.no}번</span>
-                            <div class="min-w-0 text-xs">
+                            <span class="shrink-0 ${tone} font-bold text-xs w-12">${q.no}번<span class="block text-[9px] font-normal opacity-80">${badge}</span></span>
+                            <div class="min-w-0 text-xs flex-grow">
                                 ${q.text ? `<div class="text-gray-200 leading-relaxed">${escapeHtml(q.text)}</div>` : '<div class="text-gray-500">문제 내용은 시험지를 확인해주세요.</div>'}
                                 ${ansText ? `<div class="text-emerald-400 mt-1">정답 ${ansText}</div>` : ''}
+                                ${q.explanation ? `
+                                    <button onclick="toggleMyExplain(${ti}, ${q.no})" class="mt-1 text-sky-300 hover:text-sky-200 text-[11px] font-bold">
+                                        <i class="fa-solid fa-book-open mr-1"></i>해설 보기
+                                    </button>
+                                    <div id="myexpl-${ti}-${q.no}" class="hidden mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(q.explanation)}</div>` : ''}
                             </div>
                         </div>
                     </div>`;
                 }).join('');
+                const unsureNote = t.unsure_count ? `<span class="text-amber-400 ml-1">· 모름 ${t.unsure_count}</span>` : '';
                 return `<div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
-                    <div class="flex justify-between items-center gap-2 cursor-pointer" onclick="document.getElementById('wrongbox-${ti}').classList.toggle('hidden')">
+                    <div class="flex justify-between items-center gap-2 cursor-pointer" onclick="toggleMyTaskBox(${ti})">
                         <div class="min-w-0">
                             <div class="text-white font-bold text-sm truncate">${escapeHtml(t.title)}</div>
-                            <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ` · ${escapeHtml(String(t.score))}` : ''}</div>
+                            <div class="text-[10px] text-gray-500">${escapeHtml(t.type || '')} · ${escapeHtml(t.submitted_at || '')}${t.score ? ` · ${escapeHtml(String(t.score))}` : ''}${unsureNote}</div>
                         </div>
                         <span class="shrink-0 text-xs font-bold text-red-300">${t.wrong_count}문항 <i class="fa-solid fa-chevron-down ml-1 text-[10px]"></i></span>
                     </div>
-                    <div id="wrongbox-${ti}" class="hidden mt-1">${items}</div>
+                    <div id="wrongbox-${ti}" class="${keepOpen === ti ? '' : 'hidden'} mt-1">
+                        ${(t.all_items && t.all_items.length) ? `<button onclick="toggleMyTaskScope(${ti})" class="w-full py-1.5 mb-1 rounded bg-[#151922] border border-gray-600 text-[11px] font-bold ${showAll ? 'text-sky-300' : 'text-gray-400'}">
+                            ${showAll ? '틀린 문제만 보기' : `맞은 문제까지 전부 보기 (${t.question_count}문항)`}
+                        </button>` : ''}
+                        ${items}
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -6847,6 +6894,40 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function deleteBoardPost(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/board/${id}`,{method:'DELETE'}); loadAdminBoardList(); hideLoader(); } }
 
+        // 💡 출제한 문제에는 이미 [정답 및 해설]이 들어 있다. AI를 다시 부를 필요 없이
+        //    그대로 읽어 정답표와 문항별 해설을 한꺼번에 채운다 (사용료 0원).
+        let HW_EXPLANATIONS = {};
+
+        function updateHwExplCount() {
+            const el = document.getElementById('hw-expl-count');
+            if (!el) return;
+            const n = Object.keys(HW_EXPLANATIONS || {}).length;
+            el.innerHTML = n
+                ? `<span class="text-sky-300">문항별 해설 ${n}개가 함께 저장됩니다. 학생이 채점 뒤 눌러서 볼 수 있어요.</span>`
+                : '문항별 해설이 있으면 학생이 채점 결과에서 눌러 볼 수 있습니다.';
+        }
+
+        async function pullFromQuestionBank() {
+            const content = (document.getElementById('gen-result-text') || {}).value || '';
+            if (!content.trim()) return alert("먼저 '출제' 화면에서 문제를 만들어주세요.\n(만든 문제가 화면에 있어야 정답과 해설을 가져올 수 있습니다)");
+            showLoader("출제한 문제에서 정답과 해설을 읽는 중...");
+            const fd = new FormData();
+            fd.append('content', content);
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_from_bank`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("가져오지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "가져오지 못했습니다.");
+
+            document.getElementById('hw-answers').value = (data.answer_list || []).join(', ');
+            HW_EXPLANATIONS = data.explanations || {};
+            updateHomeworkAnswerCount();
+            updateHwExplCount();
+            showToast(`정답 ${data.question_count}문항, 해설 ${data.explanation_count}개를 가져왔습니다.`);
+        }
+
         async function createHomework() {
             const t = document.getElementById('hw-title').value.trim();
             const answers = document.getElementById('hw-answers').value.trim();
@@ -6858,6 +6939,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("title", t); fd.append("desc", ""); fd.append("answer_text", "");
             fd.append("kind", document.getElementById('hw-kind').value);
             fd.append("answers", answers);
+            fd.append("explanations", JSON.stringify(HW_EXPLANATIONS || {}));
             if (hwFilesAdmin.length) fd.append("answer_file", hwFilesAdmin[0]);
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
@@ -6868,7 +6950,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         : "과제를 배포했습니다. (정답표가 없어 자동 채점은 되지 않습니다)");
                     document.getElementById('hw-title').value = '';
                     document.getElementById('hw-answers').value = '';
+                    HW_EXPLANATIONS = {};
                     updateHomeworkAnswerCount();
+                    updateHwExplCount();
                     clearAllFiles('hw-ans-file-visual');
                 } else { alert("업로드 실패: " + data.detail); }
             } catch(e) { alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message); }
@@ -6922,8 +7006,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const list = data.answers || [];
             if (!list.length) return alert("사진에서 정답을 찾지 못했습니다.");
             document.getElementById('hw-answers').value = list.join(', ');
+            // 💡 해설은 정답을 읽은 '그 한 번의 호출'에서 같이 왔다 — 추가 비용 없음
+            HW_EXPLANATIONS = data.explanations || {};
             updateHomeworkAnswerCount();
-            showToast(`정답 ${list.length}문항을 읽었습니다.`);
+            updateHwExplCount();
+            const en = Object.keys(HW_EXPLANATIONS).length;
+            showToast(`정답 ${list.length}문항${en ? `, 해설 ${en}개` : ''}를 읽었습니다.`);
         }
 
         // 💡 iOS Safari는 fetch()로 큰 파일이 담긴 FormData를 보낼 때 간헐적으로
@@ -7099,11 +7187,20 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         const OMR_MARK_CLASS = ['bg-emerald-600', 'text-white', 'border-emerald-400'];
         const OMR_PLAIN_CLASS = ['bg-[#232a36]', 'text-gray-300', 'border-gray-600'];
 
+        // 💡 '모름'을 따로 받는다. 찍어서 맞힌 것과 진짜 아는 것이 섞이면
+        //    무엇을 더 가르쳐야 할지 알 수 없기 때문이다. 채점은 오답으로 하되 따로 기록된다.
+        const OMR_UNSURE = '?';
+        const OMR_UNSURE_CLASS = ['bg-amber-600', 'text-white', 'border-amber-400'];
+
         function omrOptionBtn(i, n, marked) {
-            const on = marked ? OMR_MARK_CLASS.join(' ') : OMR_PLAIN_CLASS.join(' ');
+            const unsure = String(n) === OMR_UNSURE;
+            const onCls = unsure ? OMR_UNSURE_CLASS : OMR_MARK_CLASS;
+            const on = marked ? onCls.join(' ') : OMR_PLAIN_CLASS.join(' ');
+            const label = unsure ? '모름' : n;
+            const size = unsure ? 'text-[10px]' : 'text-base';
             return `<button id="hwomr-btn-${i}-${n}" onclick="pickHomeworkOmr(${i}, '${n}')"
-                aria-label="${i + 1}번 ${n}번 선택지" style="touch-action: manipulation;"
-                class="h-11 rounded-lg border font-bold text-base flex items-center justify-center transition active:scale-95 ${on}">${n}</button>`;
+                aria-label="${i + 1}번 ${unsure ? '모름' : n + '번 선택지'}" style="touch-action: manipulation;"
+                class="h-11 rounded-lg border font-bold ${size} flex items-center justify-center transition active:scale-95 ${on}">${label}</button>`;
         }
 
         function renderHomeworkOmr() {
@@ -7112,8 +7209,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <div id="hwomr-row-${i}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-1.5 transition-colors">
                     <div class="flex items-center gap-2">
                         <span id="hwomr-no-${i}" class="text-gray-400 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
-                        <div class="grid grid-cols-5 gap-1.5 flex-grow">
-                            ${[1, 2, 3, 4, 5].map(n => omrOptionBtn(i, n, String(v) === String(n))).join('')}
+                        <div class="grid grid-cols-6 gap-1 flex-grow">
+                            ${[1, 2, 3, 4, 5, OMR_UNSURE].map(n => omrOptionBtn(i, n, String(v) === String(n))).join('')}
                         </div>
                     </div>
                 </div>`).join('');
@@ -7122,15 +7219,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function paintHomeworkOmrRow(idx) {
             const v = HW_OMR.answers[idx];
-            for (let n = 1; n <= 5; n++) {
+            [1, 2, 3, 4, 5, OMR_UNSURE].forEach(n => {
                 const b = document.getElementById(`hwomr-btn-${idx}-${n}`);
-                if (!b) continue;
+                if (!b) return;
                 const marked = String(v) === String(n);
-                b.classList.remove(...OMR_MARK_CLASS, ...OMR_PLAIN_CLASS);
-                b.classList.add(...(marked ? OMR_MARK_CLASS : OMR_PLAIN_CLASS));
-            }
+                const onCls = String(n) === OMR_UNSURE ? OMR_UNSURE_CLASS : OMR_MARK_CLASS;
+                b.classList.remove(...OMR_MARK_CLASS, ...OMR_UNSURE_CLASS, ...OMR_PLAIN_CLASS);
+                b.classList.add(...(marked ? onCls : OMR_PLAIN_CLASS));
+            });
             const no = document.getElementById(`hwomr-no-${idx}`);
-            if (no) no.className = `text-sm font-bold w-7 shrink-0 text-right tabular-nums ${v ? 'text-emerald-400' : 'text-gray-400'}`;
+            const tone = !v ? 'text-gray-400' : (String(v) === OMR_UNSURE ? 'text-amber-400' : 'text-emerald-400');
+            if (no) no.className = `text-sm font-bold w-7 shrink-0 text-right tabular-nums ${tone}`;
         }
 
         function updateHomeworkOmrProgress() {
@@ -7162,9 +7261,75 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             setTimeout(() => row.classList.remove('ring-2', 'ring-amber-400'), 1200);
         }
 
+        // ── 채점 결과: 문항을 누르면 해설이 열린다 (맞은 문제도) ──────
+        // 💡 번호만 알려주면 복습이 안 된다. 맞은 문제도 왜 맞았는지 확인할 수 있어야
+        //    찍어서 맞힌 것을 스스로 걸러낼 수 있다.
+        let OMR_RESULT = null;
+
+        function showOmrResult(d) {
+            OMR_RESULT = d;
+            const wrongs = new Set((d.wrongs || []).map(Number));
+            const unsure = new Set((d.unsure || []).map(Number));
+            const expl = d.explanations || {};
+            const mine = d.mine || [];
+            const total = d.total || (d.answers || []).length;
+
+            let grid = '';
+            for (let i = 1; i <= total; i++) {
+                const isWrong = wrongs.has(i);
+                const isUnsure = unsure.has(i);
+                const hasExpl = !!expl[String(i)];
+                const tone = isUnsure ? 'bg-amber-900/50 border-amber-600 text-amber-200'
+                    : (isWrong ? 'bg-red-900/50 border-red-600 text-red-200'
+                               : 'bg-emerald-900/40 border-emerald-700 text-emerald-200');
+                const mark = isUnsure ? '?' : (isWrong ? '\u2715' : '\u25cb');
+                grid += `<button onclick="showOmrExplain(${i})" style="touch-action:manipulation;"
+                    class="relative h-12 rounded-lg border font-bold text-xs flex flex-col items-center justify-center transition active:scale-95 ${tone}">
+                    <span class="tabular-nums">${i}</span><span class="text-[13px] leading-none">${mark}</span>
+                    ${hasExpl ? '<span class="absolute top-0.5 right-1 text-[8px] text-sky-300">해설</span>' : ''}
+                </button>`;
+            }
+
+            const unsureNote = (d.unsure && d.unsure.length)
+                ? `<p class="text-[11px] text-amber-300 mt-1">모르겠다고 표시한 문항 ${d.unsure.length}개 — 해설을 꼭 보세요.</p>` : '';
+
+            document.getElementById('hw-omr-result').innerHTML = `
+                <div class="bg-[#151922] border border-emerald-700 rounded-xl p-3">
+                    <p class="text-emerald-300 font-black text-lg text-center mb-1">${d.correct} / ${total}문항 정답 (${d.score}점)</p>
+                    ${unsureNote}
+                    <p class="text-[11px] text-gray-500 text-center mb-2">문항을 누르면 정답과 해설을 볼 수 있어요</p>
+                    <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-40 overflow-y-auto">${grid}</div>
+                    <div id="hw-omr-explain" class="hidden mt-2 bg-[#1e2430] border border-gray-600 rounded-lg p-3"></div>
+                </div>`;
+        }
+
+        function showOmrExplain(no) {
+            const d = OMR_RESULT || {};
+            const box = document.getElementById('hw-omr-explain');
+            if (!box) return;
+            const key = (d.answers || [])[no - 1];
+            const mine = (d.mine || [])[no - 1];
+            const isUnsure = (d.unsure || []).map(Number).includes(no);
+            const isWrong = (d.wrongs || []).map(Number).includes(no);
+            const text = (d.explanations || {})[String(no)] || '';
+            const mineLabel = isUnsure ? '모르겠다고 표시' : (mine ? mine + '번' : '표시 안 함');
+            const verdict = isUnsure ? '<span class="text-amber-300">모름</span>'
+                : (isWrong ? '<span class="text-red-300">틀림</span>' : '<span class="text-emerald-300">맞음</span>');
+            box.innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <p class="text-sm font-bold text-white">${no}번 ${verdict}</p>
+                    <button onclick="document.getElementById('hw-omr-explain').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs">닫기</button>
+                </div>
+                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(key || '-'))}번</p>
+                ${text ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(text)}</p>`
+                       : '<p class="text-xs text-gray-500">이 문항은 해설이 등록되어 있지 않습니다.</p>'}`;
+            box.classList.remove('hidden');
+        }
+
         async function submitHomeworkOmr() {
             const blank = HW_OMR.answers.filter(a => !a).length;
-            if (blank && !confirm(`${blank}문항이 비어 있습니다. 그대로 제출할까요?`)) return;
+            if (blank && !confirm(`${blank}문항이 비어 있습니다. 그대로 제출할까요?` +
+                '\n(모르는 문항은 찍지 말고 \'모름\'을 눌러두면 나중에 무엇을 더 공부해야 할지 알 수 있어요)')) return;
             showLoader("채점하는 중입니다...");
             const r = await adminPostPublic('/api/homework/omr_submit', {
                 school: currentUser.school, grade: currentUser.grade,
@@ -7173,13 +7338,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
             if (!r.ok) return alert(r.message);
             const d = r.data;
-            document.getElementById('hw-omr-result').innerHTML = `
-                <div class="bg-emerald-900/30 border border-emerald-600 rounded-xl p-4 text-center">
-                    <p class="text-emerald-300 font-black text-lg mb-1">${d.correct} / ${d.total}문항 정답 (${d.score}점)</p>
-                    ${d.wrongs && d.wrongs.length
-                        ? `<p class="text-xs text-red-300">틀린 문항: ${d.wrongs.join(', ')}번</p>` : '<p class="text-xs text-emerald-400">모두 맞혔습니다!</p>'}
-                    <p class="text-[11px] text-gray-400 mt-2">정답: ${(d.answers || []).map((a, i) => `${i + 1}.${a}`).join('  ')}</p>
-                </div>`;
+            showOmrResult(d);
             document.getElementById('hw-omr-submit-btn').disabled = true;
             loadHomeworks();
         }
@@ -7573,10 +7732,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             questions.forEach((q, i) => {
                 html += `<div id="omr-row-${i}" class="rounded-lg p-2 bg-[#1e2430] border border-gray-700 transition-colors">
                     <div class="text-white font-bold text-sm mb-1.5">${i + 1}번</div>
-                    <div class="grid grid-cols-5 gap-1.5">`;
+                    <div class="grid grid-cols-6 gap-1">`;
                 for (let opt = 1; opt <= 5; opt++) {
                     html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="aspect-square rounded-lg border border-gray-500 flex items-center justify-center font-bold text-lg sm:text-xl text-gray-300 hover:bg-blue-800 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">${opt}</button>`;
                 }
+                // 💡 찍지 말고 '모름'을 눌러두면, 무엇을 더 공부해야 할지 남는다
+                html += `<button id="omr-btn-${i}-?" onclick="setOmrAnswer(${i}, '?')" class="aspect-square rounded-lg border border-amber-700 flex items-center justify-center font-bold text-[10px] text-amber-300 hover:bg-amber-900 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">모름</button>`;
                 html += `</div></div>`;
             });
             html += '</div>';
@@ -7658,9 +7819,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             for(let i=1; i<=5; i++) {
                 const b = document.getElementById(`omr-btn-${qIdx}-${i}`);
                 if(b) {
-                    if(i === opt) { b.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.remove('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
+                    if(String(i) === String(opt)) { b.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.remove('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
                     else { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.add('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
                 }
+            }
+            const ub = document.getElementById(`omr-btn-${qIdx}-?`);
+            if (ub) {
+                if (String(opt) === '?') { ub.classList.add('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.remove('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
+                else { ub.classList.remove('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.add('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
             }
             const jumpBtn = document.getElementById(`omr-jump-${qIdx}`);
             if (jumpBtn) {
