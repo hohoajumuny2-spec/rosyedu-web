@@ -1312,8 +1312,52 @@
                         <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="text-cyan-400 font-bold border border-cyan-600 px-4 py-2 rounded">영어 단어 시험</button>
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
+                        <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="text-lime-400 font-bold border border-lime-600 px-4 py-2 rounded">대신 채점</button>
                         <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="text-amber-400 font-bold border border-amber-600 px-4 py-2 rounded">모른다고 한 문항</button>
                         <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
+                    </div>
+
+                    <!-- 원장님이 학생 대신 채점하기 -->
+                    <!-- 💡 기록은 학생이 직접 낸 것과 똑같이 남는다 (같은 제출 경로를 쓴다). -->
+                    <div id="admin-grade" class="admin-tab-content grid grid-cols-1 lg:grid-cols-3 gap-4" style="display:none">
+                        <div class="lg:col-span-1 bg-[#151922] p-4 rounded-xl border border-gray-700 space-y-3">
+                            <h3 class="text-sm font-black text-lime-300"><i class="fa-solid fa-pen-ruler mr-1"></i>무엇을 채점할까요?</h3>
+                            <div>
+                                <label class="text-[11px] text-gray-400 block mb-1">학생</label>
+                                <select id="gf-student" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600 outline-none"></select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-400 block mb-1">종류</label>
+                                <select id="gf-kind" onchange="loadGradeTargets()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600 outline-none">
+                                    <option value="homework">과제 (수업·클리닉)</option>
+                                    <option value="exam">모의고사</option>
+                                    <option value="quiz">타임어택 퀴즈</option>
+                                    <option value="vocab">영어 단어 시험</option>
+                                    <option value="bank">출제한 문제</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-400 block mb-1">항목</label>
+                                <select id="gf-title" onchange="buildGradeSheet()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600 outline-none"></select>
+                            </div>
+                            <label class="flex items-start gap-2 text-[11px] text-gray-300 bg-[#1e2430] border border-gray-700 rounded p-2">
+                                <input type="checkbox" id="gf-overwrite" checked class="mt-0.5 shrink-0">
+                                <span>이미 낸 기록이 있으면 <b class="text-white">지우고 다시 채점</b>합니다. 끄면 예전처럼 "이미 제출함"으로 막힙니다.</span>
+                            </label>
+                            <div id="gf-status" class="text-[11px] text-gray-400"></div>
+                        </div>
+                        <div class="lg:col-span-2 bg-[#151922] p-4 rounded-xl border border-gray-700 flex flex-col">
+                            <div class="flex justify-between items-center mb-1">
+                                <h3 class="text-sm font-black text-white">답안 입력</h3>
+                                <span id="gf-progress" class="text-[11px] text-gray-400 tabular-nums"></span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mb-2">학생이 쓰던 것과 같은 방식입니다. 모르는 문항은 '모름'을 눌러주세요.</p>
+                            <div id="gf-sheet" class="flex-grow overflow-y-auto space-y-1.5 max-h-[420px] pr-1"></div>
+                            <div id="gf-result" class="mt-2"></div>
+                            <button onclick="submitGradeForStudent()" class="w-full mt-2 bg-lime-600 hover:bg-lime-700 py-3 text-white font-bold rounded-lg transition">
+                                <i class="fa-solid fa-check-double mr-1"></i>이 학생 이름으로 채점 기록 남기기
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 학생이 '모르겠다'고 표시한 문항 모아보기 -->
@@ -3669,6 +3713,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
             if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
+            if(id==='admin-grade'){initGradeForTab();}
             if(id==='admin-unsure'){loadUnsureReport();}
             if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner); document.getElementById('ai-status-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
@@ -9351,6 +9396,152 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
+        }
+
+        // ── 원장님이 학생 대신 채점하기 ─────────────────────────
+        // 💡 기록은 학생이 직접 낸 것과 똑같이 남는다. 서버가 학생용 제출 함수를
+        //    그대로 부르기 때문에 점수·오답·모름·경험치까지 한 길로 간다.
+        let GF = { count: 0, answers: [], content: '' };
+
+        async function initGradeForTab() {
+            const sel = document.getElementById('gf-student');
+            if (!sel) return;
+            const data = await adminGet('/api/admin/students');
+            const rows = (data && (data.students || data.list || data)) || [];
+            const names = Array.isArray(rows) ? rows.map(r => (typeof r === 'string' ? r : (r.student_name || r.name || r.id))).filter(Boolean) : [];
+            names.sort((a, b) => String(a).localeCompare(String(b), 'ko'));
+            sel.innerHTML = names.length
+                ? names.map(n => `<option value="${escAttr(n)}">${escapeHtml(n)}</option>`).join('')
+                : '<option value="">학생 명단을 불러오지 못했습니다</option>';
+            await loadGradeTargets();
+        }
+
+        async function loadGradeTargets() {
+            const kind = document.getElementById('gf-kind').value;
+            const sel = document.getElementById('gf-title');
+            sel.innerHTML = '<option value="">불러오는 중...</option>';
+            const paths = {
+                homework: '/api/homeworks',
+                exam: '/api/exams',
+                quiz: '/api/quizzes',
+                vocab: '/api/vocab_tests',
+                bank: '/api/admin/questions',
+            };
+            const data = await adminGet(paths[kind]);
+            const rows = (data && (data.homeworks || data.exams || data.quizzes ||
+                                   data.tests || data.questions || data.list || data)) || [];
+            const items = Array.isArray(rows) ? rows : [];
+            GF.items = items;
+            sel.innerHTML = items.length
+                ? items.map((x, i) => `<option value="${i}">${escapeHtml(x.title || x.name || ('항목 ' + (i + 1)))}</option>`).join('')
+                : '<option value="">등록된 항목이 없습니다</option>';
+            buildGradeSheet();
+        }
+
+        function gradeQuestionCount(item, kind) {
+            if (!item) return 0;
+            if (kind === 'homework') return Number(item.question_count || (item.answers || []).length || 0);
+            if (kind === 'quiz' || kind === 'vocab') return (item.questions || []).length;
+            if (kind === 'exam') {
+                try {
+                    const d = typeof item.exam_data === 'string' ? JSON.parse(item.exam_data) : (item.exam_data || {});
+                    return (d.questions || []).length;
+                } catch (e) { return 0; }
+            }
+            if (kind === 'bank') {
+                const nums = (String(item.content || '').split('[정답표]')[1] || '').match(/(\d{1,3})\s*번/g) || [];
+                return nums.length;
+            }
+            return 0;
+        }
+
+        function buildGradeSheet() {
+            const kind = document.getElementById('gf-kind').value;
+            const idx = document.getElementById('gf-title').value;
+            const item = (GF.items || [])[Number(idx)];
+            const n = gradeQuestionCount(item, kind);
+            GF = { count: n, answers: new Array(n).fill(''), items: GF.items,
+                   content: (item && item.content) || '' };
+            document.getElementById('gf-result').innerHTML = '';
+            const box = document.getElementById('gf-sheet');
+            if (!n) {
+                box.innerHTML = '<p class="text-xs text-gray-600 py-6 text-center">문항 수를 알 수 없습니다. 정답표가 등록된 항목을 골라주세요.</p>';
+                document.getElementById('gf-progress').innerText = '';
+                return;
+            }
+            box.innerHTML = Array.from({ length: n }, (_, i) => `
+                <div id="gf-row-${i}" class="bg-[#1e2430] border border-gray-700 rounded-lg px-2 py-1.5">
+                    <div class="flex items-center gap-2">
+                        <span id="gf-no-${i}" class="text-gray-400 text-xs font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
+                        <div class="grid grid-cols-6 gap-1 flex-grow">
+                            ${[1, 2, 3, 4, 5, '?'].map(v => `<button onclick="pickGradeAnswer(${i}, '${v}')" id="gf-btn-${i}-${v}"
+                                class="h-9 rounded border border-gray-600 bg-[#232a36] text-gray-300 font-bold ${v === '?' ? 'text-[10px]' : 'text-sm'} transition active:scale-95">${v === '?' ? '모름' : v}</button>`).join('')}
+                        </div>
+                    </div>
+                </div>`).join('');
+            updateGradeProgress();
+        }
+
+        function pickGradeAnswer(i, v) {
+            GF.answers[i] = String(GF.answers[i]) === String(v) ? '' : String(v);
+            [1, 2, 3, 4, 5, '?'].forEach(x => {
+                const b = document.getElementById(`gf-btn-${i}-${x}`);
+                if (!b) return;
+                const on = String(GF.answers[i]) === String(x);
+                b.classList.remove('bg-emerald-600', 'bg-amber-600', 'border-emerald-400', 'border-amber-400', 'text-white', 'bg-[#232a36]', 'text-gray-300', 'border-gray-600');
+                if (on && x === '?') b.classList.add('bg-amber-600', 'border-amber-400', 'text-white');
+                else if (on) b.classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
+                else b.classList.add('bg-[#232a36]', 'text-gray-300', 'border-gray-600');
+            });
+            const no = document.getElementById(`gf-no-${i}`);
+            const v2 = GF.answers[i];
+            const tone = !v2 ? 'text-gray-400' : (v2 === '?' ? 'text-amber-400' : 'text-emerald-400');
+            if (no) no.className = `text-xs font-bold w-7 shrink-0 text-right tabular-nums ${tone}`;
+            updateGradeProgress();
+        }
+
+        function updateGradeProgress() {
+            const done = GF.answers.filter(Boolean).length;
+            document.getElementById('gf-progress').innerText = `${done} / ${GF.count} 입력`;
+        }
+
+        async function submitGradeForStudent() {
+            const name = document.getElementById('gf-student').value;
+            const kind = document.getElementById('gf-kind').value;
+            const idx = document.getElementById('gf-title').value;
+            const item = (GF.items || [])[Number(idx)];
+            if (!name) return alert("학생을 골라주세요.");
+            if (!item) return alert("채점할 항목을 골라주세요.");
+            const blank = GF.answers.filter(a => !a).length;
+            if (blank && !confirm(`${blank}문항이 비어 있습니다. 그대로 채점할까요?`)) return;
+
+            showLoader("채점해서 기록을 남기는 중...");
+            const res = await adminPost('/api/admin/grade_for_student', {
+                kind: kind,
+                title: item.title || item.name || '',
+                student_name: name,
+                answers: GF.answers,
+                content: kind === 'bank' ? (item.content || '') : '',
+                overwrite: document.getElementById('gf-overwrite').checked,
+            });
+            hideLoader();
+            const d = res && (res.data || res);
+            if (!d || !d.success) {
+                document.getElementById('gf-result').innerHTML =
+                    `<p class="text-xs text-red-400">${escapeHtml((d && d.detail) || '채점하지 못했습니다.')}</p>`;
+                return;
+            }
+            const wrongs = (d.wrongs || []).join(', ');
+            const unsure = (d.unsure || []).join(', ');
+            document.getElementById('gf-result').innerHTML = `
+                <div class="bg-lime-900/30 border border-lime-700 rounded-lg p-3 text-xs">
+                    <p class="text-lime-300 font-bold mb-1">${escapeHtml(name)} 학생 이름으로 기록을 남겼습니다${d.replaced ? ' (예전 기록 ' + d.replaced + '건은 치웠습니다)' : ''}.</p>
+                    <p class="text-gray-300">${d.correct != null ? d.correct + ' / ' + d.total + '문항 정답' : '점수 ' + (d.score != null ? d.score : '-')}</p>
+                    ${wrongs ? `<p class="text-red-300 mt-1">틀린 문항: ${wrongs}번</p>` : ''}
+                    ${unsure ? `<p class="text-amber-300">모름: ${unsure}번</p>` : ''}
+                    <p class="text-gray-500 mt-1">학생이 직접 낸 것과 똑같이 저장되어, 마이페이지·틀린 문제·모름 모아보기에 모두 반영됩니다.</p>
+                </div>`;
+            showToast("채점 기록을 남겼습니다.");
         }
 
         // ── 학생이 '모르겠다'고 표시한 문항 모아보기 ─────────────
