@@ -8694,6 +8694,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <input type="number" placeholder="정답 (1~5)" min="1" max="5" class="w-1/2 p-2 bg-gray-800 text-orange-400 font-bold rounded quiz-q-ans outline-none">
                     <input type="number" placeholder="배점" value="2" class="w-1/2 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score outline-none">
                 </div>
+                <textarea rows="2" placeholder="해설 (적어두면 학생이 채점 뒤 바로 읽을 수 있습니다. 비워두셔도 됩니다)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-2 quiz-q-expl text-sm resize-y border border-gray-700 outline-none focus:border-sky-500"></textarea>
                 <div class="border-t border-gray-700 pt-2">
                     <input type="hidden" class="quiz-q-img">
                     <div class="flex items-center gap-2">
@@ -8779,6 +8780,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             item.querySelector('.quiz-q-text').value = q.q_text || '';
             const bogiEl = item.querySelector('.quiz-q-bogi');
             if (bogiEl) bogiEl.value = q.bogi || '';
+            const explEl = item.querySelector('.quiz-q-expl');
+            if (explEl) explEl.value = q.explanation || '';
             const opts = item.querySelectorAll('.quiz-q-opt');
             (q.options || []).forEach((o, i) => { if (opts[i]) opts[i].value = o || ''; });
             const ansEl = item.querySelector('.quiz-q-ans');
@@ -8865,8 +8868,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const score = parseInt(item.querySelector('.quiz-q-score').value);
                 const img = (item.querySelector('.quiz-q-img') || {}).value || '';
                 const bogi = ((item.querySelector('.quiz-q-bogi') || {}).value || '').trim();
+                const expl = ((item.querySelector('.quiz-q-expl') || {}).value || '').trim();
                 if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
-                questions.push({ q_text: text, bogi: bogi, options: opts, answer: ans, score: score, image: img });
+                questions.push({ q_text: text, bogi: bogi, options: opts, answer: ans, score: score, image: img, explanation: expl });
             }
 
             showLoader("퀴즈 배포 중...");
@@ -9308,6 +9312,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     if(!opt) return;
                     optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeHtml(opt)}</span></label>`;
                 });
+                // 💡 찍지 말고 '모름'을 고르면, 무엇을 더 공부해야 할지 남는다
+                optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg cursor-pointer border border-amber-900/60 hover:border-amber-500 transition mb-2">
+                    <input type="radio" name="qz_${qIndex}" value="?" onchange="setQuizAnswer(${qIndex}, '?')" class="w-5 h-5 accent-amber-500">
+                    <span class="text-amber-400 font-bold text-xs">모름</span>
+                    <span class="text-xs text-gray-400">잘 모르겠어요 (찍지 않고 넘어갑니다)</span></label>`;
                 const imgHtml = q.image
                     ? `<div class="mb-4"><img src="${API_URL}${encodeURI(q.image)}" class="max-w-full rounded-lg border border-gray-600" alt="문항 그림"></div>`
                     : '';
@@ -9324,6 +9333,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
+
+        function toggleQuizExplain(no) {
+            const el = document.getElementById(`quizexpl-${no}`);
+            if (el) el.classList.toggle('hidden');
+        }
 
         // 퀴즈를 내면 그 자리에서 점수와 틀린 문제를 바로 보여준다
         // ── 문항별 정답률 ──────────────────────────────────
@@ -9475,10 +9489,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     ? `<h4 class="text-white font-bold mb-2"><i class="fa-solid fa-circle-xmark text-red-400 mr-1"></i>틀린 문제 ${wrongs.length}개</h4>`
                     : `<p class="text-center text-emerald-400 font-bold mb-4 py-3 text-lg">🎉 전부 맞혔습니다!</p><h4 class="text-white font-bold mb-2">문항별 확인</h4>`;
 
+                const unsureN = det.filter(d => d.unsure).length;
+                if (unsureN) {
+                    html += `<p class="text-[11px] text-amber-300 mb-2">모르겠다고 표시한 문항 ${unsureN}개 — 해설을 꼭 보세요.</p>`;
+                }
                 html += '<div class="space-y-3 mb-6">' + det.map(d => `
-                    <div class="rounded-xl p-4 border ${d.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60'}">
+                    <div class="rounded-xl p-4 border ${d.unsure ? 'bg-amber-950/20 border-amber-900/60' : (d.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60')}">
                         <div class="flex items-start gap-2 mb-3">
-                            <span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${d.ok ? 'bg-emerald-600' : 'bg-red-600'} text-white">${d.ok ? 'O' : 'X'}</span>
+                            <span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${d.unsure ? 'bg-amber-600' : (d.ok ? 'bg-emerald-600' : 'bg-red-600')} text-white">${d.unsure ? '?' : (d.ok ? 'O' : 'X')}</span>
                             <p class="text-white text-sm font-bold leading-relaxed">${d.no}. ${escapeHtml(d.q_text || '')}</p>
                         </div>
                         ${d.image ? `<div class="pl-8 mb-2"><img src="${API_URL}${encodeURI(d.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : ''}
@@ -9486,15 +9504,20 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <div class="text-[10px] text-orange-400 font-bold mb-1">&lt;보기&gt;</div>
                             <p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(d.bogi)}</p></div></div>` : ''}
                         <div class="pl-8 space-y-1 text-sm">
-                            <div class="${d.ok ? 'text-emerald-300' : 'text-red-300'}">
+                            <div class="${d.unsure ? 'text-amber-300' : (d.ok ? 'text-emerald-300' : 'text-red-300')}">
                                 <span class="text-gray-500 text-xs mr-1">내 답</span>
-                                ${d.blank ? '<b>고르지 않음</b>' : `<b>${mark(d.my)}</b> ${escapeHtml(d.my_text || '')}`}
+                                ${d.unsure ? '<b>모르겠다고 표시</b>' : (d.blank ? '<b>고르지 않음</b>' : `<b>${mark(d.my)}</b> ${escapeHtml(d.my_text || '')}`)}
                             </div>
                             ${d.ok ? '' : `<div class="text-emerald-300">
                                 <span class="text-gray-500 text-xs mr-1">정답</span>
                                 <b>${mark(d.ans)}</b> ${escapeHtml(d.ans_text || '')}
                             </div>`}
                             <div class="text-gray-500 text-xs">배점 ${d.score}점</div>
+                            ${d.explanation ? `
+                                <button onclick="toggleQuizExplain(${d.no})" class="mt-1 text-sky-300 hover:text-sky-200 text-xs font-bold">
+                                    <i class="fa-solid fa-book-open mr-1"></i>해설 보기
+                                </button>
+                                <div id="quizexpl-${d.no}" class="hidden mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(d.explanation)}</div>` : ''}
                         </div>
                     </div>`).join('') + '</div>';
             }
