@@ -189,6 +189,18 @@
         </div>
     </div>
 
+    <!-- 📚 보관함에서 출제본 고르기 -->
+    <div id="bankpick-modal" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-3">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-lg max-h-[80vh] shadow-2xl border border-sky-600 flex flex-col">
+            <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-base font-black text-white"><i class="fa-solid fa-book-bookmark mr-2 text-sky-400"></i>어느 출제본에서 가져올까요?</h2>
+                <button onclick="closeModal('bankpick-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-[11px] text-gray-500 px-4 pt-2">고르면 문항별 정답과 해설을 한꺼번에 가져옵니다. (AI 사용료 없음)</p>
+            <div id="bankpick-list" class="flex-grow overflow-y-auto p-3 space-y-1"></div>
+        </div>
+    </div>
+
     <!-- 🏆 시험 성적 모아보기 (원장님) -->
     <div id="results-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-stretch md:items-center justify-center md:p-4">
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-5xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-lime-600 flex flex-col">
@@ -1338,6 +1350,8 @@
                     <!-- 원장님이 학생 대신 채점하기 -->
                     <!-- 💡 기록은 학생이 직접 낸 것과 똑같이 남는다 (같은 제출 경로를 쓴다). -->
                     <div id="admin-grade" class="admin-tab-content grid grid-cols-1 lg:grid-cols-3 gap-4" style="display:none">
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('all')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>전체 채점 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-all" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-all" oninput="renderActivity('all')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('all')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-all" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        
                         <div class="lg:col-span-1 bg-[#151922] p-4 rounded-xl border border-gray-700 space-y-3">
                             <h3 class="text-sm font-black text-lime-300"><i class="fa-solid fa-pen-ruler mr-1"></i>무엇을 채점할까요?</h3>
                             <div>
@@ -1490,6 +1504,8 @@
 
                     <!-- 상담 프로그램 -->
                     <div id="admin-counsel" class="admin-tab-content grid grid-cols-4 gap-4">
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('counsel')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>상담 진행 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-counsel" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-counsel" oninput="renderActivity('counsel')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('counsel')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-counsel" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        
                         <div class="col-span-4 lg:col-span-1 bg-[#151922] p-4 rounded h-[780px] flex flex-col">
                             <h3 class="text-white font-bold mb-2"><i class="fa-solid fa-comments mr-2 text-pink-400"></i>상담할 학생</h3>
                             <button onclick="openNewStudentForm()" class="w-full mb-2 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-user-plus mr-1"></i>새 학생 등록하기</button>
@@ -1667,6 +1683,8 @@
 
                     <!-- 퀴즈 탭 -->
                     <div id="admin-quiz" class="admin-tab-content grid grid-cols-2 gap-4">
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('quiz')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>퀴즈 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-quiz" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-quiz" oninput="renderActivity('quiz')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('quiz')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-quiz" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        
                         <div class="bg-[#151922] p-6 rounded">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-bold text-orange-400">새 퀴즈 출제</h3>
@@ -1889,6 +1907,8 @@
 
                     <!-- 모의고사 개설 탭 -->
                     <div id="admin-exam" class="admin-tab-content grid grid-cols-2 gap-4">
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('exam')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>모의고사 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-exam" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-exam" oninput="renderActivity('exam')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('exam')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-exam" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        
                         <div class="bg-[#151922] p-6 rounded">
                             <input type="text" id="rt-title" placeholder="시험 제목 (저장하면 앞에 [국어]/[수학]/[영어]가 자동으로 붙어요)" class="w-full p-2 bg-gray-800 text-white mb-2 rounded border border-gray-600">
                             <div class="flex gap-2 mb-2">
@@ -1943,6 +1963,8 @@
 
                     <!-- 영어 단어 시험 탭 -->
                     <div id="admin-vocab" class="admin-tab-content grid grid-cols-2 gap-4" style="display:none">
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('vocab')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>단어 시험 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-vocab" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-vocab" oninput="renderActivity('vocab')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('vocab')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-vocab" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        
                         <div class="space-y-4">
                             <div class="bg-[#151922] p-6 rounded">
                                 <h3 class="font-bold text-white mb-3 border-b border-gray-700 pb-2"><i class="fa-solid fa-file-arrow-up mr-2 text-cyan-400"></i>난이도별 단어장 올리기</h3>
@@ -2045,6 +2067,8 @@
 
                     <!-- 과제/공지 탭 -->
                     <div id="admin-hw" class="admin-tab-content grid grid-cols-2 gap-4">
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        
                         <div class="bg-[#151922] p-6 rounded">
                             <h3 class="text-white font-bold mb-4">과제/정답 배포</h3>
                             <div class="flex gap-2 mb-2">
@@ -2059,11 +2083,18 @@
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span id="hw-answers-count" class="text-[11px] text-gray-500">정답표를 넣으면 OMR 자동 채점이 켜집니다.</span>
                                 <button onclick="pullFromQuestionBank()" class="ml-2 text-[11px] font-bold text-sky-300 hover:text-sky-200">
-                                    <i class="fa-solid fa-wand-sparkles mr-1"></i>출제한 문제에서 정답·해설 가져오기
+                                    <i class="fa-solid fa-wand-sparkles mr-1"></i>보관함의 출제본에서 정답·해설 가져오기
                                 </button>
                                 <span id="hw-expl-count" class="block text-[11px] text-gray-500 mt-1"></span>
-                                <button onclick="document.getElementById('hw-ans-capture').click()" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-bold shrink-0"><i class="fa-solid fa-image mr-1"></i>정답표 사진으로 넣기</button>
                                 <input type="file" id="hw-ans-capture" accept="image/*,.pdf" multiple class="hidden" onchange="extractHomeworkAnswers(this.files); this.value='';">
+                            </div>
+                            <!-- 💡 정답을 손으로 옮겨 적는 게 번거롭다는 이야기 — 해답지를 찍거나
+                                 화면을 캡처해 붙여넣으면 AI가 문항별 정답과 해설을 함께 읽어준다. -->
+                            <div id="hw-ans-drop" onclick="document.getElementById('hw-ans-capture').click()"
+                                 class="mb-3 p-3 rounded-lg border-2 border-dashed border-emerald-700 bg-emerald-900/10 hover:bg-emerald-900/20 cursor-pointer text-center transition">
+                                <p class="text-xs font-bold text-emerald-300"><i class="fa-solid fa-camera mr-1"></i>정답표 사진·캡처로 자동 입력</p>
+                                <p class="text-[11px] text-gray-400 mt-0.5">여기를 누르거나, 캡처한 뒤 이 칸에서 <b class="text-gray-300">Ctrl+V</b></p>
+                                <p class="text-[10px] text-gray-500 mt-0.5">문항별 정답과 해설을 한 번에 읽어옵니다 (해설이 적혀 있으면 함께)</p>
                             </div>
                             <label class="text-[11px] text-gray-400 block mb-1">해답지 파일 (선택)</label>
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual')">
@@ -6993,10 +7024,41 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 : '문항별 해설이 있으면 학생이 채점 결과에서 눌러 볼 수 있습니다.';
         }
 
+        // 💡 예전에는 '출제' 화면에 떠 있는 내용만 봤다. 그래서 며칠 전에 만들어
+        //    보관함에 넣어둔 출제본은 가져올 수 없었다. 이제 보관함에서 고른다.
+        let BANK_ROWS = [];
+
         async function pullFromQuestionBank() {
-            const content = (document.getElementById('gen-result-text') || {}).value || '';
-            if (!content.trim()) return alert("먼저 '출제' 화면에서 문제를 만들어주세요.\n(만든 문제가 화면에 있어야 정답과 해설을 가져올 수 있습니다)");
-            showLoader("출제한 문제에서 정답과 해설을 읽는 중...");
+            const onScreen = ((document.getElementById('gen-result-text') || {}).value || '').trim();
+            showLoader("보관함을 불러오는 중...");
+            const data = await adminGet('/api/admin/questions');
+            hideLoader();
+            BANK_ROWS = (data && data.questions) || [];
+
+            const list = document.getElementById('bankpick-list');
+            let html = '';
+            if (onScreen) {
+                html += `<button onclick="useBankContent(-1)" class="w-full text-left px-3 py-2 rounded-lg bg-yellow-900/30 border border-yellow-700 hover:border-yellow-500 transition">
+                    <div class="text-yellow-200 text-sm font-bold">지금 '출제' 화면에 있는 문제</div>
+                    <div class="text-[10px] text-gray-400">${escapeHtml(onScreen.slice(0, 40))}…</div>
+                </button>`;
+            }
+            html += BANK_ROWS.map((q, i) => `
+                <button onclick="useBankContent(${i})" class="w-full text-left px-3 py-2 rounded-lg bg-[#151922] border border-gray-700 hover:border-sky-500 transition">
+                    <div class="text-white text-sm font-bold truncate">${escapeHtml(q.title || '제목 없음')}</div>
+                    <div class="text-[10px] text-gray-500">${escapeHtml(q.created_at || '')}</div>
+                </button>`).join('');
+            list.innerHTML = html || '<p class="text-xs text-gray-600 py-6 text-center">보관함에 저장된 출제본이 없습니다.<br>출제 화면에서 문제를 만들고 저장해주세요.</p>';
+            showModal('bankpick');
+        }
+
+        async function useBankContent(idx) {
+            const content = idx < 0
+                ? ((document.getElementById('gen-result-text') || {}).value || '')
+                : ((BANK_ROWS[idx] || {}).content || '');
+            if (!content.trim()) return alert("이 출제본에는 내용이 없습니다.");
+            closeModal('bankpick-modal');
+            showLoader("정답과 해설을 읽는 중...");
             const fd = new FormData();
             fd.append('content', content);
             let data;
@@ -7011,6 +7073,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             HW_EXPLANATIONS = data.explanations || {};
             updateHomeworkAnswerCount();
             updateHwExplCount();
+            if (idx >= 0 && !document.getElementById('hw-title').value.trim()) {
+                document.getElementById('hw-title').value = (BANK_ROWS[idx] || {}).title || '';
+            }
             showToast(`정답 ${data.question_count}문항, 해설 ${data.explanation_count}개를 가져왔습니다.`);
         }
 
@@ -7074,6 +7139,24 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             });
             return out.filter(Boolean);
         }
+
+        // 캡처한 그림을 Ctrl+V 로 바로 붙여넣을 수 있게 한다
+        document.addEventListener('paste', (e) => {
+            const drop = document.getElementById('hw-ans-drop');
+            const tab = document.getElementById('admin-hw');
+            if (!drop || !tab || tab.style.display === 'none' || !tab.offsetParent) return;
+            const items = (e.clipboardData || {}).items || [];
+            const imgs = [];
+            for (const it of items) {
+                if (it.type && it.type.startsWith('image/')) {
+                    const f = it.getAsFile();
+                    if (f) imgs.push(f);
+                }
+            }
+            if (!imgs.length) return;
+            e.preventDefault();
+            extractHomeworkAnswers(imgs);
+        });
 
         // 정답표를 사진으로 올리면 AI가 읽어 채워준다 (모의고사에서 쓰던 방식 그대로)
         async function extractHomeworkAnswers(fileList) {
@@ -9419,6 +9502,66 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
 
+        // ── 탭마다 '누가 · 무엇을 · 몇 점' 현황 ──────────────────
+        // 💡 탭에는 '내가 만든 것'만 보이고, 학생들이 그걸 해서 몇 점을 받았는지는
+        //    따로 찾아다녀야 했다. 탭 맨 위에서 바로 보이게 한다.
+        const ACTIVITY = {};
+
+        async function loadActivity(kind) {
+            const list = document.getElementById('act-list-' + kind);
+            if (!list) return;
+            list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
+            const data = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind));
+            if (!data || !data.success) {
+                list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오지 못했습니다.</p>';
+                return;
+            }
+            ACTIVITY[kind] = data.rows || [];
+            const sum = document.getElementById('act-sum-' + kind);
+            if (sum) {
+                const su = data.summary;
+                sum.innerText = su
+                    ? `${su.count}건 · 학생 ${su.students}명${su.avg != null ? ' · 평균 ' + su.avg + '점' : ''}`
+                    : `${data.count}건`;
+            }
+            renderActivity(kind);
+        }
+
+        function renderActivity(kind) {
+            const list = document.getElementById('act-list-' + kind);
+            if (!list) return;
+            const q = ((document.getElementById('act-find-' + kind) || {}).value || '').trim().toLowerCase();
+            let rows = ACTIVITY[kind] || [];
+            if (q) rows = rows.filter(r =>
+                String(r.student_name || '').toLowerCase().includes(q) ||
+                String(r.title || '').toLowerCase().includes(q));
+            if (!rows.length) {
+                list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">아직 기록이 없습니다.</p>';
+                return;
+            }
+            list.innerHTML = rows.map(r => {
+                const p = r.percent;
+                const tone = p == null ? 'text-gray-400'
+                    : (p >= 80 ? 'text-emerald-400' : p >= 60 ? 'text-yellow-400' : 'text-red-400');
+                const badges = [];
+                if (r.wrong_count) badges.push(`<span class="text-[10px] text-red-300">오답 ${r.wrong_count}</span>`);
+                if (r.unsure_count) badges.push(`<span class="text-[10px] text-amber-300">모름 ${r.unsure_count}</span>`);
+                return `
+                <div class="flex justify-between items-center gap-2 px-2.5 py-1.5 bg-[#1e2430] border border-gray-700 rounded">
+                    <div class="min-w-0">
+                        <span class="text-white text-xs font-bold">${escapeHtml(r.student_name || '')}</span>
+                        <span class="text-gray-500 text-[11px] mx-1">·</span>
+                        <span class="text-gray-300 text-xs">${escapeHtml(r.title || '')}</span>
+                        <div class="text-[10px] text-gray-500">${escapeHtml(r.type || '')} ${escapeHtml(r.submitted_at || '')} ${badges.join(' ')}</div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <div class="${tone} font-black text-sm leading-none">${p != null ? p + '점' : '-'}</div>
+                        ${r.score ? `<div class="text-[10px] text-gray-500">${escapeHtml(String(r.score))}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         // ── 시험 성적 모아보기 (원장님) ─────────────────────────
         // 💡 지금까지는 학생이 자기 결과만 볼 수 있었다. 시험을 보고 나면 원장님이
         //    '누가 몇 점인지, 어느 문항을 누가 틀렸는지'를 한 화면에서 봐야 한다.
@@ -10154,15 +10297,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 if(data.success) {
                     studentExamsList = data.exams;
                     data.exams.forEach((ex, i) => {
-                        c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center">
-                            <span class="font-bold truncate w-1/2">${escapeHtml(ex.title)}</span>
-                            <div class="flex gap-1">
-                                <button onclick="openQuestionStats('${escAttr(ex.title)}', '모의고사')" title="문항마다 몇 명이 맞고 틀렸는지" class="bg-sky-700 hover:bg-sky-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-chart-simple"></i></button>
-                                <button onclick="openTaskResults('${escAttr(ex.title)}', '모의고사')" class="bg-lime-700 hover:bg-lime-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-ranking-star mr-1"></i>성적</button>
-                                <button onclick="startAdminLiveByIndex(${i})" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-2 py-1 rounded font-bold text-white">실시간 감독</button>
-                                <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-camera mr-1"></i>오답률표 반영</button>
-                                <button onclick="openExamFiles('${escAttr(ex.title)}')" title="붙여둔 시험지·해답지 파일만 떼어냅니다" class="bg-yellow-700 hover:bg-yellow-600 text-xs px-2 py-1 rounded font-bold text-white"><i class="fa-solid fa-paperclip"></i></button>
-                                <button onclick="deleteExam('${escAttr(ex.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-2 py-1 rounded transition">삭제</button>
+                        // 💡 단추에 글자가 길어 제목이 밀렸다 — 아이콘만 남기고 설명은 툴팁으로.
+                        c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white flex justify-between items-center gap-2">
+                            <span class="font-bold truncate flex-grow min-w-0">${escapeHtml(ex.title)}</span>
+                            <div class="flex gap-1 shrink-0">
+                                <button onclick="openTaskResults('${escAttr(ex.title)}', '모의고사')" title="학생별 점수와 틀린 문항" class="w-8 h-8 flex items-center justify-center bg-lime-700 hover:bg-lime-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-ranking-star"></i></button>
+                                <button onclick="openQuestionStats('${escAttr(ex.title)}', '모의고사')" title="문항마다 몇 명이 맞고 틀렸는지" class="w-8 h-8 flex items-center justify-center bg-sky-700 hover:bg-sky-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-chart-simple"></i></button>
+                                <button onclick="startAdminLiveByIndex(${i})" title="실시간 감독" class="w-8 h-8 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-xs rounded font-bold text-white"><i class="fa-solid fa-eye"></i></button>
+                                <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="w-8 h-8 flex items-center justify-center bg-emerald-700 hover:bg-emerald-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-camera"></i></button>
+                                <button onclick="openExamFiles('${escAttr(ex.title)}')" title="붙여둔 시험지·해답지 파일만 떼어냅니다" class="w-8 h-8 flex items-center justify-center bg-yellow-700 hover:bg-yellow-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-paperclip"></i></button>
+                                <button onclick="deleteExam('${escAttr(ex.id)}')" title="삭제" class="w-8 h-8 flex items-center justify-center text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 rounded transition"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>`;
                     });
