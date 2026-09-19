@@ -3748,6 +3748,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?(currentUser.name==='원장님'?'원장님':currentUser.name+' 관리자'):currentUser.name;
                 loadHomeAvatarWidget();
                 if(!currentUser.isAdmin) {
+                    // 💡 앱을 다시 열면 저장된 세션으로 바로 들어와 로그인 요청을 보내지
+                    //    않는다. 그래서 매일 들어와도 출석 점수가 오르지 않았다.
+                    //    들어온 김에 출석을 알려 하루 한 번 점수를 받게 한다.
+                    markDailyAttendance();
                     document.getElementById('btn-mypage-nav').style.display='inline-block';
                     document.getElementById('btn-counsel-nav').style.display='inline-block';
                     document.getElementById('mobile-mypage-btn').style.display='block';
@@ -3882,6 +3886,27 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     location.reload();
                 } else alert(data.detail);
             } catch(e) { alert("서버 연결 지연. 잠시 후 다시 눌러주세요!"); } hideLoader();
+        }
+
+        // 하루 한 번 출석 점수 (이미 받았으면 서버가 조용히 넘긴다)
+        async function markDailyAttendance() {
+            if (!currentUser || currentUser.isAdmin || !currentUser.name) return;
+            try {
+                const res = await fetch(`${API_URL}/api/student/checkin`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_name: currentUser.name,
+                        school: currentUser.school || '',
+                        grade: currentUser.grade || '',
+                    }),
+                });
+                const d = await res.json();
+                if (d && d.granted) {
+                    showToast(`오늘 출석! 성장 포인트 ${d.xp_gain}점을 받았어요.`);
+                    if (d.level_up && typeof showLevelUp === 'function') showLevelUp(d.level_up);
+                    loadHomeAvatarWidget();
+                }
+            } catch (e) {}
         }
 
         function logout() { localStorage.removeItem('logyedu_user'); window.location.hash='home'; location.reload(); }
