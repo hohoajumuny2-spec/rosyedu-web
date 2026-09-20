@@ -7088,9 +7088,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function pullFromQuestionBank() {
             const onScreen = ((document.getElementById('gen-result-text') || {}).value || '').trim();
             showLoader("보관함을 불러오는 중...");
-            const data = await adminGet('/api/admin/questions');
+            const r = await adminGet('/api/admin/questions');
             hideLoader();
-            BANK_ROWS = (data && data.questions) || [];
+            if (!r.ok) return alert(r.message);
+            BANK_ROWS = r.data.questions || [];
 
             const list = document.getElementById('bankpick-list');
             let html = '';
@@ -9657,11 +9658,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const list = document.getElementById('act-list-' + kind);
             if (!list) return;
             list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
-            const data = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind));
-            if (!data || !data.success) {
-                list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오지 못했습니다.</p>';
+            const r = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind));
+            if (!r.ok) {
+                list.innerHTML = `<p class="text-xs text-gray-600 py-4 text-center">${escapeHtml(r.message)}</p>`;
                 return;
             }
+            const data = r.data;
             ACTIVITY[kind] = data.rows || [];
             const sum = document.getElementById('act-sum-' + kind);
             if (sum) {
@@ -9721,11 +9723,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('results-summary').innerText = '불러오는 중...';
             document.getElementById('results-body').innerHTML = '';
             showModal('results');
-            const data = await adminGet(`/api/admin/task_results?title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
-            if (!data || !data.success) {
-                document.getElementById('results-summary').innerText = (data && data.detail) || '불러오지 못했습니다.';
+            const r = await adminGet(`/api/admin/task_results?title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
+            if (!r.ok) {
+                document.getElementById('results-summary').innerText = r.message;
                 return;
             }
+            const data = r.data;
             RESULTS = data;
             const su = data.summary || {};
             document.getElementById('results-summary').innerText = su.count
@@ -9814,8 +9817,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function initGradeForTab() {
             const sel = document.getElementById('gf-student');
             if (!sel) return;
-            const data = await adminGet('/api/admin/students');
-            const rows = (data && (data.students || data.list || data)) || [];
+            const r = await adminGet('/api/admin/students');
+            const rows = r.ok ? (r.data.students || []) : [];
             const names = Array.isArray(rows) ? rows.map(r => (typeof r === 'string' ? r : (r.student_name || r.name || r.id))).filter(Boolean) : [];
             names.sort((a, b) => String(a).localeCompare(String(b), 'ko'));
             sel.innerHTML = names.length
@@ -9835,9 +9838,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 vocab: '/api/vocab_tests',
                 bank: '/api/admin/questions',
             };
-            const data = await adminGet(paths[kind]);
-            const rows = (data && (data.homeworks || data.exams || data.quizzes ||
-                                   data.tests || data.questions || data.list || data)) || [];
+            const r = await adminGet(paths[kind]);
+            if (!r.ok) {
+                sel.innerHTML = `<option value="">${escapeHtml(r.message)}</option>`;
+                GF.items = [];
+                buildGradeSheet();
+                return;
+            }
+            const d = r.data;
+            const rows = d.homeworks || d.exams || d.quizzes || d.tests || d.questions || [];
             const items = Array.isArray(rows) ? rows : [];
             GF.items = items;
             sel.innerHTML = items.length
@@ -9961,11 +9970,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!list) return;
             list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
             detail.innerHTML = '';
-            const data = await adminGet('/api/admin/unsure_report');
-            if (!data || !data.success) {
-                list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오지 못했습니다.</p>';
+            const r = await adminGet('/api/admin/unsure_report');
+            if (!r.ok) {
+                list.innerHTML = `<p class="text-xs text-gray-600 py-4 text-center">${escapeHtml(r.message)}</p>`;
                 return;
             }
+            const data = r.data;
             UNSURE_DATA = data;
 
             const students = data.students || [];
@@ -10010,11 +10020,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 `${escapeHtml(name)} 학생이 모른다고 한 문항 <button onclick="renderUnsureHotspots()" class="ml-2 text-[11px] font-normal text-gray-400 hover:text-white">← 전체로</button>`;
             document.getElementById('unsure-detail-hint').innerText =
                 '찍지 않고 모른다고 표시한 문항입니다. 상담이나 클리닉 편성에 쓰세요.';
-            const data = await adminGet('/api/admin/unsure_report?student_name=' + encodeURIComponent(name));
-            if (!data || !data.success) {
-                detail.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오지 못했습니다.</p>';
+            const r = await adminGet('/api/admin/unsure_report?student_name=' + encodeURIComponent(name));
+            if (!r.ok) {
+                detail.innerHTML = `<p class="text-xs text-gray-600 py-4 text-center">${escapeHtml(r.message)}</p>`;
                 return;
             }
+            const data = r.data;
             const tasks = data.tasks || [];
             detail.innerHTML = tasks.length ? `<p class="text-[11px] text-gray-400 mb-1">모두 ${data.total}문항 · ${data.task_count}건</p>` + tasks.map(t => `
                 <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-3">
