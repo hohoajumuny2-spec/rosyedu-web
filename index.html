@@ -212,6 +212,37 @@
         </div>
     </div>
 
+    <!-- 📝 해설 나중에 붙이기 -->
+    <div id="expl-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
+        <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-3xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
+            <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-start shrink-0">
+                <div class="min-w-0">
+                    <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-book-open mr-2 text-sky-400"></i>해설 넣기 — <span id="expl-title"></span></h2>
+                    <p id="expl-sub" class="text-[11px] text-gray-400 mt-0.5"></p>
+                </div>
+                <button onclick="closeModal('expl-modal')" class="shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="px-4 py-2 border-b border-gray-700 shrink-0 flex flex-wrap gap-2">
+                <button onclick="document.getElementById('expl-capture').click()" class="px-3 py-2 rounded-lg bg-emerald-800/50 border border-emerald-700 text-emerald-200 text-xs font-bold hover:bg-emerald-800">
+                    <i class="fa-solid fa-camera mr-1"></i>해설지 사진·캡처로 채우기
+                </button>
+                <input type="file" id="expl-capture" accept="image/*,.pdf" multiple class="hidden" onchange="fillExplFromImage(this.files); this.value='';">
+                <button onclick="fillExplFromBank()" class="px-3 py-2 rounded-lg bg-sky-900/40 border border-sky-700 text-sky-200 text-xs font-bold hover:bg-sky-900/70">
+                    <i class="fa-solid fa-wand-sparkles mr-1"></i>보관함 출제본에서 가져오기
+                </button>
+                <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처를 붙여넣어도 됩니다.</span>
+            </div>
+            <div id="expl-fields" class="flex-grow overflow-y-auto p-3 space-y-2"></div>
+            <div class="px-4 pt-3 border-t border-gray-700 shrink-0" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                <div id="expl-status" class="text-[11px] text-gray-400 mb-2"></div>
+                <button onclick="saveExplanations()" class="w-full bg-sky-600 hover:bg-sky-700 py-3 text-white font-bold rounded-lg transition">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i>해설 저장하기
+                </button>
+                <p class="text-[10px] text-gray-500 text-center mt-1.5">저장하면 학생이 채점 결과와 마이페이지에서 바로 볼 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- 📚 보관함에서 출제본 고르기 -->
     <div id="bankpick-modal" class="hidden fixed inset-0 z-[200] modal-bg flex items-center justify-center p-3">
         <div class="bg-[#1e2430] rounded-2xl w-full max-w-lg max-h-[80vh] shadow-2xl border border-sky-600 flex flex-col">
@@ -7378,6 +7409,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                     ${h.answer_file ? ' · 해답 파일 있음' : ''}</div>
                             </div>
                             <div class="flex gap-1 shrink-0">
+                                ${h.question_count ? `<button onclick="openExplEditor('${escAttr(h.title)}', '과제 제출')" title="문항별 해설 넣기" class="text-sky-300 text-[11px] bg-sky-900/30 hover:bg-sky-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>` : ''}
                                 ${h.answer_file ? `<button onclick="deleteHomeworkFile('${escAttr(h.title)}')" class="text-yellow-400 text-[11px] bg-yellow-900/30 hover:bg-yellow-900/50 px-2 py-1 rounded transition" title="과제는 두고 해답 파일만 뗍니다">파일만 삭제</button>` : ''}
                                 <button onclick="deleteHomework('${escAttr(h.title)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
                             </div>
@@ -9135,6 +9167,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                 <div class="text-xs text-gray-400">마감 ${escapeHtml(q.deadline || '')} · ${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
                             </div>
                             <div class="shrink-0 flex gap-1">
+                                <button onclick="openExplEditor('${escAttr(q.title)}', '타임어택 퀴즈')" title="문항별 해설 넣기" class="text-sky-300 text-xs bg-sky-900/30 hover:bg-sky-900/60 px-3 py-2 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>
                                 <button onclick="openTaskResults('${escAttr(q.title)}', '타임어택 퀴즈')" title="학생별 점수와 틀린 문항" class="text-lime-300 text-xs bg-lime-900/30 hover:bg-lime-900/60 px-3 py-2 rounded transition font-bold"><i class="fa-solid fa-ranking-star"></i></button>
                                 <button onclick="openQuestionStats('${escAttr(q.title)}', '타임어택 퀴즈')" title="문항마다 몇 명이 맞고 틀렸는지" class="text-sky-300 text-xs bg-sky-900/30 hover:bg-sky-900/60 px-3 py-2 rounded transition font-bold"><i class="fa-solid fa-chart-simple"></i></button>
                                 <button onclick="editQuiz(${i})" class="text-orange-300 text-xs bg-orange-900/30 hover:bg-orange-900/60 px-3 py-2 rounded transition font-bold">수정</button>
@@ -9559,6 +9592,134 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             });
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
+
+        // ── 이미 배포된 시험에 해설 나중에 붙이기 ────────────────
+        // 💡 만들 때 해설을 못 넣었으면 학생은 틀린 문항 번호만 보게 된다.
+        //    번호만으로는 복습이 안 되므로 나중에라도 붙일 수 있어야 한다.
+        let EXPL = { title: '', kind: '', count: 0, answers: [], values: {} };
+
+        async function openExplEditor(title, kind) {
+            const r = await adminGet(`/api/admin/explanations?title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
+            if (!r.ok) return alert(r.message);
+            const d = r.data;
+            EXPL = { title: title, kind: kind, count: d.question_count || 0,
+                     answers: d.answers || [], values: Object.assign({}, d.explanations || {}) };
+            document.getElementById('expl-title').innerText = title;
+            document.getElementById('expl-status').innerText = '';
+            renderExplFields();
+            showModal('expl');
+        }
+
+        function renderExplFields() {
+            const box = document.getElementById('expl-fields');
+            const n = EXPL.count;
+            const have = Object.keys(EXPL.values).filter(k => (EXPL.values[k] || '').trim()).length;
+            document.getElementById('expl-sub').innerText =
+                n ? `${EXPL.kind} · ${n}문항 · 지금 해설 ${have}개`
+                  : `${EXPL.kind} · 문항 수를 알 수 없습니다 (정답표가 없는 자료)`;
+            if (!n) {
+                box.innerHTML = '<p class="text-sm text-gray-500 text-center py-10">정답표가 등록되어 있지 않아 문항 칸을 만들 수 없습니다.<br>먼저 정답표를 넣어주세요.</p>';
+                return;
+            }
+            box.innerHTML = Array.from({ length: n }, (_, i) => {
+                const no = i + 1;
+                const ans = EXPL.answers[i] || '';
+                return `
+                <div class="flex gap-2 items-start">
+                    <span class="shrink-0 w-14 text-right pt-2">
+                        <span class="text-white text-sm font-bold tabular-nums">${no}번</span>
+                        ${ans ? `<span class="block text-[10px] text-emerald-400">정답 ${escapeHtml(String(ans))}</span>` : ''}
+                    </span>
+                    <textarea id="expl-in-${no}" rows="2" oninput="EXPL.values['${no}']=this.value"
+                        placeholder="${no}번 해설 (비워두면 해설 없음)"
+                        class="flex-grow p-2 bg-[#151922] border border-gray-600 rounded text-white text-xs leading-relaxed outline-none focus:border-sky-500 resize-y">${escapeHtml(EXPL.values[String(no)] || '')}</textarea>
+                </div>`;
+            }).join('');
+        }
+
+        // 해설지 사진에서 채우기 — 정답을 읽는 그 호출에서 해설도 함께 온다
+        async function fillExplFromImage(fileList) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            showLoader("해설지를 읽는 중입니다...");
+            const fd = new FormData();
+            files.forEach(f => fd.append('files', f, f.name || 'capture.png'));
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_answers_image`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("보내지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "읽지 못했습니다.");
+            const got = data.explanations || {};
+            const n = Object.keys(got).length;
+            if (!n) return alert("사진에서 해설을 찾지 못했습니다.\n해설 문장이 또렷하게 보이는 사진인지 확인해주세요.");
+            Object.keys(got).forEach(k => { EXPL.values[k] = got[k]; });
+            renderExplFields();
+            document.getElementById('expl-status').innerHTML =
+                `<span class="text-emerald-400">사진에서 해설 ${n}개를 읽어 채웠습니다. 확인하고 저장해주세요.</span>`;
+        }
+
+        async function fillExplFromBank() {
+            const r = await adminGet('/api/admin/questions');
+            if (!r.ok) return alert(r.message);
+            const rows = r.data.questions || [];
+            if (!rows.length) return alert("보관함에 저장된 출제본이 없습니다.");
+            const pick = prompt("어느 출제본에서 가져올까요? 번호를 입력해주세요.\n\n" +
+                rows.map((q, i) => `${i + 1}. ${q.title || '제목 없음'}`).join('\n'));
+            const idx = parseInt(pick) - 1;
+            if (isNaN(idx) || idx < 0 || idx >= rows.length) return;
+            showLoader("출제본에서 해설을 읽는 중...");
+            const fd = new FormData();
+            fd.append('content', rows[idx].content || '');
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_from_bank`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("가져오지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "가져오지 못했습니다.");
+            const got = data.explanations || {};
+            if (!Object.keys(got).length) return alert("그 출제본에는 해설이 없습니다.");
+            Object.keys(got).forEach(k => { EXPL.values[k] = got[k]; });
+            renderExplFields();
+            document.getElementById('expl-status').innerHTML =
+                `<span class="text-sky-300">출제본에서 해설 ${Object.keys(got).length}개를 가져왔습니다.</span>`;
+        }
+
+        async function saveExplanations() {
+            const res = await adminPost('/api/admin/explanations', {
+                title: EXPL.title, kind: EXPL.kind, explanations: EXPL.values, replace: true,
+            });
+            const d = res && (res.data || res);
+            if (!d || !d.success) {
+                document.getElementById('expl-status').innerHTML =
+                    `<span class="text-red-400">${escapeHtml((res && res.message) || (d && d.detail) || '저장하지 못했습니다.')}</span>`;
+                return;
+            }
+            EXPL.values = d.explanations || {};
+            renderExplFields();
+            document.getElementById('expl-status').innerHTML =
+                `<span class="text-emerald-400">해설 ${d.count}개를 저장했습니다. 학생이 바로 볼 수 있습니다.</span>`;
+            showToast("해설을 저장했습니다.");
+        }
+
+        // 이 창이 열려 있을 때는 붙여넣기로 해설지를 넣을 수 있다
+        document.addEventListener('paste', (e) => {
+            const m = document.getElementById('expl-modal');
+            if (!m || getComputedStyle(m).display === 'none') return;
+            const items = (e.clipboardData || {}).items || [];
+            const imgs = [];
+            for (const it of items) {
+                if (it.type && it.type.startsWith('image/')) {
+                    const f = it.getAsFile();
+                    if (f) imgs.push(f);
+                }
+            }
+            if (!imgs.length) return;
+            e.preventDefault();
+            fillExplFromImage(imgs);
+        });
 
         // ── 오답 다시 풀기 (학생) ───────────────────────────────
         // 💡 틀린 문항만 다시 풀어 볼 수 있다. 원래 점수 기록은 그대로 두고
@@ -10459,6 +10620,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <span class="font-bold truncate flex-grow min-w-0">${escapeHtml(ex.title)}</span>
                             <div class="flex gap-1 shrink-0">
                                 <button onclick="openTaskResults('${escAttr(ex.title)}', '모의고사')" title="학생별 점수와 틀린 문항" class="w-8 h-8 flex items-center justify-center bg-lime-700 hover:bg-lime-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-ranking-star"></i></button>
+                                <button onclick="openExplEditor('${escAttr(ex.title)}', '모의고사')" title="문항별 해설 넣기" class="w-8 h-8 flex items-center justify-center bg-sky-800 hover:bg-sky-700 text-xs rounded font-bold text-white"><i class="fa-solid fa-book-open"></i></button>
                                 <button onclick="openQuestionStats('${escAttr(ex.title)}', '모의고사')" title="문항마다 몇 명이 맞고 틀렸는지" class="w-8 h-8 flex items-center justify-center bg-sky-700 hover:bg-sky-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-chart-simple"></i></button>
                                 <button onclick="startAdminLiveByIndex(${i})" title="실시간 감독" class="w-8 h-8 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-xs rounded font-bold text-white"><i class="fa-solid fa-eye"></i></button>
                                 <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="w-8 h-8 flex items-center justify-center bg-emerald-700 hover:bg-emerald-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-camera"></i></button>
