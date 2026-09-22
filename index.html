@@ -247,6 +247,32 @@
         </div>
     </div>
 
+    <!-- 🔔 알림을 왜 켜는지 먼저 알려주고, 그다음에 브라우저 권한을 묻는다.
+         💡 로그인하자마자 브라우저 권한 창을 띄우면 학생이 영문도 모르고 '차단'을
+            누르기 쉽고, 한 번 차단되면 다시 물어볼 수가 없다. 그래서 우리 화면으로
+            먼저 설명하고, '받을래요'를 누른 학생에게만 권한 창을 띄운다. -->
+    <div id="pushask-modal" class="hidden fixed inset-0 z-[196] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-sm shadow-2xl border border-emerald-600 p-6 text-center">
+            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-900/40 border border-emerald-600 flex items-center justify-center mb-4">
+                <i class="fa-solid fa-bell text-2xl text-emerald-400"></i>
+            </div>
+            <h2 class="text-lg font-black text-white">알림을 받아보시겠어요?</h2>
+            <p class="text-[13px] text-gray-300 mt-2 leading-relaxed">
+                새 과제와 모의고사가 올라오거나<br>채점 결과가 나오면 휴대폰으로 바로 알려드려요.
+            </p>
+            <p class="text-[11px] text-gray-500 mt-3 leading-relaxed">
+                다음 화면에서 <b class="text-gray-400">'허용'</b>을 눌러주세요.<br>
+                언제든 마이페이지에서 끌 수 있어요.
+            </p>
+            <button onclick="acceptPushAsk()" class="w-full mt-5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 py-3.5 text-white font-bold rounded-xl transition text-base">
+                <i class="fa-solid fa-check mr-1"></i>알림 받을래요
+            </button>
+            <button onclick="laterPushAsk()" class="w-full mt-2 py-3 text-gray-400 hover:text-white font-bold rounded-xl transition text-sm">
+                다음에 할게요
+            </button>
+        </div>
+    </div>
+
     <!-- 📝 해설 나중에 붙이기 -->
     <div id="expl-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-3xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
@@ -4178,6 +4204,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     //    않는다. 그래서 매일 들어와도 출석 점수가 오르지 않았다.
                     //    들어온 김에 출석을 알려 하루 한 번 점수를 받게 한다.
                     markDailyAttendance();
+                    // 💡 알림을 켤 수 있다는 걸 모르는 학생이 대부분이다. 마이페이지에
+                    //    들어가 본 적이 없으면 알림 카드를 볼 일이 없기 때문. 들어온 김에
+                    //    한 번 권한다(세 번까지만, 사흘 간격으로).
+                    maybeAskPush();
                     document.getElementById('btn-mypage-nav').style.display='inline-block';
                     document.getElementById('btn-counsel-nav').style.display='inline-block';
                     document.getElementById('mobile-mypage-btn').style.display='block';
@@ -4384,6 +4414,49 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     btn.className = 'shrink-0 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition';
                 }
             } catch (e) { card.classList.add('hidden'); }
+        }
+
+        // ── 알림 켜기를 먼저 설명하고 권하기 ──────────────────────
+        // 💡 브라우저 권한 창은 한 번 '차단'되면 코드로 다시 띄울 수 없다. 그래서
+        //    우리 안내창을 먼저 보여주고, '받을래요'를 누른 학생에게만 권한을 묻는다.
+        const PUSH_ASK_KEY = 'logyedu_push_ask_at';
+        const PUSH_ASK_AGAIN_DAYS = 3;      // '다음에'를 고르면 사흘 뒤 다시 권한다
+        const PUSH_ASK_MAX = 3;             // 세 번까지만 권하고 그만둔다
+        const PUSH_ASK_COUNT_KEY = 'logyedu_push_ask_count';
+
+        async function maybeAskPush() {
+            try {
+                if (!currentUser || currentUser.isAdmin) return;
+                if (!pushSupported()) return;
+                // 이미 허락했거나 이미 막아둔 학생에게는 묻지 않는다
+                if (Notification.permission !== 'default') return;
+                if (Number(localStorage.getItem(PUSH_ASK_COUNT_KEY) || 0) >= PUSH_ASK_MAX) return;
+                const last = Number(localStorage.getItem(PUSH_ASK_KEY) || 0);
+                if (last && Date.now() - last < PUSH_ASK_AGAIN_DAYS * 864e5) return;
+                const reg = await navigator.serviceWorker.ready;
+                if (await reg.pushManager.getSubscription()) return;
+                // 들어오자마자 들이대면 놀라니, 화면을 한번 보고 난 뒤에 띄운다
+                setTimeout(() => showModal('pushask'), 2500);
+            } catch (e) {}
+        }
+
+        function markPushAsked() {
+            try {
+                localStorage.setItem(PUSH_ASK_KEY, String(Date.now()));
+                localStorage.setItem(PUSH_ASK_COUNT_KEY,
+                    String(Number(localStorage.getItem(PUSH_ASK_COUNT_KEY) || 0) + 1));
+            } catch (e) {}
+        }
+
+        function laterPushAsk() {
+            markPushAsked();
+            closeModal('pushask-modal');
+        }
+
+        async function acceptPushAsk() {
+            markPushAsked();
+            closeModal('pushask-modal');
+            await enablePushNotifications();
         }
 
         async function enablePushNotifications() {
