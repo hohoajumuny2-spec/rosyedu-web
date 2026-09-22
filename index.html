@@ -34,6 +34,22 @@
         @keyframes avatarHaloSpin { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
         #avatar-display.avatar-maxlevel { animation: avatarGlowPulse 1.8s ease-in-out infinite; }
         #avatar-halo.avatar-maxlevel { animation: avatarHaloSpin 4s linear infinite; }
+        /* 🎉 레벨업 순간에만 캐릭터가 크게 한 번 방방 뛰며 반짝이는 특별 모션 */
+        @keyframes avatarLevelUpBurst {
+            0% { transform: scale(1) rotate(0deg); }
+            18% { transform: scale(1.28) rotate(-10deg); }
+            36% { transform: scale(0.92) rotate(8deg); }
+            54% { transform: scale(1.16) rotate(-5deg); }
+            72% { transform: scale(0.97) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        #avatar-display.avatar-levelup-motion { animation: avatarLevelUpBurst 1.2s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes avatarSparklePop {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1) translateY(-30px); opacity: 0; }
+        }
+        .avatar-sparkle { position: absolute; left: 50%; top: 50%; font-size: 1.1rem; pointer-events: none; animation: avatarSparklePop 1s ease-out forwards; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #1a1e29; } ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .modal-bg { background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(5px); }
         .app-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
@@ -2935,7 +2951,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         let myAvatarItem = 'none';
         // 새 꾸미기 — 갈래별로 따로 고른다
         let AVATAR_CATALOG = null;          // 서버가 주는 항목 목록
-        let myAvatarLook = { face: 'boy', color: 'blue', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false };
+        let myAvatarLook = { face: 'boy', color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false };
         let myProfileImage = '';            // 올려둔 내 사진 경로
         let avatarSlotOpen = 'face';        // 지금 보고 있는 갈래
 
@@ -2974,6 +2990,160 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 뚜렷하게 escalate 되도록 (단순히 작은 배지 하나만 바뀌던 것을 더 눈에 띄게 개선)
         const LEVEL_GLOW = ['#a8a29e', '#4ade80', '#22c55e', '#2dd4bf', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#f472b6', '#fbbf24'];
 
+        // ═════════════════════════════════════════════
+        // 🦊 성장 아바타 — SVG로 그린 여우 캐릭터
+        //   이모지 하나였던 얼굴을, 색(털)·표정(캐릭터)·옷을 조합할 수 있는
+        //   직접 그린 SVG 캐릭터로 바꾼다. 모자·친구·배지·효과는 기존처럼
+        //   캐릭터 위에 이모지로 얹는다.
+        // ═════════════════════════════════════════════
+        function shadeColor(hex, percent) {
+            hex = String(hex || '#f59e0b').replace('#', '');
+            if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+            const num = parseInt(hex, 16) || 0xf59e0b;
+            let r = (num >> 16) & 0xff, g = (num >> 8) & 0xff, b = num & 0xff;
+            r = Math.max(0, Math.min(255, Math.round(r * (1 + percent))));
+            g = Math.max(0, Math.min(255, Math.round(g * (1 + percent))));
+            b = Math.max(0, Math.min(255, Math.round(b * (1 + percent))));
+            return `rgb(${r},${g},${b})`;
+        }
+
+        function foxFaceOverlay(faceId, eyeColor, dark) {
+            let eyes = `
+                <ellipse cx="38" cy="45" rx="4" ry="5" fill="${eyeColor}"/>
+                <ellipse cx="62" cy="45" rx="4" ry="5" fill="${eyeColor}"/>
+                <circle cx="39.3" cy="43" r="1.3" fill="#fff"/>
+                <circle cx="63.3" cy="43" r="1.3" fill="#fff"/>`;
+            let extra = '';
+            switch (faceId) {
+                case 'girl':
+                    extra = `<path d="M32 39 l-4 -3.5 M34.5 37.5 l-2 -4.5 M37.5 37.5 l-0.5 -4.5" stroke="${eyeColor}" stroke-width="1" stroke-linecap="round" fill="none"/>
+                        <path d="M68 39 l4 -3.5 M65.5 37.5 l2 -4.5 M62.5 37.5 l0.5 -4.5" stroke="${eyeColor}" stroke-width="1" stroke-linecap="round" fill="none"/>`;
+                    break;
+                case 'student': case 'nerd':
+                    extra = `<circle cx="38" cy="45" r="8" fill="none" stroke="#3b3b3b" stroke-width="2"/>
+                        <circle cx="62" cy="45" r="8" fill="none" stroke="#3b3b3b" stroke-width="2"/>
+                        <line x1="46" y1="45" x2="54" y2="45" stroke="#3b3b3b" stroke-width="2"/>`;
+                    break;
+                case 'cool':
+                    eyes = '';
+                    extra = `<rect x="29" y="40" width="17" height="10" rx="4" fill="#1f2937"/>
+                        <rect x="54" y="40" width="17" height="10" rx="4" fill="#1f2937"/>
+                        <line x1="46" y1="44" x2="54" y2="44" stroke="#1f2937" stroke-width="2"/>`;
+                    break;
+                case 'star':
+                    eyes = `<path d="M38 38.5 l1.7 4.6 4.6 0.4 -3.5 3.1 1.1 4.6 -3.9 -2.7 -3.9 2.7 1.1 -4.6 -3.5 -3.1 4.6 -0.4 z" fill="#fbbf24"/>
+                        <path d="M62 38.5 l1.7 4.6 4.6 0.4 -3.5 3.1 1.1 4.6 -3.9 -2.7 -3.9 2.7 1.1 -4.6 -3.5 -3.1 4.6 -0.4 z" fill="#fbbf24"/>`;
+                    break;
+                case 'ninja':
+                    eyes = `<ellipse cx="38" cy="45" rx="3.4" ry="4.2" fill="#fff"/>
+                        <ellipse cx="62" cy="45" rx="3.4" ry="4.2" fill="#fff"/>
+                        <circle cx="38" cy="45" r="1.6" fill="${eyeColor}"/>
+                        <circle cx="62" cy="45" r="1.6" fill="${eyeColor}"/>`;
+                    extra = `<path d="M20 39 Q50 54 80 39 L80 50 Q50 64 20 50 Z" fill="#1f2937"/>`;
+                    break;
+                case 'wizard':
+                    extra = `<path d="M50 4 L37 27 L63 27 Z" fill="#5b21b6"/>
+                        <ellipse cx="50" cy="27" rx="15" ry="3" fill="#4c1d95"/>
+                        <circle cx="50" cy="13" r="1.6" fill="#fde68a"/>`;
+                    break;
+                case 'astro':
+                    extra = `<circle cx="50" cy="47" r="35" fill="none" stroke="#93c5fd" stroke-width="2.5" opacity="0.85"/>
+                        <line x1="50" y1="11" x2="50" y2="3" stroke="#93c5fd" stroke-width="2"/>
+                        <circle cx="50" cy="3" r="2" fill="#93c5fd"/>`;
+                    break;
+                case 'hero':
+                    eyes = '';
+                    extra = `<path d="M22 39 Q34 32 46 39 Q44 47 34 47 Q24 47 22 39 Z" fill="#1f2937"/>
+                        <path d="M54 39 Q66 32 78 39 Q76 47 66 47 Q56 47 54 39 Z" fill="#1f2937"/>`;
+                    break;
+                case 'dragon':
+                    extra = `<path d="M30 18 L35 3 L42 20 Z" fill="${dark}"/>
+                        <path d="M70 18 L65 3 L58 20 Z" fill="${dark}"/>`;
+                    break;
+                default:
+                    break;
+            }
+            return eyes + extra;
+        }
+
+        function foxOutfitSvg(outfitId) {
+            switch (outfitId) {
+                case 'tshirt':
+                    return `<path d="M18 78 Q50 66 82 78 L82 100 L18 100 Z" fill="#ef4444"/>
+                        <path d="M40 74 Q50 82 60 74 L57 70 Q50 76 43 70 Z" fill="#fecaca"/>`;
+                case 'vest':
+                    return `<path d="M18 78 Q50 66 82 78 L82 100 L18 100 Z" fill="#78350f"/>
+                        <path d="M30 78 L30 100 M70 78 L70 100" stroke="#fde68a" stroke-width="3"/>`;
+                case 'hoodie':
+                    return `<path d="M18 78 Q50 64 82 78 L82 100 L18 100 Z" fill="#2563eb"/>
+                        <path d="M32 76 Q50 68 68 76 L64 84 Q50 78 36 84 Z" fill="#1d4ed8"/>
+                        <circle cx="46" cy="86" r="1.4" fill="#fff"/><circle cx="54" cy="86" r="1.4" fill="#fff"/>`;
+                case 'jacket':
+                    return `<path d="M18 78 Q50 64 82 78 L82 100 L18 100 Z" fill="#1f2937"/>
+                        <path d="M42 74 L50 90 L58 74" fill="none" stroke="#374151" stroke-width="3"/>
+                        <circle cx="50" cy="92" r="1.5" fill="#9ca3af"/><circle cx="50" cy="97" r="1.5" fill="#9ca3af"/>`;
+                case 'cape':
+                    return `<path d="M6 100 Q10 70 30 68 Q26 86 22 100 Z" fill="#dc2626"/>
+                        <path d="M94 100 Q90 70 70 68 Q74 86 78 100 Z" fill="#dc2626"/>
+                        <path d="M20 80 Q50 68 80 80 L80 100 L20 100 Z" fill="#fde68a"/>`;
+                case 'suit':
+                    return `<path d="M16 100 Q16 74 50 70 Q84 74 84 100 Z" fill="#111827"/>
+                        <path d="M40 74 L50 94 L60 74" fill="#fff"/>
+                        <path d="M47 79 L50 85 L53 79 L50 75 Z" fill="#dc2626"/>`;
+                case 'royal':
+                    return `<path d="M14 78 Q50 62 86 78 L82 100 L18 100 Z" fill="#f59e0b"/>
+                        <path d="M18 80 Q50 68 82 80" fill="none" stroke="#fde68a" stroke-width="2.5"/>
+                        <circle cx="50" cy="80" r="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>`;
+                default:
+                    return '';
+            }
+        }
+
+        function foxAvatarSvg(furHex, faceId, outfitId) {
+            const fur = furHex || '#f59e0b';
+            const dark = shadeColor(fur, -0.35);
+            const cream = '#fff7ed';
+            const eyeColor = '#2d2013';
+            return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                <path d="M20 100 Q20 78 50 76 Q80 78 80 100 Z" fill="${fur}"/>
+                ${foxOutfitSvg(outfitId)}
+                <path d="M18 30 L10 6 L34 24 Z" fill="${fur}"/>
+                <path d="M20 26 L15 12 L30 22 Z" fill="${dark}"/>
+                <path d="M82 30 L90 6 L66 24 Z" fill="${fur}"/>
+                <path d="M80 26 L85 12 L70 22 Z" fill="${dark}"/>
+                <ellipse cx="50" cy="48" rx="32" ry="30" fill="${fur}"/>
+                <circle cx="27" cy="58" r="5" fill="#fb7185" opacity="0.45"/>
+                <circle cx="73" cy="58" r="5" fill="#fb7185" opacity="0.45"/>
+                <ellipse cx="50" cy="62" rx="16" ry="12" fill="${cream}"/>
+                <path d="M50 56 L46 60 L54 60 Z" fill="${eyeColor}"/>
+                <path d="M50 60 L50 64 M50 64 Q44 68 40 65 M50 64 Q56 68 60 65" stroke="${eyeColor}" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+                ${foxFaceOverlay(faceId, eyeColor, dark)}
+            </svg>`;
+        }
+
+        // 🎉 레벨업 순간에만 캐릭터가 방방 뛰며 반짝이는 특별 모션 — 평소엔 가만히 있는다
+        function playAvatarLevelUpMotion() {
+            const disp = document.getElementById('avatar-display');
+            if (!disp) return;
+            disp.classList.remove('avatar-levelup-motion');
+            void disp.offsetWidth;
+            disp.classList.add('avatar-levelup-motion');
+            setTimeout(() => disp.classList.remove('avatar-levelup-motion'), 1300);
+
+            const sparkles = ['✨', '⭐', '💫', '✨', '⭐'];
+            sparkles.forEach((s, i) => {
+                const el = document.createElement('span');
+                el.className = 'avatar-sparkle';
+                el.innerText = s;
+                el.style.animationDelay = (i * 0.08) + 's';
+                el.style.setProperty('--dx', ((i - 2) * 18) + 'px');
+                el.style.transform = `translate(calc(-50% + ${(i - 2) * 18}px), -50%)`;
+                el.style.left = `${50 + (i - 2) * 14}%`;
+                disp.parentElement.appendChild(el);
+                setTimeout(() => el.remove(), 1100);
+            });
+        }
+
         // 💡 마이페이지의 풀 사이즈 아바타 카드뿐 아니라, 상단바의 미니 위젯과
         // 학습실 첫 화면의 환영 배너에도 같은 정보(레벨·경험치·꾸민 모습)를 칠한다.
         // prefix가 다른 세 군데(''=마이페이지, 'nav-avatar-'=상단바, 'home-avatar-'=환영배너)에
@@ -3001,14 +3171,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!disp) return;   // 이 화면에는 이 위젯이 없음
 
             const colorDef = avatarItemDef('color', myAvatarLook.color);
-            const faceDef = avatarItemDef('face', myAvatarLook.face);
+            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
             if (myAvatarLook.use_photo && myProfileImage) {
                 disp.innerHTML = `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-full h-full object-cover" alt="내 사진">`;
+                disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
             } else {
-                disp.innerText = faceDef ? faceDef.emoji : (myAvatarGender === 'girl' ? '👧' : '👦');
+                disp.innerHTML = foxAvatarSvg(glow, myAvatarLook.face, myAvatarLook.outfit);
+                disp.style.background = '#151922';
             }
-            disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
-            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
             disp.style.borderColor = glow;
             disp.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
 
@@ -3077,7 +3247,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     myAvatarItem = prof.avatar_item || 'none';
                     myProfileImage = prof.profile_image || '';
                     myAvatarLook = Object.assign(
-                        { face: myAvatarGender, color: 'blue', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
+                        { face: myAvatarGender, color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
                         prof.avatar_look || {});
                     applySubjectAccess(prof.subjects);
                 }
@@ -3207,17 +3377,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(!myLevelInfo) return;
             const disp = document.getElementById('avatar-display');
             const colorDef = avatarItemDef('color', myAvatarLook.color);
-            const faceDef = avatarItemDef('face', myAvatarLook.face);
+            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
 
             // 사진을 쓰기로 했으면 얼굴 자리에 사진을 넣는다
             if (myAvatarLook.use_photo && myProfileImage) {
                 disp.innerHTML = `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-full h-full object-cover" alt="내 사진">`;
+                disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
             } else {
-                disp.innerText = faceDef ? faceDef.emoji : (myAvatarGender === 'girl' ? '👧' : '👦');
+                disp.innerHTML = foxAvatarSvg(glow, myAvatarLook.face, myAvatarLook.outfit);
+                disp.style.background = '#151922';
             }
-            disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
-
-            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(myLevelInfo.level, 1), 10) - 1];
             disp.style.borderColor = glow;
 
             const hatDef = avatarItemDef('hat', myAvatarLook.hat);
@@ -3454,6 +3623,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }
             const ov = document.getElementById('level-up-overlay');
             ov.classList.remove('hidden'); ov.style.display = 'flex';
+            playAvatarLevelUpMotion();
         }
         function closeLevelUpOverlay() {
             const ov = document.getElementById('level-up-overlay');
@@ -3622,7 +3792,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     await loadAvatarCatalog();
                     // 예전에 저장된 학생은 성별·배지만 있으므로 그걸 새 구조로 옮긴다
                     myAvatarLook = Object.assign(
-                        { face: myAvatarGender, color: 'blue', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
+                        { face: myAvatarGender, color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: myAvatarItem, effect: 'none', use_photo: false },
                         prof.avatar_look || {});
 
                     (data.reports || []).forEach(r => {
