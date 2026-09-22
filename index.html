@@ -8231,14 +8231,23 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             let html = '<div class="space-y-2 pb-4">';
             questions.forEach((q, i) => {
                 html += `<div id="omr-row-${i}" class="rounded-lg p-2 bg-[#1e2430] border border-gray-700 transition-colors">
-                    <div class="text-white font-bold text-sm mb-1.5">${i + 1}번</div>
-                    <div class="grid grid-cols-6 gap-1">`;
-                for (let opt = 1; opt <= 5; opt++) {
-                    html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="aspect-square rounded-lg border border-gray-500 flex items-center justify-center font-bold text-lg sm:text-xl text-gray-300 hover:bg-blue-800 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">${opt}</button>`;
+                    <div class="text-white font-bold text-sm mb-1.5">${i + 1}번</div>`;
+                if (q.qtype === 'short') {
+                    html += `<div class="flex gap-1.5">
+                        <input id="omr-short-${i}" type="text" oninput="setOmrShortAnswer(${i}, this.value)" placeholder="답을 적어주세요"
+                            class="flex-grow p-2 bg-[#232a36] text-white rounded-lg text-sm border border-gray-600 outline-none focus:border-blue-500">
+                        <button id="omr-btn-${i}-?" onclick="setOmrShortUnsure(${i})" class="px-3 rounded-lg border border-amber-700 flex items-center justify-center font-bold text-[10px] text-amber-300 hover:bg-amber-900 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">모름</button>
+                        </div>`;
+                } else {
+                    html += `<div class="grid grid-cols-6 gap-1">`;
+                    for (let opt = 1; opt <= 5; opt++) {
+                        html += `<button id="omr-btn-${i}-${opt}" onclick="setOmrAnswer(${i}, ${opt})" class="aspect-square rounded-lg border border-gray-500 flex items-center justify-center font-bold text-lg sm:text-xl text-gray-300 hover:bg-blue-800 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">${opt}</button>`;
+                    }
+                    // 💡 찍지 말고 '모름'을 눌러두면, 무엇을 더 공부해야 할지 남는다
+                    html += `<button id="omr-btn-${i}-?" onclick="setOmrAnswer(${i}, '?')" class="aspect-square rounded-lg border border-amber-700 flex items-center justify-center font-bold text-[10px] text-amber-300 hover:bg-amber-900 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">모름</button>`;
+                    html += `</div>`;
                 }
-                // 💡 찍지 말고 '모름'을 눌러두면, 무엇을 더 공부해야 할지 남는다
-                html += `<button id="omr-btn-${i}-?" onclick="setOmrAnswer(${i}, '?')" class="aspect-square rounded-lg border border-amber-700 flex items-center justify-center font-bold text-[10px] text-amber-300 hover:bg-amber-900 active:scale-95 transition focus:outline-none" style="touch-action: manipulation;">모름</button>`;
-                html += `</div></div>`;
+                html += `</div>`;
             });
             html += '</div>';
             c.innerHTML = jumpHtml + html;
@@ -8328,12 +8337,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const verdict = d.unsure ? '<span class="text-amber-300">모름</span>'
                 : (d.ok ? '<span class="text-emerald-300">맞음</span>' : '<span class="text-red-300">틀림</span>');
             const mineLabel = d.unsure ? '모르겠다고 표시' : (d.blank ? '무응답' : (d.my || '-'));
+            const ansLabel = answerSlotKind(d.ans) === 'short' ? String(d.ans || '-') : formatAnswerLabel(d.ans);
             box.innerHTML = `
                 <div class="flex justify-between items-center mb-1">
                     <p class="text-sm font-bold text-white">${no}번 ${verdict}</p>
                     <button onclick="document.getElementById('exam-explain-box').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs">닫기</button>
                 </div>
-                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(formatAnswerLabel(d.ans))}</p>
+                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(ansLabel)}</p>
                 ${text ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(text)}</p>`
                        : '<p class="text-xs text-gray-500">이 문항은 해설이 등록되어 있지 않습니다.</p>'}`;
             box.classList.remove('hidden');
@@ -8362,6 +8372,38 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const progressText = document.getElementById('omr-progress-text');
             if (progressText) progressText.innerText = `${answeredCount} / ${studentOmrAnswers.length} 완료`;
             updateOmrBadge();
+        }
+
+        function markOmrProgress(qIdx, answered) {
+            const jumpBtn = document.getElementById(`omr-jump-${qIdx}`);
+            if (jumpBtn) {
+                jumpBtn.classList.toggle('bg-emerald-600', answered);
+                jumpBtn.classList.toggle('text-white', answered);
+                jumpBtn.classList.toggle('border-emerald-500', answered);
+                jumpBtn.classList.toggle('text-gray-400', !answered);
+                jumpBtn.classList.toggle('border-gray-600', !answered);
+            }
+            const answeredCount = studentOmrAnswers.filter(a => a !== "" && a != null).length;
+            const progressText = document.getElementById('omr-progress-text');
+            if (progressText) progressText.innerText = `${answeredCount} / ${studentOmrAnswers.length} 완료`;
+            updateOmrBadge();
+        }
+
+        function setOmrShortAnswer(qIdx, val) {
+            studentOmrAnswers[qIdx] = val;
+            const ub = document.getElementById(`omr-btn-${qIdx}-?`);
+            if (ub) { ub.classList.remove('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.add('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
+            markOmrProgress(qIdx, !!val);
+        }
+
+        function setOmrShortUnsure(qIdx) {
+            const input = document.getElementById(`omr-short-${qIdx}`);
+            if (input) input.value = '';
+            studentOmrAnswers[qIdx] = '?';
+            const ub = document.getElementById(`omr-btn-${qIdx}-?`);
+            if (ub) { ub.classList.add('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.remove('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
+            markOmrProgress(qIdx, true);
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
         }
 
         function startSectionTimer(sec) {
