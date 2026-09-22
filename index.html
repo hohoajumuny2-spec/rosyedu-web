@@ -4962,7 +4962,22 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     </div>
                 </div>`;
 
+            // 💡 지도에 0개가 뜰 때 "왜"인지 바로 알 수 있게, 지금 이 학생의 어떤
+            // 성적값이 잡혔고 무엇이 비어(None) 있는지를 화면에 그대로 보여준다.
+            const mine = UNIV_MAP_DATA.mine || {};
+            const mineField = (label, v, suffix) => `<span class="${v === null || v === undefined ? 'text-red-400' : 'text-gray-300'}">${label} <b>${v === null || v === undefined ? '입력 안 됨' : v + (suffix || '')}</b></span>`;
+            const mineLine = [
+                mineField('내신 등급', mine.grade, '등급'),
+                mineField('백분위 평균', mine.percentile, ''),
+                mineField('백분위 합(국수탐)', mine.percentile_sum, ''),
+                mineField('원점수 합', mine.score, '점'),
+                mineField('영어 등급', mine.eng_grade, '등급'),
+            ].join(' · ');
+
             box.innerHTML = `
+                <div class="text-[10px] bg-[#151922] border border-gray-700 rounded-lg px-2 py-1.5 mb-2">
+                    <span class="text-gray-500">지금 이 학생 기준값 —</span> ${mineLine}
+                </div>
                 <div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-xs">
                     <div>${crumb}</div>
                     <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
