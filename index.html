@@ -644,6 +644,28 @@
                             <button onclick="fixUnivMetric()" class="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded text-white font-bold transition">고치기</button>
                         </div>
                     </details>
+
+                    <!-- 💡 정시 자료를 올렸는데 '수시/정시' 선택을 놓쳐(또는 예전 자동판정
+                         오류로) 갈래 자체가 잘못 저장된 경우 — 이것도 다시 올리지 않고 고칠 수 있게 -->
+                    <details class="mt-2 pt-3 border-t border-gray-700">
+                        <summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-300">갈래(수시/정시)가 잘못 저장됐다면 여기서 바로 고치기</summary>
+                        <p class="text-[10px] text-gray-500 mt-1">지금 갈래로 저장된 자료 전체를 다른 갈래로 옮깁니다. 그 갈래 안에 서로 다른 자료가 섞여 있지 않을 때만 쓰세요.</p>
+                        <div class="mt-2 flex flex-wrap gap-2 items-center text-xs">
+                            <span class="text-gray-500">지금</span>
+                            <select id="fix-kind-from" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="susi">수시</option>
+                                <option value="nonsul">논술</option>
+                                <option value="jeongsi">정시</option>
+                            </select>
+                            <span class="text-gray-500">→ 바꿀 값</span>
+                            <select id="fix-kind-to" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="jeongsi">정시</option>
+                                <option value="susi">수시</option>
+                                <option value="nonsul">논술</option>
+                            </select>
+                            <button onclick="fixUnivKind()" class="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded text-white font-bold transition">고치기</button>
+                        </div>
+                    </details>
                 </div>
             </div>
         </div>
@@ -5971,7 +5993,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             Object.entries(data.auto_mapping || {}).forEach(([k, v]) => { guessed[k] = v; });
             const autoNote = document.getElementById('univ-auto-note');
             if (data.is_template) {
-                autoNote.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i>표준 양식으로 확인했습니다. 열 짝짓기가 이미 끝났으니 아래에서 <b>수시/정시</b>만 고르고 바로 저장하시면 됩니다.';
+                // 💡 예전엔 여기서 '수시/정시만 고르세요'라고 안내만 하고 실제로는
+                // 고르지 않아도 그냥 넘어갈 수 있어서, 수시가 기본값으로 남은 채
+                // 정시 자료가 통째로 '수시'로 저장되는 사고가 실제로 있었다 —
+                // 서버가 열 구성으로 알아낸 갈래를 여기서 바로 선택해 둔다.
+                const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[data.template_kind] || data.template_kind;
+                if (data.template_kind) {
+                    document.getElementById('univ-kind').value = data.template_kind;
+                    syncUnivMetricDefault();
+                }
+                autoNote.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>표준 양식으로 확인했습니다(<b>${kindLabel}</b>로 자동 선택). 아래 내용이 맞는지 한 번 확인하고 저장하시면 됩니다.`;
                 autoNote.classList.remove('hidden');
             } else {
                 autoNote.classList.add('hidden');
@@ -6090,6 +6121,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
             if (!data || !data.success) return alert((data && data.detail) || "고치지 못했습니다.");
             alert(data.changed ? `${data.changed.toLocaleString()}건을 '${metricLabel[to]}' 기준으로 고쳤습니다.` : "해당하는 자료가 없었습니다.");
+            await loadUnivList();
+        }
+
+        async function fixUnivKind() {
+            const from = document.getElementById('fix-kind-from').value;
+            const to = document.getElementById('fix-kind-to').value;
+            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' };
+            if (from === to) return alert("지금 갈래와 바꿀 갈래가 같습니다.");
+            if (!confirm(`'${kindLabel[from]}'로 저장된 자료 전체를 '${kindLabel[to]}'(으)로 옮길까요?\n(그 갈래 안에 서로 다른 자료가 섞여 있으면 함께 옮겨지니 주의하세요)`)) return;
+            showLoader("고치는 중...");
+            const fd = new FormData();
+            fd.append("from_kind", from); fd.append("to_kind", to);
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/univ_table/fix_kind`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("고치지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "고치지 못했습니다.");
+            alert(data.changed ? `${data.changed.toLocaleString()}건을 '${kindLabel[to]}'(으)로 옮겼습니다.\n점수 종류(등급/백분위)도 맞는지 위 도구로 함께 확인해주세요.` : "해당하는 자료가 없었습니다.");
             await loadUnivList();
         }
 
