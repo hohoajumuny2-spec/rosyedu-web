@@ -3016,8 +3016,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             let extra = '';
             switch (faceId) {
                 case 'girl':
-                    extra = `<path d="M32 39 l-4 -3.5 M34.5 37.5 l-2 -4.5 M37.5 37.5 l-0.5 -4.5" stroke="${eyeColor}" stroke-width="1" stroke-linecap="round" fill="none"/>
-                        <path d="M68 39 l4 -3.5 M65.5 37.5 l2 -4.5 M62.5 37.5 l0.5 -4.5" stroke="${eyeColor}" stroke-width="1" stroke-linecap="round" fill="none"/>`;
+                    // 💡 속눈썹만으로는 이 캐릭터 크기(112px)에서 거의 안 보여, 확실히 눈에
+                    // 띄는 분홍 리본을 귀 옆에 달아 표정을 바꿔도 차이가 분명하게 보이게 함
+                    extra = `<path d="M22 22 Q14 16 17 8 Q24 10 24 18 Z" fill="#ec4899"/>
+                        <path d="M22 22 Q30 16 27 8 Q20 10 20 18 Z" fill="#f472b6"/>
+                        <circle cx="22.5" cy="19" r="2.6" fill="#be185d"/>`;
                     break;
                 case 'student': case 'nerd':
                     extra = `<circle cx="38" cy="45" r="8" fill="none" stroke="#3b3b3b" stroke-width="2"/>
@@ -3035,11 +3038,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <path d="M62 38.5 l1.7 4.6 4.6 0.4 -3.5 3.1 1.1 4.6 -3.9 -2.7 -3.9 2.7 1.1 -4.6 -3.5 -3.1 4.6 -0.4 z" fill="#fbbf24"/>`;
                     break;
                 case 'ninja':
-                    eyes = `<ellipse cx="38" cy="45" rx="3.4" ry="4.2" fill="#fff"/>
-                        <ellipse cx="62" cy="45" rx="3.4" ry="4.2" fill="#fff"/>
-                        <circle cx="38" cy="45" r="1.6" fill="${eyeColor}"/>
-                        <circle cx="62" cy="45" r="1.6" fill="${eyeColor}"/>`;
-                    extra = `<path d="M20 39 Q50 54 80 39 L80 50 Q50 64 20 50 Z" fill="#1f2937"/>`;
+                    // 💡 마스크가 진한 색끼리(털색의 그림자 색) 겹치면 안 보이니, 털색과
+                    // 무관하게 항상 짙은 색 + 빨간 띠로 고정해 어떤 색이든 또렷하게 보이게 함
+                    eyes = `<ellipse cx="38" cy="45" rx="3.6" ry="4.4" fill="#fff"/>
+                        <ellipse cx="62" cy="45" rx="3.6" ry="4.4" fill="#fff"/>
+                        <circle cx="38" cy="45" r="1.8" fill="${eyeColor}"/>
+                        <circle cx="62" cy="45" r="1.8" fill="${eyeColor}"/>`;
+                    extra = `<path d="M18 37 Q50 53 82 37 L82 51 Q50 66 18 51 Z" fill="#111827"/>
+                        <rect x="18" y="36" width="64" height="4" fill="#dc2626"/>
+                        <path d="M82 39 L92 35 L90 42 L94 47 L84 45 Z" fill="#dc2626"/>`;
                     break;
                 case 'wizard':
                     extra = `<path d="M50 4 L37 27 L63 27 Z" fill="#5b21b6"/>
@@ -3047,18 +3054,28 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <circle cx="50" cy="13" r="1.6" fill="#fde68a"/>`;
                     break;
                 case 'astro':
-                    extra = `<circle cx="50" cy="47" r="35" fill="none" stroke="#93c5fd" stroke-width="2.5" opacity="0.85"/>
-                        <line x1="50" y1="11" x2="50" y2="3" stroke="#93c5fd" stroke-width="2"/>
-                        <circle cx="50" cy="3" r="2" fill="#93c5fd"/>`;
+                    extra = `<circle cx="50" cy="47" r="34" fill="none" stroke="#e0f2fe" stroke-width="3.5" opacity="0.95"/>
+                        <path d="M22 40 Q50 28 78 40" fill="none" stroke="#fff" stroke-width="2" opacity="0.8"/>
+                        <line x1="50" y1="10" x2="50" y2="2" stroke="#e0f2fe" stroke-width="2.5"/>
+                        <circle cx="50" cy="2" r="2.6" fill="#f87171"/>`;
                     break;
                 case 'hero':
-                    eyes = '';
-                    extra = `<path d="M22 39 Q34 32 46 39 Q44 47 34 47 Q24 47 22 39 Z" fill="#1f2937"/>
-                        <path d="M54 39 Q66 32 78 39 Q76 47 66 47 Q56 47 54 39 Z" fill="#1f2937"/>`;
+                    // 💡 어두운 마스크만으로는 표정 차이가 잘 안 보여 금색 테두리로 확실히 감싸고,
+                    // 눈 구멍은 흰자를 남겨 마스크를 써도 표정이 살아있게 함
+                    eyes = `<ellipse cx="38" cy="44" rx="3.6" ry="3" fill="#fff"/>
+                        <ellipse cx="62" cy="44" rx="3.6" ry="3" fill="#fff"/>
+                        <circle cx="38" cy="44" r="1.6" fill="${eyeColor}"/>
+                        <circle cx="62" cy="44" r="1.6" fill="${eyeColor}"/>`;
+                    extra = `<path d="M20 38 Q34 29 48 38 Q46 49 34 49 Q22 49 20 38 Z" fill="#111827" stroke="#fbbf24" stroke-width="2"/>
+                        <path d="M52 38 Q66 29 80 38 Q78 49 66 49 Q54 49 52 38 Z" fill="#111827" stroke="#fbbf24" stroke-width="2"/>
+                        <path d="M48 38 Q50 35 52 38" fill="none" stroke="#111827" stroke-width="2.5"/>`;
                     break;
                 case 'dragon':
-                    extra = `<path d="M30 18 L35 3 L42 20 Z" fill="${dark}"/>
-                        <path d="M70 18 L65 3 L58 20 Z" fill="${dark}"/>`;
+                    // 💡 털색 그림자로 뿔을 칠하면 털색과 겹쳐 안 보이니, 뿔은 항상 같은
+                    // 살구빛으로 고정하고 짙은 테두리를 둘러 어떤 털색에도 또렷이 보이게 함
+                    extra = `<path d="M28 20 L34 2 L44 22 Z" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+                        <path d="M72 20 L66 2 L56 22 Z" fill="#fde68a" stroke="#92400e" stroke-width="1.5"/>
+                        <path d="M46 65 Q50 70 54 65 L52 72 Q50 76 48 72 Z" fill="#fde68a" stroke="#92400e" stroke-width="1"/>`;
                     break;
                 default:
                     break;
