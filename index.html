@@ -933,6 +933,24 @@
             <div class="flex flex-col md:flex-row gap-4 justify-center">
                 <button onclick="goToDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 md:px-10 md:py-5 rounded-xl font-bold text-lg md:text-xl shadow-lg">스마트 학습실 입장하기</button>
             </div>
+
+            <!-- 🔔 들어오기 전에 알림을 미리 알려준다.
+                 💡 특히 아이폰은 '홈 화면에 추가'를 하지 않으면 알림 자체가 불가능하다.
+                    로그인한 뒤에 알려주면 이미 늦어서, 들어가기 전에 짚어준다. -->
+            <div class="mt-10 w-full max-w-2xl mx-auto bg-emerald-900/20 border border-emerald-700 rounded-2xl px-5 py-4 text-left">
+                <p class="text-sm md:text-base font-bold text-emerald-300 flex items-center gap-2">
+                    <i class="fa-solid fa-bell"></i>새 과제 · 모의고사 · 채점 결과를 휴대폰으로 바로 받아보세요
+                </p>
+                <p class="text-[12px] md:text-sm text-gray-300 mt-2 leading-relaxed">
+                    로그인하면 <b class="text-white">"알림을 받아보시겠어요?"</b> 창이 뜹니다. <b class="text-white">[알림 받을래요]</b> → <b class="text-white">[허용]</b> 두 번만 누르면 끝이에요.
+                </p>
+                <p id="home-push-ios" class="hidden text-[12px] md:text-sm text-amber-300 mt-2 leading-relaxed">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i><b>아이폰·아이패드는 한 단계가 더 필요해요.</b>
+                    사파리 아래쪽 <b>공유 버튼</b>(<i class="fa-solid fa-arrow-up-from-bracket"></i>) → <b>[홈 화면에 추가]</b>를 먼저 하고,
+                    바탕화면에 생긴 <b>로지에듀 아이콘</b>으로 들어와야 알림을 켤 수 있습니다.
+                </p>
+                <p class="text-[11px] text-gray-500 mt-2">알림은 언제든 마이페이지에서 끌 수 있어요. 자세한 방법은 아래 <b class="text-gray-400">이용 안내</b>를 봐주세요.</p>
+            </div>
         </div>
 
         <div id="intro-section" class="w-full max-w-5xl mx-auto py-24 text-left border-t border-gray-800">
@@ -1194,6 +1212,49 @@
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold text-white mb-2">모바일 · 태블릿에서 이용하기</h3>
                     <p class="text-gray-300 leading-relaxed">스마트폰이나 태블릿에서도 동일하게 이용할 수 있습니다. 화면 우측 상단의 메뉴 아이콘(☰)을 누르면 데스크톱과 같은 모든 메뉴가 나타나며, 사진 첨부나 문제 촬영도 그대로 이용할 수 있습니다.</p>
+                </div>
+            </div>
+            <div class="feature-reveal bg-[#151922] border border-emerald-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
+                <div class="shrink-0">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white font-black text-xl flex items-center justify-center">12</div>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-bell mr-2 text-emerald-400"></i>휴대폰 알림 받는 방법</h3>
+                    <p class="text-gray-300 leading-relaxed mb-5">새 과제나 모의고사가 올라왔을 때, 그리고 채점 결과가 나왔을 때 휴대폰으로 바로 알려드립니다. 프로그램을 켜두지 않아도 오고, 카카오톡이나 문자처럼 잠금화면에 뜹니다. <b class="text-white">기기마다 켜는 방법이 조금 다릅니다.</b></p>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-[#0f131b] border border-gray-700 rounded-xl p-4">
+                            <p class="font-bold text-white mb-2"><i class="fa-brands fa-android mr-2 text-green-400"></i>안드로이드 · 컴퓨터</p>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-sm text-gray-300">
+                                <li>로그인합니다.</li>
+                                <li>잠시 뒤 <b class="text-white">"알림을 받아보시겠어요?"</b> 창이 뜨면 <b class="text-emerald-400">[알림 받을래요]</b>를 누릅니다.</li>
+                                <li>브라우저가 다시 한 번 물어보면 <b class="text-emerald-400">[허용]</b>을 누릅니다.</li>
+                            </ol>
+                            <p class="text-[11px] text-gray-500 mt-3">이 두 번이면 끝입니다.</p>
+                        </div>
+
+                        <div class="bg-[#0f131b] border border-amber-700 rounded-xl p-4">
+                            <p class="font-bold text-white mb-2"><i class="fa-brands fa-apple mr-2 text-gray-300"></i>아이폰 · 아이패드</p>
+                            <p class="text-[12px] text-amber-300 mb-2">사파리 화면에서는 알림을 켤 수 없습니다. <b>홈 화면에 추가</b>부터 해주세요.</p>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-sm text-gray-300">
+                                <li><b class="text-white">사파리</b>로 이 사이트를 엽니다. (크롬 말고 사파리여야 합니다)</li>
+                                <li>화면 아래 <b class="text-white">공유 버튼</b> <i class="fa-solid fa-arrow-up-from-bracket text-blue-400"></i> 을 누릅니다.</li>
+                                <li>메뉴를 내려 <b class="text-white">[홈 화면에 추가]</b>를 누릅니다.</li>
+                                <li>바탕화면에 생긴 <b class="text-white">로지에듀 아이콘</b>으로 들어옵니다.</li>
+                                <li>로그인하면 알림 창이 뜹니다. <b class="text-emerald-400">[알림 받을래요]</b> → <b class="text-emerald-400">[허용]</b></li>
+                            </ol>
+                            <p class="text-[11px] text-gray-500 mt-3">iOS 16.4 이상에서 됩니다. 설정 → 일반 → 정보에서 버전을 확인하세요.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-[#0f131b] border border-gray-700 rounded-xl p-4">
+                        <p class="font-bold text-white mb-2 text-sm"><i class="fa-solid fa-circle-question mr-2 text-gray-400"></i>이럴 때는요</p>
+                        <ul class="space-y-1.5 text-sm text-gray-400">
+                            <li><b class="text-gray-300">창을 놓쳤어요</b> — <b class="text-gray-300">마이페이지</b>에 들어가면 위쪽에 <b class="text-gray-300">[켜기]</b> 버튼이 있습니다.</li>
+                            <li><b class="text-gray-300">실수로 [차단]을 눌렀어요</b> — 프로그램에서는 다시 물어볼 수 없습니다. 주소창 왼쪽 자물쇠(또는 ⓘ)를 눌러 <b class="text-gray-300">알림</b>을 <b class="text-gray-300">허용</b>으로 바꿔주세요.</li>
+                            <li><b class="text-gray-300">알림을 그만 받고 싶어요</b> — 마이페이지에서 <b class="text-gray-300">[끄기]</b>를 누르면 됩니다.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             </div>
@@ -4415,6 +4476,29 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 }
             } catch (e) { card.classList.add('hidden'); }
         }
+
+        // 💡 아이폰·아이패드는 '홈 화면에 추가'를 해야만 알림을 켤 수 있다(iOS 16.4+).
+        //    사파리 탭으로 보고 있는 동안에는 켜기 버튼을 눌러도 되지 않으므로,
+        //    들어오기 전에 첫 화면에서 그 한 단계를 미리 알려준다.
+        function isIosDevice() {
+            const ua = navigator.userAgent;
+            // 아이패드는 최근 iPadOS에서 맥인 척한다 — 손가락 입력이 되는 맥은 아이패드로 본다
+            return /iPad|iPhone|iPod/.test(ua) ||
+                   (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        }
+
+        function isStandaloneApp() {
+            return window.navigator.standalone === true ||
+                   window.matchMedia('(display-mode: standalone)').matches;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // 이미 홈 화면 아이콘으로 들어온 아이폰에는 이 안내가 필요 없다
+            if (isIosDevice() && !isStandaloneApp()) {
+                const el = document.getElementById('home-push-ios');
+                if (el) el.classList.remove('hidden');
+            }
+        });
 
         // ── 알림 켜기를 먼저 설명하고 권하기 ──────────────────────
         // 💡 브라우저 권한 창은 한 번 '차단'되면 코드로 다시 띄울 수 없다. 그래서
