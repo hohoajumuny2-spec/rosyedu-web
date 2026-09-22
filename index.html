@@ -1188,6 +1188,17 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4"><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-info" class="text-lg text-white font-bold"></p></div><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-count" class="text-xl text-emerald-400 font-black">0건</p></div></div>
+
+                <!-- 💡 새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 받을 수 있게 -->
+                <div id="push-card" class="hidden mb-4 rounded-xl p-4 border">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p id="push-card-title" class="text-sm font-bold text-white"><i class="fa-solid fa-bell mr-1"></i>알림 받기</p>
+                            <p id="push-card-desc" class="text-[11px] text-gray-400 mt-0.5">새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 알려드려요.</p>
+                        </div>
+                        <button id="push-card-btn" onclick="enablePushNotifications()" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition">켜기</button>
+                    </div>
+                </div>
                 <div id="mypage-history-list" class="space-y-2 bg-[#151922] p-4 rounded-xl h-[400px] overflow-y-auto text-gray-300"></div>
 
                 <!-- ❌ 내가 틀린 문제 모아보기 -->
@@ -3576,6 +3587,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 return;
             }
             document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
+            refreshPushCard();
             try {
                 const res=await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`); const data=await res.json();
                 const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0;
@@ -3917,6 +3929,106 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     location.reload();
                 } else alert(data.detail);
             } catch(e) { alert("서버 연결 지연. 잠시 후 다시 눌러주세요!"); } hideLoader();
+        }
+
+        // ── 푸시 알림 켜기 ──────────────────────────────────────
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64);
+            const out = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+            return out;
+        }
+
+        function pushSupported() {
+            return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        }
+
+        // 마이페이지를 열 때 카드 상태를 맞춘다: 지원 안 함 / 꺼짐 / 켜짐 / 막힘
+        async function refreshPushCard() {
+            const card = document.getElementById('push-card');
+            if (!card || !currentUser || currentUser.isAdmin) { if (card) card.classList.add('hidden'); return; }
+            if (!pushSupported()) { card.classList.add('hidden'); return; }
+            card.classList.remove('hidden');
+            const title = document.getElementById('push-card-title');
+            const desc = document.getElementById('push-card-desc');
+            const btn = document.getElementById('push-card-btn');
+
+            if (Notification.permission === 'denied') {
+                card.className = 'mb-4 rounded-xl p-4 border border-gray-700 bg-[#151922]';
+                title.innerHTML = '<i class="fa-solid fa-bell-slash mr-1"></i>알림이 차단되어 있어요';
+                desc.innerText = '휴대폰 설정에서 이 사이트의 알림을 허용해주시면 켤 수 있어요.';
+                btn.classList.add('hidden');
+                return;
+            }
+            btn.classList.remove('hidden');
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const existing = await reg.pushManager.getSubscription();
+                if (existing) {
+                    card.className = 'mb-4 rounded-xl p-4 border border-emerald-700 bg-emerald-900/20';
+                    title.innerHTML = '<i class="fa-solid fa-bell mr-1"></i>알림이 켜져 있어요';
+                    desc.innerText = '새 과제·모의고사·퀴즈·채점 결과를 바로 알려드려요.';
+                    btn.innerText = '끄기';
+                    btn.onclick = disablePushNotifications;
+                    btn.className = 'shrink-0 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition';
+                } else {
+                    card.className = 'mb-4 rounded-xl p-4 border border-gray-700 bg-[#151922]';
+                    title.innerHTML = '<i class="fa-solid fa-bell mr-1"></i>알림 받기';
+                    desc.innerText = '새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 알려드려요.';
+                    btn.innerText = '켜기';
+                    btn.onclick = enablePushNotifications;
+                    btn.className = 'shrink-0 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition';
+                }
+            } catch (e) { card.classList.add('hidden'); }
+        }
+
+        async function enablePushNotifications() {
+            if (!pushSupported()) return alert("이 기기·브라우저는 알림을 지원하지 않아요.\n(아이폰은 홈 화면에 추가한 뒤 iOS 16.4 이상에서 됩니다)");
+            try {
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') { await refreshPushCard(); return; }
+                const keyRes = await fetch(`${API_URL}/api/push/vapid_public_key`);
+                const keyData = await keyRes.json();
+                if (!keyData.success || !keyData.key) return alert("알림 설정을 서버에서 가져오지 못했습니다.");
+                const reg = await navigator.serviceWorker.ready;
+                let subOpt = await reg.pushManager.getSubscription();
+                if (!subOpt) {
+                    subOpt = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(keyData.key),
+                    });
+                }
+                const j = subOpt.toJSON();
+                await fetch(`${API_URL}/api/push/subscribe`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_name: currentUser.name,
+                        endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth,
+                    }),
+                });
+                showToast("알림을 켰어요!");
+            } catch (e) {
+                alert("알림을 켜지 못했습니다: " + e.message);
+            }
+            await refreshPushCard();
+        }
+
+        async function disablePushNotifications() {
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const subOpt = await reg.pushManager.getSubscription();
+                if (subOpt) {
+                    await fetch(`${API_URL}/api/push/unsubscribe`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ endpoint: subOpt.endpoint }),
+                    });
+                    await subOpt.unsubscribe();
+                }
+                showToast("알림을 껐어요.");
+            } catch (e) {}
+            await refreshPushCard();
         }
 
         // 하루 한 번 출석 점수 (이미 받았으면 서버가 조용히 넘긴다)
