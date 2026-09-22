@@ -5105,9 +5105,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const mine = UNIV_MAP_DATA.mine || {};
             const mineField = (label, v, suffix) => `<span class="${v === null || v === undefined ? 'text-red-400' : 'text-gray-300'}">${label} <b>${v === null || v === undefined ? '입력 안 됨' : v + (suffix || '')}</b></span>`;
             const missing = mine.percentile_sum_missing || [];
+            // 최근 회차가 불완전해 예전 회차로 계산했으면 어느 회차인지 밝혀 둔다
+            const sumFrom = (mine.percentile_sum_date && mine.latest_date && mine.percentile_sum_date !== mine.latest_date)
+                ? `<span class="text-amber-300"> (${escapeHtml(mine.percentile_sum_date)} 회차 기준 — 최근 ${escapeHtml(mine.latest_date)} 회차엔 국수탐이 다 없음)</span>` : '';
             const sumField = (mine.percentile_sum === null || mine.percentile_sum === undefined)
                 ? `<span class="text-red-400">백분위 합(국수탐) <b>없음${missing.length ? ' — ' + escapeHtml(missing.join(', ')) + ' 비어 있음' : ''}</b></span>`
-                : `<span class="text-gray-300">백분위 합(국수탐) <b>${mine.percentile_sum}</b></span>`;
+                : `<span class="text-gray-300">백분위 합(국수탐) <b>${mine.percentile_sum}</b>${sumFrom}</span>`;
             const mineLine = [
                 mineField('내신 등급', mine.grade, '등급'),
                 mineField('백분위 평균', mine.percentile, ''),
