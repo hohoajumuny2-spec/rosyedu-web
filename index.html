@@ -4508,21 +4508,58 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         const PUSH_ASK_MAX = 3;             // 세 번까지만 권하고 그만둔다
         const PUSH_ASK_COUNT_KEY = 'logyedu_push_ask_count';
 
+        // 왜 안 떴는지 콘솔에 남긴다. 조용히 넘어가면 '안 뜬다'는 말만 듣고 원인을 못 찾는다.
+        function pushSkip(why) { console.log('[알림 안내] 건너뜀 —', why); }
+
         async function maybeAskPush() {
             try {
-                if (!currentUser || currentUser.isAdmin) return;
-                if (!pushSupported()) return;
-                // 이미 허락했거나 이미 막아둔 학생에게는 묻지 않는다
-                if (Notification.permission !== 'default') return;
-                if (Number(localStorage.getItem(PUSH_ASK_COUNT_KEY) || 0) >= PUSH_ASK_MAX) return;
-                const last = Number(localStorage.getItem(PUSH_ASK_KEY) || 0);
-                if (last && Date.now() - last < PUSH_ASK_AGAIN_DAYS * 864e5) return;
+                if (!currentUser) return pushSkip('로그인 상태가 아님');
+                if (!pushSupported()) return pushSkip('이 브라우저는 알림을 지원하지 않음');
+
+                if (Notification.permission === 'denied') return pushSkip('이 기기에서 이미 알림을 막아둠');
+
                 const reg = await navigator.serviceWorker.ready;
-                if (await reg.pushManager.getSubscription()) return;
+                const already = await reg.pushManager.getSubscription();
+                if (already) return pushSkip('이미 알림이 켜져 있음');
+
+                // 💡 예전에 허락해 둔 기기인데 등록만 빠져 있는 경우가 있다(앱 데이터를 지웠거나,
+                //    등록 중에 창을 닫았거나). 이때 '허락했으니 됐다'고 넘기면 학생은 알림을
+                //    켠 줄 알지만 하나도 받지 못한다. 묻지 말고 조용히 등록만 마쳐 준다.
+                if (Notification.permission === 'granted') {
+                    console.log('[알림 안내] 이미 허락된 기기 — 등록만 마칩니다');
+                    return enablePushNotifications();
+                }
+
+                if (Number(localStorage.getItem(PUSH_ASK_COUNT_KEY) || 0) >= PUSH_ASK_MAX)
+                    return pushSkip('이미 ' + PUSH_ASK_MAX + '번 권해서 그만둠');
+                const last = Number(localStorage.getItem(PUSH_ASK_KEY) || 0);
+                if (last && Date.now() - last < PUSH_ASK_AGAIN_DAYS * 864e5)
+                    return pushSkip('최근에 "다음에"를 골라서 기다리는 중');
+
                 // 들어오자마자 들이대면 놀라니, 화면을 한번 보고 난 뒤에 띄운다
+                console.log('[알림 안내] 잠시 뒤 안내창을 띄웁니다');
                 setTimeout(() => showModal('pushask'), 2500);
-            } catch (e) {}
+            } catch (e) {
+                console.log('[알림 안내] 오류로 못 띄움 —', e && e.message);
+            }
         }
+
+        // 💡 원장님 계정에는 알림 안내가 뜨지 않는다(알림은 학생에게 가는 것이라 원장님이
+        //    켜봐야 받을 것이 없다). 그래서 원장님은 학생 화면을 확인할 길이 없었다.
+        //    주소 끝에 #pushtest 를 붙여 들어오면, 계정과 상관없이 안내창을 그대로 보여준다.
+        // 💡 주소의 #부분은 로그인하면 프로그램이 '#dashboard' 등으로 바꿔 버린다. 그래서
+        //    들어온 순간의 주소를 먼저 붙잡아 둔다. 물음표 방식(?pushtest)도 함께 받는다.
+        const PUSH_PREVIEW_WANTED =
+            String(location.hash || '').toLowerCase() === '#pushtest' ||
+            new URLSearchParams(location.search).has('pushtest');
+
+        function checkPushPreview() {
+            if (!PUSH_PREVIEW_WANTED && String(location.hash || '').toLowerCase() !== '#pushtest') return;
+            showModal('pushask');
+            console.log('[알림 안내] 미리 보기 — 학생에게 보이는 그대로입니다');
+        }
+        window.addEventListener('DOMContentLoaded', () => setTimeout(checkPushPreview, 600));
+        window.addEventListener('hashchange', checkPushPreview);
 
         function markPushAsked() {
             try {
