@@ -189,6 +189,25 @@
         </div>
     </div>
 
+    <!-- 📄 제출한 결과 다시보기 (학생) -->
+    <div id="viewresult-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
+        <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-2xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
+            <div class="px-4 pt-3 pb-2 border-b border-gray-700 shrink-0" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+                <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                        <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-file-lines mr-2 text-sky-400"></i><span id="vr-title"></span></h2>
+                        <p id="vr-sub" class="text-[11px] text-gray-400 mt-0.5"></p>
+                    </div>
+                    <button onclick="closeModal('viewresult-modal')" aria-label="닫기" class="shrink-0 w-11 h-11 -mr-2 -mt-1 flex items-center justify-center text-gray-400 hover:text-white active:bg-gray-700 rounded-full"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+            </div>
+            <div class="px-3 pt-2 shrink-0">
+                <div id="vr-grid" class="grid grid-cols-6 sm:grid-cols-8 gap-1"></div>
+            </div>
+            <div id="vr-detail" class="flex-grow overflow-y-auto px-4 py-3" style="-webkit-overflow-scrolling: touch;"></div>
+        </div>
+    </div>
+
     <!-- 🔁 오답 다시 풀기 (학생) -->
     <div id="retry-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-2xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
@@ -7471,7 +7490,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         const kindTone = h.kind === 'clinic' ? 'bg-purple-900/60 text-purple-200' : 'bg-blue-900/60 text-blue-200';
 
                         let submitBtnHtml;
-                        if (isSubmitted) {
+                        if (isSubmitted && hasOmr) {
+                            submitBtnHtml = `<button onclick="openViewResult('${escAttr(h.title)}', '과제 제출')" class="flex-1 md:flex-none bg-sky-700 hover:bg-sky-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition"><i class="fa-solid fa-file-lines mr-1"></i>결과 다시보기</button>`;
+                        } else if (isSubmitted) {
                             submitBtnHtml = `<button disabled class="flex-1 md:flex-none bg-gray-600 px-4 py-2 rounded-lg text-sm font-bold text-gray-400 cursor-not-allowed border border-gray-500">제출 완료</button>`;
                         } else if (hasOmr) {
                             // 정답이 등록된 과제는 OMR로 답만 마킹하면 그 자리에서 채점된다
@@ -9635,13 +9656,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadStudentQuizzes() {
             try {
+                let done = new Set();
+                if (currentUser && !currentUser.isAdmin) done = await submittedTaskTitles('타임어택 퀴즈');
                 const qs = (!currentUser || currentUser.isAdmin) ? '' : `?student_name=${encodeURIComponent(currentUser.name)}`;
                 const res = await fetch(`${API_URL}/api/quizzes${qs}`); const data = await res.json();
                 const c = document.getElementById('student-quiz-list'); c.innerHTML = '';
                 if(data.success) {
                     allQuizzes = data.quizzes;
                     data.quizzes.forEach((q, i) => {
-                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-orange-500 flex flex-col justify-between cursor-pointer shadow-lg shadow-orange-500/20" onclick="enterQuizRoom(${i})"><div><h3 class="font-bold text-xl text-white mb-2">${escapeHtml(q.title)}</h3><p class="text-xs text-orange-400 font-bold">제한 시간: ${escapeHtml(q.time_limit)}분</p></div><button class="bg-orange-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">퀴즈 시작</button></div>`;
+                        const isDone = done.has(q.title);
+                        const btn = isDone
+                            ? `<button onclick="event.stopPropagation(); openViewResult('${escAttr(q.title)}', '타임어택 퀴즈')" class="bg-sky-700 hover:bg-sky-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4"><i class="fa-solid fa-file-lines mr-1"></i>결과 다시보기</button>`
+                            : '<button class="bg-orange-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">퀴즈 시작</button>';
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border ${isDone ? 'border-gray-600' : 'border-orange-500 cursor-pointer shadow-lg shadow-orange-500/20'}" ${isDone ? '' : `onclick="enterQuizRoom(${i})"`}><div><h3 class="font-bold text-xl text-white mb-2">${escapeHtml(q.title)}</h3><p class="text-xs ${isDone ? 'text-gray-500' : 'text-orange-400'} font-bold">${isDone ? '이미 제출했어요' : '제한 시간: ' + escapeHtml(q.time_limit) + '분'}</p></div>${btn}</div>`;
                     });
                 }
             } catch(e){}
@@ -9832,6 +9859,80 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             e.preventDefault();
             fillExplFromImage(imgs);
         });
+
+        // ── 제출한 결과 다시보기 (학생) ─────────────────────────
+        // 💡 채점 직후 화면을 나가면 다시 볼 방법이 없었다. 서버에 남겨둔 결과를
+        //    다시 불러와, 처음 채점됐을 때와 같은 화면을 언제든 다시 볼 수 있게 한다.
+        let VR = { items: [] };
+
+        async function openViewResult(title, kind) {
+            let data;
+            try {
+                const res = await fetch(`${API_URL}/api/student/view_result?student_name=${encodeURIComponent(currentUser.name)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
+                data = await res.json();
+            } catch (e) { return alert("결과를 불러오지 못했습니다: " + e.message); }
+            if (!data.success) return alert(data.detail || "결과를 불러오지 못했습니다.");
+
+            VR = data;
+            document.getElementById('vr-title').innerText = title;
+            const pct = (data.correct_count !== '' && data.question_count)
+                ? Math.round(data.correct_count / data.question_count * 100) : null;
+            document.getElementById('vr-sub').innerText =
+                `${kind} · ${data.submitted_at || ''}` +
+                (data.score !== '' && data.score != null ? ` · 점수 ${data.score}` : '') +
+                (pct != null ? ` (${pct}%)` : '') +
+                (data.retry && data.retry.count ? ` · 다시 풀어 ${(data.retry.fixed || []).length}개 맞힘` : '');
+
+            const grid = document.getElementById('vr-grid');
+            grid.innerHTML = data.items.map(it => {
+                const tone = it.is_unsure ? 'bg-amber-900/40 border-amber-700 text-amber-300'
+                    : (it.is_wrong ? 'bg-red-900/30 border-red-800 text-red-300' : 'bg-emerald-900/40 border-emerald-700 text-emerald-300');
+                const mark = it.is_unsure ? '?' : (it.is_wrong ? 'X' : 'O');
+                return `<button onclick="showViewResultItem(${it.no})" style="touch-action:manipulation;"
+                    class="relative aspect-square rounded-md flex flex-col items-center justify-center border transition active:scale-95 ${tone}">
+                    <span class="text-[11px] font-bold">${it.no}</span><span class="text-[10px]">${mark}</span>
+                    ${it.explanation ? '<span class="absolute top-0 right-0.5 text-[7px] text-sky-300">해설</span>' : ''}
+                </button>`;
+            }).join('');
+            document.getElementById('vr-detail').innerHTML =
+                '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 정답, 해설을 확인하세요.</p>';
+            showModal('viewresult');
+        }
+
+        function showViewResultItem(no) {
+            const it = (VR.items || []).find(x => x.no === no);
+            if (!it) return;
+            const box = document.getElementById('vr-detail');
+            const verdict = it.is_unsure ? '<span class="text-amber-300">모름</span>'
+                : (it.is_wrong ? '<span class="text-red-300">틀림</span>' : '<span class="text-emerald-300">맞음</span>');
+            const mineLabel = it.is_unsure ? '모르겠다고 표시' : (it.mine ? it.mine + '번' : '표시 안 함');
+
+            const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2">${escapeHtml(it.text)}</p>` : '';
+            const imgHtml = it.image ? `<div class="mb-2"><img src="${API_URL}${encodeURI(it.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : '';
+            const bogiHtml = (it.bogi || '').trim() ? `<div class="mb-2 border border-gray-600 rounded p-3 bg-[#151922]">
+                <div class="text-[10px] text-sky-400 font-bold mb-1">&lt;보기&gt;</div>
+                <p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(it.bogi)}</p></div>` : '';
+            const optsHtml = (it.options || []).length ? `<div class="space-y-1 mb-2">${it.options.map((o, i) => {
+                if (!o) return '';
+                const n = i + 1;
+                const isMine = String(it.mine) === String(n);
+                const isAns = String(it.answer) === String(n);
+                const cls = isAns ? 'text-emerald-300 font-bold' : (isMine ? 'text-red-300' : 'text-gray-400');
+                return `<div class="text-xs ${cls}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}${(isMine && !isAns) ? ' ← 내 답' : ''}</div>`;
+            }).join('')}</div>` : '';
+
+            box.innerHTML = `
+                <div class="bg-[#1e2430] border border-gray-600 rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-sm font-bold text-white">${it.no}번 ${verdict}</p>
+                    </div>
+                    ${textHtml}${imgHtml}${bogiHtml}${optsHtml}
+                    <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}</p>
+                    ${it.explanation
+                        ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line border-t border-gray-700 pt-2">${escapeHtml(it.explanation)}</p>`
+                        : '<p class="text-xs text-gray-500 border-t border-gray-700 pt-2">이 문항은 해설이 등록되어 있지 않습니다.</p>'}
+                </div>`;
+        }
 
         // ── 오답 다시 풀기 (학생) ───────────────────────────────
         // 💡 틀린 문항만 다시 풀어 볼 수 있다. 원래 점수 기록은 그대로 두고
@@ -10695,8 +10796,21 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // GET /api/exams, DELETE /api/admin/exam/{title}, GET /api/lectures,
         // POST /api/admin/lecture {title, desc, video_url}, DELETE /api/admin/lecture/{lecture_id}
 
+        // 그 종류를 이미 제출한 항목 제목들을 모은다 (모의고사·퀴즈 목록에서 함께 쓴다)
+        async function submittedTaskTitles(type) {
+            const out = new Set();
+            try {
+                const res = await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`);
+                const data = await res.json();
+                if (data.success && data.reports) data.reports.forEach(r => { if (r.type === type) out.add(r.task_name); });
+            } catch (e) {}
+            return out;
+        }
+
         async function loadStudentExams() {
             try {
+                let done = new Set();
+                if (currentUser && !currentUser.isAdmin) done = await submittedTaskTitles('모의고사');
                 const qs = (!currentUser || currentUser.isAdmin) ? '' : `?student_name=${encodeURIComponent(currentUser.name)}`;
                 const res = await fetch(`${API_URL}/api/exams${qs}`);
                 const data = await res.json();
@@ -10706,12 +10820,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     studentExamsList = data.exams;
                     if(data.exams.length === 0) { c.innerHTML = '<p class="text-gray-500 col-span-2 text-center mt-6">등록된 모의고사가 없습니다.</p>'; return; }
                     data.exams.forEach((ex, i) => {
-                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-yellow-500 flex flex-col justify-between cursor-pointer shadow-lg shadow-yellow-500/20" onclick="enterExamRoom(${i})">
+                        const isDone = done.has(ex.title);
+                        const btn = isDone
+                            ? `<button onclick="event.stopPropagation(); openViewResult('${escAttr(ex.title)}', '모의고사')" class="bg-sky-700 hover:bg-sky-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4"><i class="fa-solid fa-file-lines mr-1"></i>결과 다시보기</button>`
+                            : '<button class="bg-yellow-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">시험 입장</button>';
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border ${isDone ? 'border-gray-600' : 'border-yellow-500 cursor-pointer shadow-lg shadow-yellow-500/20'} flex flex-col justify-between" ${isDone ? '' : `onclick="enterExamRoom(${i})"`}>
                             <div>
                                 <h3 class="font-bold text-xl text-white mb-2">${escapeHtml(ex.title)}</h3>
-                                <p class="text-xs text-yellow-400 font-bold">${escapeHtml(ex.objective || '')}</p>
+                                <p class="text-xs ${isDone ? 'text-gray-500' : 'text-yellow-400'} font-bold">${isDone ? '이미 응시했어요' : escapeHtml(ex.objective || '')}</p>
                             </div>
-                            <button class="bg-yellow-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">시험 입장</button>
+                            ${btn}
                         </div>`;
                     });
                 }
