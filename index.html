@@ -631,6 +631,7 @@
                             </select>
                             <span class="text-gray-500">지금</span>
                             <select id="fix-metric-from" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="any">무엇이든 (전부)</option>
                                 <option value="grade">등급</option>
                                 <option value="percentile">백분위 평균</option>
                                 <option value="percentile_sum">백분위 합</option>
@@ -655,6 +656,7 @@
                         <div class="mt-2 flex flex-wrap gap-2 items-center text-xs">
                             <span class="text-gray-500">지금</span>
                             <select id="fix-kind-from" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="any">무엇이든 (전부)</option>
                                 <option value="susi">수시</option>
                                 <option value="nonsul">논술</option>
                                 <option value="jeongsi">정시</option>
@@ -5897,12 +5899,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 ? `${m.label || '입결 자료'} · 전체 ${m.count.toLocaleString()}건 저장됨 · ${m.metric === 'percentile' ? '백분위 기준' : '등급 기준'} · ${m.uploaded_at || ''}`
                     + (totalMatched > rows.length ? ` · 목록엔 이 중 ${rows.length}건까지만 보여요 — 특정 대학은 위 검색창으로 찾아보세요` : '')
                 : '아직 올린 입결 자료가 없습니다.';
+            // 💡 줄마다 '지금 어떤 갈래·어떤 점수 종류로 저장돼 있는지'를 그대로 보여준다.
+            // 예전엔 백분위가 아니면 무조건 '등급'이라고 붙여서, 실제로는 백분위 합으로
+            // 고쳐졌는데도 화면엔 '등급'으로 보여 고쳐졌는지 확인할 방법이 없었다.
+            const KIND_TAG = { susi: ['수시', 'bg-blue-900/60 text-blue-200'],
+                               nonsul: ['논술', 'bg-purple-900/60 text-purple-200'],
+                               jeongsi: ['정시', 'bg-yellow-900/60 text-yellow-200'] };
+            const METRIC_TAG = { grade: '등급', percentile: '백분위 평균',
+                                 percentile_sum: '백분위 합', score: '점수', eng_grade: '영어등급' };
             box.innerHTML = rows.length
-                ? rows.map(x => `<div class="flex justify-between items-center bg-[#151922] border border-gray-700 rounded px-3 py-1.5 text-xs">
-                        <span class="text-white truncate">${escapeHtml(x.univ)} <span class="text-gray-400">${escapeHtml(x.major || '')}</span>
+                ? rows.map(x => {
+                    const k = KIND_TAG[x.kind || 'susi'] || KIND_TAG.susi;
+                    const mLabel = METRIC_TAG[x.metric || 'grade'] || (x.metric || '등급');
+                    return `<div class="flex justify-between items-center bg-[#151922] border border-gray-700 rounded px-3 py-1.5 text-xs">
+                        <span class="text-white truncate">
+                            <span class="text-[10px] px-1.5 py-0.5 rounded ${k[1]} mr-1">${k[0]}</span>
+                            ${escapeHtml(x.univ)} <span class="text-gray-400">${escapeHtml(x.major || '')}</span>
                             ${x.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(x.type)}</span>` : ''}</span>
-                        <b class="text-indigo-300 shrink-0 ml-2">${x.cut}${x.metric === 'percentile' ? '' : '등급'}</b>
-                    </div>`).join('')
+                        <b class="text-indigo-300 shrink-0 ml-2">${x.cut}<span class="text-[10px] text-gray-500 font-normal ml-1">${escapeHtml(mLabel)}</span></b>
+                    </div>`;
+                }).join('')
                 : (q ? '<p class="text-gray-600 text-xs text-center py-4">찾는 대학이 없습니다.</p>' : '');
         }
 
@@ -6125,7 +6141,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const from = document.getElementById('fix-metric-from').value;
             const to = document.getElementById('fix-metric-to').value;
             const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[kind] || kind;
-            const metricLabel = { grade: '등급', percentile: '백분위 평균', percentile_sum: '백분위 합', score: '점수' };
+            const metricLabel = { any: '무엇이든', grade: '등급', percentile: '백분위 평균', percentile_sum: '백분위 합', score: '점수' };
             if (from === to) return alert("지금 값과 바꿀 값이 같습니다.");
             if (!confirm(`${kindLabel} 자료 중 '${metricLabel[from]}'로 저장된 것을 '${metricLabel[to]}'(으)로 바꿀까요?\n(다른 갈래·다른 점수 종류 자료는 건드리지 않습니다)`)) return;
             showLoader("고치는 중...");
@@ -6145,7 +6161,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function fixUnivKind() {
             const from = document.getElementById('fix-kind-from').value;
             const to = document.getElementById('fix-kind-to').value;
-            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' };
+            const kindLabel = { any: '무엇이든', susi: '수시', nonsul: '논술', jeongsi: '정시' };
             if (from === to) return alert("지금 갈래와 바꿀 갈래가 같습니다.");
             if (!confirm(`'${kindLabel[from]}'로 저장된 자료 전체를 '${kindLabel[to]}'(으)로 옮길까요?\n(그 갈래 안에 서로 다른 자료가 섞여 있으면 함께 옮겨지니 주의하세요)`)) return;
             showLoader("고치는 중...");
