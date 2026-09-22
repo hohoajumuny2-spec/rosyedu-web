@@ -2513,6 +2513,17 @@
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail', err)); }); }
 
+        // 💡 국어 문항은 밑줄이 있어야 성립한다. "㉠에 대한 이해로 적절한 것은?"에서
+        //    ㉠이 어디서 시작해 어디서 끝나는지 밑줄로 보여주지 않으면 학생이 풀 수 없다.
+        //    그래서 출제할 때 밑줄 칠 곳을 <u>...</u>로 적게 하고, 화면에 그릴 때는
+        //    나머지는 전부 막되 이 표시만 진짜 밑줄로 되살린다.
+        //    (통째로 이스케이프한 뒤 <u>만 되돌리므로, 다른 태그는 들어올 수 없다.)
+        function escapeKeepUnderline(str) {
+            return escapeHtml(str)
+                .replace(/&lt;u&gt;/g, '<u>')
+                .replace(/&lt;\/u&gt;/g, '</u>');
+        }
+
         // 💡 XSS 방지용 이스케이프 헬퍼
         // escapeHtml: 텍스트 노드로 innerHTML에 삽입할 때 사용 (&, <, >, ", ' 이스케이프)
         function escapeHtml(str) {
@@ -2815,6 +2826,9 @@
 
             // 💡 실제 학교 시험지(미강고 주간지) 형식에 맞춘 인쇄 레이아웃
             const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // 💡 밑줄(<u>...</u>)만 진짜 밑줄로 되살린다. 국어 문항은 ㉠ⓐ가 어디서
+            //    시작해 어디서 끝나는지 밑줄로 보여줘야 학생이 풀 수 있다.
+            const escU = s => esc(s).replace(/&lt;u&gt;/g, '<u>').replace(/&lt;\/u&gt;/g, '</u>');
             const clean = raw.replace(/[*#\\]/g, '').replace(/\[\d+문단\]/g, '');
 
             // 💡 실제 시험지는 "※ 다음 글을 읽고 물음에 답하시오."가 지문 박스 '위'에 오는데,
@@ -2867,16 +2881,16 @@
                 const qm = text.match(/^(\d+)\.\s*(.*)$/);
                 if(qm) {
                     closeBox(); closeQuestion();
-                    html += `<div class="q"><div class="qt"><span class="qn">${qm[1]}.</span>${esc(qm[2])}</div>`;
+                    html += `<div class="q"><div class="qt"><span class="qn">${qm[1]}.</span>${escU(qm[2])}</div>`;
                     inQuestion = true; return;
                 }
                 // 선지 ①~⑤
-                if(/^[①②③④⑤]/.test(text)) { html += `<div class="opt">${esc(text)}</div>`; return; }
+                if(/^[①②③④⑤]/.test(text)) { html += `<div class="opt">${escU(text)}</div>`; return; }
                 // 출처 표기 (- 윤동주, 「길」) 는 우측 정렬
                 if(/^[-–—]\s*\S.*[「『]/.test(text)) { html += `<div class="src">${esc(text)}</div>`; return; }
                 // 지문 구획 [A]~[E]
                 if(/^\[[A-E]\]$/.test(text)) { html += `<div class="seg">${esc(text)}</div>`; return; }
-                html += `<div class="t">${esc(text)}</div>`;
+                html += `<div class="t">${escU(text)}</div>`;
             });
             closeBox(); closeQuestion();
 
@@ -10824,7 +10838,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 } else {
                     q.options.forEach((opt, optIdx) => {
                         if(!opt) return;
-                        optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeHtml(opt)}</span></label>`;
+                        optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeKeepUnderline(opt)}</span></label>`;
                     });
                     // 💡 찍지 말고 '모름'을 고르면, 무엇을 더 공부해야 할지 남는다
                     optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg cursor-pointer border border-amber-900/60 hover:border-amber-500 transition mb-2">
@@ -10839,10 +10853,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const bogiHtml = (q.bogi || '').trim()
                     ? `<div class="mb-4 border border-gray-500 rounded-lg p-4 bg-[#1a1e29]">
                            <div class="text-xs text-orange-400 font-bold mb-2">&lt;보기&gt;</div>
-                           <p class="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">${escapeHtml(q.bogi)}</p>
+                           <p class="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">${escapeKeepUnderline(q.bogi)}</p>
                        </div>`
                     : '';
-                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeHtml(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
+                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeKeepUnderline(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
@@ -11035,18 +11049,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             // 원장님이 볼 때는 '내 답'이 아니라 '학생 이름의 답'이어야 말이 된다
             const whose = VR.viewing_student ? escapeHtml(VR.viewing_student) + ' 답' : '내 답';
 
-            const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2">${escapeHtml(it.text)}</p>` : '';
+            const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2">${escapeKeepUnderline(it.text)}</p>` : '';
             const imgHtml = it.image ? `<div class="mb-2"><img src="${API_URL}${encodeURI(it.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : '';
             const bogiHtml = (it.bogi || '').trim() ? `<div class="mb-2 border border-gray-600 rounded p-3 bg-[#151922]">
                 <div class="text-[10px] text-sky-400 font-bold mb-1">&lt;보기&gt;</div>
-                <p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(it.bogi)}</p></div>` : '';
+                <p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeKeepUnderline(it.bogi)}</p></div>` : '';
             const optsHtml = (it.options || []).length ? `<div class="space-y-1 mb-2">${it.options.map((o, i) => {
                 if (!o) return '';
                 const n = i + 1;
                 const isMine = String(it.mine) === String(n);
                 const isAns = answerContains(it.answer, n);
                 const cls = isAns ? 'text-emerald-300 font-bold' : (isMine ? 'text-red-300' : 'text-gray-400');
-                return `<div class="text-xs ${cls}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}${(isMine && !isAns) ? ' ← ' + whose : ''}</div>`;
+                return `<div class="text-xs ${cls}">${n}. ${escapeKeepUnderline(o)} ${isAns ? '✓' : ''}${(isMine && !isAns) ? ' ← ' + whose : ''}</div>`;
             }).join('')}</div>` : '';
 
             const answerLineHtml = qtype === 'essay'
@@ -11348,17 +11362,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <span class="text-white font-bold text-sm">${q.no}번</span>
                         <span class="text-xs ${rate != null && rate < 50 ? 'text-red-300 font-bold' : 'text-gray-400'}">정답률 ${rate != null ? rate + '%' : '-'} <span class="text-gray-600">(${q.correct}/${q.total})</span></span>
                     </div>
-                    ${q.text ? `<p class="text-[12px] text-gray-200 leading-relaxed mb-1.5">${escapeHtml(q.text)}</p>` : ''}
+                    ${q.text ? `<p class="text-[12px] text-gray-200 leading-relaxed mb-1.5">${escapeKeepUnderline(q.text)}</p>` : ''}
                     ${q.image ? `<img src="${API_URL}${encodeURI(q.image)}" class="max-w-full rounded border border-gray-700 mb-1.5" alt="문항 그림">` : ''}
                     ${(q.bogi || '').trim() ? `<div class="mb-1.5 border border-gray-600 rounded p-2 bg-[#0f131b]">
                         <div class="text-[10px] text-sky-400 font-bold mb-1">&lt;보기&gt;</div>
-                        <p class="text-[11px] text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(q.bogi)}</p></div>` : ''}
+                        <p class="text-[11px] text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeKeepUnderline(q.bogi)}</p></div>` : ''}
                     ${opts.length ? `<details class="mb-1.5"><summary class="text-[11px] text-gray-400 cursor-pointer">선택지 보기</summary>
                         <div class="mt-1 space-y-0.5">${(q.options || []).map((o, i) => {
                             if (!o) return '';
                             const n = i + 1;
                             const isAns = answerContains(q.answer, n);
-                            return `<div class="text-[11px] ${isAns ? 'text-emerald-300 font-bold' : 'text-gray-400'}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}</div>`;
+                            return `<div class="text-[11px] ${isAns ? 'text-emerald-300 font-bold' : 'text-gray-400'}">${n}. ${escapeKeepUnderline(o)} ${isAns ? '✓' : ''}</div>`;
                         }).join('')}</div></details>`
                         : (q.answer_text || q.answer ? `<p class="text-[11px] text-emerald-300 mb-1.5">정답: ${escapeHtml(String(q.answer_text || q.answer))}</p>` : '')}
                     <div class="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-1">
