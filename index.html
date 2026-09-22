@@ -3966,6 +3966,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const parts = answerParts(raw);
             return parts.length ? parts.map(p => p + '번').join(' 또는 ') : String(raw || '-');
         }
+        // 정답 한 자리가 1~5번 중 고르는 객관식인지, 글자로 직접 쓰는 단답형인지
+        // (제출 뒤 정답이 이미 공개된 상태에서만 씀 — 서버의 slot_kind와 같은 규칙)
+        function answerSlotKind(raw) {
+            const parts = answerParts(raw);
+            return (parts.length && parts.every(p => '12345'.includes(p) && p.length === 1)) ? 'choice' : 'short';
+        }
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -7511,6 +7517,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
         }
 
+        let STUDENT_HW_LIST = [];
+
         async function loadHomeworks() {
             try {
                 let submittedTasks = new Set();
@@ -7524,11 +7532,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     }
                 }
 
-                const res=await fetch(`${API_URL}/api/homeworks`);
+                // 💡 정답표가 응답에 그대로 실리면 API를 직접 열어봐도 정답이 보인다 —
+                //    student_name을 실어 보내면 서버가 정답 대신 문항 유형만 보내준다.
+                const qs = (currentUser && !currentUser.isAdmin) ? `?student_name=${encodeURIComponent(currentUser.name)}` : '';
+                const res=await fetch(`${API_URL}/api/homeworks${qs}`);
                 const data=await res.json();
                 const c=document.getElementById('student-hw-list');
                 c.innerHTML='';
                 if(data.success){
+                    STUDENT_HW_LIST = data.homeworks;
                     data.homeworks.forEach((h,i) => {
                         const isSubmitted = submittedTasks.has(h.title);
                         const hwId = `hw-item-${i}`;
@@ -7549,7 +7561,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             submitBtnHtml = `<button disabled class="flex-1 md:flex-none bg-gray-600 px-4 py-2 rounded-lg text-sm font-bold text-gray-400 cursor-not-allowed border border-gray-500">제출 완료</button>`;
                         } else if (hasOmr) {
                             // 정답이 등록된 과제는 OMR로 답만 마킹하면 그 자리에서 채점된다
-                            submitBtnHtml = `<button onclick="openHomeworkOmr('${escAttr(h.title)}', ${h.question_count}, '${escAttr(kindLabel)}')" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">OMR로 제출하기</button>`;
+                            submitBtnHtml = `<button onclick="openHomeworkOmr(${i})" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">OMR로 제출하기</button>`;
                         } else {
                             submitBtnHtml = `<button onclick="document.getElementById('hw-submit-area').style.display='block'; document.getElementById('hw-target-title').innerText='${escAttr(h.title)}'; document.getElementById('hw-target-title').dataset.idx='${i}';" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">과제 제출하기</button>`;
                         }
@@ -7620,9 +7632,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // ── 과제 OMR 제출 (수업·클리닉 공통) ──────────────
         let HW_OMR = { title: '', count: 0, answers: [] };
 
-        function openHomeworkOmr(title, count, kindLabel) {
-            HW_OMR = { title: title, count: count, answers: new Array(count).fill('') };
-            document.getElementById('hw-omr-title').innerText = title;
+        function openHomeworkOmr(idx) {
+            const h = STUDENT_HW_LIST[idx];
+            if (!h) return;
+            const count = h.question_count || 0;
+            const kindLabel = h.kind === 'clinic' ? '클리닉 과제' : '수업 과제';
+            HW_OMR = { title: h.title, count: count, answers: new Array(count).fill(''),
+                       kinds: (h.omr_kinds && h.omr_kinds.length === count) ? h.omr_kinds : new Array(count).fill('choice') };
+            document.getElementById('hw-omr-title').innerText = h.title;
             document.getElementById('hw-omr-kind').innerText = kindLabel || '';
             document.getElementById('hw-omr-result').innerHTML = '';
             renderHomeworkOmr();
@@ -7654,16 +7671,44 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function renderHomeworkOmr() {
             const box = document.getElementById('hw-omr-sheet');
-            box.innerHTML = HW_OMR.answers.map((v, i) => `
+            box.innerHTML = HW_OMR.answers.map((v, i) => {
+                const isShort = (HW_OMR.kinds || [])[i] === 'short';
+                const body = isShort
+                    ? `<input id="hwomr-short-${i}" type="text" value="${escAttr(v === OMR_UNSURE ? '' : v)}"
+                        oninput="setHomeworkShortAnswer(${i}, this.value)" placeholder="답을 적어주세요"
+                        class="flex-grow p-2 bg-[#232a36] text-white rounded-lg text-sm border border-gray-600 outline-none focus:border-emerald-500">
+                       <button id="hwomr-btn-${i}-${OMR_UNSURE}" onclick="setHomeworkUnsure(${i})" style="touch-action: manipulation;"
+                        class="h-9 px-3 rounded-lg border font-bold text-[10px] shrink-0 transition active:scale-95 ${v === OMR_UNSURE ? OMR_UNSURE_CLASS.join(' ') : OMR_PLAIN_CLASS.join(' ')}">모름</button>`
+                    : `<div class="grid grid-cols-6 gap-1 flex-grow">
+                        ${[1, 2, 3, 4, 5, OMR_UNSURE].map(n => omrOptionBtn(i, n, String(v) === String(n))).join('')}
+                       </div>`;
+                return `
                 <div id="hwomr-row-${i}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-1.5 transition-colors">
                     <div class="flex items-center gap-2">
                         <span id="hwomr-no-${i}" class="text-gray-400 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
-                        <div class="grid grid-cols-6 gap-1 flex-grow">
-                            ${[1, 2, 3, 4, 5, OMR_UNSURE].map(n => omrOptionBtn(i, n, String(v) === String(n))).join('')}
-                        </div>
+                        ${body}
                     </div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
             updateHomeworkOmrProgress();
+        }
+
+        function setHomeworkShortAnswer(idx, val) {
+            HW_OMR.answers[idx] = val;
+            const btn = document.getElementById(`hwomr-btn-${idx}-${OMR_UNSURE}`);
+            if (btn) btn.classList.remove(...OMR_UNSURE_CLASS.filter(c => c !== 'text-[10px]'), ...OMR_MARK_CLASS);
+            if (btn) btn.classList.add(...OMR_PLAIN_CLASS);
+            updateHomeworkOmrProgress();
+        }
+
+        function setHomeworkUnsure(idx) {
+            const input = document.getElementById(`hwomr-short-${idx}`);
+            if (input) input.value = '';
+            HW_OMR.answers[idx] = OMR_UNSURE;
+            const btn = document.getElementById(`hwomr-btn-${idx}-${OMR_UNSURE}`);
+            if (btn) { btn.classList.remove(...OMR_PLAIN_CLASS); btn.classList.add(...OMR_UNSURE_CLASS); }
+            updateHomeworkOmrProgress();
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
         }
 
         function paintHomeworkOmrRow(idx) {
@@ -7761,7 +7806,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const isUnsure = (d.unsure || []).map(Number).includes(no);
             const isWrong = (d.wrongs || []).map(Number).includes(no);
             const text = (d.explanations || {})[String(no)] || '';
-            const mineLabel = isUnsure ? '모르겠다고 표시' : (mine ? mine + '번' : '표시 안 함');
+            const isShort = answerSlotKind(key) === 'short';
+            const mineLabel = isUnsure ? '모르겠다고 표시' : (mine ? (isShort ? mine : mine + '번') : '표시 안 함');
+            const ansLabel = isShort ? String(key || '-') : formatAnswerLabel(key);
             const verdict = isUnsure ? '<span class="text-amber-300">모름</span>'
                 : (isWrong ? '<span class="text-red-300">틀림</span>' : '<span class="text-emerald-300">맞음</span>');
             box.innerHTML = `
@@ -7769,7 +7816,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <p class="text-sm font-bold text-white">${no}번 ${verdict}</p>
                     <button onclick="document.getElementById('hw-omr-explain').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs">닫기</button>
                 </div>
-                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(formatAnswerLabel(key))}</p>
+                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(ansLabel)}</p>
                 ${text ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(text)}</p>`
                        : '<p class="text-xs text-gray-500">이 문항은 해설이 등록되어 있지 않습니다.</p>'}`;
             box.classList.remove('hidden');
@@ -10103,7 +10150,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!d.success) return alert(d.detail || "다시 풀 수 없습니다.");
             if (!(d.wrongs || []).length) return alert("이 시험은 틀린 문항이 없습니다.");
 
-            RETRY = { title: title, kind: kind, nos: d.wrongs, answers: {}, expl: d.explanations || {} };
+            RETRY = { title: title, kind: kind, nos: d.wrongs, answers: {}, expl: d.explanations || {}, qtypes: d.qtypes || {} };
             document.getElementById('retry-title').innerText = title;
             document.getElementById('retry-sub').innerText =
                 `틀린 ${d.wrongs.length}문항 다시 풀기${d.retry_count ? ' · 지금까지 ' + d.retry_count + '번 다시 풀었어요' : ''}`;
@@ -10117,20 +10164,49 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const box = document.getElementById('retry-sheet');
             box.innerHTML = RETRY.nos.map(no => {
                 const expl = RETRY.expl[String(no)] || '';
+                const qtype = RETRY.qtypes[no] || 'choice';
+                let body;
+                if (qtype === 'essay') {
+                    // 서술형은 정해진 정답이 하나가 아니라 자동으로 다시 채점할 수 없다
+                    body = `<p class="text-[11px] text-gray-500 flex-grow">서술형 문항은 다시 채점할 수 없어요. 해설을 참고해 주세요.</p>`;
+                } else if (qtype === 'short') {
+                    body = `<input type="text" id="retry-short-${no}" placeholder="답을 적어주세요" oninput="setRetryShortAnswer(${no}, this.value)"
+                        class="flex-grow p-2 bg-[#232a36] text-white rounded-lg text-sm border border-gray-600 outline-none focus:border-sky-500">
+                        <button onclick="setRetryUnsure(${no})" id="retry-btn-${no}-?"
+                            style="touch-action:manipulation;"
+                            class="h-9 px-3 rounded-lg border border-gray-600 bg-[#232a36] text-gray-300 font-bold text-[10px] shrink-0 transition active:scale-95">모름</button>`;
+                } else {
+                    body = `<div class="grid grid-cols-6 gap-1 flex-grow">
+                        ${[1, 2, 3, 4, 5, '?'].map(v => `<button onclick="pickRetry(${no}, '${v}')" id="retry-btn-${no}-${v}"
+                            style="touch-action:manipulation;"
+                            class="h-11 rounded-lg border border-gray-600 bg-[#232a36] text-gray-300 font-bold ${v === '?' ? 'text-[10px]' : 'text-base'} transition active:scale-95">${v === '?' ? '모름' : v}</button>`).join('')}
+                        </div>`;
+                }
                 return `
                 <div id="retry-row-${no}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-2">
                     <div class="flex items-center gap-2">
                         <span id="retry-no-${no}" class="text-red-300 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${no}</span>
-                        <div class="grid grid-cols-6 gap-1 flex-grow">
-                            ${[1, 2, 3, 4, 5, '?'].map(v => `<button onclick="pickRetry(${no}, '${v}')" id="retry-btn-${no}-${v}"
-                                style="touch-action:manipulation;"
-                                class="h-11 rounded-lg border border-gray-600 bg-[#232a36] text-gray-300 font-bold ${v === '?' ? 'text-[10px]' : 'text-base'} transition active:scale-95">${v === '?' ? '모름' : v}</button>`).join('')}
-                        </div>
+                        ${body}
                     </div>
                     ${expl ? `<details class="mt-1 ml-9"><summary class="text-[11px] text-sky-300 cursor-pointer">힌트 — 해설 보기</summary>
                         <p class="text-[11px] text-gray-300 mt-1 whitespace-pre-line leading-relaxed">${escapeHtml(expl)}</p></details>` : ''}
                 </div>`;
             }).join('');
+        }
+
+        function setRetryShortAnswer(no, val) {
+            RETRY.answers[no] = val;
+            const btn = document.getElementById(`retry-btn-${no}-?`);
+            if (btn) btn.className = 'h-9 px-3 rounded-lg border border-gray-600 bg-[#232a36] text-gray-300 font-bold text-[10px] shrink-0 transition active:scale-95';
+        }
+
+        function setRetryUnsure(no) {
+            const input = document.getElementById(`retry-short-${no}`);
+            if (input) input.value = '';
+            RETRY.answers[no] = '?';
+            const btn = document.getElementById(`retry-btn-${no}-?`);
+            if (btn) btn.className = 'h-9 px-3 rounded-lg border border-amber-400 bg-amber-600 text-white font-bold text-[10px] shrink-0 transition active:scale-95';
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
         }
 
         function pickRetry(no, v) {
