@@ -575,7 +575,7 @@
                             </div>
                             <div>
                                 <label class="text-[11px] text-indigo-300 font-bold mb-1 block">이 자료는 수시인가요, 정시인가요? *</label>
-                                <select id="univ-kind" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-indigo-600">
+                                <select id="univ-kind" onchange="syncUnivMetricDefault()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-indigo-600">
                                     <option value="susi">수시 — 내신 등급과 견줍니다</option>
                                     <option value="nonsul">논술 — 논술전형 입결과 견줍니다</option>
                                     <option value="jeongsi">정시 — 수능 백분위·원점수와 견줍니다</option>
@@ -618,6 +618,32 @@
                         <button onclick="clearUnivTable()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-white font-bold text-sm transition">전체 삭제</button>
                     </div>
                     <div id="univ-list" class="max-h-64 overflow-y-auto space-y-1"></div>
+
+                    <!-- 💡 올릴 때 '기준 점수의 종류'를 잘못 골라(예: 정시인데 등급으로) 저장한 경우,
+                         파일을 다시 올리지 않고 바로 고칠 수 있게 -->
+                    <details class="mt-4 pt-3 border-t border-gray-700">
+                        <summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-300">점수 종류가 잘못 저장됐다면 여기서 바로 고치기</summary>
+                        <div class="mt-2 flex flex-wrap gap-2 items-center text-xs">
+                            <select id="fix-metric-kind" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="susi">수시</option>
+                                <option value="nonsul">논술</option>
+                                <option value="jeongsi">정시</option>
+                            </select>
+                            <span class="text-gray-500">지금</span>
+                            <select id="fix-metric-from" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="grade">등급</option>
+                                <option value="percentile">백분위</option>
+                                <option value="score">점수</option>
+                            </select>
+                            <span class="text-gray-500">→ 바꿀 값</span>
+                            <select id="fix-metric-to" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
+                                <option value="percentile">백분위</option>
+                                <option value="grade">등급</option>
+                                <option value="score">점수</option>
+                            </select>
+                            <button onclick="fixUnivMetric()" class="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded text-white font-bold transition">고치기</button>
+                        </div>
+                    </details>
                 </div>
             </div>
         </div>
@@ -5951,6 +5977,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 autoNote.classList.add('hidden');
             }
 
+            // 💡 정시 자료를 올리면서 '기준 점수의 종류'를 등급(기본값)에서 백분위로
+            // 바꾸는 걸 깜빡하기 쉽다 — 수시/정시 선택에 맞춰 미리 알맞게 골라둔다.
+            const univKindDefault = document.getElementById('univ-kind').value === 'jeongsi' ? 'percentile' : 'grade';
+
             document.getElementById('univ-map-fields').innerHTML = UNIV_MAP_FIELDS.map(([key, label, req]) => `
                 <div>
                     <label class="text-[11px] ${req ? 'text-indigo-300 font-bold' : 'text-gray-400'} mb-1 block">${label}${req ? ' *' : ''}</label>
@@ -5962,11 +5992,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <div class="md:col-span-2">
                     <label class="text-[11px] text-indigo-300 font-bold mb-1 block">기준 점수의 종류 *</label>
                     <select id="um-metric" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
-                        <option value="grade">내신 등급 — 숫자가 낮을수록 좋음 (수시 교과등급)</option>
-                        <option value="percentile">백분위 — 숫자가 높을수록 좋음 (정시)</option>
+                        <option value="grade" ${univKindDefault === 'grade' ? 'selected' : ''}>내신 등급 — 숫자가 낮을수록 좋음 (수시 교과등급)</option>
+                        <option value="percentile" ${univKindDefault === 'percentile' ? 'selected' : ''}>백분위 — 숫자가 높을수록 좋음 (정시)</option>
                         <option value="score">점수 — 숫자가 높을수록 좋음 (원점수·표준점수·대학별 환산점수)</option>
                     </select>
-                    <p class="text-[10px] text-gray-500 mt-1">'점수 종류가 적힌 열'을 고르셨다면, 줄마다 그 열을 보고 알아서 갈라 넣습니다.</p>
+                    <p class="text-[10px] text-gray-500 mt-1">'점수 종류가 적힌 열'을 고르셨다면, 줄마다 그 열을 보고 알아서 갈라 넣습니다. 수시/정시를 바꾸면 이 값도 자동으로 맞춰집니다 — 자료가 다르면 직접 골라주세요.</p>
                 </div>`;
 
             const sample = data.sample || [];
@@ -5981,6 +6011,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         // 시트나 제목 줄을 바꾸면 그 설정으로 다시 읽는다
         function reloadUnivPreview() { previewUnivFile(null, true); }
+
+        // 수시/정시를 나중에 바꿔도 '기준 점수의 종류'가 알맞게 따라가도록
+        function syncUnivMetricDefault() {
+            const metricSel = document.getElementById('um-metric');
+            if (!metricSel) return;
+            metricSel.value = document.getElementById('univ-kind').value === 'jeongsi' ? 'percentile' : 'grade';
+        }
 
         async function importUnivFile() {
             if (!UNIV_FILE) return alert("먼저 파일을 올려주세요.");
@@ -6032,6 +6069,28 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const statusEl = document.getElementById('univ-queue-status');
                 if (statusEl) statusEl.classList.add('hidden');
             }
+        }
+
+        async function fixUnivMetric() {
+            const kind = document.getElementById('fix-metric-kind').value;
+            const from = document.getElementById('fix-metric-from').value;
+            const to = document.getElementById('fix-metric-to').value;
+            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[kind] || kind;
+            const metricLabel = { grade: '등급', percentile: '백분위', score: '점수' };
+            if (from === to) return alert("지금 값과 바꿀 값이 같습니다.");
+            if (!confirm(`${kindLabel} 자료 중 '${metricLabel[from]}'로 저장된 것을 '${metricLabel[to]}'(으)로 바꿀까요?\n(다른 갈래·다른 점수 종류 자료는 건드리지 않습니다)`)) return;
+            showLoader("고치는 중...");
+            const fd = new FormData();
+            fd.append("kind", kind); fd.append("from_metric", from); fd.append("to_metric", to);
+            let data;
+            try {
+                const res = await uploadFormData(`${API_URL}/api/admin/univ_table/fix_metric`, fd);
+                data = typeof res === 'string' ? JSON.parse(res) : res;
+            } catch (e) { hideLoader(); return alert("고치지 못했습니다: " + e.message); }
+            hideLoader();
+            if (!data || !data.success) return alert((data && data.detail) || "고치지 못했습니다.");
+            alert(data.changed ? `${data.changed.toLocaleString()}건을 '${metricLabel[to]}' 기준으로 고쳤습니다.` : "해당하는 자료가 없었습니다.");
+            await loadUnivList();
         }
 
         async function clearUnivTable() {
