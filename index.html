@@ -538,6 +538,7 @@
                         <div class="flex gap-2 shrink-0">
                             <button onclick="downloadUnivTemplate('susi')" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-download mr-1"></i>수시 양식</button>
                             <button onclick="downloadUnivTemplate('jeongsi')" class="bg-yellow-700 hover:bg-yellow-600 px-4 py-2 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-download mr-1"></i>정시 양식</button>
+                        <button onclick="downloadUnivTemplate('yeche')" class="bg-yellow-700 hover:bg-yellow-600 px-4 py-2 rounded text-white font-bold text-xs transition"><i class="fa-solid fa-download mr-1"></i>예체능 양식</button>
                         </div>
                     </div>
                     <p class="text-[11px] text-gray-400 leading-relaxed mb-1">
@@ -579,6 +580,7 @@
                                     <option value="susi">수시 — 내신 등급과 견줍니다</option>
                                     <option value="nonsul">논술 — 논술전형 입결과 견줍니다</option>
                                     <option value="jeongsi">정시 — 수능 백분위·원점수와 견줍니다</option>
+                                    <option value="yeche">예체능 — 실기와 함께 봅니다</option>
                                 </select>
                             </div>
                             <div>
@@ -617,6 +619,15 @@
                         <button onclick="loadUnivList()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white font-bold text-sm transition">찾기</button>
                         <button onclick="clearUnivTable()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-white font-bold text-sm transition">전체 삭제</button>
                     </div>
+                    <!-- 💡 이미 올려둔 자료를 표준 양식 그대로 내려받아, 빈 칸만 채워 다시 올리도록 -->
+                    <div class="flex flex-wrap items-center gap-2 mb-2 bg-[#1e2430] border border-gray-700 rounded-lg px-2 py-1.5">
+                        <span class="text-[11px] text-gray-400">지금 저장된 자료를 엑셀로 내려받아 고치기</span>
+                        <button onclick="exportUnivTable('jeongsi')" class="bg-yellow-700 hover:bg-yellow-600 px-3 py-1 rounded text-white font-bold text-[11px] transition"><i class="fa-solid fa-file-arrow-down mr-1"></i>정시</button>
+                        <button onclick="exportUnivTable('susi')" class="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded text-white font-bold text-[11px] transition"><i class="fa-solid fa-file-arrow-down mr-1"></i>수시</button>
+                        <button onclick="exportUnivTable('nonsul')" class="bg-purple-800 hover:bg-purple-700 px-3 py-1 rounded text-white font-bold text-[11px] transition"><i class="fa-solid fa-file-arrow-down mr-1"></i>논술</button>
+                        <button onclick="exportUnivTable('yeche')" class="bg-pink-800 hover:bg-pink-700 px-3 py-1 rounded text-white font-bold text-[11px] transition"><i class="fa-solid fa-file-arrow-down mr-1"></i>예체능</button>
+                        <span class="text-[10px] text-gray-500 basis-full">받은 파일의 <b class="text-yellow-300">노란 칸</b>만 채워 그대로 다시 올리시면 됩니다. 올릴 때 <b>'덧붙이기'는 꺼주세요.</b></span>
+                    </div>
                     <div id="univ-list" class="max-h-64 overflow-y-auto space-y-1"></div>
 
                     <!-- 💡 올릴 때 '기준 점수의 종류'를 잘못 골라(예: 정시인데 등급으로) 저장한 경우,
@@ -628,6 +639,7 @@
                                 <option value="susi">수시</option>
                                 <option value="nonsul">논술</option>
                                 <option value="jeongsi">정시</option>
+                                                            <option value="yeche">예체능</option>
                             </select>
                             <span class="text-gray-500">지금</span>
                             <select id="fix-metric-from" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
@@ -660,12 +672,14 @@
                                 <option value="susi">수시</option>
                                 <option value="nonsul">논술</option>
                                 <option value="jeongsi">정시</option>
+                                                            <option value="yeche">예체능</option>
                             </select>
                             <span class="text-gray-500">→ 바꿀 값</span>
                             <select id="fix-kind-to" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
                                 <option value="jeongsi">정시</option>
                                 <option value="susi">수시</option>
                                 <option value="nonsul">논술</option>
+                                                            <option value="yeche">예체능</option>
                             </select>
                             <button onclick="fixUnivKind()" class="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded text-white font-bold transition">고치기</button>
                         </div>
@@ -695,6 +709,39 @@
             <div class="p-4 border-t border-gray-700 flex gap-2">
                 <button onclick="saveRecordCriteria()" class="flex-1 bg-purple-600 hover:bg-purple-700 py-3 text-white font-bold rounded transition">기준 저장</button>
                 <button onclick="restoreCriteriaDefault()" class="bg-gray-700 hover:bg-gray-600 py-3 px-5 text-white font-bold rounded transition">기본값으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏛 학교별 주요 사항 (학생부종합 평가 기준) -->
+    <div id="univcrit-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-center justify-center p-2 md:p-4">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-4xl h-[90vh] shadow-2xl border border-indigo-500 flex flex-col">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-black text-white"><i class="fa-solid fa-building-columns mr-2 text-indigo-400"></i>학교별 주요 사항</h2>
+                    <p class="text-[11px] text-gray-400 mt-1">학생부종합은 대학마다 모집요강에 적어둔 잣대가 다릅니다. 여기에 넣어두면 그 대학 기준으로도 함께 평가합니다.</p>
+                </div>
+                <button onclick="closeModal('univcrit-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-5">
+                <div class="flex flex-wrap gap-2 items-end mb-3">
+                    <div class="flex-grow min-w-[200px]">
+                        <label class="text-[11px] text-gray-400 block mb-1">대학 이름</label>
+                        <input type="text" id="univcrit-name" placeholder="예: 중앙대학교" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600 outline-none focus:border-indigo-500">
+                    </div>
+                    <button onclick="loadUnivCriteriaOne()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white font-bold text-sm transition">불러오기</button>
+                </div>
+                <label class="text-[11px] text-gray-400 block mb-1">모집요강에 적힌 평가 기준 · 유의사항</label>
+                <textarea id="univcrit-text" class="w-full h-[38vh] p-4 bg-[#151922] border border-gray-600 outline-none focus:border-indigo-500 rounded text-white text-sm leading-relaxed resize-y"
+                    placeholder="예)&#10;- 서류 100% (면접 없음)&#10;- 학업역량 40% / 진로역량 40% / 공동체역량 20%&#10;- 전공 관련 교과 이수 여부를 중요하게 봄&#10;- 3학년 1학기까지의 성장 추이를 중시"></textarea>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="saveUnivCriteria()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 py-2.5 text-white font-bold rounded transition">저장</button>
+                    <button onclick="deleteUnivCriteria()" class="bg-red-800 hover:bg-red-700 py-2.5 px-5 text-white font-bold rounded transition">이 대학 지우기</button>
+                </div>
+                <div class="mt-5 pt-4 border-t border-gray-700">
+                    <p class="text-[11px] text-gray-400 font-bold mb-2">저장된 대학</p>
+                    <div id="univcrit-list" class="space-y-1"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1713,9 +1760,10 @@
                                                     <option value="susi">수시 — 내신으로</option>
                                                     <option value="nonsul">논술 — 논술전형으로</option>
                                                     <option value="jeongsi">정시 — 수능으로</option>
+                                                    <option value="yeche">예체능 — 실기 포함</option>
                                                 </select>
                                                 <select id="map-scope" onchange="loadUnivMap()" class="p-1 bg-gray-800 text-white rounded text-[11px] border border-gray-600">
-                                                    <option value="1">지금 닿는 대학만</option>
+                                                    <option value="1">지금 가능한 대학만</option>
                                                     <option value="0">입결 자료에 있는 전체</option>
                                                 </select>
                                                 <button onclick="loadUnivMap()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-rotate mr-1"></i>지도 보기</button>
@@ -1733,6 +1781,7 @@
                                                     <option value="jeongsi">정시</option>
                                                     <option value="susi">수시</option>
                                                     <option value="nonsul">논술</option>
+                                                    <option value="yeche">예체능</option>
                                                 </select>
                                                 <select id="poss-scope" class="p-1 bg-gray-800 text-white rounded border border-gray-600">
                                                     <option value="0">가능 + 모자란 곳까지</option>
@@ -1835,10 +1884,22 @@
                                 <div id="cs-record" class="cs-tab-content hidden flex-grow overflow-y-auto pr-1">
                                     <div class="flex justify-between items-center mb-2">
                                         <p class="text-[11px] text-gray-500">AI는 아래 <b class="text-gray-400">평가 기준</b>에 적힌 잣대만 사용합니다.</p>
-                                        <button onclick="openRecordCriteria()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-list-check mr-1"></i>학생부 평가 기준 설정</button>
+                                        <div class="flex gap-1">
+                                            <button onclick="openRecordCriteria()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-list-check mr-1"></i>공통 평가 기준</button>
+                                            <button onclick="openUnivCriteria()" class="bg-indigo-700 hover:bg-indigo-600 px-3 py-1.5 rounded text-[11px] text-white font-bold transition"><i class="fa-solid fa-building-columns mr-1"></i>학교별 주요 사항</button>
+                                        </div>
                                     </div>
-                                    <label class="text-xs text-gray-400 mb-1 block">희망 전공 (선택)</label>
-                                    <input type="text" id="cs-major" placeholder="예: 국어국문학과, 미디어커뮤니케이션" class="w-full p-2 mb-3 bg-gray-800 text-white rounded text-sm">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                                        <div>
+                                            <label class="text-xs text-gray-400 mb-1 block">희망 대학 (선택)</label>
+                                            <input type="text" id="cs-univ" placeholder="예: 중앙대학교" class="w-full p-2 bg-gray-800 text-white rounded text-sm">
+                                            <p class="text-[10px] text-gray-500 mt-0.5">이 대학의 <b class="text-indigo-300">학교별 주요 사항</b>이 저장돼 있으면 그 기준으로도 함께 평가합니다.</p>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-gray-400 mb-1 block">희망 전공 (선택)</label>
+                                            <input type="text" id="cs-major" placeholder="예: 국어국문학과, 미디어커뮤니케이션" class="w-full p-2 bg-gray-800 text-white rounded text-sm">
+                                        </div>
+                                    </div>
                                     <label class="text-xs text-gray-400 mb-1 block">학생부 내용 붙여넣기 (세특 · 창체 · 행발 · 출결 · 독서 등)</label>
                                     <textarea id="cs-record-text" rows="12" class="w-full p-3 bg-gray-800 text-white rounded text-sm leading-relaxed resize-y" placeholder="학생부에서 평가받고 싶은 부분을 그대로 붙여넣으세요. 출결·봉사·독서까지 함께 넣으면 아래에서 따로 정리해 보여드립니다."></textarea>
                                     <div class="flex flex-wrap gap-2 mt-2">
@@ -4897,7 +4958,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const box = document.getElementById('poss-view');
             const used = d.used || {}, mine = d.mine || {};
             const isWhatIf = (d.overridden || []).length > 0;
-            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[d.kind] || d.kind;
+            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시', yeche: '예체능' }[d.kind] || d.kind;
 
             POSS_BASE = d.base_subject_pcts || {};
             const P = d.subject_pcts || {};
@@ -4991,7 +5052,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         // 전형 갈래별 색 — 수시 파랑 / 논술 보라 / 정시 노랑, 섞이면 초록
         const MAP_KIND_RGB = { susi: '59,130,246', nonsul: '168,85,247', jeongsi: '234,179,8', mixed: '16,185,129' };
-        const MAP_KIND_LABEL = { susi: '수시', nonsul: '논술', jeongsi: '정시' };
+        const MAP_KIND_LABEL = { susi: '수시', nonsul: '논술', jeongsi: '정시', yeche: '예체능' };
         const MAP_KIND_TEXT = { susi: 'text-blue-300', nonsul: 'text-purple-300', jeongsi: 'text-yellow-300' };
         const MAP_KIND_BG = { susi: 'bg-blue-900/50 text-blue-200', nonsul: 'bg-purple-900/50 text-purple-200', jeongsi: 'bg-yellow-900/50 text-yellow-200' };
 
@@ -5660,13 +5721,81 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             showLoader("AI가 학생부를 평가하고 있습니다... (40초 정도 걸립니다)");
             const r = await adminPost('/api/admin/counsel/record_eval', {
                 student_name: COUNSEL_TARGET, record_text: body,
-                target_major: document.getElementById('cs-major').value.trim()
+                target_major: document.getElementById('cs-major').value.trim(),
+                target_univ: document.getElementById('cs-univ').value.trim()
             });
             hideLoader();
             if (!r.ok) return alert(r.message);
             COUNSEL_DATA.record_eval = r.data.record_eval;
             COUNSEL_DATA.record_eval_at = r.data.at;
-            document.getElementById('cs-record-result').innerHTML = aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
+            const note = r.data.univ
+                ? (r.data.used_univ_criteria
+                    ? `<p class="text-[11px] text-indigo-300 mb-1"><i class="fa-solid fa-building-columns mr-1"></i>${escapeHtml(r.data.univ)}의 학교별 주요 사항을 함께 반영했습니다.</p>`
+                    : `<p class="text-[11px] text-yellow-500 mb-1"><i class="fa-solid fa-circle-info mr-1"></i>${escapeHtml(r.data.univ)}의 학교별 주요 사항이 저장돼 있지 않아 공통 기준으로만 평가했습니다.</p>`)
+                : '';
+            document.getElementById('cs-record-result').innerHTML =
+                note + aiBox('학생부 정성 평가', r.data.record_eval, r.data.at);
+        }
+
+        // ── 학교별 주요 사항 (학생부종합 평가 기준) ──────────
+        async function openUnivCriteria() {
+            document.getElementById('univcrit-name').value =
+                (document.getElementById('cs-univ').value || '').trim();
+            document.getElementById('univcrit-text').value = '';
+            showModal('univcrit');
+            await refreshUnivCriteriaList();
+            if (document.getElementById('univcrit-name').value) await loadUnivCriteriaOne();
+        }
+
+        async function refreshUnivCriteriaList() {
+            const box = document.getElementById('univcrit-list');
+            const r = await adminGet('/api/admin/counsel/univ_criteria');
+            if (!r.ok) { box.innerHTML = `<p class="text-[11px] text-yellow-400">${escapeHtml(r.message)}</p>`; return; }
+            const items = r.data.items || [];
+            box.innerHTML = items.length
+                ? items.map(x => `<button onclick="pickUnivCriteria('${escAttr(x.univ)}')"
+                        class="w-full text-left bg-[#151922] hover:bg-gray-800 border border-gray-700 rounded px-3 py-1.5 transition">
+                        <span class="text-sm text-white font-bold">${escapeHtml(x.univ)}</span>
+                        <span class="text-[10px] text-gray-500 ml-2">${escapeHtml(x.updated_at || '')}</span>
+                        <div class="text-[10px] text-gray-500 truncate">${escapeHtml(x.preview || '')}</div>
+                    </button>`).join('')
+                : '<p class="text-[11px] text-gray-600">아직 저장된 대학이 없습니다.</p>';
+        }
+
+        async function pickUnivCriteria(univ) {
+            document.getElementById('univcrit-name').value = univ;
+            await loadUnivCriteriaOne();
+        }
+
+        async function loadUnivCriteriaOne() {
+            const univ = document.getElementById('univcrit-name').value.trim();
+            if (!univ) return alert("대학 이름을 적어주세요.");
+            const r = await adminGet('/api/admin/counsel/univ_criteria?univ=' + encodeURIComponent(univ));
+            if (!r.ok) return alert(r.message);
+            document.getElementById('univcrit-text').value = r.data.text || '';
+            if (!r.data.text) showToast(`${univ}에 저장된 내용이 아직 없습니다.`);
+        }
+
+        async function saveUnivCriteria() {
+            const univ = document.getElementById('univcrit-name').value.trim();
+            const text = document.getElementById('univcrit-text').value.trim();
+            if (!univ) return alert("대학 이름을 적어주세요.");
+            if (!text) return alert("내용이 비어 있습니다. 지우시려면 '이 대학 지우기'를 눌러주세요.");
+            const r = await adminPost('/api/admin/counsel/univ_criteria', { univ: univ, text: text });
+            if (!r.ok) return alert(r.message);
+            showToast(`${univ} 주요 사항을 저장했습니다.`);
+            await refreshUnivCriteriaList();
+        }
+
+        async function deleteUnivCriteria() {
+            const univ = document.getElementById('univcrit-name').value.trim();
+            if (!univ) return alert("대학 이름을 적어주세요.");
+            if (!confirm(`${univ}의 학교별 주요 사항을 지울까요?`)) return;
+            const r = await adminPost('/api/admin/counsel/univ_criteria', { univ: univ, text: '' });
+            if (!r.ok) return alert(r.message);
+            document.getElementById('univcrit-text').value = '';
+            showToast(`${univ} 주요 사항을 지웠습니다.`);
+            await refreshUnivCriteriaList();
         }
 
         // ── 학생부에서 출결 · 봉사 · 독서만 따로 뽑아 보여주기 ──
@@ -6070,6 +6199,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             return downloadTemplateFile(`/api/admin/univ_table/template?kind=${k}`, name);
         }
 
+        // 지금 저장된 입결 자료를 표준 양식 엑셀로 내려받는다 (빈 칸만 채워 다시 올리도록)
+        function exportUnivTable(kind) {
+            const name = { susi: '수시', nonsul: '논술', jeongsi: '정시', yeche: '예체능' }[kind] || kind;
+            return downloadTemplateFile(`/api/admin/univ_table/export?kind=${kind}`,
+                                        `입결자료_${name}_내려받기.xlsx`);
+        }
+
         function downloadVocabTemplate() {
             return downloadTemplateFile('/api/admin/vocab/template', '영어단어_입력양식.xlsx');
         }
@@ -6095,7 +6231,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             // 고쳐졌는데도 화면엔 '등급'으로 보여 고쳐졌는지 확인할 방법이 없었다.
             const KIND_TAG = { susi: ['수시', 'bg-blue-900/60 text-blue-200'],
                                nonsul: ['논술', 'bg-purple-900/60 text-purple-200'],
-                               jeongsi: ['정시', 'bg-yellow-900/60 text-yellow-200'] };
+                               jeongsi: ['정시', 'bg-yellow-900/60 text-yellow-200'],
+                               yeche: ['예체능', 'bg-pink-900/60 text-pink-200'] };
             const METRIC_TAG = { grade: '등급', percentile: '백분위 평균',
                                  percentile_sum: '백분위 합', score: '점수', eng_grade: '영어등급' };
             box.innerHTML = rows.length
@@ -6221,7 +6358,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 // 고르지 않아도 그냥 넘어갈 수 있어서, 수시가 기본값으로 남은 채
                 // 정시 자료가 통째로 '수시'로 저장되는 사고가 실제로 있었다 —
                 // 서버가 열 구성으로 알아낸 갈래를 여기서 바로 선택해 둔다.
-                const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[data.template_kind] || data.template_kind;
+                const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시', yeche: '예체능' }[data.template_kind] || data.template_kind;
                 if (data.template_kind) {
                     document.getElementById('univ-kind').value = data.template_kind;
                     syncUnivMetricDefault();
@@ -6331,7 +6468,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const kind = document.getElementById('fix-metric-kind').value;
             const from = document.getElementById('fix-metric-from').value;
             const to = document.getElementById('fix-metric-to').value;
-            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[kind] || kind;
+            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시', yeche: '예체능' }[kind] || kind;
             const metricLabel = { any: '무엇이든', grade: '등급', percentile: '백분위 평균', percentile_sum: '백분위 합', score: '점수' };
             if (from === to) return alert("지금 값과 바꿀 값이 같습니다.");
             if (!confirm(`${kindLabel} 자료 중 '${metricLabel[from]}'로 저장된 것을 '${metricLabel[to]}'(으)로 바꿀까요?\n(다른 갈래·다른 점수 종류 자료는 건드리지 않습니다)`)) return;
@@ -6352,7 +6489,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         async function fixUnivKind() {
             const from = document.getElementById('fix-kind-from').value;
             const to = document.getElementById('fix-kind-to').value;
-            const kindLabel = { any: '무엇이든', susi: '수시', nonsul: '논술', jeongsi: '정시' };
+            const kindLabel = { any: '무엇이든', susi: '수시', nonsul: '논술', jeongsi: '정시', yeche: '예체능' };
             if (from === to) return alert("지금 갈래와 바꿀 갈래가 같습니다.");
             if (!confirm(`'${kindLabel[from]}'로 저장된 자료 전체를 '${kindLabel[to]}'(으)로 옮길까요?\n(그 갈래 안에 서로 다른 자료가 섞여 있으면 함께 옮겨지니 주의하세요)`)) return;
             showLoader("고치는 중...");
@@ -6406,7 +6543,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 return `<div class="bg-[#151922] border ${tone} rounded-lg p-3">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-[11px] text-gray-400 font-bold">${title}</span>
-                        <span class="text-[10px] text-gray-500">${blk.total}건 중 <b class="text-emerald-400">${blk.reachable}건</b> 도달</span>
+                        <span class="text-[10px] text-gray-500">${blk.total}건 중 <b class="text-emerald-400">${blk.reachable}건</b> 가능</span>
                     </div>
                     ${head}
                     <div class="space-y-1 max-h-32 overflow-y-auto mt-2">
@@ -6416,7 +6553,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                     ${i.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(i.type)}</span>` : ''}</span>
                                 <span class="shrink-0 ml-2 ${i.reach ? 'text-emerald-400' : 'text-yellow-400'} font-bold">
                                     ${i.cut}${i.unit}${i.eng_cut !== null && i.eng_cut !== undefined ? ` <span class="text-gray-500">영${i.eng_cut}</span>` : ''}
-                                    · ${i.reach ? '도달' : Math.abs(i.gap) + i.unit + ' 부족'}</span>
+                                    · ${i.reach ? '가능' : Math.abs(i.gap) + i.unit + ' 모자람'}</span>
                             </div>`).join('')}
                     </div>
                 </div>`;
