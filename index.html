@@ -4550,6 +4550,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             return list.find(m => m.name === n)
                 || list.find(m => m.name.startsWith(n))
                 || list.find(m => n.startsWith(m.name))
+                // 💡 '수원시영통구'처럼 시+구가 붙은 이름인데 '영통구'만 적었을 때도
+                //    찾을 수 있게, 그 도 안에서 뒤가 같은 이름도 찾아본다.
+                || (n.length >= 2 ? list.find(m => m.name.endsWith(n)) : null)
                 || null;
         }
 
@@ -4701,13 +4704,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         </div>
                     </div>
                     <div data-majors class="hidden mt-2 pt-2 border-t border-gray-800 space-y-1">
-                        ${(u.majors || []).map(m => `<div class="text-[10px]">
+                        ${(u.majors || []).map(m => {
+                            const typeLabel = [m.type, m.subtype].filter(Boolean).join(' · ');
+                            return `<div class="text-[10px]">
                             <div class="flex justify-between gap-2">
-                                <span class="text-gray-300 truncate">${escapeHtml(m.major || '(학과 미상)')}${m.type ? `<span class="text-gray-600 ml-1">${escapeHtml(m.type)}</span>` : ''}</span>
+                                <span class="text-gray-300 truncate">${escapeHtml(m.major || '(학과 미상)')}${typeLabel ? `<span class="text-gray-600 ml-1">${escapeHtml(typeLabel)}</span>` : ''}</span>
                                 <span class="shrink-0 ${m.reach ? 'text-emerald-400' : 'text-red-400'}">${escapeHtml(majorLine(m))}</span>
                             </div>
+                            ${m.method ? `<div class="text-[10px] text-gray-500">${escapeHtml(m.method)}</div>` : ''}
+                            ${m.subjects ? `<div class="text-[10px] text-gray-500">반영 과목 ${escapeHtml(m.subjects)}</div>` : ''}
                             ${m.min_suneung ? `<div class="text-[10px] text-gray-500">수능최저 ${escapeHtml(m.min_suneung)}</div>` : ''}
-                        </div>`).join('') || '<div class="text-[10px] text-gray-600">학과 정보가 없습니다.</div>'}
+                        </div>`;
+                        }).join('') || '<div class="text-[10px] text-gray-600">학과 정보가 없습니다.</div>'}
                     </div>
                 </div>`;
 
