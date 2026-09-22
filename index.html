@@ -10943,16 +10943,23 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         //    다시 불러와, 처음 채점됐을 때와 같은 화면을 언제든 다시 볼 수 있게 한다.
         let VR = { items: [] };
 
-        async function openViewResult(title, kind) {
+        // 💡 원장님도 같은 화면을 쓴다. 학생 이름을 넘기면 그 학생의 답안지를 그대로 펼친다
+        //    ('3번을 틀렸다'만 보고는 무엇을 모르는지 알 수 없다). focusNo 를 주면
+        //    열자마자 그 문항을 펼쳐 보여준다.
+        async function openViewResult(title, kind, studentName, focusNo) {
+            const who = studentName || (currentUser && currentUser.name);
+            if (!who) return alert("학생을 찾지 못했습니다.");
             let data;
             try {
-                const res = await fetch(`${API_URL}/api/student/view_result?student_name=${encodeURIComponent(currentUser.name)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
+                const res = await fetch(`${API_URL}/api/student/view_result?student_name=${encodeURIComponent(who)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
                 data = await res.json();
             } catch (e) { return alert("결과를 불러오지 못했습니다: " + e.message); }
             if (!data.success) return alert(data.detail || "결과를 불러오지 못했습니다.");
 
             VR = data;
-            document.getElementById('vr-title').innerText = title;
+            VR.viewing_student = studentName || '';   // 원장님이 남의 답안지를 볼 때만 채워진다
+            document.getElementById('vr-title').innerText =
+                studentName ? `${studentName} · ${title}` : title;
             const pct = (data.correct_count !== '' && data.question_count)
                 ? Math.round(data.correct_count / data.question_count * 100) : null;
             document.getElementById('vr-sub').innerText =
@@ -10972,9 +10979,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     ${it.explanation ? '<span class="absolute top-0 right-0.5 text-[7px] text-sky-300">해설</span>' : ''}
                 </button>`;
             }).join('');
-            document.getElementById('vr-detail').innerHTML =
-                '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 정답, 해설을 확인하세요.</p>';
+            document.getElementById('vr-detail').innerHTML = studentName
+                ? '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 학생의 답과 정답, 해설을 확인하세요.</p>'
+                : '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 정답, 해설을 확인하세요.</p>';
             showModal('viewresult');
+            if (focusNo) showViewResultItem(Number(focusNo));
         }
 
         function showViewResultItem(no) {
@@ -10986,6 +10995,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const qtype = it.qtype || 'choice';
             const mineLabel = it.is_unsure ? '모르겠다고 표시'
                 : (it.mine ? (qtype === 'choice' ? it.mine + '번' : it.mine) : '표시 안 함');
+            // 원장님이 볼 때는 '내 답'이 아니라 '학생 이름의 답'이어야 말이 된다
+            const whose = VR.viewing_student ? escapeHtml(VR.viewing_student) + ' 답' : '내 답';
 
             const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2">${escapeHtml(it.text)}</p>` : '';
             const imgHtml = it.image ? `<div class="mb-2"><img src="${API_URL}${encodeURI(it.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : '';
@@ -10998,14 +11009,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const isMine = String(it.mine) === String(n);
                 const isAns = answerContains(it.answer, n);
                 const cls = isAns ? 'text-emerald-300 font-bold' : (isMine ? 'text-red-300' : 'text-gray-400');
-                return `<div class="text-xs ${cls}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}${(isMine && !isAns) ? ' ← 내 답' : ''}</div>`;
+                return `<div class="text-xs ${cls}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}${(isMine && !isAns) ? ' ← ' + whose : ''}</div>`;
             }).join('')}</div>` : '';
 
             const answerLineHtml = qtype === 'essay'
-                ? `<p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))}</p>
+                ? `<p class="text-[11px] text-gray-400 mb-2">${whose}: ${escapeHtml(String(mineLabel))}</p>
                    ${it.rubric ? `<p class="text-[11px] text-gray-500 mb-2">채점 기준: ${escapeHtml(it.rubric)}</p>` : ''}
                    ${it.ai_feedback ? `<div class="text-sky-300 text-xs bg-[#151922] border border-gray-700 rounded p-2 mb-2"><i class="fa-solid fa-robot mr-1"></i>${escapeHtml(it.ai_feedback)}</div>` : ''}`
-                : `<p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}</p>`;
+                : `<p class="text-[11px] text-gray-400 mb-2">${whose}: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}</p>`;
 
             box.innerHTML = `
                 <div class="bg-[#1e2430] border border-gray-600 rounded-lg p-3">
@@ -11238,6 +11249,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             tab === 'students' ? renderResultsStudents() : renderResultsQuestions();
         }
 
+        // 💡 성적 모아보기에서 학생 이름이나 틀린 번호를 누르면, 그 학생의 답안지를
+        //    문제 내용까지 통째로 펼친다. 번호만 보고는 무엇을 모르는지 알 수 없다.
+        function openStudentAnswerSheet(studentName, no) {
+            if (!RESULTS) return;
+            openViewResult(RESULTS.title, RESULTS.kind, studentName, no);
+        }
+
         function renderResultsStudents() {
             const box = document.getElementById('results-body');
             const rows = (RESULTS && RESULTS.students) || [];
@@ -11251,12 +11269,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     : (pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-yellow-400' : 'text-red-400');
                 const wrongs = (st.wrongs || []);
                 const unsure = new Set((st.unsure || []).map(Number));
+                const who = escAttr(st.student_name);
                 return `
                 <div class="bg-[#151922] border border-gray-700 rounded-lg p-3 mb-2">
                     <div class="flex justify-between items-start gap-2">
                         <div class="min-w-0">
                             <span class="text-gray-500 text-xs mr-1">${i + 1}위</span>
-                            <span class="text-white font-bold text-sm">${escapeHtml(st.student_name)}</span>
+                            <button onclick="openStudentAnswerSheet('${who}')" class="text-white font-bold text-sm hover:text-sky-300 underline decoration-dotted underline-offset-2">${escapeHtml(st.student_name)}</button>
                             <div class="text-[10px] text-gray-500">${escapeHtml(st.school || '')} ${escapeHtml(String(st.grade || ''))} · ${escapeHtml(st.submitted_at || '')}</div>
                         </div>
                         <div class="text-right shrink-0">
@@ -11265,8 +11284,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         </div>
                     </div>
                     ${wrongs.length ? `<div class="mt-2 flex flex-wrap gap-1">
-                        ${wrongs.map(no => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${unsure.has(Number(no)) ? 'bg-amber-900/50 text-amber-300 border border-amber-700' : 'bg-red-900/40 text-red-300 border border-red-800'}">${no}번${unsure.has(Number(no)) ? ' 모름' : ''}</span>`).join('')}
-                    </div>` : '<p class="text-[11px] text-emerald-400 mt-2">전부 맞혔습니다.</p>'}
+                        ${wrongs.map(no => `<button onclick="openStudentAnswerSheet('${who}', ${Number(no)})" style="touch-action:manipulation;"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-bold transition active:scale-95 hover:brightness-125 ${unsure.has(Number(no)) ? 'bg-amber-900/50 text-amber-300 border border-amber-700' : 'bg-red-900/40 text-red-300 border border-red-800'}">${no}번${unsure.has(Number(no)) ? ' 모름' : ''}</button>`).join('')}
+                    </div>
+                    <p class="text-[10px] text-gray-600 mt-1.5"><i class="fa-solid fa-hand-pointer mr-1"></i>번호를 누르면 어떤 문제였는지, 무엇이라고 답했는지 볼 수 있어요.</p>`
+                    : '<p class="text-[11px] text-emerald-400 mt-2">전부 맞혔습니다.</p>'}
                 </div>`;
             }).join('');
         }
@@ -11282,12 +11304,26 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const rate = q.rate;
                 const tone = rate == null ? 'bg-gray-700'
                     : (rate >= 80 ? 'bg-emerald-500' : rate >= 50 ? 'bg-yellow-500' : 'bg-red-500');
+                const opts = (q.options || []).filter(Boolean);
                 return `
                 <div class="bg-[#151922] border border-gray-700 rounded-lg p-3 mb-2">
                     <div class="flex justify-between items-center gap-2 mb-1">
                         <span class="text-white font-bold text-sm">${q.no}번</span>
                         <span class="text-xs ${rate != null && rate < 50 ? 'text-red-300 font-bold' : 'text-gray-400'}">정답률 ${rate != null ? rate + '%' : '-'} <span class="text-gray-600">(${q.correct}/${q.total})</span></span>
                     </div>
+                    ${q.text ? `<p class="text-[12px] text-gray-200 leading-relaxed mb-1.5">${escapeHtml(q.text)}</p>` : ''}
+                    ${q.image ? `<img src="${API_URL}${encodeURI(q.image)}" class="max-w-full rounded border border-gray-700 mb-1.5" alt="문항 그림">` : ''}
+                    ${(q.bogi || '').trim() ? `<div class="mb-1.5 border border-gray-600 rounded p-2 bg-[#0f131b]">
+                        <div class="text-[10px] text-sky-400 font-bold mb-1">&lt;보기&gt;</div>
+                        <p class="text-[11px] text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(q.bogi)}</p></div>` : ''}
+                    ${opts.length ? `<details class="mb-1.5"><summary class="text-[11px] text-gray-400 cursor-pointer">선택지 보기</summary>
+                        <div class="mt-1 space-y-0.5">${(q.options || []).map((o, i) => {
+                            if (!o) return '';
+                            const n = i + 1;
+                            const isAns = answerContains(q.answer, n);
+                            return `<div class="text-[11px] ${isAns ? 'text-emerald-300 font-bold' : 'text-gray-400'}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}</div>`;
+                        }).join('')}</div></details>`
+                        : (q.answer_text || q.answer ? `<p class="text-[11px] text-emerald-300 mb-1.5">정답: ${escapeHtml(String(q.answer_text || q.answer))}</p>` : '')}
                     <div class="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-1">
                         <div class="h-full ${tone}" style="width:${rate || 0}%"></div>
                     </div>
