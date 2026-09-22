@@ -632,12 +632,14 @@
                             <span class="text-gray-500">지금</span>
                             <select id="fix-metric-from" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
                                 <option value="grade">등급</option>
-                                <option value="percentile">백분위</option>
+                                <option value="percentile">백분위 평균</option>
+                                <option value="percentile_sum">백분위 합</option>
                                 <option value="score">점수</option>
                             </select>
                             <span class="text-gray-500">→ 바꿀 값</span>
                             <select id="fix-metric-to" class="p-2 bg-gray-800 text-white rounded border border-gray-600">
-                                <option value="percentile">백분위</option>
+                                <option value="percentile_sum">백분위 합</option>
+                                <option value="percentile">백분위 평균</option>
                                 <option value="grade">등급</option>
                                 <option value="score">점수</option>
                             </select>
@@ -6024,10 +6026,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <label class="text-[11px] text-indigo-300 font-bold mb-1 block">기준 점수의 종류 *</label>
                     <select id="um-metric" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
                         <option value="grade" ${univKindDefault === 'grade' ? 'selected' : ''}>내신 등급 — 숫자가 낮을수록 좋음 (수시 교과등급)</option>
-                        <option value="percentile" ${univKindDefault === 'percentile' ? 'selected' : ''}>백분위 — 숫자가 높을수록 좋음 (정시)</option>
+                        <option value="percentile" ${univKindDefault === 'percentile' ? 'selected' : ''}>백분위 평균 — 숫자가 높을수록 좋음, 0~100 (정시)</option>
+                        <option value="percentile_sum">백분위 합 — 국어+수학+탐구(평균) 백분위를 더한 값, 보통 250~400 (정시 배치표에 흔함)</option>
                         <option value="score">점수 — 숫자가 높을수록 좋음 (원점수·표준점수·대학별 환산점수)</option>
                     </select>
-                    <p class="text-[10px] text-gray-500 mt-1">'점수 종류가 적힌 열'을 고르셨다면, 줄마다 그 열을 보고 알아서 갈라 넣습니다. 수시/정시를 바꾸면 이 값도 자동으로 맞춰집니다 — 자료가 다르면 직접 골라주세요.</p>
+                    <p class="text-[10px] text-gray-500 mt-1">'점수 종류가 적힌 열'을 고르셨다면, 줄마다 그 열을 보고 알아서 갈라 넣습니다. 수시/정시를 바꾸면 이 값도 자동으로 맞춰집니다 — 자료가 다르면 직접 골라주세요. 정시 배치표 숫자가 100을 훌쩍 넘으면(200~400대) '백분위 합'을 골라주세요.</p>
                 </div>`;
 
             const sample = data.sample || [];
@@ -6107,7 +6110,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const from = document.getElementById('fix-metric-from').value;
             const to = document.getElementById('fix-metric-to').value;
             const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[kind] || kind;
-            const metricLabel = { grade: '등급', percentile: '백분위', score: '점수' };
+            const metricLabel = { grade: '등급', percentile: '백분위 평균', percentile_sum: '백분위 합', score: '점수' };
             if (from === to) return alert("지금 값과 바꿀 값이 같습니다.");
             if (!confirm(`${kindLabel} 자료 중 '${metricLabel[from]}'로 저장된 것을 '${metricLabel[to]}'(으)로 바꿀까요?\n(다른 갈래·다른 점수 종류 자료는 건드리지 않습니다)`)) return;
             showLoader("고치는 중...");
