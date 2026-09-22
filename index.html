@@ -1741,24 +1741,42 @@
                                                 <button onclick="loadUnivPossible()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1 rounded text-white font-bold transition"><i class="fa-solid fa-magnifying-glass mr-1"></i>찾기</button>
                                             </div>
                                         </div>
-                                        <div class="flex flex-wrap items-end gap-2 mb-2 bg-[#1e2430] border border-gray-700 rounded-lg p-2">
-                                            <div>
-                                                <label class="text-[10px] text-gray-400 block mb-0.5">가능 백분위 (국+수+탐평균 합)</label>
-                                                <input type="number" id="poss-pctsum" step="0.1" placeholder="학생 성적 그대로"
-                                                       class="w-40 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500">
+                                        <div class="bg-[#1e2430] border border-gray-700 rounded-lg p-2 mb-2">
+                                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                                <span class="text-[10px] text-gray-400 font-bold">과목별 백분위</span>
+                                                <label class="text-[10px] text-gray-400 flex items-center gap-1">
+                                                    <input type="checkbox" id="poss-no-special" checked onchange="loadUnivPossible()">
+                                                    농어촌 · 기회균등 등 특별전형 빼고 보기
+                                                </label>
                                             </div>
-                                            <div>
-                                                <label class="text-[10px] text-gray-400 block mb-0.5">영어 등급</label>
-                                                <input type="number" id="poss-eng" step="1" min="1" max="9" placeholder="그대로"
-                                                       class="w-24 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500">
+                                            <div class="flex flex-wrap items-end gap-2">
+                                                <div><label class="text-[10px] text-gray-500 block mb-0.5">국어</label>
+                                                    <input type="number" id="poss-kor" step="1" min="0" max="100" placeholder="지금"
+                                                        class="w-20 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500"></div>
+                                                <div><label class="text-[10px] text-gray-500 block mb-0.5">수학</label>
+                                                    <input type="number" id="poss-math" step="1" min="0" max="100" placeholder="지금"
+                                                        class="w-20 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500"></div>
+                                                <div><label class="text-[10px] text-gray-500 block mb-0.5">탐구(평균)</label>
+                                                    <input type="number" id="poss-tamgu" step="1" min="0" max="100" placeholder="지금"
+                                                        class="w-20 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500"></div>
+                                                <div><label class="text-[10px] text-gray-500 block mb-0.5">영어 등급</label>
+                                                    <input type="number" id="poss-eng" step="1" min="1" max="9" placeholder="지금"
+                                                        class="w-20 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500"></div>
+                                                <div><label class="text-[10px] text-gray-500 block mb-0.5">내신(수시)</label>
+                                                    <input type="number" id="poss-grade" step="0.01" min="1" max="9" placeholder="지금"
+                                                        class="w-20 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500"></div>
                                             </div>
-                                            <div>
-                                                <label class="text-[10px] text-gray-400 block mb-0.5">내신 등급 (수시용)</label>
-                                                <input type="number" id="poss-grade" step="0.01" min="1" max="9" placeholder="그대로"
-                                                       class="w-28 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500">
+                                            <div class="flex flex-wrap items-center gap-1 mt-2">
+                                                <span class="text-[10px] text-gray-500 mr-1">한 번에 올리고 내리기</span>
+                                                <button onclick="bumpPossSubject('kor', 5)" class="bg-gray-800 hover:bg-emerald-800 text-gray-300 px-2 py-1 rounded text-[10px]">국어 +5</button>
+                                                <button onclick="bumpPossSubject('kor', -5)" class="bg-gray-800 hover:bg-red-900 text-gray-300 px-2 py-1 rounded text-[10px]">국어 −5</button>
+                                                <button onclick="bumpPossSubject('math', 5)" class="bg-gray-800 hover:bg-emerald-800 text-gray-300 px-2 py-1 rounded text-[10px]">수학 +5</button>
+                                                <button onclick="bumpPossSubject('math', -5)" class="bg-gray-800 hover:bg-red-900 text-gray-300 px-2 py-1 rounded text-[10px]">수학 −5</button>
+                                                <button onclick="bumpPossSubject('tamgu', 5)" class="bg-gray-800 hover:bg-emerald-800 text-gray-300 px-2 py-1 rounded text-[10px]">탐구 +5</button>
+                                                <button onclick="bumpPossSubject('tamgu', -5)" class="bg-gray-800 hover:bg-red-900 text-gray-300 px-2 py-1 rounded text-[10px]">탐구 −5</button>
+                                                <button onclick="clearUnivPossibleWhatIf()" class="ml-1 text-[10px] text-gray-400 hover:text-white underline decoration-dotted px-1 py-1">학생 실제 성적으로</button>
                                             </div>
-                                            <button onclick="clearUnivPossibleWhatIf()" class="text-[11px] text-gray-400 hover:text-white underline decoration-dotted px-1 py-1">학생 실제 성적으로</button>
-                                            <p class="text-[10px] text-gray-500 basis-full">비워두면 학생의 지금 성적으로 봅니다. 숫자를 넣으면 <b class="text-emerald-400">그 점수가 됐을 때</b> 어디까지 열리는지 미리 볼 수 있어요.</p>
+                                            <p class="text-[10px] text-gray-500 mt-1">비워두면 학생의 지금 성적으로 봅니다. 대학마다 <b class="text-emerald-400">반영 과목 수(2과목·3과목)</b>가 다르면, 그 대학 방식대로 더해서 견줍니다.</p>
                                         </div>
                                         <div id="poss-view"><p class="text-gray-600 text-xs text-center py-6"><b class="text-emerald-400">찾기</b>를 누르면 가능한 대학과 그 안의 학과가 나옵니다.</p></div>
                                     </div>
@@ -4828,10 +4846,27 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // ── 가능 대학 찾기 ───────────────────────────────
         //   대학을 먼저 줄 세우고, 대학마다 가능한 학과와 모자란 점수를 함께 보여준다.
         //   '가능 백분위'를 넣으면 그 점수가 됐을 때를 미리 본다.
+        const POSS_INPUTS = ['poss-kor', 'poss-math', 'poss-tamgu', 'poss-eng', 'poss-grade'];
+
         function clearUnivPossibleWhatIf() {
-            ['poss-pctsum', 'poss-eng', 'poss-grade'].forEach(id => { document.getElementById(id).value = ''; });
+            POSS_INPUTS.forEach(id => { document.getElementById(id).value = ''; });
             loadUnivPossible();
         }
+
+        // 과목 하나를 지금 값에서 ±만큼 움직여 본다(칸이 비어 있으면 학생 실제 값에서 출발)
+        function bumpPossSubject(which, delta) {
+            const id = 'poss-' + which;
+            const el = document.getElementById(id);
+            const base = (el.value || '').trim() !== '' ? Number(el.value)
+                : (POSS_BASE[{ kor: '국어', math: '수학', tamgu: '탐구' }[which]]);
+            if (base === null || base === undefined || isNaN(base)) {
+                return alert("이 학생의 과목 백분위가 없어서 올리고 내릴 수 없습니다.\n모의고사 성적을 먼저 채워주세요.");
+            }
+            el.value = Math.max(0, Math.min(100, Math.round(base + delta)));
+            loadUnivPossible();
+        }
+
+        let POSS_BASE = {};   // 학생의 실제 과목별 백분위
 
         async function loadUnivPossible() {
             if (!COUNSEL_TARGET) return alert("학생을 먼저 선택해주세요.");
@@ -4845,7 +4880,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 student_name: COUNSEL_TARGET,
                 kind: document.getElementById('poss-kind').value,
                 only_reachable: document.getElementById('poss-scope').value === '1',
-                percentile_sum: numOrNull('poss-pctsum'),
+                exclude_special: document.getElementById('poss-no-special').checked,
+                kor: numOrNull('poss-kor'),
+                math: numOrNull('poss-math'),
+                tamgu: numOrNull('poss-tamgu'),
                 eng_grade: numOrNull('poss-eng'),
                 grade: numOrNull('poss-grade'),
             });
@@ -4861,11 +4899,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const isWhatIf = (d.overridden || []).length > 0;
             const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[d.kind] || d.kind;
 
+            POSS_BASE = d.base_subject_pcts || {};
+            const P = d.subject_pcts || {};
             const baseBits = [];
             if (d.kind === 'jeongsi') {
-                baseBits.push(used.percentile_sum === null || used.percentile_sum === undefined
-                    ? '<span class="text-red-400">백분위 합 없음 (국어·수학·탐구 중 빠진 과목이 있어요)</span>'
-                    : `백분위 합 <b class="text-white">${used.percentile_sum}</b>`);
+                // 대학마다 반영 과목이 달라 '합계 하나'로는 말할 수 없다 — 과목별로 보여준다
+                const one = (label, key) => {
+                    const now = P[key], was = POSS_BASE[key];
+                    if (now === null || now === undefined) return `<span class="text-red-400">${label} 없음</span>`;
+                    const moved = (was !== null && was !== undefined && now !== was)
+                        ? `<span class="${now > was ? 'text-emerald-400' : 'text-red-400'}">(${was}→${now})</span>` : '';
+                    return `${label} <b class="text-white">${now}</b>${moved}`;
+                };
+                baseBits.push(one('국어', '국어'), one('수학', '수학'), one('탐구', '탐구'));
             } else {
                 baseBits.push(used.grade === null || used.grade === undefined
                     ? '<span class="text-red-400">내신 없음</span>'
@@ -4875,7 +4921,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
             const head = `<div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-[11px]">
                 <div class="text-gray-400">${kindLabel} 기준 · ${baseBits.join(' · ')}
-                    ${isWhatIf ? `<span class="ml-1 text-amber-300">(가정 점수로 미리보기 · 실제는 ${mine.percentile_sum ?? mine.grade ?? '-'})</span>` : ''}</div>
+                    ${isWhatIf ? '<span class="ml-1 text-amber-300">(가정 점수로 미리보기)</span>' : ''}
+                    ${d.excluded_special ? `<span class="ml-1 text-gray-500">· 특별전형 ${d.excluded_special}건 제외</span>` : ''}</div>
                 <div class="text-gray-400">대학 <b class="text-white">${d.total_univ_count}</b>곳 중
                     <b class="text-emerald-400">${d.reach_univ_count}</b>곳 가능</div>
             </div>`;
@@ -4894,7 +4941,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         ${m.subtype ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(m.subtype)}</span>` : ''}
                     </span>
                     <span class="shrink-0 text-[11px] font-bold ${m.reach ? 'text-emerald-400' : 'text-yellow-500'}">
-                        ${m.cut}${escapeHtml(m.unit || '')}${m.eng_cut !== null && m.eng_cut !== undefined ? ` <span class="text-gray-500 font-normal">영${m.eng_cut}</span>` : ''}
+                        ${m.reflect ? `<span class="text-gray-500 font-normal mr-1" title="이 학과가 반영하는 과목">${escapeHtml(m.reflect)}</span>` : ''}
+                        ${m.mine !== null && m.mine !== undefined ? `<span class="text-gray-400 font-normal">내 ${m.mine}</span> / ` : ''}컷 ${m.cut}${m.eng_cut !== null && m.eng_cut !== undefined ? ` <span class="text-gray-500 font-normal">영${m.eng_cut}</span>` : ''}
                         · ${m.reach ? `여유 ${Math.abs(m.gap)}` : `<span class="text-red-400">${m.short_by} 모자람</span>`}
                     </span>
                 </div>`;
