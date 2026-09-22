@@ -9130,24 +9130,41 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const div = document.createElement('div');
             div.className = "bg-[#1e2430] p-4 rounded border border-gray-600 quiz-q-item";
             div.innerHTML = `
-                <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="w-full p-2 bg-gray-800 text-white rounded mb-3 quiz-q-text border border-gray-600 outline-none">
-                <textarea rows="2" placeholder="&lt;보기&gt; 상자에 들어갈 내용 (없으면 비워두세요)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-3 quiz-q-bogi text-sm resize-y border border-gray-700 outline-none focus:border-orange-500"></textarea>
-                <div class="space-y-2 mb-3 pl-2 border-l-2 border-orange-900">
-                    <input type="text" placeholder="① 보기 1" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                    <input type="text" placeholder="② 보기 2" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                    <input type="text" placeholder="③ 보기 3" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                    <input type="text" placeholder="④ 보기 4" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                    <input type="text" placeholder="⑤ 보기 5" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                <div class="flex gap-2 mb-3">
+                    <select onchange="onQuizTypeChange(this)" class="quiz-q-type p-2 bg-gray-800 text-orange-300 font-bold rounded border border-gray-600 outline-none text-sm">
+                        <option value="choice">객관식</option>
+                        <option value="short">단답형</option>
+                        <option value="essay">서술형</option>
+                    </select>
+                    <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="flex-grow p-2 bg-gray-800 text-white rounded quiz-q-text border border-gray-600 outline-none">
                 </div>
-                <div class="mb-2">
-                    <label class="text-[11px] text-gray-400 block mb-1">정답 <span class="text-gray-600">(문항에 결함이 있을 땐 여러 개를 함께 고를 수 있습니다)</span></label>
-                    <div class="flex gap-1.5 quiz-q-ans-boxes">
-                        <button type="button" data-n="1" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">1</button>
-                        <button type="button" data-n="2" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">2</button>
-                        <button type="button" data-n="3" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">3</button>
-                        <button type="button" data-n="4" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">4</button>
-                        <button type="button" data-n="5" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">5</button>
+                <textarea rows="2" placeholder="&lt;보기&gt; 상자에 들어갈 내용 (없으면 비워두세요)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-3 quiz-q-bogi text-sm resize-y border border-gray-700 outline-none focus:border-orange-500"></textarea>
+                <div class="quiz-q-choice-only">
+                    <div class="space-y-2 mb-3 pl-2 border-l-2 border-orange-900">
+                        <input type="text" placeholder="① 보기 1" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="② 보기 2" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="③ 보기 3" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="④ 보기 4" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="⑤ 보기 5" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
                     </div>
+                    <div class="mb-2">
+                        <label class="text-[11px] text-gray-400 block mb-1">정답 <span class="text-gray-600">(문항에 결함이 있을 땐 여러 개를 함께 고를 수 있습니다)</span></label>
+                        <div class="flex gap-1.5 quiz-q-ans-boxes">
+                            <button type="button" data-n="1" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">1</button>
+                            <button type="button" data-n="2" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">2</button>
+                            <button type="button" data-n="3" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">3</button>
+                            <button type="button" data-n="4" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">4</button>
+                            <button type="button" data-n="5" onclick="toggleQuizAnsBox(this)" class="w-10 h-9 rounded font-bold text-sm bg-gray-800 text-gray-400 border border-gray-600 transition">5</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="quiz-q-short-only hidden mb-2">
+                    <label class="text-[11px] text-gray-400 block mb-1">정답 <span class="text-gray-600">(띄어쓰기·대소문자는 너그럽게 채점됩니다. 여러 답을 인정하려면 /로 구분: 예 서울/Seoul)</span></label>
+                    <input type="text" placeholder="예: 서울" class="w-full p-2 bg-gray-800 text-orange-300 font-bold rounded quiz-q-short border border-gray-600 outline-none">
+                </div>
+                <div class="quiz-q-essay-only hidden mb-2">
+                    <label class="text-[11px] text-gray-400 block mb-1">채점 기준 <span class="text-gray-600">(AI가 이 기준에 맞는지 보고 통과/미통과를 매깁니다. 비워두면 일반적인 기준으로 채점합니다)</span></label>
+                    <textarea rows="2" placeholder="예: 기온 상승과 광합성을 언급했는지" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-rubric text-sm resize-y border border-gray-600 outline-none"></textarea>
                 </div>
                 <div class="flex gap-2 mb-2">
                     <input type="number" placeholder="배점" value="2" class="w-1/2 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score outline-none">
@@ -9230,6 +9247,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         // 읽어낸 문항 하나를 문제 목록에 채워 넣는다
+        function onQuizTypeChange(sel) {
+            const item = sel.closest('.quiz-q-item');
+            const t = sel.value;
+            item.querySelector('.quiz-q-choice-only').classList.toggle('hidden', t !== 'choice');
+            item.querySelector('.quiz-q-short-only').classList.toggle('hidden', t !== 'short');
+            item.querySelector('.quiz-q-essay-only').classList.toggle('hidden', t !== 'essay');
+        }
+
         function toggleQuizAnsBox(btn) {
             btn.classList.toggle('bg-orange-600'); btn.classList.toggle('text-white');
             btn.classList.toggle('bg-gray-800'); btn.classList.toggle('text-gray-400');
@@ -9264,7 +9289,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const opts = item.querySelectorAll('.quiz-q-opt');
             (q.options || []).forEach((o, i) => { if (opts[i]) opts[i].value = o || ''; });
             const scoreEl = item.querySelector('.quiz-q-score');
-            if (q.answer) {
+
+            const qtype = q.qtype || 'choice';
+            const typeSel = item.querySelector('.quiz-q-type');
+            typeSel.value = qtype;
+            onQuizTypeChange(typeSel);
+            if (qtype === 'short') {
+                item.querySelector('.quiz-q-short').value = q.answer || '';
+            } else if (qtype === 'essay') {
+                item.querySelector('.quiz-q-rubric').value = q.rubric || '';
+            } else if (q.answer) {
                 setQuizAnsBoxes(item, q.answer);
             } else {
                 // 정답을 못 읽은 문항은 눈에 띄게 표시해 직접 채우게 한다
@@ -9338,14 +9372,30 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             let questions = [];
             for(let item of qItems) {
                 const text = item.querySelector('.quiz-q-text').value;
-                const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
-                const ans = readQuizAnsBoxes(item);
                 const score = parseInt(item.querySelector('.quiz-q-score').value);
                 const img = (item.querySelector('.quiz-q-img') || {}).value || '';
                 const bogi = ((item.querySelector('.quiz-q-bogi') || {}).value || '').trim();
                 const expl = ((item.querySelector('.quiz-q-expl') || {}).value || '').trim();
+                const qtype = item.querySelector('.quiz-q-type').value;
+
+                if (qtype === 'essay') {
+                    const rubric = item.querySelector('.quiz-q-rubric').value.trim();
+                    if (!text || !score) return alert("문제 내용과 배점을 정확히 채워주세요.");
+                    questions.push({ q_text: text, bogi: bogi, qtype: 'essay', rubric: rubric,
+                                     options: [], answer: '', score: score, image: img, explanation: expl });
+                    continue;
+                }
+                if (qtype === 'short') {
+                    const ans = item.querySelector('.quiz-q-short').value.trim();
+                    if (!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
+                    questions.push({ q_text: text, bogi: bogi, qtype: 'short', options: [],
+                                     answer: ans, score: score, image: img, explanation: expl });
+                    continue;
+                }
+                const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
+                const ans = readQuizAnsBoxes(item);
                 if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.\n(정답은 보기 번호를 하나 이상 눌러 골라주세요)");
-                questions.push({ q_text: text, bogi: bogi, options: opts, answer: ans, score: score, image: img, explanation: expl });
+                questions.push({ q_text: text, bogi: bogi, qtype: 'choice', options: opts, answer: ans, score: score, image: img, explanation: expl });
             }
 
             showLoader("퀴즈 배포 중...");
@@ -9791,15 +9841,29 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const circles = ['①', '②', '③', '④', '⑤'];
             currentActiveQuiz.questions.forEach((q, qIndex) => {
                 let optsHtml = '';
-                q.options.forEach((opt, optIdx) => {
-                    if(!opt) return;
-                    optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeHtml(opt)}</span></label>`;
-                });
-                // 💡 찍지 말고 '모름'을 고르면, 무엇을 더 공부해야 할지 남는다
-                optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg cursor-pointer border border-amber-900/60 hover:border-amber-500 transition mb-2">
-                    <input type="radio" name="qz_${qIndex}" value="?" onchange="setQuizAnswer(${qIndex}, '?')" class="w-5 h-5 accent-amber-500">
-                    <span class="text-amber-400 font-bold text-xs">모름</span>
-                    <span class="text-xs text-gray-400">잘 모르겠어요 (찍지 않고 넘어갑니다)</span></label>`;
+                const qtype = q.qtype || 'choice';
+                if (qtype === 'short' || qtype === 'essay') {
+                    // 💡 단답형·서술형은 직접 입력한다. '모름'은 답을 지우고 표시만 해 둔다.
+                    const inputHtml = qtype === 'essay'
+                        ? `<textarea id="qz-free-${qIndex}" rows="4" oninput="setQuizAnswer(${qIndex}, this.value); document.getElementById('qz-unsure-${qIndex}').classList.remove('bg-amber-600','text-white');" placeholder="서술형 답을 적어주세요" class="w-full p-3 bg-gray-800 text-white rounded-lg text-sm resize-y border border-gray-600 outline-none focus:border-orange-500"></textarea>`
+                        : `<input id="qz-free-${qIndex}" type="text" oninput="setQuizAnswer(${qIndex}, this.value); document.getElementById('qz-unsure-${qIndex}').classList.remove('bg-amber-600','text-white');" placeholder="답을 적어주세요" class="w-full p-3 bg-gray-800 text-white rounded-lg text-sm border border-gray-600 outline-none focus:border-orange-500">`;
+                    const rubricHtml = (qtype === 'essay' && (q.rubric || '').trim())
+                        ? `<p class="text-[11px] text-gray-500 mb-2"><i class="fa-solid fa-circle-info mr-1"></i>채점 기준: ${escapeHtml(q.rubric)}</p>` : '';
+                    optsHtml = `${rubricHtml}${inputHtml}
+                        <button type="button" id="qz-unsure-${qIndex}" onclick="setQuizUnsure(${qIndex})" class="mt-2 px-3 py-2 rounded-lg text-xs font-bold bg-gray-800 text-amber-400 border border-amber-900/60 hover:border-amber-500 transition">
+                            <i class="fa-solid fa-circle-question mr-1"></i>모름 — 잘 모르겠어요
+                        </button>`;
+                } else {
+                    q.options.forEach((opt, optIdx) => {
+                        if(!opt) return;
+                        optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeHtml(opt)}</span></label>`;
+                    });
+                    // 💡 찍지 말고 '모름'을 고르면, 무엇을 더 공부해야 할지 남는다
+                    optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg cursor-pointer border border-amber-900/60 hover:border-amber-500 transition mb-2">
+                        <input type="radio" name="qz_${qIndex}" value="?" onchange="setQuizAnswer(${qIndex}, '?')" class="w-5 h-5 accent-amber-500">
+                        <span class="text-amber-400 font-bold text-xs">모름</span>
+                        <span class="text-xs text-gray-400">잘 모르겠어요 (찍지 않고 넘어갑니다)</span></label>`;
+                }
                 const imgHtml = q.image
                     ? `<div class="mb-4"><img src="${API_URL}${encodeURI(q.image)}" class="max-w-full rounded-lg border border-gray-600" alt="문항 그림"></div>`
                     : '';
@@ -9988,7 +10052,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const box = document.getElementById('vr-detail');
             const verdict = it.is_unsure ? '<span class="text-amber-300">모름</span>'
                 : (it.is_wrong ? '<span class="text-red-300">틀림</span>' : '<span class="text-emerald-300">맞음</span>');
-            const mineLabel = it.is_unsure ? '모르겠다고 표시' : (it.mine ? it.mine + '번' : '표시 안 함');
+            const qtype = it.qtype || 'choice';
+            const mineLabel = it.is_unsure ? '모르겠다고 표시'
+                : (it.mine ? (qtype === 'choice' ? it.mine + '번' : it.mine) : '표시 안 함');
 
             const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2">${escapeHtml(it.text)}</p>` : '';
             const imgHtml = it.image ? `<div class="mb-2"><img src="${API_URL}${encodeURI(it.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : '';
@@ -10004,13 +10070,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 return `<div class="text-xs ${cls}">${n}. ${escapeHtml(o)} ${isAns ? '✓' : ''}${(isMine && !isAns) ? ' ← 내 답' : ''}</div>`;
             }).join('')}</div>` : '';
 
+            const answerLineHtml = qtype === 'essay'
+                ? `<p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))}</p>
+                   ${it.rubric ? `<p class="text-[11px] text-gray-500 mb-2">채점 기준: ${escapeHtml(it.rubric)}</p>` : ''}
+                   ${it.ai_feedback ? `<div class="text-sky-300 text-xs bg-[#151922] border border-gray-700 rounded p-2 mb-2"><i class="fa-solid fa-robot mr-1"></i>${escapeHtml(it.ai_feedback)}</div>` : ''}`
+                : `<p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}</p>`;
+
             box.innerHTML = `
                 <div class="bg-[#1e2430] border border-gray-600 rounded-lg p-3">
                     <div class="flex justify-between items-center mb-2">
                         <p class="text-sm font-bold text-white">${it.no}번 ${verdict}</p>
                     </div>
                     ${textHtml}${imgHtml}${bogiHtml}${optsHtml}
-                    <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}</p>
+                    ${answerLineHtml}
                     ${it.explanation
                         ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line border-t border-gray-700 pt-2">${escapeHtml(it.explanation)}</p>`
                         : '<p class="text-xs text-gray-500 border-t border-gray-700 pt-2">이 문항은 해설이 등록되어 있지 않습니다.</p>'}
@@ -10507,6 +10579,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
 
+        // 단답형·서술형에서 '모름' 단추 — 입력칸을 비우고 답을 '?'로 표시한다
+        function setQuizUnsure(qIdx) {
+            const box = document.getElementById(`qz-free-${qIdx}`);
+            if (box) box.value = '';
+            quizAnswers[qIdx] = '?';
+            const btn = document.getElementById(`qz-unsure-${qIdx}`);
+            if (btn) { btn.classList.add('bg-amber-600', 'text-white'); }
+        }
+
         function toggleQuizExplain(no) {
             const el = document.getElementById(`quizexpl-${no}`);
             if (el) el.classList.toggle('hidden');
@@ -10679,12 +10760,15 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <div class="pl-8 space-y-1 text-sm">
                             <div class="${d.unsure ? 'text-amber-300' : (d.ok ? 'text-emerald-300' : 'text-red-300')}">
                                 <span class="text-gray-500 text-xs mr-1">내 답</span>
-                                ${d.unsure ? '<b>모르겠다고 표시</b>' : (d.blank ? '<b>고르지 않음</b>' : `<b>${mark(d.my)}</b> ${escapeHtml(d.my_text || '')}`)}
+                                ${d.unsure ? '<b>모르겠다고 표시</b>' : (d.blank ? '<b>고르지 않음</b>'
+                                    : (d.qtype === 'choice' ? `<b>${mark(d.my)}</b> ${escapeHtml(d.my_text || '')}` : `<b>${escapeHtml(d.my)}</b>`))}
                             </div>
-                            ${d.ok ? '' : `<div class="text-emerald-300">
-                                <span class="text-gray-500 text-xs mr-1">정답</span>
-                                <b>${mark(d.ans)}</b> ${escapeHtml(d.ans_text || '')}
-                            </div>`}
+                            ${(d.qtype === 'essay')
+                                ? (d.ai_feedback ? `<div class="text-sky-300 text-xs bg-[#151922] border border-gray-700 rounded p-2 mt-1"><i class="fa-solid fa-robot mr-1"></i>${escapeHtml(d.ai_feedback)}</div>` : '')
+                                : (d.ok ? '' : `<div class="text-emerald-300">
+                                    <span class="text-gray-500 text-xs mr-1">정답</span>
+                                    ${d.qtype === 'choice' ? `<b>${mark(d.ans)}</b> ${escapeHtml(d.ans_text || '')}` : `<b>${escapeHtml(d.ans)}</b>`}
+                                </div>`)}
                             <div class="text-gray-500 text-xs">배점 ${d.score}점</div>
                             ${d.explanation ? `
                                 <button onclick="toggleQuizExplain(${d.no})" class="mt-1 text-sky-300 hover:text-sky-200 text-xs font-bold">
