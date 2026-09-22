@@ -5801,15 +5801,20 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadUnivList() {
             const q = (document.getElementById('univ-search').value || '').trim();
-            const r = await adminGet(`/api/admin/univ_table?q=${encodeURIComponent(q)}&limit=200`);
+            const r = await adminGet(`/api/admin/univ_table?q=${encodeURIComponent(q)}&limit=500`);
             const meta = document.getElementById('univ-meta');
             const box = document.getElementById('univ-list');
             if (!r.ok) { meta.innerText = r.message; box.innerHTML = ''; return; }
             const m = r.data.meta || {};
-            meta.innerText = m.count
-                ? `${m.label || '입결 자료'} · ${m.count.toLocaleString()}건 · ${m.metric === 'percentile' ? '백분위 기준' : '등급 기준'} · ${m.uploaded_at || ''}`
-                : '아직 올린 입결 자료가 없습니다.';
             const rows = r.data.rows || [];
+            const totalMatched = r.data.count || 0;
+            // 💡 실제로는 다 저장됐는데, 목록 화면이 한 번에 다 못 보여줘서
+            // "업로드가 중간에 끊겼다"고 오해하기 쉽다 — 저장된 총 건수와
+            // 지금 화면에 몇 건이 보이는지를 분명히 나눠서 알려준다.
+            meta.innerText = m.count
+                ? `${m.label || '입결 자료'} · 전체 ${m.count.toLocaleString()}건 저장됨 · ${m.metric === 'percentile' ? '백분위 기준' : '등급 기준'} · ${m.uploaded_at || ''}`
+                    + (totalMatched > rows.length ? ` · 목록엔 이 중 ${rows.length}건까지만 보여요 — 특정 대학은 위 검색창으로 찾아보세요` : '')
+                : '아직 올린 입결 자료가 없습니다.';
             box.innerHTML = rows.length
                 ? rows.map(x => `<div class="flex justify-between items-center bg-[#151922] border border-gray-700 rounded px-3 py-1.5 text-xs">
                         <span class="text-white truncate">${escapeHtml(x.univ)} <span class="text-gray-400">${escapeHtml(x.major || '')}</span>
