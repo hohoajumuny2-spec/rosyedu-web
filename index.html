@@ -1783,9 +1783,13 @@
                                                     <option value="nonsul">논술</option>
                                                     <option value="yeche">예체능</option>
                                                 </select>
-                                                <select id="poss-scope" class="p-1 bg-gray-800 text-white rounded border border-gray-600">
-                                                    <option value="0">가능 + 모자란 곳까지</option>
-                                                    <option value="1">지금 가능한 대학만</option>
+                                                <select id="poss-scope" class="p-1 bg-gray-800 text-white rounded border border-gray-600" title="내 점수에서 어느 정도 범위까지 볼지">
+                                                    <option value="challenge,fit,safe">상향 · 적정 · 안정</option>
+                                                    <option value="challenge,fit">상향 · 적정만</option>
+                                                    <option value="fit">적정만</option>
+                                                    <option value="fit,safe">적정 · 안정</option>
+                                                    <option value="challenge">상향만</option>
+                                                    <option value="challenge,fit,safe,far,low">전부 보기</option>
                                                 </select>
                                                 <button onclick="loadUnivPossible()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1 rounded text-white font-bold transition"><i class="fa-solid fa-magnifying-glass mr-1"></i>찾기</button>
                                             </div>
@@ -4940,7 +4944,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const r = await adminPost('/api/admin/counsel/univ_possible', {
                 student_name: COUNSEL_TARGET,
                 kind: document.getElementById('poss-kind').value,
-                only_reachable: document.getElementById('poss-scope').value === '1',
+                lines: document.getElementById('poss-scope').value.split(','),
                 exclude_special: document.getElementById('poss-no-special').checked,
                 kor: numOrNull('poss-kor'),
                 math: numOrNull('poss-math'),
@@ -4983,7 +4987,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const head = `<div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-[11px]">
                 <div class="text-gray-400">${kindLabel} 기준 · ${baseBits.join(' · ')}
                     ${isWhatIf ? '<span class="ml-1 text-amber-300">(가정 점수로 미리보기)</span>' : ''}
-                    ${d.excluded_special ? `<span class="ml-1 text-gray-500">· 특별전형 ${d.excluded_special}건 제외</span>` : ''}</div>
+                    ${d.excluded_special ? `<span class="ml-1 text-gray-500">· 특별전형 ${d.excluded_special}건 제외</span>` : ''}
+                    ${d.excluded_line ? `<span class="ml-1 text-gray-500">· 점수 차이가 큰 ${d.excluded_line}건 제외</span>` : ''}</div>
                 <div class="text-gray-400">대학 <b class="text-white">${d.total_univ_count}</b>곳 중
                     <b class="text-emerald-400">${d.reach_univ_count}</b>곳 가능</div>
             </div>`;
@@ -5012,8 +5017,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <div class="border ${u.reach_count ? 'border-emerald-800/60 bg-emerald-950/15' : 'border-gray-700 bg-[#1e2430]'} rounded-lg">
                     <button onclick="toggleUnivPossible(${idx})" class="w-full flex justify-between items-center gap-2 px-3 py-2 text-left">
                         <span class="truncate">
+                            ${u.line_label ? `<span class="text-[10px] px-1.5 py-0.5 rounded mr-1 ${
+                                u.line === 'challenge' ? 'bg-orange-900/70 text-orange-200'
+                                : u.line === 'fit' ? 'bg-emerald-900/70 text-emerald-200'
+                                : 'bg-sky-900/70 text-sky-200'}">${escapeHtml(u.line_label)}</span>` : ''}
                             <b class="text-sm ${u.reach_count ? 'text-emerald-300' : 'text-gray-300'}">${escapeHtml(u.univ)}</b>
                             ${u.sido ? `<span class="text-[10px] text-gray-500 ml-1">${escapeHtml(u.sido)}${u.sigungu ? ' ' + escapeHtml(u.sigungu) : ''}</span>` : ''}
+                            ${u.campus_check ? `<span class="text-[10px] text-amber-400 ml-1" title="캠퍼스가 여러 곳인 대학인데 엑셀 소재지 칸이 비어 있어 본교 자리로 표시했습니다. 분교 자료라면 소재지를 적어주세요."><i class="fa-solid fa-triangle-exclamation"></i> 캠퍼스 확인</span>` : ''}
                         </span>
                         <span class="shrink-0 text-[11px]">
                             ${u.reach_count
