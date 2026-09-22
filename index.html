@@ -1724,6 +1724,45 @@
                                         <div id="univ-map-view"><p class="text-gray-600 text-xs text-center py-8">위 <b class="text-emerald-400">지도 보기</b>를 누르면 지금 성적으로 갈 수 있는 대학이 지역별로 표시됩니다.</p></div>
                                     </div>
 
+                                    <!-- 가능 대학 찾기 : 대학 → 그 대학의 학과 → 모자란 점수 -->
+                                    <div class="bg-[#151922] p-3 rounded-xl border border-gray-700 mb-4">
+                                        <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                                            <h4 class="text-white font-bold text-sm"><i class="fa-solid fa-list-check mr-1 text-emerald-400"></i>가능 대학 찾기</h4>
+                                            <div class="flex flex-wrap items-center gap-1 text-[11px]">
+                                                <select id="poss-kind" class="p-1 bg-gray-800 text-white rounded border border-gray-600">
+                                                    <option value="jeongsi">정시</option>
+                                                    <option value="susi">수시</option>
+                                                    <option value="nonsul">논술</option>
+                                                </select>
+                                                <select id="poss-scope" class="p-1 bg-gray-800 text-white rounded border border-gray-600">
+                                                    <option value="0">가능 + 모자란 곳까지</option>
+                                                    <option value="1">지금 가능한 대학만</option>
+                                                </select>
+                                                <button onclick="loadUnivPossible()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1 rounded text-white font-bold transition"><i class="fa-solid fa-magnifying-glass mr-1"></i>찾기</button>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-wrap items-end gap-2 mb-2 bg-[#1e2430] border border-gray-700 rounded-lg p-2">
+                                            <div>
+                                                <label class="text-[10px] text-gray-400 block mb-0.5">가능 백분위 (국+수+탐평균 합)</label>
+                                                <input type="number" id="poss-pctsum" step="0.1" placeholder="학생 성적 그대로"
+                                                       class="w-40 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500">
+                                            </div>
+                                            <div>
+                                                <label class="text-[10px] text-gray-400 block mb-0.5">영어 등급</label>
+                                                <input type="number" id="poss-eng" step="1" min="1" max="9" placeholder="그대로"
+                                                       class="w-24 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500">
+                                            </div>
+                                            <div>
+                                                <label class="text-[10px] text-gray-400 block mb-0.5">내신 등급 (수시용)</label>
+                                                <input type="number" id="poss-grade" step="0.01" min="1" max="9" placeholder="그대로"
+                                                       class="w-28 p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 outline-none focus:border-emerald-500">
+                                            </div>
+                                            <button onclick="clearUnivPossibleWhatIf()" class="text-[11px] text-gray-400 hover:text-white underline decoration-dotted px-1 py-1">학생 실제 성적으로</button>
+                                            <p class="text-[10px] text-gray-500 basis-full">비워두면 학생의 지금 성적으로 봅니다. 숫자를 넣으면 <b class="text-emerald-400">그 점수가 됐을 때</b> 어디까지 열리는지 미리 볼 수 있어요.</p>
+                                        </div>
+                                        <div id="poss-view"><p class="text-gray-600 text-xs text-center py-6"><b class="text-emerald-400">찾기</b>를 누르면 가능한 대학과 그 안의 학과가 나옵니다.</p></div>
+                                    </div>
+
                                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                         <div class="bg-[#1e2430] p-3 rounded border border-gray-700">
                                             <div class="flex justify-between items-center mb-2">
@@ -4786,6 +4825,103 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             renderUnivMapView();
         }
 
+        // ── 가능 대학 찾기 ───────────────────────────────
+        //   대학을 먼저 줄 세우고, 대학마다 가능한 학과와 모자란 점수를 함께 보여준다.
+        //   '가능 백분위'를 넣으면 그 점수가 됐을 때를 미리 본다.
+        function clearUnivPossibleWhatIf() {
+            ['poss-pctsum', 'poss-eng', 'poss-grade'].forEach(id => { document.getElementById(id).value = ''; });
+            loadUnivPossible();
+        }
+
+        async function loadUnivPossible() {
+            if (!COUNSEL_TARGET) return alert("학생을 먼저 선택해주세요.");
+            const numOrNull = id => {
+                const v = (document.getElementById(id).value || '').trim();
+                return v === '' ? null : Number(v);
+            };
+            const box = document.getElementById('poss-view');
+            box.innerHTML = '<p class="text-gray-500 text-xs text-center py-6">찾는 중...</p>';
+            const r = await adminPost('/api/admin/counsel/univ_possible', {
+                student_name: COUNSEL_TARGET,
+                kind: document.getElementById('poss-kind').value,
+                only_reachable: document.getElementById('poss-scope').value === '1',
+                percentile_sum: numOrNull('poss-pctsum'),
+                eng_grade: numOrNull('poss-eng'),
+                grade: numOrNull('poss-grade'),
+            });
+            if (!r.ok) { box.innerHTML = `<p class="text-yellow-400 text-xs text-center py-6">${escapeHtml(r.message)}</p>`; return; }
+            const d = r.data;
+            if (!d.success) { box.innerHTML = `<p class="text-yellow-400 text-xs text-center py-6">${escapeHtml(d.detail || '찾지 못했습니다.')}</p>`; return; }
+            renderUnivPossible(d);
+        }
+
+        function renderUnivPossible(d) {
+            const box = document.getElementById('poss-view');
+            const used = d.used || {}, mine = d.mine || {};
+            const isWhatIf = (d.overridden || []).length > 0;
+            const kindLabel = { susi: '수시', nonsul: '논술', jeongsi: '정시' }[d.kind] || d.kind;
+
+            const baseBits = [];
+            if (d.kind === 'jeongsi') {
+                baseBits.push(used.percentile_sum === null || used.percentile_sum === undefined
+                    ? '<span class="text-red-400">백분위 합 없음 (국어·수학·탐구 중 빠진 과목이 있어요)</span>'
+                    : `백분위 합 <b class="text-white">${used.percentile_sum}</b>`);
+            } else {
+                baseBits.push(used.grade === null || used.grade === undefined
+                    ? '<span class="text-red-400">내신 없음</span>'
+                    : `내신 <b class="text-white">${used.grade}등급</b>`);
+            }
+            if (used.eng_grade !== null && used.eng_grade !== undefined) baseBits.push(`영어 <b class="text-white">${used.eng_grade}등급</b>`);
+
+            const head = `<div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-[11px]">
+                <div class="text-gray-400">${kindLabel} 기준 · ${baseBits.join(' · ')}
+                    ${isWhatIf ? `<span class="ml-1 text-amber-300">(가정 점수로 미리보기 · 실제는 ${mine.percentile_sum ?? mine.grade ?? '-'})</span>` : ''}</div>
+                <div class="text-gray-400">대학 <b class="text-white">${d.total_univ_count}</b>곳 중
+                    <b class="text-emerald-400">${d.reach_univ_count}</b>곳 가능</div>
+            </div>`;
+
+            if (!d.univs.length) {
+                box.innerHTML = head + '<p class="text-gray-600 text-xs text-center py-6">해당하는 대학이 없습니다.</p>';
+                return;
+            }
+
+            const majorRow = m => `
+                <div class="flex justify-between items-center gap-2 px-2 py-1 rounded ${m.reach ? 'bg-emerald-950/30' : 'bg-[#151922]'}">
+                    <span class="text-[11px] ${m.reach ? 'text-white' : 'text-gray-400'} truncate">
+                        ${m.reach ? '<i class="fa-solid fa-circle-check text-emerald-500 mr-1 text-[10px]"></i>' : ''}
+                        ${escapeHtml(m.major || '(모집단위 없음)')}
+                        ${m.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(m.type)}</span>` : ''}
+                        ${m.subtype ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(m.subtype)}</span>` : ''}
+                    </span>
+                    <span class="shrink-0 text-[11px] font-bold ${m.reach ? 'text-emerald-400' : 'text-yellow-500'}">
+                        ${m.cut}${escapeHtml(m.unit || '')}${m.eng_cut !== null && m.eng_cut !== undefined ? ` <span class="text-gray-500 font-normal">영${m.eng_cut}</span>` : ''}
+                        · ${m.reach ? `여유 ${Math.abs(m.gap)}` : `<span class="text-red-400">${m.short_by} 모자람</span>`}
+                    </span>
+                </div>`;
+
+            box.innerHTML = head + '<div class="space-y-1.5 max-h-[520px] overflow-y-auto pr-1">' + d.univs.map((u, idx) => `
+                <div class="border ${u.reach_count ? 'border-emerald-800/60 bg-emerald-950/15' : 'border-gray-700 bg-[#1e2430]'} rounded-lg">
+                    <button onclick="toggleUnivPossible(${idx})" class="w-full flex justify-between items-center gap-2 px-3 py-2 text-left">
+                        <span class="truncate">
+                            <b class="text-sm ${u.reach_count ? 'text-emerald-300' : 'text-gray-300'}">${escapeHtml(u.univ)}</b>
+                            ${u.sido ? `<span class="text-[10px] text-gray-500 ml-1">${escapeHtml(u.sido)}${u.sigungu ? ' ' + escapeHtml(u.sigungu) : ''}</span>` : ''}
+                        </span>
+                        <span class="shrink-0 text-[11px]">
+                            ${u.reach_count
+                                ? `<span class="text-emerald-400 font-bold">학과 ${u.total}개 중 ${u.reach_count}개 가능</span>`
+                                : `<span class="text-yellow-500">가장 가까운 곳도 <b class="text-red-400">${u.short_by}</b> 모자람</span>`}
+                            <i class="fa-solid fa-chevron-down text-gray-600 ml-1 text-[10px]"></i>
+                        </span>
+                    </button>
+                    <div id="poss-majors-${idx}" class="hidden px-2 pb-2 space-y-1">${u.majors.map(majorRow).join('')}</div>
+                </div>`).join('') + '</div>';
+        }
+
+        function toggleUnivPossible(idx) {
+            const el = document.getElementById('poss-majors-' + idx);
+            if (el) el.classList.toggle('hidden');
+        }
+
         // 대학이 적어 온 시군구 이름을 지도 위 도형과 짝짓는다.
         // '수원시'처럼 구까지 안 적혀 있어도(지도에는 '수원시영통구'로 나뉘어 있어도) 찾아낸다.
         function matchSigunguShape(sidoCode, name) {
@@ -4968,10 +5104,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             // 성적값이 잡혔고 무엇이 비어(None) 있는지를 화면에 그대로 보여준다.
             const mine = UNIV_MAP_DATA.mine || {};
             const mineField = (label, v, suffix) => `<span class="${v === null || v === undefined ? 'text-red-400' : 'text-gray-300'}">${label} <b>${v === null || v === undefined ? '입력 안 됨' : v + (suffix || '')}</b></span>`;
+            const missing = mine.percentile_sum_missing || [];
+            const sumField = (mine.percentile_sum === null || mine.percentile_sum === undefined)
+                ? `<span class="text-red-400">백분위 합(국수탐) <b>없음${missing.length ? ' — ' + escapeHtml(missing.join(', ')) + ' 비어 있음' : ''}</b></span>`
+                : `<span class="text-gray-300">백분위 합(국수탐) <b>${mine.percentile_sum}</b></span>`;
             const mineLine = [
                 mineField('내신 등급', mine.grade, '등급'),
                 mineField('백분위 평균', mine.percentile, ''),
-                mineField('백분위 합(국수탐)', mine.percentile_sum, ''),
+                sumField,
                 mineField('원점수 합', mine.score, '점'),
                 mineField('영어 등급', mine.eng_grade, '등급'),
             ].join(' · ');
@@ -6279,16 +6419,27 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const d = r.data, mine = d.mine || {};
             const bits = [];
             if (mine.grade !== null && mine.grade !== undefined) bits.push(`내신 ${mine.grade}등급`);
-            if (mine.percentile !== null && mine.percentile !== undefined) bits.push(`백분위 ${mine.percentile}`);
+            if (mine.percentile !== null && mine.percentile !== undefined) bits.push(`백분위 평균 ${mine.percentile}`);
+            // 💡 정시 배치표는 '백분위 합'으로 견주므로 이 값이 없으면 아무것도 비교되지 않는다.
+            //    없을 땐 왜 없는지 바로 알 수 있게 빨간 글씨로 밝혀 둔다.
+            bits.push((mine.percentile_sum === null || mine.percentile_sum === undefined)
+                ? '백분위 합 없음(국어·수학·탐구 중 빠진 과목 있음)'
+                : `백분위 합 ${mine.percentile_sum}`);
             if (mine.score !== null && mine.score !== undefined) bits.push(`원점수 ${mine.score}점`);
             if (mine.eng_grade !== null && mine.eng_grade !== undefined) bits.push(`영어 ${mine.eng_grade}등급`);
+            const univCount = new Set([].concat(...['susi', 'nonsul', 'jeongsi']
+                .map(k => ((d[k] || {}).items || []).map(i => i.univ))).filter(Boolean)).size;
             document.getElementById('majors-sub').innerText =
-                bits.length ? `${COUNSEL_TARGET} 학생 기준 — ${bits.join(' · ')}` : '학생 성적이 없어 기준 점수만 보여줍니다';
+                (bits.length ? `${COUNSEL_TARGET} 학생 기준 — ${bits.join(' · ')}` : '학생 성적이 없어 기준 점수만 보여줍니다')
+                + (univCount > 1 ? ` · 대학 ${univCount}곳` : '');
 
+            // 💡 '경기'처럼 묶어 부르는 이름을 누르면 여러 대학이 한꺼번에 걸리는데,
+            //    예전엔 학과 이름만 보여줘서 어느 대학 학과인지 알 수 없었다.
             const row = (i, good) => `
                 <div class="flex justify-between items-center ${good ? 'bg-emerald-950/25 border-emerald-900/50' : 'bg-[#151922] border-gray-700'} border rounded px-3 py-2">
                     <span class="text-sm ${good ? 'text-white' : 'text-gray-400'} truncate">
                         ${good ? '<i class="fa-solid fa-circle-check text-emerald-500 mr-1 text-[11px]"></i>' : ''}
+                        <b class="text-emerald-300">${escapeHtml(i.univ || '')}</b>
                         ${escapeHtml(i.major || '(모집단위 없음)')}
                         ${i.type ? `<span class="text-[10px] text-gray-600 ml-1">${escapeHtml(i.type)}</span>` : ''}
                         ${i.year ? `<span class="text-[10px] text-gray-700 ml-1">${escapeHtml(i.year)}</span>` : ''}
