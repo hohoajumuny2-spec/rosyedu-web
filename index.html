@@ -1475,7 +1475,7 @@
 
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
-            <div id="home-welcome-banner" class="bg-[#1e2430] border border-teal-700/50 rounded-2xl p-4 md:p-5 mb-6 flex items-center gap-4 md:gap-5">
+            <div id="home-welcome-banner" class="bg-[#1e2430] border border-teal-700/50 rounded-2xl p-4 md:p-5 mb-6 flex flex-wrap items-center gap-3 md:gap-5">
                 <div class="relative shrink-0">
                     <div id="home-avatar-avatar-halo" class="absolute left-1/2 top-1/2 text-6xl opacity-20 pointer-events-none select-none transition-all duration-700" style="transform: translate(-50%, -50%);"></div>
                     <div id="home-avatar-avatar-display" class="relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-xl border-4 border-blue-500 transition-all duration-500 overflow-hidden">🌱</div>
@@ -1483,7 +1483,7 @@
                     <span id="home-avatar-avatar-pet" class="absolute -bottom-1 -left-2 text-lg md:text-xl pointer-events-none"></span>
                     <span id="home-avatar-avatar-item-badge" class="absolute -bottom-1 -right-1 text-lg md:text-xl pointer-events-none"></span>
                 </div>
-                <div class="flex-grow min-w-0">
+                <div class="flex-grow min-w-[10rem] basis-40">
                     <p id="home-welcome-text" class="text-white font-black text-base md:text-lg truncate">환영합니다!</p>
                     <div class="flex items-center gap-1.5 text-xs md:text-sm text-gray-300 mt-1">
                         <span id="home-avatar-avatar-level-icon"></span>
@@ -1493,7 +1493,7 @@
                     <div class="h-2.5 bg-gray-800 rounded-full overflow-hidden mt-2 max-w-sm">
                         <div id="home-avatar-avatar-progress-bar" class="h-full bg-emerald-500 transition-all duration-500" style="width:0%"></div>
                     </div>
-                    <p id="home-avatar-avatar-progress-text" class="text-[11px] text-gray-500 mt-1"></p>
+                    <p id="home-avatar-avatar-progress-text" class="text-[11px] text-gray-500 mt-1 word-break-keep-all"></p>
                 </div>
                 <button onclick="openProgram('mypage'); loadMyPage();" class="shrink-0 text-xs font-bold text-teal-300 border border-teal-700 px-3 py-2 rounded-lg hover:bg-teal-900/30 transition">
                     <i class="fa-solid fa-shirt mr-1"></i><span class="hidden sm:inline">아바타 </span>꾸미기
@@ -8395,13 +8395,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const progressText = levelInfo.is_max
                 ? `최고 레벨 달성 (누적 ${levelInfo.xp}점)`
                 : `다음 레벨까지 ${levelInfo.next_threshold - levelInfo.xp}점 남음 (${levelInfo.xp}/${levelInfo.next_threshold})`;
-            return `<div class="mb-4 bg-[#151922] rounded-xl p-4 border border-gray-700 flex items-center gap-4">
+            return `<div class="mb-4 bg-[#151922] rounded-xl p-4 border border-gray-700 flex flex-wrap items-center gap-3">
                 <div class="relative flex-shrink-0 w-16 h-16">
                     <div class="absolute left-1/2 top-1/2 text-5xl opacity-25 pointer-events-none select-none" style="transform: translate(-50%, -50%);">${levelInfo.icon}</div>
                     <div class="relative w-16 h-16 rounded-full flex items-center justify-center text-3xl border-4 bg-[#1e2430]" style="border-color:${glow};">${gender}</div>
                     ${itemDef ? `<div class="absolute -top-1 -right-1 text-xl drop-shadow-lg">${itemDef.emoji}</div>` : ''}
                 </div>
-                <div class="flex-grow">
+                <div class="flex-grow min-w-[10rem] basis-40">
                     <div class="flex items-center flex-wrap gap-2 mb-1">
                         <span class="font-black text-white">${escapeHtml(levelInfo.name)}</span>
                         <span class="text-xs bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Lv.${levelInfo.level}</span>
