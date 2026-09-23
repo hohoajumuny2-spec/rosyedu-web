@@ -29,6 +29,11 @@
               '프로그램 소 / 개'처럼 낱말 가운데가 잘린다. 낱말 단위로만 넘기게 한다.
               (이 이름은 화면 곳곳에서 쓰고 있었는데 정작 정의된 적이 없어
                여태 아무 효력이 없었다.) */
+        /* 💡 한글은 글자 하나하나가 줄바꿈 자리가 될 수 있어서, 그냥 두면 '불러오 / 기'처럼
+              낱말 한가운데가 끊긴다. 화면 곳곳에서 같은 일이 계속 나와, 아예 전체 기본값으로
+              낱말 단위 줄바꿈을 둔다. 긴 주소처럼 끊을 데가 없는 글자는 그대로 흘러넘치지
+              않도록 overflow-wrap 으로 받아 준다. (영어는 원래대로 띄어쓰기에서 끊긴다.) */
+        body { word-break: keep-all; overflow-wrap: break-word; }
         .word-break-keep-all, .nav-word { word-break: keep-all; overflow-wrap: break-word; }
         /* 메뉴 글자는 줄이 나뉘더라도 가운데 정렬로 단정하게 */
         #main-nav .nav-word { text-align: center; line-height: 1.3; }
@@ -619,12 +624,12 @@
                 </div>
                 <input type="hidden" id="cut-id">
                 <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                    <span class="col-span-2">과목</span>
+                    <span class="col-span-1 lg:col-span-2">과목</span>
                     <span class="col-span-1 text-center">1등급</span><span class="col-span-1 text-center">2등급</span>
                     <span class="col-span-1 text-center">3등급</span><span class="col-span-1 text-center">4등급</span>
                     <span class="col-span-1 text-center">5등급</span><span class="col-span-1 text-center">6등급</span>
                     <span class="col-span-1 text-center">7등급</span><span class="col-span-1 text-center">8등급</span>
-                    <span class="col-span-2"></span>
+                    <span class="col-span-1 lg:col-span-2"></span>
                 </div>
                 <div id="cut-rows" class="space-y-1 mb-2"></div>
                 <p class="text-[10px] text-gray-600 mb-3">각 칸에는 <b class="text-gray-400">그 등급을 받는 최저 원점수</b>를 넣으세요. 예: 1등급 85 → 85점 이상이면 1등급. 영어·한국사는 비워두면 90/80/70…을 씁니다.</p>
@@ -889,7 +894,7 @@
                 <div>
                     <h3 class="text-white font-bold text-sm mb-2">수시 — 내신 등급 기준 <span id="admission-scale-label" class="text-blue-300 font-normal">(9등급제)</span></h3>
                     <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                        <span class="col-span-2">이 등급까지</span><span class="col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
+                        <span class="col-span-1 lg:col-span-2">이 등급까지</span><span class="col-span-1 lg:col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
                     </div>
                     <div id="susi-rows" class="space-y-1"></div>
                     <button onclick="addTableRow('susi')" class="mt-2 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-[11px] text-white font-bold transition">+ 구간 추가</button>
@@ -897,7 +902,7 @@
                 <div>
                     <h3 class="text-white font-bold text-sm mb-2">정시 — 모의고사 평균 백분위 기준</h3>
                     <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                        <span class="col-span-2">이 백분위부터</span><span class="col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
+                        <span class="col-span-1 lg:col-span-2">이 백분위부터</span><span class="col-span-1 lg:col-span-3">구간 이름</span><span class="col-span-7">해당 대학</span>
                     </div>
                     <div id="jeongsi-rows" class="space-y-1"></div>
                     <button onclick="addTableRow('jeongsi')" class="mt-2 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-[11px] text-white font-bold transition">+ 구간 추가</button>
@@ -2002,8 +2007,8 @@
                         </div>
                     </div>
 
-                    <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
-                        <div class="col-span-4 lg:col-span-1 space-y-4">
+                    <div id="admin-users" class="admin-tab-content grid grid-cols-1 lg:grid-cols-4 gap-4">
+                        <div class="col-span-1 lg:col-span-1 space-y-4">
                             <!-- 학생 추가 -->
                             <div class="bg-[#151922] p-4 rounded">
                                 <h3 class="text-white font-bold mb-3"><i class="fa-solid fa-user-plus mr-2 text-emerald-400"></i>학생 추가</h3>
@@ -2040,7 +2045,7 @@
                         </div>
 
                         <!-- 반별 명단 -->
-                        <div class="col-span-4 lg:col-span-3 bg-[#151922] p-4 rounded h-[600px] flex flex-col">
+                        <div class="col-span-1 lg:col-span-3 bg-[#151922] p-4 rounded h-[600px] flex flex-col">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-3">
                                 <h3 class="text-white font-bold"><i class="fa-solid fa-list-check mr-2 text-emerald-400"></i>반별 명단 <span class="text-gray-400 font-normal text-sm">(총 <span id="total-student-count">0</span>명)</span></h3>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -2058,7 +2063,7 @@
                             <div id="admin-student-list" class="flex-grow overflow-y-auto pr-1"></div>
                         </div>
 
-                        <div class="col-span-4 bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] flex flex-col">
+                        <div class="col-span-1 lg:col-span-4 bg-[#151922] p-6 border border-gray-700 rounded-lg h-[600px] flex flex-col">
                             <h3 class="text-lg lg:text-xl font-bold mb-4 text-white flex justify-between items-center border-b border-gray-700 pb-4">
                                 <span id="stats-title-span"><i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계</span>
                                 <button onclick="fetchReports()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs rounded text-white">전체보기</button>
@@ -2067,7 +2072,7 @@
                         </div>
 
                         <!-- 관리자 계정 — 별도 탭에서 계속 비어 보이는 문제가 있어 이 탭 안으로 옮김 -->
-                        <div id="admin-account-in-users" class="col-span-4 grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-2">
+                        <div id="admin-account-in-users" class="col-span-1 lg:col-span-4 grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-2">
                             <p id="admin-account-status" class="col-span-1 lg:col-span-2 text-xs empty:hidden"></p>
                             <div class="bg-[#151922] p-6 rounded">
                                 <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-key mr-2 text-blue-400"></i>내 비밀번호 변경</h3>
@@ -2093,10 +2098,10 @@
                     </div>
 
                     <!-- 상담 프로그램 -->
-                    <div id="admin-counsel" class="admin-tab-content grid grid-cols-4 gap-4">
+                    <div id="admin-counsel" class="admin-tab-content grid grid-cols-1 lg:grid-cols-4 gap-4">
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('counsel')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>상담 진행 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-counsel" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-counsel" oninput="renderActivity('counsel')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('counsel')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-counsel" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
-                        <div class="col-span-4 lg:col-span-1 bg-[#151922] p-4 rounded h-[780px] flex flex-col">
+                        <div class="col-span-1 lg:col-span-1 bg-[#151922] p-4 rounded h-[780px] flex flex-col">
                             <h3 class="text-white font-bold mb-2"><i class="fa-solid fa-comments mr-2 text-pink-400"></i>상담할 학생</h3>
                             <button onclick="openNewStudentForm()" class="w-full mb-2 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-user-plus mr-1"></i>새 학생 등록하기</button>
                             <input type="text" id="counsel-search" oninput="renderCounselStudentList()" placeholder="이름으로 찾기" class="w-full p-2 mb-2 bg-gray-800 text-white rounded text-sm">
@@ -2105,7 +2110,7 @@
                             <button onclick="openAdmissionTable()" class="mt-2 w-full bg-gray-700 hover:bg-gray-600 py-2 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-sliders mr-1"></i>대학 라인 기준표 설정</button>
                         </div>
 
-                        <div class="col-span-4 lg:col-span-3 bg-[#151922] p-4 rounded min-h-[780px] flex flex-col">
+                        <div class="col-span-1 lg:col-span-3 bg-[#151922] p-4 rounded min-h-[780px] flex flex-col">
                             <div id="counsel-empty" class="flex-grow flex flex-col items-center justify-center text-gray-600">
                                 <i class="fa-solid fa-user-graduate text-5xl mb-4"></i>
                                 <p class="text-sm">왼쪽에서 학생을 선택하면 상담 카드가 열립니다.</p>
@@ -2238,7 +2243,7 @@
                                                 </div>
                                             </div>
                                             <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                                                <span class="col-span-2">학기</span><span class="col-span-3">과목</span><span class="col-span-1">단위</span><span class="col-span-2">백분율%</span><span class="col-span-2">등급</span><span class="col-span-2">환산</span>
+                                                <span class="col-span-1 lg:col-span-2">학기</span><span class="col-span-1 lg:col-span-3">과목</span><span class="col-span-1">단위</span><span class="col-span-1 lg:col-span-2">백분율%</span><span class="col-span-1 lg:col-span-2">등급</span><span class="col-span-1 lg:col-span-2">환산</span>
                                             </div>
                                             <p class="text-[10px] text-gray-600 px-1 mb-1"><b class="text-blue-300">석차백분율(상위 몇 %)</b>을 넣으면 9등급제·5등급제 등급이 <b class="text-blue-300">정확히</b> 계산됩니다. 모르시면 등급만 넣으셔도 됩니다.</p>
                                             <div id="naesin-rows" class="space-y-1 max-h-64 overflow-y-auto"></div>
@@ -2254,7 +2259,7 @@
                                                 </div>
                                             </div>
                                             <div class="grid grid-cols-12 gap-1 text-[10px] text-gray-500 px-1 mb-1">
-                                                <span class="col-span-3">시행(예 2026-06)</span><span class="col-span-3">과목</span><span class="col-span-2">원점수</span><span class="col-span-2">등급</span><span class="col-span-2">백분위</span>
+                                                <span class="col-span-1 lg:col-span-3">시행(예 2026-06)</span><span class="col-span-1 lg:col-span-3">과목</span><span class="col-span-1 lg:col-span-2">원점수</span><span class="col-span-1 lg:col-span-2">등급</span><span class="col-span-1 lg:col-span-2">백분위</span>
                                             </div>
                                             <p class="text-[10px] text-gray-600 px-1 mb-1">원점수를 넣으면 그 회차 등급컷으로 등급이 자동으로 채워집니다. 영어·한국사는 절대평가라 백분위 칸이 잠깁니다.</p>
                                             <p class="text-[10px] text-sky-400 px-1 mb-1"><i class="fa-solid fa-paste mr-1"></i>성적표를 <b>캡처해서 이 칸에 Ctrl+V로 붙여넣어도</b> 바로 성적이 채워집니다.</p>
@@ -2347,7 +2352,7 @@
                     </div>
 
                     <!-- 퀴즈 탭 -->
-                    <div id="admin-quiz" class="admin-tab-content grid grid-cols-2 gap-4">
+                    <div id="admin-quiz" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('quiz')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>퀴즈 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-quiz" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-quiz" oninput="renderActivity('quiz')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('quiz')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-quiz" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
@@ -2407,8 +2412,8 @@
                     </div>
 
                     <!-- 자료학습 탭 -->
-                    <div id="admin-knowledge" class="admin-tab-content grid grid-cols-2 gap-4">
-                        <div class="col-span-2 bg-[#151922] p-4 rounded border border-gray-700 flex items-center gap-3">
+                    <div id="admin-knowledge" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="col-span-1 lg:col-span-2 bg-[#151922] p-4 rounded border border-gray-700 flex items-center gap-3">
                             <span class="text-white font-bold text-sm shrink-0"><i class="fa-solid fa-graduation-cap mr-1 text-emerald-400"></i>과목</span>
                             <select id="kb-subject-select" onchange="switchKbSubject()" class="p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
                                 <option value="korean">국어 (국최)</option>
@@ -2417,7 +2422,7 @@
                             </select>
                             <p class="text-[11px] text-gray-500">과목마다 자료학습과 AI 답변 원칙이 완전히 분리되어 있습니다.</p>
                         </div>
-                        <div class="col-span-2 bg-[#151922] p-6 rounded border border-yellow-600/50">
+                        <div class="col-span-1 lg:col-span-2 bg-[#151922] p-6 rounded border border-yellow-600/50">
                             <h4 class="text-yellow-400 font-bold mb-2"><i class="fa-solid fa-chalkboard-user mr-2"></i>AI 답변 원칙 (수업 방식/설명 스타일)</h4>
                             <p class="text-xs text-gray-400 mb-2">여기에 적어주신 내용을 AI 질문 답변과 논술 첨삭이 최우선으로 참고합니다. 예: "문학 작품은 항상 시대적 배경을 먼저 설명한 뒤 해석한다", "비유법은 이렇게 설명한다" 등 원장님만의 설명 방식을 자유롭게 적어주세요.</p>
                             <textarea id="ai-guidelines-text" class="w-full h-28 bg-gray-800 text-white mb-2 p-2 rounded border border-gray-600 outline-none focus:border-yellow-500" placeholder="예: 문학 지문은 항상 화자의 정서 변화를 먼저 파악하게 지도한다..."></textarea>
@@ -2571,7 +2576,7 @@
                     </div>
 
                     <!-- 모의고사 개설 탭 -->
-                    <div id="admin-exam" class="admin-tab-content grid grid-cols-2 gap-4">
+                    <div id="admin-exam" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('exam')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>모의고사 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-exam" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-exam" oninput="renderActivity('exam')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('exam')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-exam" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
@@ -2627,7 +2632,7 @@
                     </div>
 
                     <!-- 영어 단어 시험 탭 -->
-                    <div id="admin-vocab" class="admin-tab-content grid grid-cols-2 gap-4" style="display:none">
+                    <div id="admin-vocab" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4" style="display:none">
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('vocab')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>단어 시험 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-vocab" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-vocab" oninput="renderActivity('vocab')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('vocab')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-vocab" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="space-y-4">
@@ -2725,13 +2730,13 @@
                     </div>
 
                     <!-- 강의 탭 -->
-                    <div id="admin-lecture" class="admin-tab-content grid grid-cols-2 gap-4">
+                    <div id="admin-lecture" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div class="bg-[#151922] p-6 rounded"><input type="text" id="lec-title" class="w-full p-2 mb-2 bg-gray-800 text-white" placeholder="강의 제목"><input type="text" id="lec-url" class="w-full p-2 mb-2 bg-gray-800 text-white" placeholder="동영상 URL"><button onclick="createLecture()" class="w-full bg-purple-600 py-2 text-white font-bold rounded">등록</button></div>
                         <div id="admin-lecture-list" class="bg-[#151922] p-6 rounded h-[500px] overflow-auto text-white space-y-2"></div>
                     </div>
 
                     <!-- 과제/공지 탭 -->
-                    <div id="admin-hw" class="admin-tab-content grid grid-cols-2 gap-4">
+                    <div id="admin-hw" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
@@ -7063,9 +7068,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function cutRowHtml(subject, cuts) {
             const v = i => (cuts && cuts[i] !== undefined && cuts[i] !== null) ? cuts[i] : '';
             return `<div class="grid grid-cols-12 gap-1" data-cutrow="1">
-                <input type="text" data-cut="subject" value="${escAttr(subject || '')}" placeholder="과목" class="col-span-2 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                <input type="text" data-cut="subject" value="${escAttr(subject || '')}" placeholder="과목" class="col-span-1 lg:col-span-2 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
                 ${[0,1,2,3,4,5,6,7].map(i => `<input type="number" step="0.1" data-cut="${i}" value="${escAttr(String(v(i)))}" class="col-span-1 p-1.5 bg-gray-800 text-white rounded text-xs text-center min-w-0">`).join('')}
-                <button onclick="this.parentElement.remove()" class="col-span-2 text-red-400 hover:text-red-300 text-xs">삭제</button>
+                <button onclick="this.parentElement.remove()" class="col-span-1 lg:col-span-2 text-red-400 hover:text-red-300 text-xs">삭제</button>
             </div>`;
         }
 
@@ -7843,8 +7848,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function tableRowHtml(kind, row) {
             const numKey = kind === 'susi' ? 'upto' : 'from_pct';
             return `<div class="grid grid-cols-12 gap-1" data-trow="${kind}">
-                <input type="number" step="0.1" data-k="${numKey}" value="${escAttr(String(row[numKey] ?? ''))}" class="col-span-2 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
-                <input type="text" data-k="tier" value="${escAttr(row.tier || '')}" placeholder="구간 이름" class="col-span-3 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                <input type="number" step="0.1" data-k="${numKey}" value="${escAttr(String(row[numKey] ?? ''))}" class="col-span-1 lg:col-span-2 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
+                <input type="text" data-k="tier" value="${escAttr(row.tier || '')}" placeholder="구간 이름" class="col-span-1 lg:col-span-3 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
                 <input type="text" data-k="examples" value="${escAttr(row.examples || '')}" placeholder="대학 이름들" class="col-span-6 p-1.5 bg-gray-800 text-white rounded text-xs min-w-0">
                 <button onclick="this.parentElement.remove()" class="col-span-1 text-red-400 hover:text-red-300 text-xs"><i class="fa-solid fa-xmark"></i></button>
             </div>`;
