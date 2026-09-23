@@ -1750,7 +1750,6 @@
             <!-- 타임어택 퀴즈 목록 -->
             <div id="prog-quiz-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
                 <h2 class="text-2xl font-bold text-orange-500 mb-4">타임어택 퀴즈</h2>
-                <p class="text-gray-400 text-sm mb-6">정해진 기한(마감)과 시험 시간이 있는 퀴즈입니다. 타이머가 0이 되면 자동 제출됩니다.</p>
                 <div id="student-quiz-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
@@ -1771,7 +1770,6 @@
             <!-- 영어 단어 시험 목록 -->
             <div id="prog-vocab-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
                 <h2 class="text-2xl font-bold text-cyan-400 mb-4">영어 단어 시험</h2>
-                <p class="text-gray-400 text-sm mb-6">단어를 보고 뜻 쓰기, 뜻을 보고 단어 쓰기, 빈칸에 철자 채우기, 구절 해석 등 서술형으로 답을 직접 씁니다. 타이머가 0이 되면 자동 제출됩니다.</p>
                 <div id="student-vocab-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
@@ -4423,6 +4421,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
                 document.getElementById('dashboard-screen').style.display='block'; document.getElementById('program-view').style.display='block';
                 const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block';
+                showProgramIntro(h.replace('prog-',''), t);
                 if(h==='prog-admin') switchAdminTab('admin-users');
             }
         });
@@ -4581,6 +4580,72 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function showToast(m) { const c=document.getElementById('toast-container'); const t=document.createElement('div'); t.className='toast show'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
         function showLiveToast(m) { const c=document.getElementById('live-toast-container'); const t=document.createElement('div'); t.className='bg-red-600 text-white p-4 rounded-xl shadow-2xl font-bold text-center mb-2 animate-bounce'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(), 5000); }
         function toggleFullscreen() { const v=document.getElementById('pdf-viewer-section'); v.classList.toggle('fixed'); v.classList.toggle('inset-0'); v.classList.toggle('z-[120]'); v.classList.toggle('w-full'); v.classList.toggle('lg:w-2/3'); }
+        // ── 들어온 곳이 무엇을 하는 곳인지 첫머리에 알려준다 ──────────
+        // 💡 학생은 카드를 눌러 들어왔을 뿐, 여기서 뭘 해야 하는지 모른 채
+        //    빈 목록만 보는 일이 많았다. 화면마다 '어떤 곳이고, 어떻게 쓰고,
+        //    무엇을 알아두면 좋은지'를 제목 바로 아래에 한 덩어리로 붙인다.
+        const PROGRAM_INTRO = {
+            'mypage': { 색: 'teal', 무엇: '지금까지 공부한 기록이 모두 모이는 곳이에요.',
+                할일: ['푼 퀴즈·모의고사·과제와 점수를 한눈에 봐요',
+                       '틀린 문제만 모아 다시 풀 수 있어요',
+                       '레벨과 아바타를 꾸미고, 휴대폰 알림도 여기서 켜요'] },
+            'quiz-list': { 색: 'orange', 무엇: '정해진 기간 안에, 제한 시간을 재며 푸는 퀴즈예요.',
+                할일: ['시작하면 타이머가 돌아가고, 0이 되면 자동으로 제출돼요',
+                       '내면 바로 채점되고 친구들 정답률도 같이 보여요',
+                       '모르면 찍지 말고 \'모름\'을 고르세요 — 나중에 그것만 복습할 수 있어요'] },
+            'exam-list': { 색: 'yellow', 무엇: '실제 시험처럼 OMR에 답을 마킹하는 모의고사예요.',
+                할일: ['시험지를 보며 답안지에 마킹해요. 시간이 끝나면 자동 제출돼요',
+                       '끝나면 점수와 해설을 바로 볼 수 있어요',
+                       '한 번 시작하면 중간에 멈출 수 없으니 시간을 확보하고 들어오세요'] },
+            'homework': { 색: 'emerald', 무엇: '선생님이 내주신 과제를 확인하고 제출하는 곳이에요.',
+                할일: ['과제를 고르고, 답을 적거나 사진을 찍어 올려요',
+                       '정답표가 있는 과제는 내자마자 채점돼요',
+                       '제출하면 성장 포인트가 쌓여요'] },
+            'lecture': { 색: 'purple', 무엇: '선생님이 올려주신 해설 강의를 보는 곳이에요.',
+                할일: ['틀린 문제나 어려웠던 단원의 강의를 찾아 봐요',
+                       '언제든 다시 볼 수 있으니 이해될 때까지 돌려 보세요'] },
+            'counsel': { 색: 'rose', 무엇: '내 성적으로 어느 대학에 갈 수 있는지 보는 곳이에요.',
+                할일: ['모의고사 성적을 바탕으로 지원 가능한 대학과 학과를 보여줘요',
+                       '점수가 모자라면 얼마나 모자란지도 알려줘요',
+                       '선생님이 적어주신 상담 내용도 여기서 확인해요'] },
+            'vocab-list': { 색: 'cyan', 무엇: '외운 영어 단어를 직접 써보며 확인하는 시험이에요.',
+                할일: ['단어를 보고 뜻 쓰기, 뜻을 보고 단어 쓰기 등으로 나와요',
+                       '고르는 게 아니라 직접 적어야 해서 제대로 외웠는지 알 수 있어요'] },
+            'board': { 색: 'blue', 무엇: '학원 소식과 안내가 올라오는 곳이에요.',
+                할일: ['시험 일정, 휴원, 보강 같은 공지를 확인해요',
+                       '새 공지가 올라오면 휴대폰으로 알림을 받을 수 있어요'] },
+            'essay': { 색: 'pink', 무엇: '내가 쓴 글을 AI가 읽고 고쳐주는 곳이에요.',
+                할일: ['논제와 내가 쓴 글을 올리면 어디를 어떻게 고치면 좋을지 알려줘요',
+                       '사진으로 찍어 올려도 읽어줘요'] },
+            'chat': { 색: 'blue', 무엇: '과목별 AI 선생님에게 언제든 물어보는 곳이에요.',
+                할일: ['밤이든 주말이든 물어보면 바로 답해줘요',
+                       '문제를 사진으로 찍거나 화면을 캡처해 붙여넣어도(Ctrl+V) 읽어줘요',
+                       '질문할 때마다 성장 포인트가 쌓여요'] },
+            'inquiry': { 색: 'emerald', 무엇: '학원에 궁금한 것을 남기는 곳이에요.',
+                할일: ['질문이나 건의를 남기면 원장님이 확인하고 답해주세요'] },
+        };
+
+        function showProgramIntro(key, view) {
+            const info = PROGRAM_INTRO[key];
+            if (!view || !info) return;
+            let box = view.querySelector(':scope > .prog-intro');
+            if (box) return;                         // 이미 붙여뒀으면 다시 만들지 않는다
+            box = document.createElement('div');
+            box.className = 'prog-intro mb-5 rounded-xl border border-' + info.색 + '-700/50 bg-' + info.색 + '-900/15 px-4 py-3';
+            box.innerHTML =
+                '<p class="text-[13px] md:text-sm font-bold text-' + info.색 + '-300 word-break-keep-all">'
+                + '<i class="fa-solid fa-circle-info mr-1.5"></i>' + escapeHtml(info.무엇) + '</p>'
+                + '<ul class="mt-2 space-y-1">'
+                + info.할일.map(t => '<li class="text-[11.5px] md:text-[13px] text-gray-300 word-break-keep-all flex gap-1.5">'
+                    + '<span class="text-' + info.색 + '-400 shrink-0">·</span><span>' + escapeHtml(t) + '</span></li>').join('')
+                + '</ul>';
+            // 제목(h2) 바로 아래에 넣는다. 제목이 없으면 맨 위에.
+            const h2 = view.querySelector(':scope > h2');
+            if (h2 && h2.nextSibling) view.insertBefore(box, h2.nextSibling);
+            else if (h2) view.appendChild(box);
+            else view.insertBefore(box, view.firstChild);
+        }
+
         function openProgram(id) { window.location.hash='prog-'+id; }
         function closeExamRoomStrict() { clearInterval(examTimerInterval); isDrawing=false; document.getElementById('pdf-inner-container').innerHTML=''; document.getElementById('exam-prep-overlay').style.display='none'; if(wsLive) wsLive.close(); }
         function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); }
