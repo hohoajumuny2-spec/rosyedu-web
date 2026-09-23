@@ -1508,6 +1508,61 @@
                 </div>
             </div>
 
+            <!-- 💡 여태 학생 화면에는 AI 셋만 놓여 있고, 퀴즈·모의고사·과제는 오른쪽 위
+                 메뉴(☰) 안에만 있었다. 메뉴를 열어본 적 없는 학생은 있는 줄도 몰랐다.
+                 들어오자마자 보이고 한 번에 닿도록 바탕에 펼쳐 둔다. -->
+            <div id="student-smart-room" class="hidden">
+                <h2 class="text-2xl font-bold mb-2">스마트 학습실</h2>
+                <p class="text-gray-400 text-sm mb-6">눌러서 바로 시작하세요.</p>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+                    <div onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="bg-[#1e2430] border border-orange-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-orange-500 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">⏱️</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">타임어택 퀴즈</h3>
+                        <p class="text-orange-200/70 text-[11px] md:text-sm word-break-keep-all">제한 시간 안에 풀고 바로 채점받아요.</p>
+                    </div>
+                    <div onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="bg-[#1e2430] border border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🔤</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">영어 단어 시험</h3>
+                        <p class="text-cyan-200/70 text-[11px] md:text-sm word-break-keep-all">외운 단어를 실제로 확인해요.</p>
+                    </div>
+                    <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-500 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📝</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">실시간 모의고사</h3>
+                        <p class="text-yellow-200/70 text-[11px] md:text-sm word-break-keep-all">실제 시험처럼 OMR로 응시해요.</p>
+                    </div>
+                    <div onclick="openProgram('homework'); loadHomeworks();" class="bg-[#1e2430] border border-emerald-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📚</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">과제 제출</h3>
+                        <p class="text-emerald-200/70 text-[11px] md:text-sm word-break-keep-all">오늘 낼 과제를 확인하고 제출해요.</p>
+                    </div>
+                    <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎬</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">해설 강의실</h3>
+                        <p class="text-purple-200/70 text-[11px] md:text-sm word-break-keep-all">틀린 문제의 해설 강의를 봐요.</p>
+                    </div>
+                    <div onclick="openProgram('essay');" class="bg-[#1e2430] border border-pink-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">✍️</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">AI 논술·요약 첨삭</h3>
+                        <p class="text-pink-200/70 text-[11px] md:text-sm word-break-keep-all">쓴 글을 바로 첨삭받아요.</p>
+                    </div>
+                    <div onclick="openProgram('counsel'); loadMyCounsel();" class="bg-[#1e2430] border border-rose-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-rose-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎯</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">나의 진학 상담</h3>
+                        <p class="text-rose-200/70 text-[11px] md:text-sm word-break-keep-all">내 성적으로 갈 수 있는 대학을 봐요.</p>
+                    </div>
+                    <div onclick="openProgram('mypage'); loadMyPage();" class="bg-[#1e2430] border border-teal-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-teal-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🙋</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">마이페이지</h3>
+                        <p class="text-teal-200/70 text-[11px] md:text-sm word-break-keep-all">내 기록과 틀린 문제를 모아 봐요.</p>
+                    </div>
+                    <div onclick="openProgram('board'); loadBoard();" class="bg-[#1e2430] border border-blue-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📢</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">공지사항</h3>
+                        <p class="text-blue-200/70 text-[11px] md:text-sm word-break-keep-all">학원 소식을 확인해요.</p>
+                    </div>
+                </div>
+            </div>
+
             <div id="admin-smart-room" class="hidden">
                 <h2 class="text-2xl font-bold mb-6">스마트 학습실</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -4500,6 +4555,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     document.getElementById('mobile-counsel-btn').style.display='block';
                     document.getElementById('nav-student-menu').style.display='flex';
                     document.getElementById('mobile-student-menu').style.display='block';
+                    document.getElementById('student-smart-room').classList.remove('hidden');
                     document.getElementById('card-admin').style.display='none';
                 }
                 if(currentUser.isAdmin) { document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
@@ -4516,7 +4572,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         function showModal(id) { document.getElementById(id+'-modal').style.display='flex'; if(id==='auth') toggleSignupMode(false); }
         function closeModal(id) { const el = document.getElementById(id); if(el) el.style.display='none'; }
-        function goHome() { window.location.hash='home'; }
+        // 💡 로그인한 학생에게 '로지에듀'는 집 버튼이다. 여기서 소개 화면으로 보내면
+        //    공부하다 말고 홍보 페이지로 튕겨 나간 꼴이 된다. 바탕화면으로 돌려보낸다.
+        function goHome() {
+            window.location.hash = (currentUser ? 'dashboard' : 'home');
+        }
         function goToDashboard() { if(!currentUser) return showModal('auth'); window.location.hash='dashboard'; }
         function showToast(m) { const c=document.getElementById('toast-container'); const t=document.createElement('div'); t.className='toast show'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
         function showLiveToast(m) { const c=document.getElementById('live-toast-container'); const t=document.createElement('div'); t.className='bg-red-600 text-white p-4 rounded-xl shadow-2xl font-bold text-center mb-2 animate-bounce'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(), 5000); }
