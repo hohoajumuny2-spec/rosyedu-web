@@ -1515,15 +1515,15 @@
                 <h2 class="text-2xl font-bold mb-2">스마트 학습실</h2>
                 <p class="text-gray-400 text-sm mb-6">눌러서 바로 시작하세요.</p>
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+                    <div onclick="openProgram('mypage'); loadMyPage();" class="bg-[#1e2430] border border-teal-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-teal-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🙋</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">마이페이지</h3>
+                        <p class="text-teal-200/70 text-[11px] md:text-sm word-break-keep-all">내 기록과 틀린 문제를 모아 봐요.</p>
+                    </div>
                     <div onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="bg-[#1e2430] border border-orange-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-orange-500 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">⏱️</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">타임어택 퀴즈</h3>
                         <p class="text-orange-200/70 text-[11px] md:text-sm word-break-keep-all">제한 시간 안에 풀고 바로 채점받아요.</p>
-                    </div>
-                    <div onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="bg-[#1e2430] border border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
-                        <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🔤</div>
-                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">영어 단어 시험</h3>
-                        <p class="text-cyan-200/70 text-[11px] md:text-sm word-break-keep-all">외운 단어를 실제로 확인해요.</p>
                     </div>
                     <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-500 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📝</div>
@@ -1540,25 +1540,25 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">해설 강의실</h3>
                         <p class="text-purple-200/70 text-[11px] md:text-sm word-break-keep-all">틀린 문제의 해설 강의를 봐요.</p>
                     </div>
-                    <div onclick="openProgram('essay');" class="bg-[#1e2430] border border-pink-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
-                        <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">✍️</div>
-                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">AI 논술·요약 첨삭</h3>
-                        <p class="text-pink-200/70 text-[11px] md:text-sm word-break-keep-all">쓴 글을 바로 첨삭받아요.</p>
-                    </div>
                     <div onclick="openProgram('counsel'); loadMyCounsel();" class="bg-[#1e2430] border border-rose-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-rose-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎯</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">나의 진학 상담</h3>
                         <p class="text-rose-200/70 text-[11px] md:text-sm word-break-keep-all">내 성적으로 갈 수 있는 대학을 봐요.</p>
                     </div>
-                    <div onclick="openProgram('mypage'); loadMyPage();" class="bg-[#1e2430] border border-teal-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
-                        <div class="w-12 h-12 md:w-14 md:h-14 bg-teal-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🙋</div>
-                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">마이페이지</h3>
-                        <p class="text-teal-200/70 text-[11px] md:text-sm word-break-keep-all">내 기록과 틀린 문제를 모아 봐요.</p>
+                    <div onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="bg-[#1e2430] border border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🔤</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">영어 단어 시험</h3>
+                        <p class="text-cyan-200/70 text-[11px] md:text-sm word-break-keep-all">외운 단어를 실제로 확인해요.</p>
                     </div>
                     <div onclick="openProgram('board'); loadBoard();" class="bg-[#1e2430] border border-blue-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📢</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">공지사항</h3>
                         <p class="text-blue-200/70 text-[11px] md:text-sm word-break-keep-all">학원 소식을 확인해요.</p>
+                    </div>
+                    <div onclick="openProgram('essay');" class="bg-[#1e2430] border border-pink-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">✍️</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">AI 논술·요약 첨삭</h3>
+                        <p class="text-pink-200/70 text-[11px] md:text-sm word-break-keep-all">쓴 글을 바로 첨삭받아요.</p>
                     </div>
                 </div>
             </div>
