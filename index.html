@@ -32,6 +32,21 @@
         .word-break-keep-all, .nav-word { word-break: keep-all; overflow-wrap: break-word; }
         /* 메뉴 글자는 줄이 나뉘더라도 가운데 정렬로 단정하게 */
         #main-nav .nav-word { text-align: center; line-height: 1.3; }
+        /* 학원 이름은 어떤 좁은 화면에서도 쪼개지면 안 된다 ('로/지/에/듀'가 됐던 적이 있다) */
+        #main-nav .nav-logo { white-space: nowrap; flex-shrink: 0; }
+        /* 좁은 화면에서 상단 버튼이 서로 밀어내지 않도록 */
+        #main-nav .nav-word { flex-shrink: 0; }
+        /* 💡 휴대폰 폭에서는 상단에 버튼을 다 늘어놓을 자리가 없다. 다 밀어 넣으면
+              정작 메뉴 버튼(☰)이 화면 밖으로 밀려나 아무것도 누를 수 없게 된다.
+              메뉴 안에도 있는 항목은 접고, 이름은 아래 카드에 이미 크게 나오므로 뺀다.
+              꼭 남겨야 하는 것: 학원 이름 · 아바타 · 학습실 · 메뉴 버튼. */
+        @media (max-width: 639px) {
+            #main-nav #btn-mypage-nav, #main-nav #header-user-info { display: none !important; }
+        }
+        /* 💡 메뉴 항목이 많아 화면 아래로 넘치면 마지막 항목(로그아웃)에 닿을 수가 없었다.
+              메뉴 안에서 스크롤되게 하고, 아래쪽 홈 바에 가리지 않도록 여백을 둔다. */
+        #mobile-menu { overflow-y: auto; -webkit-overflow-scrolling: touch;
+                       padding-bottom: env(safe-area-inset-bottom); overscroll-behavior: contain; }
 
         /* 프로그램 소개/이용 안내 — 스크롤해서 내려가며 카드가 하나씩 나타나는 연출 */
         .feature-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
@@ -971,10 +986,10 @@
                             </div>
                         </div>
                     </div>
-                    <span id="header-user-info" class="text-blue-400 font-bold text-xs md:text-sm"></span>
-                    <button onclick="openProgram('mypage'); loadMyPage();" class="text-emerald-400 font-bold border border-emerald-600 px-3 py-1.5 rounded-lg text-xs bg-emerald-900/20" id="btn-mypage-nav" style="display:none;">마이페이지</button>
-                    <button onclick="openProgram('counsel'); loadMyCounsel();" class="text-pink-400 font-bold border border-pink-600 px-2 py-1.5 rounded-lg text-[11px] bg-pink-900/20 hidden sm:inline-block" id="btn-counsel-nav" style="display:none;" title="나의 진학 상담"><i class="fa-solid fa-compass"></i></button>
-                    <button onclick="goToDashboard()" class="text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1.5 rounded-lg text-xs">학습실</button>
+                    <span id="header-user-info" class="nav-word text-blue-400 font-bold text-xs md:text-sm"></span>
+                    <button onclick="openProgram('mypage'); loadMyPage();" class="nav-word text-emerald-400 font-bold border border-emerald-600 px-3 py-1.5 rounded-lg text-xs bg-emerald-900/20" id="btn-mypage-nav" style="display:none;">마이페이지</button>
+                    <button onclick="openProgram('counsel'); loadMyCounsel();" class="nav-word text-pink-400 font-bold border border-pink-600 px-2 py-1.5 rounded-lg text-[11px] bg-pink-900/20 hidden sm:inline-block" id="btn-counsel-nav" style="display:none;" title="나의 진학 상담"><i class="fa-solid fa-compass"></i></button>
+                    <button onclick="goToDashboard()" class="nav-word text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1.5 rounded-lg text-xs">학습실</button>
                     <button onclick="logout()" class="text-gray-400 hover:text-white underline text-xs hidden md:inline">로그아웃</button>
                 </div>
                 <button class="nav-word lg:hidden text-gray-300 text-xl focus:outline-none" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
@@ -4284,7 +4299,25 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         function scrollToSection(id) { const e = document.getElementById(id); if(e) window.scrollTo({top: e.offsetTop - 80, behavior: 'smooth'}); if(window.location.hash!=='#home') window.location.hash='home'; }
-        function toggleMobileMenu() { const m = document.getElementById('mobile-menu'); m.classList.toggle('hidden'); m.classList.toggle('flex'); }
+        // 💡 상단 머리글 높이는 로그인 여부·아바타·이름 길이에 따라 68px에서 150px까지 달라진다.
+        //    그래서 메뉴 높이를 숫자로 고정하면 아래쪽 항목(로그아웃)이 화면 밖으로 밀려
+        //    아예 누를 수가 없었다. 열 때마다 남은 화면만큼만 차지하도록 직접 재서 정한다.
+        function fitMobileMenu() {
+            const m = document.getElementById('mobile-menu');
+            if (!m || m.classList.contains('hidden')) return;
+            const top = m.getBoundingClientRect().top;
+            m.style.maxHeight = Math.max(160, window.innerHeight - top - 8) + 'px';
+        }
+
+        function toggleMobileMenu() {
+            const m = document.getElementById('mobile-menu');
+            m.classList.toggle('hidden');
+            m.classList.toggle('flex');
+            m.scrollTop = 0;
+            fitMobileMenu();
+        }
+        window.addEventListener('resize', fitMobileMenu);
+        window.addEventListener('orientationchange', () => setTimeout(fitMobileMenu, 200));
         // 💡 main-popup 요소가 HTML에 없어 매 로그인마다 조용히 에러가 나던 것을 방어 코드로 수정
         function closeMainPopup(h) { const el = document.getElementById('main-popup'); if(el) el.style.display='none'; if(h) localStorage.setItem('logyedu_hide', new Date().toISOString().split('T')[0]); }
         function checkMainPopup() { const el = document.getElementById('main-popup'); if(el && localStorage.getItem('logyedu_hide') !== new Date().toISOString().split('T')[0]) el.style.display='flex'; }
