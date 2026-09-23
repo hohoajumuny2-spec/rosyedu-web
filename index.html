@@ -4632,7 +4632,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     loadMySchedule();
                     document.getElementById('card-admin').style.display='none';
                 }
-                if(currentUser.isAdmin) { document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
+                if(currentUser.isAdmin) { loadAdminSchedule(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
                 document.getElementById('mobile-logout-btn').style.display='block';
                 if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup();
 
@@ -4779,6 +4779,64 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 💡 학생이 제일 자주 묻는 두 가지다. 여태 카톡이나 말로만 오갔고
         //    프로그램 안에는 없었다. 바탕화면 맨 위와 마이페이지 두 곳에 띄운다.
         let MY_SCHEDULE = null;
+
+        // 원장님 화면 — 오늘 오는 클리닉과 다가오는 시험을 바탕화면 맨 위에
+        async function loadAdminSchedule() {
+            const host = document.getElementById('schedule-banner');
+            if (!host || !currentUser || !currentUser.isAdmin) return;
+            const r = await adminGet('/api/admin/schedule_overview?days=7');
+            if (!r.ok || !r.data || !r.data.success) return;
+            const d = r.data;
+            const 있는날 = (d.days || []).filter(x => x.items.length);
+            if (!있는날.length && !(d.exams || []).length) { host.classList.add('hidden'); return; }
+            host.classList.remove('hidden');
+
+            const 오늘 = (d.days || [])[0];
+            const 사람 = (x) => `<span class="inline-flex items-center gap-1 bg-[#1e2430] border border-sky-800 rounded-lg px-2 py-1 mr-1.5 mb-1.5">
+                <b class="text-white text-[12px]">${escapeHtml(x.student_name)}</b>
+                <span class="text-[11px] text-sky-300">${escapeHtml(x.time || '')}</span>
+                ${x.subject ? `<span class="text-[10.5px] text-gray-400">${escapeHtml(x.subject)}</span>` : ''}
+                ${x.once ? '<span class="text-[10px] text-amber-300">보강</span>' : ''}</span>`;
+
+            const 오늘칸 = `
+                <div class="flex-1 rounded-xl border border-sky-700/60 bg-sky-900/20 px-4 py-3">
+                    <p class="text-[11px] text-sky-300/80 font-bold mb-2">
+                        <i class="fa-solid fa-user-clock mr-1"></i>오늘 오는 클리닉
+                        <span class="text-white">${오늘 ? 오늘.items.length : 0}명</span>
+                        <span class="text-gray-500">· ${escapeHtml(d.today)} (${오늘 ? escapeHtml(오늘.weekday_label) : ''})</span>
+                    </p>
+                    ${오늘 && 오늘.items.length
+                        ? `<div class="flex flex-wrap">${오늘.items.map(사람).join('')}</div>`
+                        : '<p class="text-[12px] text-gray-500">오늘은 클리닉이 없습니다.</p>'}
+                    ${있는날.length > 1 ? `<details class="mt-2">
+                        <summary class="text-[11px] text-sky-300 cursor-pointer">이번 주 전체 보기</summary>
+                        <div class="mt-2 space-y-2">${있는날.slice(1).map(day => `
+                            <div>
+                                <p class="text-[11px] text-gray-400 mb-1">${escapeHtml(day.date)} (${escapeHtml(day.weekday_label)}) · ${day.items.length}명</p>
+                                <div class="flex flex-wrap">${day.items.map(사람).join('')}</div>
+                            </div>`).join('')}</div>
+                    </details>` : ''}
+                </div>`;
+
+            const 시험 = (d.exams || [])[0];
+            const 급함 = 시험 && 시험.d_left <= 7;
+            const 색 = 급함 ? 'red' : 'amber';
+            const 시험칸 = 시험 ? `
+                <div class="flex-1 rounded-xl border border-${색}-700/60 bg-${색}-900/20 px-4 py-3">
+                    <p class="text-[11px] text-${색}-300/80 font-bold">다가오는 시험</p>
+                    <p class="text-xl md:text-2xl font-black text-${색}-300 leading-tight mt-0.5 word-break-keep-all">
+                        ${escapeHtml(시험.school || '전체')} ${escapeHtml(시험.title)} <span class="text-white">${escapeHtml(시험.d_day)}</span></p>
+                    <p class="text-[11px] text-gray-400 mt-1">${escapeHtml(시험.date)}${시험.grade ? ' · ' + escapeHtml(시험.grade) + '학년' : ''}${시험.memo ? ' · ' + escapeHtml(시험.memo) : ''}</p>
+                    ${d.exams.length > 1 ? `<div class="mt-2 space-y-0.5">${d.exams.slice(1, 4).map(e =>
+                        `<p class="text-[11px] text-gray-400 word-break-keep-all">${escapeHtml(e.school || '전체')} ${escapeHtml(e.title)} · <b class="text-gray-300">${escapeHtml(e.d_day)}</b></p>`).join('')}</div>` : ''}
+                </div>` : `
+                <div class="flex-1 rounded-xl border border-gray-700 bg-[#151922] px-4 py-3">
+                    <p class="text-[11px] text-gray-400 font-bold">다가오는 시험</p>
+                    <p class="text-[12px] text-gray-500 mt-1.5">넣어둔 시험 일정이 없습니다.</p>
+                </div>`;
+
+            host.innerHTML = `<div class="flex flex-col md:flex-row gap-3">${오늘칸}${시험칸}</div>`;
+        }
 
         async function loadMySchedule() {
             if (!currentUser || currentUser.isAdmin) return;
