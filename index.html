@@ -1107,10 +1107,22 @@
                                 <p class="text-[10.5px] text-[#9b9aa2] mt-3">과목 점수를 올려보며 어디까지 열리는지 미리 봅니다</p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-center gap-1.5 pb-3 bg-white">
-                            <button onclick="showHeroScene(0)" data-dotidx="0" class="demo-dot w-6 h-1.5 rounded-full bg-[#17161a]" aria-label="첫 번째 화면"></button>
-                            <button onclick="showHeroScene(1)" data-dotidx="1" class="demo-dot w-6 h-1.5 rounded-full bg-[#dcdbd8]" aria-label="두 번째 화면"></button>
-                            <button onclick="showHeroScene(2)" data-dotidx="2" class="demo-dot w-6 h-1.5 rounded-full bg-[#dcdbd8]" aria-label="세 번째 화면"></button>
+                        <!-- 💡 손가락으로 밀어도 넘어가지만, 밀 수 있다는 걸 모르는 분을 위해
+                             화살표도 함께 둔다. 자동 넘김을 꺼둔 기기에서는 이게 유일한 길이다. -->
+                        <div class="flex items-center justify-center gap-3 pb-3 bg-white">
+                            <button onclick="showHeroScene(heroScene - 1, true)" aria-label="이전 화면"
+                                class="w-8 h-8 rounded-full text-[#6b6a72] hover:text-[#17161a] hover:bg-[#f2f1ef] transition flex items-center justify-center">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="showHeroScene(0, true)" data-dotidx="0" class="demo-dot w-6 h-1.5 rounded-full bg-[#17161a]" aria-label="첫 번째 화면"></button>
+                                <button onclick="showHeroScene(1, true)" data-dotidx="1" class="demo-dot w-6 h-1.5 rounded-full bg-[#dcdbd8]" aria-label="두 번째 화면"></button>
+                                <button onclick="showHeroScene(2, true)" data-dotidx="2" class="demo-dot w-6 h-1.5 rounded-full bg-[#dcdbd8]" aria-label="세 번째 화면"></button>
+                            </div>
+                            <button onclick="showHeroScene(heroScene + 1, true)" aria-label="다음 화면"
+                                class="w-8 h-8 rounded-full text-[#6b6a72] hover:text-[#17161a] hover:bg-[#f2f1ef] transition flex items-center justify-center">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -5110,10 +5122,41 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             heroTimer = setInterval(() => showHeroScene(heroScene + 1), 5200);
         }
 
+        // 💡 휴대폰에서는 손가락으로 미는 게 먼저 나온다. 점 버튼만 두면
+        //    "옆으로 안 넘어간다"는 말을 듣게 된다. 밀기(스와이프)를 붙인다.
+        //    위아래로 긁는 건 화면 스크롤이므로, 가로로 더 많이 움직였을 때만 넘긴다.
+        let heroSwipeReady = false;
+
+        function enableHeroSwipe() {
+            const demo = document.getElementById('hero-demo');
+            if (!demo || heroSwipeReady) return;
+            heroSwipeReady = true;
+            let x0 = null, y0 = null;
+            const 시작 = (x, y) => { x0 = x; y0 = y; };
+            const 끝 = (x, y) => {
+                if (x0 === null) return;
+                const dx = x - x0, dy = y - y0;
+                x0 = y0 = null;
+                if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;  // 세로로 긁은 것
+                showHeroScene(heroScene + (dx < 0 ? 1 : -1), true);
+            };
+            demo.addEventListener('touchstart', e => 시작(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+            demo.addEventListener('touchend', e => {
+                const t = e.changedTouches[0];
+                끝(t.clientX, t.clientY);
+            }, { passive: true });
+            // 컴퓨터에서 마우스로 끌어도 넘어가게
+            demo.addEventListener('mousedown', e => 시작(e.clientX, e.clientY));
+            demo.addEventListener('mouseup', e => 끝(e.clientX, e.clientY));
+            demo.style.touchAction = 'pan-y';        // 위아래 스크롤은 그대로 두고
+            demo.style.cursor = 'grab';
+        }
+
         function startHeroDemo() {
             const vid = document.getElementById('hero-video');
             const demo = document.getElementById('hero-demo');
             if (!demo) return;
+            enableHeroSwipe();
             if (HERO_VIDEO_SRC && vid) {           // 진짜 영상이 있으면 그걸 튼다
                 vid.src = HERO_VIDEO_SRC;
                 vid.classList.remove('hidden');
