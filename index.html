@@ -25,6 +25,14 @@
         body { font-family: 'Pretendard', sans-serif; background-color: #1a1e29; color: #ffffff; scroll-behavior: smooth; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 💡 한글은 글자 하나하나가 줄바꿈 자리가 될 수 있어서, 그냥 두면
+              '프로그램 소 / 개'처럼 낱말 가운데가 잘린다. 낱말 단위로만 넘기게 한다.
+              (이 이름은 화면 곳곳에서 쓰고 있었는데 정작 정의된 적이 없어
+               여태 아무 효력이 없었다.) */
+        .word-break-keep-all, .nav-word { word-break: keep-all; overflow-wrap: break-word; }
+        /* 메뉴 글자는 줄이 나뉘더라도 가운데 정렬로 단정하게 */
+        #main-nav .nav-word { text-align: center; line-height: 1.3; }
+
         /* 프로그램 소개/이용 안내 — 스크롤해서 내려가며 카드가 하나씩 나타나는 연출 */
         .feature-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
         .feature-reveal.is-visible { opacity: 1; transform: translateY(0); }
@@ -936,19 +944,19 @@
                 <button onclick="scrollToSection('guide-section')" class="nav-word hover:text-blue-400">이용 안내</button>
                 <button onclick="openProgram('board'); loadBoard();" class="nav-word hover:text-blue-400">공지사항</button>
                 <button onclick="openProgram('inquiry'); loadInquiries();" class="nav-word hover:text-emerald-400">문의 사항</button>
-                <a href="https://logyedu.com" target="_blank" class="hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i>로지에듀 홈페이지</a>
+                <a href="https://logyedu.com" target="_blank" class="nav-word hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i>로지에듀 홈페이지</a>
                 <span id="nav-student-menu" class="hidden md:flex items-center gap-6 border-l border-gray-700 pl-6">
-                    <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="hover:text-orange-400">타임어택 퀴즈</button>
-                    <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="hover:text-cyan-400">영어 단어 시험</button>
-                    <button onclick="openProgram('exam-list'); loadStudentExams();" class="hover:text-yellow-400">실시간 모의고사</button>
-                    <button onclick="openProgram('lecture'); loadLectures();" class="hover:text-purple-400">해설 강의실</button>
-                    <button onclick="openProgram('homework'); loadHomeworks();" class="hover:text-emerald-400">과제 제출</button>
-                    <button onclick="openProgram('essay')" class="hover:text-pink-400">AI 논술/요약 첨삭</button>
+                    <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="nav-word hover:text-orange-400">타임어택 퀴즈</button>
+                    <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="nav-word hover:text-cyan-400">영어 단어 시험</button>
+                    <button onclick="openProgram('exam-list'); loadStudentExams();" class="nav-word hover:text-yellow-400">실시간 모의고사</button>
+                    <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
+                    <button onclick="openProgram('homework'); loadHomeworks();" class="nav-word hover:text-emerald-400">과제 제출</button>
+                    <button onclick="openProgram('essay')" class="nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
                 </span>
             </div>
             <div class="flex items-center gap-3">
                 <div id="auth-nav" class="flex gap-2">
-                    <button onclick="scrollToSection('guide-section')" class="text-gray-300 hover:text-yellow-400 transition hidden md:inline-block"><i class="fa-solid fa-lightbulb mr-1"></i> 이용 가이드</button>
+                    <button onclick="scrollToSection('guide-section')" class="nav-word text-gray-300 hover:text-yellow-400 transition hidden lg:inline-block"><i class="fa-solid fa-lightbulb mr-1"></i> 이용 가이드</button>
                     <button onclick="showModal('auth')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs"><i class="fa-solid fa-lock mr-1"></i> 로그인</button>
                 </div>
                 <div id="user-nav" class="hidden items-center gap-3">
