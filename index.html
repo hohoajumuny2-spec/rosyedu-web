@@ -28,6 +28,72 @@
         /* 프로그램 소개/이용 안내 — 스크롤해서 내려가며 카드가 하나씩 나타나는 연출 */
         .feature-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
         .feature-reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+        /* ─────────────────────────────────────────────────────────
+           첫 화면(로그인 전)만 밝게. 학생이 공부하는 화면은 지금처럼 어둡게 둔다
+           — 밤에 문제를 풀 때 눈이 덜 부시기 때문.
+           ───────────────────────────────────────────────────────── */
+        .home-light { background: #fbfaf9; }
+        .home-light #home-view { background: #fbfaf9; color: #17161a; }
+        .home-light #main-nav { background: rgba(251,250,249,.82); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid #ecebe9; }
+        .home-light #main-nav .nav-word { color: #4b4a52; }
+        .home-light #main-nav .nav-word:hover { color: #17161a; }
+        .home-light #main-nav .nav-logo { color: #17161a; }
+        .home-light #intro-section, .home-light #guide-section { border-top-color: #ecebe9; }
+        .home-light .feature-reveal { background: #ffffff; border-color: #ecebe9; }
+        .home-light .feature-reveal h3 { color: #17161a; }
+        .home-light .feature-reveal p { color: #4b4a52; }
+        .home-light .feature-reveal li { color: #6b6a72; }
+        .home-light #home-view h2 { color: #17161a; }
+        .home-light #home-view .sub-note { color: #6b6a72; }
+        /* 알림 안내 상자 — 밝은 바탕에 맞춰 옅은 초록으로 */
+        .home-light .home-note { background: #f0faf3 !important; border-color: #bfe6cd !important; }
+        .home-light .home-note p:first-child { color: #15803d !important; }
+        .home-light .home-note p { color: #4b5563; }
+        .home-light .home-note b { color: #17161a !important; }
+        .home-light .home-note .text-amber-300 { color: #b45309 !important; }
+        .home-light .home-note .text-gray-500 { color: #8e8d95 !important; }
+        .home-light .home-note .text-gray-400 { color: #6b6a72 !important; }
+
+        /* 큰 제목 — 노션처럼 글자를 바짝 붙이고, 토스처럼 크고 굵게 */
+        .hero-title { letter-spacing: -0.045em; line-height: 1.08; font-weight: 800; color: #17161a; }
+        .hero-accent { background: linear-gradient(180deg, transparent 62%, #cfe0ff 62%); }
+        .hero-sub { color: #5c5b63; letter-spacing: -0.02em; }
+        /* 타입폼처럼 거의 검정인 버튼, 모서리는 넉넉하게 */
+        .hero-cta { background: #17161a; color: #fff; border-radius: 14px; transition: transform .15s ease, box-shadow .15s ease; }
+        .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.18); }
+        .hero-ghost { border: 1px solid #dcdbd8; color: #33323a; border-radius: 14px; background: #fff; }
+        .hero-ghost:hover { border-color: #b9b8b4; }
+
+        /* ── 프로그램 화면 미리보기 (영상 대신 코드로 움직인다) ──
+           💡 영상 파일이면 3~10MB에 휴대폰에서 버벅이고 확대하면 뭉개진다.
+              화면을 코드로 그리면 30KB 남짓에 늘 선명하고, 글자만 고쳐도 내용이 바뀐다.
+              나중에 진짜 녹화 영상을 넣고 싶으면 #hero-video 에 mp4만 걸면 된다. */
+        .device { background: #fff; border: 1px solid #e6e5e2; border-radius: 18px; box-shadow: 0 24px 60px -18px rgba(23,22,26,.22); overflow: hidden; }
+        .device-bar { background: #f5f4f2; border-bottom: 1px solid #ecebe9; }
+        .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+        .scene { display: none; }
+        .scene.on { display: block; animation: sceneIn .5s ease-out both; }
+        @keyframes sceneIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        .bubble { border-radius: 14px; padding: 9px 13px; font-size: 13px; line-height: 1.55; max-width: 86%; }
+        .bubble-me { background: #17161a; color: #fff; margin-left: auto; border-bottom-right-radius: 5px; }
+        .bubble-ai { background: #f2f1ef; color: #26252b; border-bottom-left-radius: 5px; }
+        /* 커서가 깜빡이며 글이 써지는 느낌 */
+        .typing::after { content: '▍'; margin-left: 1px; animation: caret 1s steps(1) infinite; color: #8e8d95; }
+        @keyframes caret { 50% { opacity: 0; } }
+        .opt-row { border: 1px solid #e6e5e2; border-radius: 10px; padding: 8px 11px; font-size: 12.5px; color: #3b3a42; transition: all .3s ease; }
+        .opt-row.pick { border-color: #17161a; background: #17161a; color: #fff; }
+        .opt-row.right { border-color: #16a34a; background: #eafaef; color: #14532d; }
+        .bar { background: #ecebe9; border-radius: 99px; overflow: hidden; height: 7px; }
+        .bar > i { display: block; height: 100%; background: #17161a; border-radius: 99px; animation: grow 1.6s ease-out both; }
+        @keyframes grow { from { width: 0; } }
+        .pin { animation: pinDrop .5s cubic-bezier(.2,1.4,.4,1) both; }
+        @keyframes pinDrop { from { opacity: 0; transform: translateY(-12px) scale(.6); } to { opacity: 1; transform: none; } }
+        /* 움직임을 줄여달라고 설정한 분께는 애니메이션을 멈춘다 */
+        @media (prefers-reduced-motion: reduce) {
+            .scene.on, .bar > i, .pin { animation: none !important; }
+            .typing::after { animation: none; }
+        }
         @keyframes levelUpPop { 0% { opacity: 0; transform: scale(0.5); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes levelUpBounce { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
         @keyframes avatarGlowPulse { 0%, 100% { box-shadow: 0 0 14px 2px var(--glow-color, rgba(251,191,36,0.6)); } 50% { box-shadow: 0 0 32px 10px var(--glow-color, rgba(251,191,36,0.9)); } }
@@ -862,14 +928,14 @@
         </div>
     </div>
 
-    <nav class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm">
+    <nav id="main-nav" class="fixed top-0 w-full z-50 bg-[#1a1e29]/95 border-b border-gray-800 backdrop-blur-sm transition-colors">
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
-            <div class="text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
-            <div class="hidden md:flex gap-6 items-center text-sm font-bold text-gray-300">
-                <button onclick="scrollToSection('intro-section')" class="hover:text-blue-400">프로그램 소개</button>
-                <button onclick="scrollToSection('guide-section')" class="hover:text-blue-400">이용 안내</button>
-                <button onclick="openProgram('board'); loadBoard();" class="hover:text-blue-400">공지사항</button>
-                <button onclick="openProgram('inquiry'); loadInquiries();" class="hover:text-emerald-400">문의 사항</button>
+            <div class="nav-logo text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
+            <div class="hidden lg:flex gap-6 items-center text-sm font-bold text-gray-300">
+                <button onclick="scrollToSection('intro-section')" class="nav-word hover:text-blue-400">프로그램 소개</button>
+                <button onclick="scrollToSection('guide-section')" class="nav-word hover:text-blue-400">이용 안내</button>
+                <button onclick="openProgram('board'); loadBoard();" class="nav-word hover:text-blue-400">공지사항</button>
+                <button onclick="openProgram('inquiry'); loadInquiries();" class="nav-word hover:text-emerald-400">문의 사항</button>
                 <a href="https://logyedu.com" target="_blank" class="hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i>로지에듀 홈페이지</a>
                 <span id="nav-student-menu" class="hidden md:flex items-center gap-6 border-l border-gray-700 pl-6">
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="hover:text-orange-400">타임어택 퀴즈</button>
@@ -903,7 +969,7 @@
                     <button onclick="goToDashboard()" class="text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1.5 rounded-lg text-xs">학습실</button>
                     <button onclick="logout()" class="text-gray-400 hover:text-white underline text-xs hidden md:inline">로그아웃</button>
                 </div>
-                <button class="md:hidden text-gray-300 text-xl focus:outline-none" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+                <button class="nav-word lg:hidden text-gray-300 text-xl focus:outline-none" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
             </div>
         </div>
 
@@ -928,16 +994,109 @@
     </nav>
 
     <div id="home-view" class="w-full flex-grow flex flex-col items-center pt-20 px-4 overflow-y-auto">
-        <div class="text-center z-10 fade-in min-h-[80vh] flex flex-col justify-center items-center w-full">
-            <h1 class="text-4xl md:text-6xl lg:text-[5rem] font-black text-white mb-10 tracking-tight leading-tight word-break-keep-all"><span class="text-blue-500">'로지는 언제나 올바름'</span>을 찾아냈습니다.<br><span class="text-2xl md:text-4xl lg:text-[2.5rem] mt-6 block text-gray-300 font-bold">그리고 그것이 <span class="text-blue-500">정답</span>이 되는 길을 만들었습니다.</span></h1>
-            <div class="flex flex-col md:flex-row gap-4 justify-center">
-                <button onclick="goToDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 md:px-10 md:py-5 rounded-xl font-bold text-lg md:text-xl shadow-lg">스마트 학습실 입장하기</button>
+        <div class="z-10 fade-in w-full max-w-6xl mx-auto pt-6 pb-4">
+            <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+                <div class="text-center lg:text-left">
+                    <h1 class="hero-title text-[2.1rem] sm:text-[2.6rem] md:text-[3rem] lg:text-[3.15rem] word-break-keep-all">
+                        <span class="hero-accent">'로지는 언제나 올바름'</span>을<br>찾아냈습니다.
+                    </h1>
+                    <p class="hero-sub mt-5 text-lg md:text-xl font-semibold word-break-keep-all">
+                        그리고 그것이 <b class="text-[#17161a]">정답</b>이 되는 길을 만들었습니다.
+                    </p>
+                    <p class="hero-sub mt-3 text-[15px] md:text-base leading-relaxed word-break-keep-all opacity-90">
+                        24시간 답해주는 AI 선생님, 실전처럼 보는 모의고사,<br class="hidden md:block">
+                        그리고 내 성적으로 갈 수 있는 대학까지 — 한곳에서.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mt-8">
+                        <button onclick="goToDashboard()" class="hero-cta px-8 py-4 font-bold text-base md:text-lg">
+                            스마트 학습실 입장하기
+                        </button>
+                        <button onclick="scrollToSection('intro-section')" class="hero-ghost px-7 py-4 font-bold text-base md:text-lg">
+                            무엇을 할 수 있나요?
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 프로그램 화면 미리보기 — 실제로 어떻게 쓰는지 차례로 보여준다.
+                     나중에 진짜 녹화 영상을 쓰려면 아래 video 에 파일만 걸면 된다. -->
+                <div class="device w-full max-w-[520px] mx-auto" aria-label="로지에듀 프로그램 화면 미리보기">
+                    <video id="hero-video" class="hidden w-full" autoplay muted loop playsinline></video>
+                    <div id="hero-demo">
+                        <div class="device-bar flex items-center gap-1.5 px-3 py-2.5">
+                            <span class="dot" style="background:#ff5f57"></span>
+                            <span class="dot" style="background:#febc2e"></span>
+                            <span class="dot" style="background:#28c840"></span>
+                            <span id="demo-tab" class="ml-2 text-[11px] font-bold text-[#6b6a72]">AI 국최에게 질문하기</span>
+                        </div>
+                        <div class="p-4 h-[292px] bg-white">
+                            <!-- ① AI에게 질문하기 -->
+                            <div class="scene on" data-scene="0">
+                                <div class="space-y-2.5">
+                                    <div class="bubble bubble-me">비문학에서 글쓴이 관점 묻는 문제가 자꾸 틀려요</div>
+                                    <div class="bubble bubble-ai">
+                                        글쓴이 관점 문제는 <b>'평가어'</b>를 먼저 찾으면 쉬워져요.<br>
+                                        '다행히', '문제는', '~에 불과하다' 같은 말이 나오면<br>거기가 글쓴이 생각이 드러나는 자리예요.
+                                    </div>
+                                    <div class="bubble bubble-ai typing">예를 들어 방금 그 지문에서는</div>
+                                </div>
+                                <p class="text-[10.5px] text-[#9b9aa2] mt-3">밤 11시에도, 사진을 찍어 올려도 바로 답해줍니다</p>
+                            </div>
+                            <!-- ② 타임어택 퀴즈 -->
+                            <div class="scene" data-scene="1">
+                                <p class="text-[12px] font-bold text-[#17161a] mb-1">Q3. ㉠의 의미로 가장 적절한 것은?</p>
+                                <p class="text-[11.5px] text-[#6b6a72] mb-3">㉠<u>길에 나아갑니다</u></p>
+                                <div class="space-y-1.5">
+                                    <div class="opt-row">① 만남의 장소</div>
+                                    <div class="opt-row" id="demo-pick">② 삶의 여정</div>
+                                    <div class="opt-row">③ 도피의 통로</div>
+                                </div>
+                                <div class="flex items-center gap-2 mt-3">
+                                    <span class="text-[11px] font-bold text-[#17161a]">남은 시간</span>
+                                    <div class="bar flex-grow"><i style="width:38%"></i></div>
+                                    <span class="text-[11px] text-[#6b6a72]">02:14</span>
+                                </div>
+                                <p class="text-[10.5px] text-[#9b9aa2] mt-3">제출하면 바로 채점 — 친구들 정답률까지 같이 보여요</p>
+                            </div>
+                            <!-- ③ 지원 가능 대학 -->
+                            <div class="scene" data-scene="2">
+                                <p class="text-[12px] font-bold text-[#17161a] mb-2">내 백분위로 지금 갈 수 있는 대학</p>
+                                <div class="grid grid-cols-3 gap-2 mb-3">
+                                    <div class="rounded-xl border border-[#e6e5e2] p-2.5 text-center pin" style="animation-delay:.05s">
+                                        <p class="text-[10px] text-[#9b9aa2]">상향</p><p class="text-[17px] font-black text-[#17161a]">12</p>
+                                    </div>
+                                    <div class="rounded-xl border border-[#17161a] bg-[#17161a] p-2.5 text-center pin" style="animation-delay:.2s">
+                                        <p class="text-[10px] text-white/70">적정</p><p class="text-[17px] font-black text-white">27</p>
+                                    </div>
+                                    <div class="rounded-xl border border-[#e6e5e2] p-2.5 text-center pin" style="animation-delay:.35s">
+                                        <p class="text-[10px] text-[#9b9aa2]">안정</p><p class="text-[17px] font-black text-[#17161a]">19</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between rounded-lg bg-[#f7f6f4] px-3 py-2">
+                                        <span class="text-[12px] font-bold text-[#17161a]">단국대(천안) · 임상병리학과</span>
+                                        <span class="text-[11px] font-bold text-[#16a34a]">안정</span>
+                                    </div>
+                                    <div class="flex items-center justify-between rounded-lg bg-[#f7f6f4] px-3 py-2">
+                                        <span class="text-[12px] font-bold text-[#17161a]">경기대 · 국어국문학과</span>
+                                        <span class="text-[11px] font-bold text-[#b45309]">6점 모자람</span>
+                                    </div>
+                                </div>
+                                <p class="text-[10.5px] text-[#9b9aa2] mt-3">과목 점수를 올려보며 어디까지 열리는지 미리 봅니다</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5 pb-3 bg-white">
+                            <button onclick="showHeroScene(0)" data-dotidx="0" class="demo-dot w-6 h-1.5 rounded-full bg-[#17161a]" aria-label="첫 번째 화면"></button>
+                            <button onclick="showHeroScene(1)" data-dotidx="1" class="demo-dot w-6 h-1.5 rounded-full bg-[#dcdbd8]" aria-label="두 번째 화면"></button>
+                            <button onclick="showHeroScene(2)" data-dotidx="2" class="demo-dot w-6 h-1.5 rounded-full bg-[#dcdbd8]" aria-label="세 번째 화면"></button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 🔔 들어오기 전에 알림을 미리 알려준다.
                  💡 특히 아이폰은 '홈 화면에 추가'를 하지 않으면 알림 자체가 불가능하다.
                     로그인한 뒤에 알려주면 이미 늦어서, 들어가기 전에 짚어준다. -->
-            <div class="mt-10 w-full max-w-2xl mx-auto bg-emerald-900/20 border border-emerald-700 rounded-2xl px-5 py-4 text-left">
+            <div class="home-note mt-10 w-full max-w-2xl mx-auto bg-emerald-900/20 border border-emerald-700 rounded-2xl px-5 py-4 text-left">
                 <p class="text-sm md:text-base font-bold text-emerald-300 flex items-center gap-2">
                     <i class="fa-solid fa-bell"></i>새 과제 · 모의고사 · 채점 결과를 휴대폰으로 바로 받아보세요
                 </p>
@@ -4501,6 +4660,70 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 }
             } catch (e) { card.classList.add('hidden'); }
         }
+
+        // ── 첫 화면 미리보기 ─────────────────────────────────────
+        // 💡 영상 파일 대신 화면을 코드로 그려 돌린다. 30KB 남짓이라 휴대폰에서도
+        //    바로 뜨고, 확대해도 선명하며, 내용은 글자만 고치면 바뀐다.
+        //    나중에 진짜 녹화 영상을 쓰려면 HERO_VIDEO_SRC 에 파일 주소만 넣으면
+        //    미리보기 대신 그 영상이 재생된다.
+        const HERO_VIDEO_SRC = '';          // 예: 'hero.mp4'
+        const HERO_SCENE_LABELS = ['AI 국최에게 질문하기', '타임어택 퀴즈 응시', '지원 가능 대학 찾기'];
+        let heroScene = 0, heroTimer = null;
+
+        function showHeroScene(i, fromUser) {
+            const scenes = document.querySelectorAll('#hero-demo .scene');
+            if (!scenes.length) return;
+            heroScene = (i + scenes.length) % scenes.length;
+            scenes.forEach((el, n) => el.classList.toggle('on', n === heroScene));
+            document.querySelectorAll('.demo-dot').forEach((d, n) => {
+                d.className = 'demo-dot w-6 h-1.5 rounded-full ' + (n === heroScene ? 'bg-[#17161a]' : 'bg-[#dcdbd8]');
+            });
+            const tab = document.getElementById('demo-tab');
+            if (tab) tab.innerText = HERO_SCENE_LABELS[heroScene] || '';
+            // 퀴즈 장면은 '고르고 → 채점되는' 흐름까지 보여준다
+            const pick = document.getElementById('demo-pick');
+            if (pick) {
+                pick.className = 'opt-row';
+                if (heroScene === 1) {
+                    setTimeout(() => pick.classList.add('pick'), 700);
+                    setTimeout(() => { pick.classList.remove('pick'); pick.classList.add('right'); }, 1900);
+                }
+            }
+            if (fromUser) restartHeroTimer();
+        }
+
+        function restartHeroTimer() {
+            clearInterval(heroTimer);
+            // 움직임을 줄여달라고 설정한 분에게는 저절로 넘기지 않는다
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            heroTimer = setInterval(() => showHeroScene(heroScene + 1), 5200);
+        }
+
+        function startHeroDemo() {
+            const vid = document.getElementById('hero-video');
+            const demo = document.getElementById('hero-demo');
+            if (!demo) return;
+            if (HERO_VIDEO_SRC && vid) {           // 진짜 영상이 있으면 그걸 튼다
+                vid.src = HERO_VIDEO_SRC;
+                vid.classList.remove('hidden');
+                demo.classList.add('hidden');
+                return;
+            }
+            showHeroScene(0);
+            restartHeroTimer();
+        }
+
+        function stopHeroDemo() { clearInterval(heroTimer); heroTimer = null; }
+
+        // 로그인 전 첫 화면만 밝게. 학생이 공부하는 화면은 어두운 그대로 둔다.
+        function syncHomeTheme() {
+            const home = document.getElementById('home-view');
+            const onHome = home && getComputedStyle(home).display !== 'none';
+            document.body.classList.toggle('home-light', !!onHome);
+            if (onHome) startHeroDemo(); else stopHeroDemo();
+        }
+        window.addEventListener('DOMContentLoaded', () => setTimeout(syncHomeTheme, 60));
+        window.addEventListener('hashchange', () => setTimeout(syncHomeTheme, 60));
 
         // 💡 아이폰·아이패드는 '홈 화면에 추가'를 해야만 알림을 켤 수 있다(iOS 16.4+).
         //    사파리 탭으로 보고 있는 동안에는 켜기 버튼을 눌러도 되지 않으므로,
