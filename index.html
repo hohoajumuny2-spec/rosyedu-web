@@ -2063,7 +2063,7 @@
                                 </div>
                                 <div class="w-1/2">
                                     <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
-                                    <select id="qz-target-class" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600 class-select"><option value="">전체 대상</option></select>
+                                    <div class="w-full"><div id="qz-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="qz-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
                                 </div>
                             </div>
                             <div class="flex gap-2 mb-2">
@@ -2278,7 +2278,7 @@
                                     <option value="math">수학</option>
                                     <option value="english">영어</option>
                                 </select>
-                                <select id="rt-target-class" class="w-1/2 p-2 bg-gray-800 text-white rounded border border-gray-600 class-select"><option value="">전체 대상</option></select>
+                                <div class="w-1/2"><div id="rt-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="rt-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
                             </div>
                             <input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4 rounded border border-gray-600">
                             <div class="flex gap-2 mb-2">
@@ -2377,7 +2377,7 @@
                                     </div>
                                 </div>
                                 <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
-                                <select id="vt-target-class" class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600 class-select mb-3"><option value="">전체 대상</option></select>
+                                <div class="w-full mb-3"><div id="vt-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="vt-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
 
                                 <div id="vt-random-panel">
                                     <p class="text-xs text-gray-400 mb-1">난이도별 출제 개수 (보유한 단어 수 이내로)</p>
@@ -2442,6 +2442,10 @@
                                 </select>
                                 <input type="text" id="hw-title" placeholder="과제명" class="w-2/3 p-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500">
                             </div>
+
+                            <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">과제 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
+                            <div id="hw-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
+                            <p id="hw-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
                             <label class="text-[11px] text-emerald-300 font-bold block mb-1">정답표 (넣어두면 학생이 OMR로 답만 마킹해도 자동 채점됩니다)</label>
                             <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4  또는  1번 3 / 2번 1  (줄바꿈·쉼표 모두 됩니다)" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
                             <div class="flex items-center justify-between gap-2 mb-2">
@@ -2470,6 +2474,10 @@
                             <h3 class="text-white font-bold mb-4">공지사항 등록</h3>
                             <input type="text" id="bd-title-admin" placeholder="공지제목" class="w-full p-2 mb-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-blue-500">
                             <textarea id="bd-desc-admin" placeholder="내용을 입력하세요" class="w-full p-2 mb-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-blue-500 h-24"></textarea>
+
+                            <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">공지 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
+                            <div id="bd-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
+                            <p id="bd-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
                             <input type="file" id="bd-file-admin" class="mb-2 text-white" onchange="handleFileSelect(event, bdFilesAdmin, 'bd-file-admin-visual')">
                             <div id="bd-file-admin-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <button onclick="createBoardAdmin()" class="w-full bg-gray-600 hover:bg-gray-500 py-2 text-white font-bold rounded transition shadow-lg">공지 등록</button>
@@ -7310,7 +7318,66 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 sel.value = keep;
                 if (sel.value !== keep) sel.value = '';
             });
+            document.querySelectorAll('.class-picker').forEach(box => renderClassPicker(box));
         }
+
+        // ── 대상 반 고르기 (여러 개) ────────────────────────────
+        // 💡 예전에는 반을 하나만 고를 수 있어서, 같은 시험을 두 반에 내주려면
+        //    같은 것을 두 번 만들어야 했다. 이제 체크해서 여러 반을 한 번에 고른다.
+        //    하나도 체크하지 않으면 '전체 대상'이다.
+        function renderClassPicker(box) {
+            if (typeof box === 'string') box = document.getElementById(box);
+            if (!box) return;
+            const picked = new Set(String(box.dataset.picked || '').split('|').filter(Boolean));
+            if (!ADMIN_CLASSES.length) {
+                box.innerHTML = `<p class="text-[11px] text-gray-500 p-2">등록된 반이 없습니다. '반 관리'에서 먼저 반을 만들어주세요. (지금은 전체 대상)</p>`;
+                return;
+            }
+            box.innerHTML = ADMIN_CLASSES.map(c => {
+                const on = picked.has(c.name);
+                return `<label class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-700/60">
+                    <input type="checkbox" value="${escAttr(c.name)}" ${on ? 'checked' : ''}
+                        onchange="onClassPickerChange(this)" class="w-4 h-4 accent-sky-500 shrink-0">
+                    <span class="text-xs text-gray-200 truncate">${escapeHtml(c.name)}</span>
+                    <span class="text-[10px] text-gray-500 ml-auto shrink-0">${escapeHtml(classScheduleLabel(c))}</span>
+                </label>`;
+            }).join('');
+            updateClassPickerLabel(box);
+        }
+
+        function onClassPickerChange(input) {
+            const box = input.closest('.class-picker');
+            if (!box) return;
+            box.dataset.picked = getPickedClasses(box).join('|');
+            updateClassPickerLabel(box);
+        }
+
+        function updateClassPickerLabel(box) {
+            const el = document.getElementById(box.id + '-label');
+            if (!el) return;
+            const picked = getPickedClasses(box);
+            el.innerHTML = picked.length
+                ? `<span class="text-sky-300 font-bold">${picked.length}개 반</span> <span class="text-gray-400">· ${escapeHtml(picked.join(', '))}</span>`
+                : `<span class="text-gray-400">전체 대상 (반을 고르지 않으면 모두에게 보입니다)</span>`;
+        }
+
+        function getPickedClasses(box) {
+            if (typeof box === 'string') box = document.getElementById(box);
+            if (!box) return [];
+            return [...box.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+        }
+
+        // 저장된 자료를 다시 열 때 체크 상태를 되돌린다 (예전 한 칸짜리 값도 받는다)
+        function setPickedClasses(box, names) {
+            if (typeof box === 'string') box = document.getElementById(box);
+            if (!box) return;
+            const list = Array.isArray(names) ? names
+                : String(names || '').split(',').map(s => s.trim()).filter(Boolean);
+            box.dataset.picked = list.join('|');
+            renderClassPicker(box);
+        }
+
+        function clearClassPicker(box) { setPickedClasses(box, []); }
 
         function renderClassManageList() {
             const box = document.getElementById('class-manage-list');
@@ -7984,12 +8051,14 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if(!t) return alert("공지 제목을 입력하세요.");
             showLoader("공지사항 및 첨부파일을 서버에 업로드 중입니다...");
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
+            fd.append("target_classes", getPickedClasses('bd-target-class').join(","));
             if(bdFilesAdmin.length) fd.append("file",bdFilesAdmin[0]);
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/board`, fd);
                 if(data.success) {
                     loadAdminBoardList();
                     document.getElementById('bd-title-admin').value=''; document.getElementById('bd-desc-admin').value='';
+                    clearClassPicker('bd-target-class');
                     clearAllFiles('bd-file-admin-visual');
                 } else { alert("업로드 실패: " + data.detail); }
             } catch(e){ alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message + "\n(첨부파일 용량이 너무 크면 막힐 수 있습니다)"); }
@@ -8015,7 +8084,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadBoard() {
             try {
-                const res = await fetch(`${API_URL}/api/board`);
+                // 💡 이름을 함께 보내야 '그 반만 보는 공지'를 가려낼 수 있다.
+                //    원장님(관리자)은 이름을 안 보내 전부 본다.
+                const who = (currentUser && !currentUser.isAdmin) ? currentUser.name : '';
+                const res = await fetch(`${API_URL}/api/board?student_name=${encodeURIComponent(who)}`);
                 const data = await res.json();
                 const c = document.getElementById('board-list');
                 c.innerHTML = '';
@@ -8234,6 +8306,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('hw-title').value = h.title;
             document.getElementById('hw-kind').value = h.kind === 'clinic' ? 'clinic' : 'class';
             document.getElementById('hw-answers').value = (h.answers || []).join(', ');
+            setPickedClasses('hw-target-class', h.target_classes || []);
             HW_EXPLANATIONS = Object.assign({}, h.explanations || {});
             updateHomeworkAnswerCount();
             updateHwExplCount();
@@ -8246,6 +8319,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             EDITING_HW_TITLE = '';
             document.getElementById('hw-title').value = '';
             document.getElementById('hw-answers').value = '';
+            clearClassPicker('hw-target-class');
             HW_EXPLANATIONS = {};
             updateHomeworkAnswerCount();
             updateHwExplCount();
@@ -8268,6 +8342,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("answers", answers);
             fd.append("explanations", JSON.stringify(HW_EXPLANATIONS || {}));
             fd.append("old_title", isEdit ? EDITING_HW_TITLE : "");
+            fd.append("target_classes", getPickedClasses('hw-target-class').join(","));
             if (hwFilesAdmin.length) fd.append("answer_file", hwFilesAdmin[0]);
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
@@ -8966,7 +9041,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             fd.append("title",t);
             fd.append("objective",o);
             fd.append("subject", document.getElementById('rt-subject').value);
-            fd.append("target_class", document.getElementById('rt-target-class').value);
+            fd.append("target_classes", getPickedClasses('rt-target-class').join(","));
             fd.append("allowed_students", "all");
             fd.append("exam_data", JSON.stringify({sections:adminExamSections, questions:adminExamQuestions}));
             fd.append("video_url",v);
@@ -10385,7 +10460,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 const res = await fetch(`${API_URL}/api/admin/quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_class: document.getElementById('qz-target-class').value })
+                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_classes: getPickedClasses('qz-target-class') })
                 });
                 const data = await res.json();
                 if(data.success) {
@@ -10439,7 +10514,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('qz-deadline').value = (q.deadline || '').slice(0, 16);
             document.getElementById('qz-limit').value = q.time_limit || '';
             document.getElementById('qz-subject').value = q.subject || 'korean';
-            document.getElementById('qz-target-class').value = q.target_class || '';
+            setPickedClasses('qz-target-class', q.target_classes || q.target_class || []);
             const board = document.getElementById('qz-questions-board');
             board.innerHTML = '';
             (q.questions || []).forEach(x => fillQuizQuestion({
@@ -10663,7 +10738,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const limit = parseInt(document.getElementById('vt-limit').value);
             if (!title || !limit) return alert('제목과 제한 시간을 입력하세요.');
 
-            const payload = { title, deadline, time_limit: limit, target_class: document.getElementById('vt-target-class').value };
+            const payload = { title, deadline, time_limit: limit, target_classes: getPickedClasses('vt-target-class') };
             if (vocabTestMode === 'manual') {
                 if (!vocabManualSelection.length) return alert('출제할 단어를 하나 이상 선택하세요.');
                 payload.manual_questions = vocabManualSelection;
