@@ -1489,6 +1489,10 @@
                 </button>
             </div>
 
+            <!-- 💡 학생이 가장 자주 궁금해하는 두 가지 — 시험이 며칠 남았는지,
+                 내 클리닉이 언제인지. 들어오자마자 맨 위에서 보이게 둔다. -->
+            <div id="schedule-banner" class="hidden mb-8"></div>
+
             <h2 class="text-2xl font-bold mb-4">24시간 AI 도우미</h2>
             <div id="ai-subject-tiles" class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-8">
                 <div data-subject="korean" onclick="openProgram('chat'); openChatSubject('korean');" class="bg-[#1e2430] border-2 border-blue-600/60 p-8 md:p-10 rounded-2xl cursor-pointer app-card shadow-lg shadow-blue-900/20">
@@ -1646,6 +1650,9 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4"><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-info" class="text-lg text-white font-bold"></p></div><div class="bg-[#151922] p-4 rounded-xl border border-gray-700"><p id="mypage-count" class="text-xl text-emerald-400 font-black">0건</p></div></div>
+
+                <!-- 내 시험 D-day와 클리닉 일정 — 바탕화면과 같은 내용을 여기서도 본다 -->
+                <div id="mypage-schedule" class="hidden mb-4"></div>
 
                 <!-- 💡 새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 받을 수 있게 -->
                 <div id="push-card" class="hidden mb-4 rounded-xl p-4 border">
@@ -1866,6 +1873,7 @@
                         <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="text-lime-400 font-bold border border-lime-600 px-4 py-2 rounded">대신 채점</button>
                         <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="text-amber-400 font-bold border border-amber-600 px-4 py-2 rounded">모른다고 한 문항</button>
                         <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
+                        <button onclick="switchAdminTab('admin-schedule')" id="btn-admin-schedule" class="text-sky-400 font-bold border border-sky-500 px-4 py-2 rounded">시험일정 · 클리닉</button>
                     </div>
 
                     <!-- 원장님이 학생 대신 채점하기 -->
@@ -1933,6 +1941,54 @@
                     </div>
 
                     <!-- 명단 관리 -->
+                    <!-- 💡 학생이 제일 자주 묻는 두 가지를 원장님이 여기서 적어둔다.
+                         적어두면 학생 바탕화면 맨 위와 마이페이지에 바로 뜬다. -->
+                    <div id="admin-schedule" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4" style="display:none;">
+                        <div class="bg-[#151922] p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-bold text-amber-300 mb-1"><i class="fa-regular fa-calendar-days mr-2"></i>시험 일정</h3>
+                            <p class="text-[11px] text-gray-500 mb-4">학교와 학년을 적으면 그 학생들에게만 D-day가 뜹니다. 둘 다 비우면 학원 전체에 뜹니다.</p>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <input id="ed-school" placeholder="학교 (예: 대치고)" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                <input id="ed-grade" placeholder="학년 (예: 2)" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <input id="ed-title" value="중간고사" placeholder="시험 이름" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                <input id="ed-date" type="date" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                            </div>
+                            <input id="ed-memo" placeholder="메모 (선택) — 예: 국어는 1교시" class="w-full p-2 mb-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                            <button onclick="saveExamDate()" class="w-full bg-amber-600 hover:bg-amber-700 py-2.5 text-white font-bold rounded transition text-sm">시험 일정 추가</button>
+                            <div id="ed-list" class="mt-4 space-y-2 max-h-80 overflow-y-auto"></div>
+                        </div>
+
+                        <div class="bg-[#151922] p-5 rounded-xl border border-gray-700">
+                            <h3 class="text-lg font-bold text-sky-300 mb-1"><i class="fa-solid fa-user-clock mr-2"></i>클리닉 일정</h3>
+                            <p class="text-[11px] text-gray-500 mb-4">매주 같은 요일에 오는 클리닉과, 날짜를 따로 잡은 보강을 모두 넣을 수 있습니다. 학생을 여러 명 골라 한 번에 잡아줄 수 있어요.</p>
+                            <div class="flex gap-2 mb-2">
+                                <button onclick="setClinicKind('weekly')" id="cl-kind-weekly" class="flex-1 py-2 rounded text-sm font-bold bg-sky-600 text-white">매주 같은 요일</button>
+                                <button onclick="setClinicKind('once')" id="cl-kind-once" class="flex-1 py-2 rounded text-sm font-bold bg-gray-700 text-gray-300">날짜로 한 번</button>
+                            </div>
+                            <div id="cl-weekly-row" class="grid grid-cols-2 gap-2 mb-2">
+                                <select id="cl-weekday" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                    <option value="0">월요일</option><option value="1">화요일</option><option value="2">수요일</option>
+                                    <option value="3">목요일</option><option value="4">금요일</option><option value="5">토요일</option><option value="6">일요일</option>
+                                </select>
+                                <input id="cl-time" type="time" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                            </div>
+                            <div id="cl-once-row" class="hidden grid-cols-2 gap-2 mb-2">
+                                <input id="cl-date" type="date" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                <input id="cl-time2" type="time" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <input id="cl-subject" placeholder="과목 (선택)" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                <input id="cl-memo" placeholder="메모 (선택)" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                            </div>
+                            <label class="text-[11px] text-sky-300 font-bold block mb-1">학생 고르기 (여러 명 가능)</label>
+                            <div id="cl-students" class="max-h-40 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1 mb-2"></div>
+                            <button onclick="saveClinic()" class="w-full bg-sky-600 hover:bg-sky-700 py-2.5 text-white font-bold rounded transition text-sm">클리닉 잡아주기</button>
+                            <div id="cl-list" class="mt-4 space-y-2 max-h-80 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
                     <div id="admin-users" class="admin-tab-content grid grid-cols-4 gap-4">
                         <div class="col-span-4 lg:col-span-1 space-y-4">
                             <!-- 학생 추가 -->
@@ -4321,6 +4377,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }
             document.getElementById('mypage-info').innerText=`${currentUser.school} ${currentUser.grade} ${currentUser.name}`;
             refreshPushCard();
+            loadMySchedule();
             try {
                 const res=await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(currentUser.name)}`); const data=await res.json();
                 const c=document.getElementById('mypage-history-list'); c.innerHTML=''; let cnt=0;
@@ -4558,6 +4615,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     document.getElementById('nav-student-menu').style.display='flex';
                     document.getElementById('mobile-student-menu').style.display='block';
                     document.getElementById('student-smart-room').classList.remove('hidden');
+                    loadMySchedule();
                     document.getElementById('card-admin').style.display='none';
                 }
                 if(currentUser.isAdmin) { document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
@@ -4583,6 +4641,189 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function showToast(m) { const c=document.getElementById('toast-container'); const t=document.createElement('div'); t.className='toast show'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
         function showLiveToast(m) { const c=document.getElementById('live-toast-container'); const t=document.createElement('div'); t.className='bg-red-600 text-white p-4 rounded-xl shadow-2xl font-bold text-center mb-2 animate-bounce'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(), 5000); }
         function toggleFullscreen() { const v=document.getElementById('pdf-viewer-section'); v.classList.toggle('fixed'); v.classList.toggle('inset-0'); v.classList.toggle('z-[120]'); v.classList.toggle('w-full'); v.classList.toggle('lg:w-2/3'); }
+        // ── 원장님: 시험 일정 · 클리닉 관리 ─────────────────────
+        let CLINIC_KIND = 'weekly';
+
+        async function initScheduleTab() {
+            await Promise.all([refreshExamDates(), refreshClinics(), fillClinicStudents()]);
+        }
+
+        async function refreshExamDates() {
+            const box = document.getElementById('ed-list');
+            const r = await adminGet('/api/admin/exam_dates');
+            const rows = r.ok ? (r.data.rows || []) : [];
+            if (!rows.length) { box.innerHTML = '<p class="text-[11px] text-gray-500">아직 넣은 시험 일정이 없습니다.</p>'; return; }
+            box.innerHTML = rows.map(x => {
+                const 지남 = (x.d_left ?? 0) < 0;
+                return `<div class="flex items-center justify-between gap-2 bg-[#1e2430] border ${지남 ? 'border-gray-700' : 'border-amber-800'} rounded-lg px-3 py-2">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold ${지남 ? 'text-gray-500' : 'text-white'} word-break-keep-all">
+                            ${escapeHtml(x.school || '전체')} ${escapeHtml(x.grade ? x.grade + '학년' : '')} ${escapeHtml(x.title || '')}</p>
+                        <p class="text-[11px] text-gray-400">${escapeHtml(x.date || '')} · <b class="${지남 ? 'text-gray-500' : 'text-amber-300'}">${escapeHtml(x.d_day || '')}</b>${x.memo ? ' · ' + escapeHtml(x.memo) : ''}</p>
+                    </div>
+                    <button onclick="deleteExamDate('${escAttr(x.id)}')" class="shrink-0 text-red-400 hover:text-red-300 text-xs font-bold">삭제</button>
+                </div>`;
+            }).join('');
+        }
+
+        async function saveExamDate() {
+            const date = document.getElementById('ed-date').value;
+            if (!date) return alert("시험 날짜를 골라주세요.");
+            const r = await adminPost('/api/admin/exam_date', {
+                school: document.getElementById('ed-school').value.trim(),
+                grade: document.getElementById('ed-grade').value.trim(),
+                title: document.getElementById('ed-title').value.trim() || '시험',
+                date: date,
+                memo: document.getElementById('ed-memo').value.trim(),
+            });
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || "저장하지 못했습니다.");
+            document.getElementById('ed-memo').value = '';
+            showToast("시험 일정을 넣었어요.");
+            refreshExamDates();
+        }
+
+        async function deleteExamDate(id) {
+            if (!confirm("이 시험 일정을 지울까요?")) return;
+            await adminPost('/api/admin/exam_date/delete', { id: id });
+            refreshExamDates();
+        }
+
+        function setClinicKind(kind) {
+            CLINIC_KIND = kind;
+            document.getElementById('cl-weekly-row').classList.toggle('hidden', kind !== 'weekly');
+            document.getElementById('cl-weekly-row').classList.toggle('grid', kind === 'weekly');
+            document.getElementById('cl-once-row').classList.toggle('hidden', kind !== 'once');
+            document.getElementById('cl-once-row').classList.toggle('grid', kind === 'once');
+            const on = 'flex-1 py-2 rounded text-sm font-bold bg-sky-600 text-white';
+            const off = 'flex-1 py-2 rounded text-sm font-bold bg-gray-700 text-gray-300';
+            document.getElementById('cl-kind-weekly').className = kind === 'weekly' ? on : off;
+            document.getElementById('cl-kind-once').className = kind === 'once' ? on : off;
+        }
+
+        async function fillClinicStudents() {
+            const box = document.getElementById('cl-students');
+            const r = await adminGet('/api/admin/students');
+            const rows = r.ok ? (r.data.students || []) : [];
+            const names = rows.map(x => (typeof x === 'string' ? x : (x.student_name || x.name || x.id))).filter(Boolean);
+            names.sort((a, b) => String(a).localeCompare(String(b), 'ko'));
+            box.innerHTML = names.length
+                ? names.map(n => `<label class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-700/60">
+                        <input type="checkbox" value="${escAttr(n)}" class="w-4 h-4 accent-sky-500 shrink-0">
+                        <span class="text-xs text-gray-200">${escapeHtml(n)}</span></label>`).join('')
+                : '<p class="text-[11px] text-gray-500 p-2">학생 명단을 불러오지 못했습니다.</p>';
+        }
+
+        async function saveClinic() {
+            const names = [...document.querySelectorAll('#cl-students input:checked')].map(i => i.value);
+            if (!names.length) return alert("학생을 한 명 이상 골라주세요.");
+            const body = {
+                student_names: names, kind: CLINIC_KIND,
+                subject: document.getElementById('cl-subject').value.trim(),
+                memo: document.getElementById('cl-memo').value.trim(),
+            };
+            if (CLINIC_KIND === 'weekly') {
+                body.weekday = Number(document.getElementById('cl-weekday').value);
+                body.time = document.getElementById('cl-time').value;
+            } else {
+                body.date = document.getElementById('cl-date').value;
+                body.time = document.getElementById('cl-time2').value;
+                if (!body.date) return alert("보강 날짜를 골라주세요.");
+            }
+            const r = await adminPost('/api/admin/clinic', body);
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || "저장하지 못했습니다.");
+            document.querySelectorAll('#cl-students input:checked').forEach(i => i.checked = false);
+            showToast(`${r.data.saved}명에게 클리닉을 잡았어요.`);
+            refreshClinics();
+        }
+
+        async function refreshClinics() {
+            const box = document.getElementById('cl-list');
+            const r = await adminGet('/api/admin/clinics');
+            const rows = r.ok ? (r.data.rows || []) : [];
+            if (!rows.length) { box.innerHTML = '<p class="text-[11px] text-gray-500">아직 잡아둔 클리닉이 없습니다.</p>'; return; }
+            box.innerHTML = rows.map(x => {
+                const 언제 = x.kind === 'once'
+                    ? `${escapeHtml(x.date || '')} ${escapeHtml(x.time || '')}`
+                    : `매주 ${escapeHtml(x.weekday_label || '')}요일 ${escapeHtml(x.time || '')}`;
+                return `<div class="flex items-center justify-between gap-2 bg-[#1e2430] border border-sky-900 rounded-lg px-3 py-2">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-white word-break-keep-all">${escapeHtml(x.student_name || '')}</p>
+                        <p class="text-[11px] text-sky-300">${언제}${x.subject ? ' · ' + escapeHtml(x.subject) : ''}${x.memo ? ' · ' + escapeHtml(x.memo) : ''}</p>
+                    </div>
+                    <button onclick="deleteClinic('${escAttr(x.id)}')" class="shrink-0 text-red-400 hover:text-red-300 text-xs font-bold">삭제</button>
+                </div>`;
+            }).join('');
+        }
+
+        async function deleteClinic(id) {
+            if (!confirm("이 클리닉을 지울까요?")) return;
+            await adminPost('/api/admin/clinic/delete', { id: id });
+            refreshClinics();
+        }
+
+        // ── 내 시험 D-day와 내 전체 클리닉 ──────────────────────
+        // 💡 학생이 제일 자주 묻는 두 가지다. 여태 카톡이나 말로만 오갔고
+        //    프로그램 안에는 없었다. 바탕화면 맨 위와 마이페이지 두 곳에 띄운다.
+        let MY_SCHEDULE = null;
+
+        async function loadMySchedule() {
+            if (!currentUser || currentUser.isAdmin) return;
+            try {
+                const res = await fetch(`${API_URL}/api/student/schedule?student_name=${encodeURIComponent(currentUser.name)}`);
+                const d = await res.json();
+                if (!d.success) return;
+                MY_SCHEDULE = d;
+            } catch (e) { return; }
+            renderSchedule('schedule-banner');
+            renderSchedule('mypage-schedule');
+        }
+
+        function renderSchedule(hostId) {
+            const host = document.getElementById(hostId);
+            if (!host || !MY_SCHEDULE) return;
+            const exam = MY_SCHEDULE.next_exam;
+            const c = MY_SCHEDULE.clinics || { weekly: [], upcoming: [] };
+            const 클리닉있음 = c.weekly.length || c.upcoming.length;
+            if (!exam && !클리닉있음) { host.classList.add('hidden'); return; }
+            host.classList.remove('hidden');
+
+            // 시험이 코앞이면 더 눈에 띄게
+            const 급함 = exam && exam.d_left <= 7;
+            const 시험색 = 급함 ? 'red' : 'amber';
+
+            const 시험칸 = exam ? `
+                <div class="flex-1 rounded-xl border border-${시험색}-700/60 bg-${시험색}-900/20 px-4 py-3">
+                    <p class="text-[11px] text-${시험색}-300/80 font-bold">${escapeHtml(exam.school || '')} ${escapeHtml(exam.title)}까지</p>
+                    <p class="text-2xl md:text-3xl font-black text-${시험색}-300 leading-tight mt-0.5">${escapeHtml(exam.d_day)}</p>
+                    <p class="text-[11px] text-gray-400 mt-1">${escapeHtml(exam.date)}${exam.memo ? ' · ' + escapeHtml(exam.memo) : ''}</p>
+                    ${MY_SCHEDULE.exams.length > 1
+                        ? `<p class="text-[10.5px] text-gray-500 mt-1.5">다음: ${MY_SCHEDULE.exams.slice(1, 3)
+                              .map(e => escapeHtml(e.title) + ' ' + escapeHtml(e.d_day)).join(' · ')}</p>` : ''}
+                </div>` : '';
+
+            const 줄 = (t) => `<li class="text-[12px] md:text-[13px] text-gray-200 word-break-keep-all flex gap-1.5">
+                <span class="text-sky-400 shrink-0">·</span><span>${t}</span></li>`;
+            const 클리닉칸 = 클리닉있음 ? `
+                <div class="flex-1 rounded-xl border border-sky-700/60 bg-sky-900/20 px-4 py-3">
+                    <p class="text-[11px] text-sky-300/80 font-bold"><i class="fa-solid fa-user-clock mr-1"></i>내 전체 클리닉</p>
+                    <ul class="mt-1.5 space-y-1">
+                        ${c.weekly.map(w => 줄(`<b class="text-white">매주 ${escapeHtml(w.weekday_label)}요일 ${escapeHtml(w.time || '')}</b>`
+                            + (w.subject ? ' · ' + escapeHtml(w.subject) : '')
+                            + (w.memo ? ' · ' + escapeHtml(w.memo) : ''))).join('')}
+                        ${c.upcoming.map(u => 줄(`<b class="text-white">${escapeHtml(u.date)} ${escapeHtml(u.time || '')}</b>`
+                            + ` <span class="text-sky-300 font-bold">${escapeHtml(u.d_day)}</span>`
+                            + (u.subject ? ' · ' + escapeHtml(u.subject) : '')
+                            + (u.memo ? ' · ' + escapeHtml(u.memo) : ''))).join('')}
+                    </ul>
+                </div>` : `
+                <div class="flex-1 rounded-xl border border-gray-700 bg-[#151922] px-4 py-3">
+                    <p class="text-[11px] text-gray-400 font-bold"><i class="fa-solid fa-user-clock mr-1"></i>내 전체 클리닉</p>
+                    <p class="text-[12px] text-gray-500 mt-1.5">아직 잡힌 클리닉이 없어요.</p>
+                </div>`;
+
+            host.innerHTML = `<div class="flex flex-col md:flex-row gap-3">${시험칸}${클리닉칸}</div>`;
+        }
+
         // ── 들어온 곳이 무엇을 하는 곳인지 첫머리에 알려준다 ──────────
         // 💡 학생은 카드를 눌러 들어왔을 뿐, 여기서 뭘 해야 하는지 모른 채
         //    빈 목록만 보는 일이 많았다. 화면마다 '어떤 곳이고, 어떻게 쓰고,
@@ -4665,6 +4906,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800');
             if(id==='admin-users'){fetchReports(); loadAdminStudents(); loadAdminAccounts();}
             if(id==='admin-counsel'){initCounselTab();}
+            if(id==='admin-schedule'){initScheduleTab();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
             if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
