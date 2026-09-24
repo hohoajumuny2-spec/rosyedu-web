@@ -72,6 +72,17 @@
         .home-light .feature-reveal h3 { color: #17161a; }
         .home-light .feature-reveal p { color: #4b4a52; }
         .home-light .feature-reveal li { color: #6b6a72; }
+        /* 스마트 상담 시스템 — 밝은 홈에서는 다른 카드처럼 흰 판이다.
+           다만 위의 .feature-reveal 규칙이 h3·p·li 만 어둡게 바꾸므로,
+           h4 와 굵은 글씨는 흰색 그대로 남아 흰 바탕에서 안 보인다. 여기서 맞춘다. */
+        .home-light #feature-counsel h4,
+        .home-light #feature-counsel li b { color: #17161a; }
+        /* 그림칸은 실제 프로그램 화면(어두운 색)을 흉내 낸 것이다.
+           그 안 글씨까지 어둡게 바뀌면 안 보이므로 되돌린다. */
+        .home-light #feature-counsel figure .text-gray-200 { color: #e5e7eb; }
+        .home-light #feature-counsel figure .text-gray-300 { color: #d1d5db; }
+        .home-light #feature-counsel figure .text-gray-400 { color: #9ca3af; }
+        .home-light #feature-counsel figure .text-gray-500 { color: #6b7280; }
         .home-light #home-view h2 { color: #17161a; }
         .home-light #home-view .sub-note { color: #6b6a72; }
         /* 알림 안내 상자 — 밝은 바탕에 맞춰 옅은 초록으로 */
@@ -1025,6 +1036,7 @@
                 <button onclick="openProgram('inquiry'); loadInquiries();" class="nav-word hover:text-emerald-400">문의 사항</button>
                 <a href="https://logyedu.com" target="_blank" class="nav-word hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i>로지에듀 홈페이지</a>
                 <span id="nav-student-menu" class="hidden md:flex items-center gap-6 border-l border-gray-700 pl-6">
+                    <button onclick="goToDashboard()" class="nav-word hover:text-emerald-400">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="nav-word hover:text-orange-400">타임어택 퀴즈</button>
                     <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="nav-word hover:text-cyan-400">영어 단어 시험</button>
                     <button onclick="openProgram('exam-list'); loadStudentExams();" class="nav-word hover:text-yellow-400">실시간 모의고사</button>
@@ -1067,7 +1079,8 @@
             <button onclick="openProgram('inquiry'); loadInquiries(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">문의 사항</button>
             <a href="https://logyedu.com" target="_blank" class="p-4 border-b border-gray-800 hover:text-blue-400"><i class="fa-solid fa-globe mr-1"></i>로지에듀 홈페이지</a>
             <span id="mobile-student-menu" class="hidden" style="display:none;">
-                <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
+                <button onclick="goToDashboard(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">바탕화면</button>
+                    <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
                 <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
                 <button onclick="openProgram('exam-list'); loadStudentExams(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-yellow-400 w-full">실시간 모의고사</button>
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
@@ -1215,6 +1228,163 @@
             <h2 class="text-3xl font-bold text-blue-400 mb-3"><i class="fa-solid fa-circle-info mr-2"></i>프로그램 소개</h2>
             <p class="text-gray-400 mb-10">로지에듀 AI 스마트 프로그램에서 학생이 할 수 있는 모든 것을 하나씩 자세히 소개합니다. 천천히 스크롤하며 살펴보세요.</p>
             <div class="space-y-5 md:space-y-6">
+            <!-- 스마트 상담 시스템 — 학원이 내세우는 것이라 소개 맨 앞에 크게 둔다.
+                 성적으로 목표를 세우고, 과목·태도를 뜯어보고, 학생부까지 함께 본다. -->
+            <section id="feature-counsel" class="feature-reveal mb-8 md:mb-10 rounded-3xl border border-blue-800/60 bg-gradient-to-b from-[#161d2b] to-[#12151c] p-6 md:p-10">
+                <p class="text-[11px] md:text-xs font-black tracking-[0.2em] text-blue-400 mb-2">LOGYEDU COUNSELING</p>
+                <h3 class="text-2xl md:text-4xl font-black text-white leading-snug mb-3">성적표 한 장으로 끝나지 않는<br class="hidden md:block"> 스마트 상담 시스템</h3>
+                <p class="text-gray-400 leading-relaxed mb-8 md:mb-10 max-w-3xl">
+                    내신과 모의고사를 넣으면 지금 갈 수 있는 대학이 먼저 보입니다.
+                    거기서 그치지 않고 과목별로 무엇이 부족한지, 공부하는 태도는 어떤지,
+                    학생부는 어떻게 읽히는지까지 함께 봅니다. 상담이 끝나면 다음에 무엇을 할지가 남습니다.
+                </p>
+
+                <!-- ① 목표 설정 -->
+                <article class="grid md:grid-cols-2 gap-6 md:gap-10 items-center mb-10 md:mb-14">
+                    <div>
+                        <span class="inline-flex items-center gap-2 text-xs font-black text-blue-300 bg-blue-950/60 border border-blue-800 rounded-full px-3 py-1 mb-3">STEP 1 · 목표 설정</span>
+                        <h4 class="text-xl md:text-2xl font-bold text-white mb-3">내신과 모의고사로 갈 수 있는 대학을 먼저 봅니다</h4>
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            막연히 "열심히 하자"로 시작하지 않습니다. 지금 성적을 그대로 넣어
+                            상향·적정·안정으로 나눠 보여주고, 어느 과목을 몇 점 올리면 어디까지
+                            열리는지 숫자로 확인합니다.
+                        </p>
+                        <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
+                            <li>내신 등급과 모의고사 백분위를 함께 봅니다 (수시·정시 둘 다)</li>
+                            <li>전국 입결 자료와 맞춰 지원 가능 대학을 뽑아냅니다</li>
+                            <li>"국어 3점만 더" 처럼 목표까지 남은 거리를 알려줍니다</li>
+                            <li>대학 소재지를 지도에 띄워 통학까지 함께 따져봅니다</li>
+                        </ul>
+                    </div>
+                    <figure class="rounded-2xl border border-gray-700 bg-[#0f1319] p-4 md:p-5 shadow-2xl">
+                        <figcaption class="text-[11px] text-gray-500 font-bold mb-3">내 백분위로 지금 갈 수 있는 대학</figcaption>
+                        <div class="grid grid-cols-3 gap-2 mb-3">
+                            <div class="rounded-xl bg-[#151922] border border-gray-700 py-3 text-center">
+                                <p class="text-[10px] text-gray-500 mb-1">상향</p><p class="text-2xl font-black text-white">12</p></div>
+                            <div class="rounded-xl bg-blue-600 py-3 text-center">
+                                <p class="text-[10px] text-blue-100 mb-1">적정</p><p class="text-2xl font-black text-white">27</p></div>
+                            <div class="rounded-xl bg-[#151922] border border-gray-700 py-3 text-center">
+                                <p class="text-[10px] text-gray-500 mb-1">안정</p><p class="text-2xl font-black text-white">19</p></div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between gap-2 rounded-lg bg-[#151922] border border-gray-700 px-3 py-2">
+                                <span class="text-xs text-gray-200 truncate">단국대(천안) · 임상병리학과</span>
+                                <span class="text-[10px] font-black text-emerald-400 shrink-0">안정</span></div>
+                            <div class="flex items-center justify-between gap-2 rounded-lg bg-[#151922] border border-gray-700 px-3 py-2">
+                                <span class="text-xs text-gray-200 truncate">경기대 · 국어국문학과</span>
+                                <span class="text-[10px] font-black text-orange-400 shrink-0">6점 모자람</span></div>
+                            <div class="flex items-center justify-between gap-2 rounded-lg bg-[#151922] border border-gray-700 px-3 py-2">
+                                <span class="text-xs text-gray-200 truncate">인하대 · 사회교육과</span>
+                                <span class="text-[10px] font-black text-rose-400 shrink-0">상향</span></div>
+                        </div>
+                    </figure>
+                </article>
+
+                <!-- ② 과목·태도 분석 -->
+                <article class="grid md:grid-cols-2 gap-6 md:gap-10 items-center mb-10 md:mb-14">
+                    <figure class="order-2 md:order-1 rounded-2xl border border-gray-700 bg-[#0f1319] p-4 md:p-5 shadow-2xl">
+                        <figcaption class="text-[11px] text-gray-500 font-bold mb-3">과목별 현재 상태</figcaption>
+                        <div class="space-y-3 mb-4">
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1"><span class="text-gray-300 font-bold">국어</span><span class="text-blue-300 font-black">2등급 · 88</span></div>
+                                <div class="h-2 rounded-full bg-[#1e2430]"><div class="h-2 rounded-full bg-blue-500" style="width:88%"></div></div>
+                                <p class="text-[10px] text-gray-500 mt-1">독서(과학·기술) 정답률 54% — 여기서 점수가 깎입니다</p>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1"><span class="text-gray-300 font-bold">수학</span><span class="text-emerald-300 font-black">3등급 · 74</span></div>
+                                <div class="h-2 rounded-full bg-[#1e2430]"><div class="h-2 rounded-full bg-emerald-500" style="width:74%"></div></div>
+                                <p class="text-[10px] text-gray-500 mt-1">계산 실수로 잃은 점수가 12점 — 개념보다 습관 문제</p>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[11px] mb-1"><span class="text-gray-300 font-bold">영어</span><span class="text-cyan-300 font-black">2등급 · 91</span></div>
+                                <div class="h-2 rounded-full bg-[#1e2430]"><div class="h-2 rounded-full bg-cyan-500" style="width:91%"></div></div>
+                                <p class="text-[10px] text-gray-500 mt-1">어휘는 충분, 빈칸추론만 반복해서 틀립니다</p>
+                            </div>
+                        </div>
+                        <figcaption class="text-[11px] text-gray-500 font-bold mb-2 pt-3 border-t border-gray-800">학습 태도</figcaption>
+                        <div class="grid grid-cols-2 gap-2 text-center">
+                            <div class="rounded-lg bg-[#151922] border border-gray-700 py-2">
+                                <p class="text-[10px] text-gray-500">과제 제출</p><p class="text-sm font-black text-emerald-400">18/20회</p></div>
+                            <div class="rounded-lg bg-[#151922] border border-gray-700 py-2">
+                                <p class="text-[10px] text-gray-500">오답 고쳐풀기</p><p class="text-sm font-black text-orange-400">42%</p></div>
+                            <div class="rounded-lg bg-[#151922] border border-gray-700 py-2">
+                                <p class="text-[10px] text-gray-500">클리닉 참석</p><p class="text-sm font-black text-emerald-400">전원 출석</p></div>
+                            <div class="rounded-lg bg-[#151922] border border-gray-700 py-2">
+                                <p class="text-[10px] text-gray-500">'모름' 표시</p><p class="text-sm font-black text-blue-400">솔직함</p></div>
+                        </div>
+                    </figure>
+                    <div class="order-1 md:order-2">
+                        <span class="inline-flex items-center gap-2 text-xs font-black text-emerald-300 bg-emerald-950/60 border border-emerald-800 rounded-full px-3 py-1 mb-3">STEP 2 · 과목 · 태도 분석</span>
+                        <h4 class="text-xl md:text-2xl font-bold text-white mb-3">등급이 아니라 '무엇이 부족한지'를 말합니다</h4>
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            같은 3등급이어도 이유는 제각각입니다. 개념을 몰라서인지, 시간이 모자라서인지,
+                            알면서 실수한 것인지. 프로그램에 쌓인 과제·퀴즈·모의고사 기록을 뜯어
+                            어디서 점수가 새는지 짚어냅니다.
+                        </p>
+                        <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
+                            <li><b class="text-gray-200">국어</b> — 화법과 작문 · 언어와 매체 · 문학 · 독서, 갈래별 정답률</li>
+                            <li><b class="text-gray-200">수학</b> — 단원별 정답률과 계산 실수로 잃은 점수를 나눠서</li>
+                            <li><b class="text-gray-200">영어</b> — 어휘 · 문법 · 유형별(빈칸/순서/어법) 약점</li>
+                            <li><b class="text-gray-200">학습 태도</b> — 과제 제출률, 오답을 실제로 고쳐 푸는지,
+                                클리닉에 오는지, 모르는 것을 '모름'으로 솔직히 표시하는지</li>
+                        </ul>
+                        <p class="text-[13px] text-gray-500 leading-relaxed mt-4">
+                            태도는 성적보다 먼저 움직입니다. 오답을 고쳐 푸는 비율이 오르기 시작하면
+                            한두 달 뒤에 등급이 따라옵니다 — 그래서 함께 봅니다.
+                        </p>
+                    </div>
+                </article>
+
+                <!-- ③ 학생부 정성 평가 -->
+                <article class="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
+                    <div>
+                        <span class="inline-flex items-center gap-2 text-xs font-black text-purple-300 bg-purple-950/60 border border-purple-800 rounded-full px-3 py-1 mb-3">STEP 3 · 학생부 정성 평가</span>
+                        <h4 class="text-xl md:text-2xl font-bold text-white mb-3">숫자로 안 나오는 것까지 읽어드립니다</h4>
+                        <p class="text-gray-300 leading-relaxed mb-4">
+                            학생부종합으로 갈 학생에게는 등급보다 중요한 것이 있습니다.
+                            세특과 창체에 적힌 문장을 대학이 어떻게 읽을지, 전공과 이어지는 흐름이
+                            보이는지, 빈 곳은 어디인지를 짚어 다음 학기에 무엇을 채울지 정합니다.
+                        </p>
+                        <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
+                            <li>세특 · 창체 문장을 전공적합성 · 학업역량 · 진로역량으로 나눠 읽기</li>
+                            <li>지원하려는 학과가 실제로 무엇을 보는지와 맞춰보기</li>
+                            <li>비어 있는 항목과, 남은 학기에 채울 수 있는 것 정리</li>
+                            <li>독서 · 탐구 주제를 성적 약점과 이어 붙이기</li>
+                        </ul>
+                    </div>
+                    <figure class="rounded-2xl border border-gray-700 bg-[#0f1319] p-4 md:p-5 shadow-2xl">
+                        <figcaption class="text-[11px] text-gray-500 font-bold mb-3">학생부 읽기 — 국어교육과 지원 기준</figcaption>
+                        <div class="space-y-2.5 mb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[11px] text-gray-400 w-20 shrink-0">전공적합성</span>
+                                <div class="flex-grow h-2 rounded-full bg-[#1e2430]"><div class="h-2 rounded-full bg-purple-500" style="width:82%"></div></div>
+                                <span class="text-[11px] font-black text-purple-300 w-8 text-right">82</span></div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[11px] text-gray-400 w-20 shrink-0">학업역량</span>
+                                <div class="flex-grow h-2 rounded-full bg-[#1e2430]"><div class="h-2 rounded-full bg-blue-500" style="width:71%"></div></div>
+                                <span class="text-[11px] font-black text-blue-300 w-8 text-right">71</span></div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[11px] text-gray-400 w-20 shrink-0">진로역량</span>
+                                <div class="flex-grow h-2 rounded-full bg-[#1e2430]"><div class="h-2 rounded-full bg-emerald-500" style="width:64%"></div></div>
+                                <span class="text-[11px] font-black text-emerald-300 w-8 text-right">64</span></div>
+                        </div>
+                        <div class="rounded-xl bg-[#151922] border border-gray-700 p-3 mb-2">
+                            <p class="text-[10px] font-black text-emerald-400 mb-1">잘 쌓인 것</p>
+                            <p class="text-[11px] text-gray-300 leading-relaxed">2학년 문학 세특의 '매체 언어 변화' 탐구가 지원 학과와 곧게 이어집니다.</p>
+                        </div>
+                        <div class="rounded-xl bg-[#151922] border border-gray-700 p-3">
+                            <p class="text-[10px] font-black text-orange-400 mb-1">채워야 할 것</p>
+                            <p class="text-[11px] text-gray-300 leading-relaxed">교육 자체에 대한 관심이 드러난 활동이 없습니다. 3학년 1학기 발표 주제로 이어 붙이기를 권합니다.</p>
+                        </div>
+                    </figure>
+                </article>
+
+                <div class="mt-8 md:mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <p class="text-sm text-gray-400 flex-grow">상담 결과는 프로그램 안 <b class="text-gray-200">'나의 진학 상담'</b> 에 그대로 남아, 언제든 다시 열어볼 수 있습니다.</p>
+                    <button onclick="goToDashboard()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-5 py-3 text-sm transition">스마트 학습실에서 보기</button>
+                </div>
+            </section>
+
             <div id="feature-korean" class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
                 <div class="shrink-0 flex items-center gap-4 md:block">
                     <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl md:text-4xl bg-blue-600 text-white shadow-lg">🤖</div>
@@ -4729,7 +4899,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // 💡 로그인한 학생에게 '로지에듀'는 집 버튼이다. 여기서 소개 화면으로 보내면
         //    공부하다 말고 홍보 페이지로 튕겨 나간 꼴이 된다. 바탕화면으로 돌려보낸다.
         function goHome() {
-            window.location.hash = (currentUser ? 'dashboard' : 'home');
+            // 로지에듀 로고는 언제나 소개 화면(홈)으로 돌아온다.
+            // 로그인한 학생이 바탕화면으로 갈 길은 메뉴의 '바탕화면' 으로 따로 둔다.
+            window.location.hash = 'home';
         }
         function goToDashboard() { if(!currentUser) return showModal('auth'); window.location.hash='dashboard'; }
         function showToast(m) { const c=document.getElementById('toast-container'); const t=document.createElement('div'); t.className='toast show'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
