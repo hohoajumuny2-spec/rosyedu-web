@@ -5290,10 +5290,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         // ── 퀴즈 재응시 요청 ───────────────────────────────────
         //   제한 시간을 넘겼거나 마감이 지나 못 푼 학생이 원장님께 부탁한다.
         //   원장님이 허락하면 그 퀴즈만 한 번 더 열린다.
-        async function askQuizRetry(title, why) {
+        async function askQuizRetry(title, why, kind) {
+            kind = kind || '타임어택 퀴즈';
             let st = { status: 'none' };
             try {
-                const r = await fetch(`${API_URL}/api/quiz/retry_status?student_name=${encodeURIComponent(currentUser.name)}&title=${encodeURIComponent(title)}`);
+                const r = await fetch(`${API_URL}/api/quiz/retry_status?student_name=${encodeURIComponent(currentUser.name)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
                 st = await r.json();
             } catch (e) { }
 
@@ -5308,7 +5309,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             try {
                 const r = await fetch(`${API_URL}/api/quiz/request_retry`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ student_name: currentUser.name, title, reason })
+                    body: JSON.stringify({ student_name: currentUser.name, title, kind, reason })
                 });
                 const d = await r.json();
                 hideLoader();
@@ -5342,7 +5343,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                        </div>` : '';
                 return `<div class="flex items-start justify-between gap-2 bg-[#1e2430] border ${x.status === 'pending' ? 'border-amber-600' : 'border-gray-700'} rounded-lg px-3 py-2">
                     <div class="min-w-0">
-                        <p class="text-sm font-bold text-white word-break-keep-all">${escapeHtml(x.student_name || '')} <span class="text-gray-400 font-normal">· ${escapeHtml(x.title || '')}</span></p>
+                        <p class="text-sm font-bold text-white word-break-keep-all">${escapeHtml(x.student_name || '')} <span class="text-gray-400 font-normal">· ${escapeHtml(x.title || '')}</span>
+                        <span class="text-[10px] text-sky-300 ml-1">${escapeHtml(x.kind || '타임어택 퀴즈')}</span></p>
                         ${x.reason ? `<p class="text-[11px] text-gray-400 mt-0.5 word-break-keep-all">"${escapeHtml(x.reason)}"</p>` : ''}
                         <p class="text-[11px] text-gray-600 mt-0.5">${escapeHtml(x.requested_at || '')}</p>
                         ${상태}
@@ -9917,6 +9919,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
             if (!r.ok) return alert(r.message);
             const d = r.data;
+            // 이미 냈다고 막힌 것이면 원장님께 부탁할 길을 준다
+            if (d && d.success === false) {
+                if (String(d.detail || "").includes("이미"))
+                    return askQuizRetry(HW_OMR.title, d.detail, "과제 제출");
+                return alert(d.detail || "제출하지 못했습니다.");
+            }
             showOmrResult(d);
             document.getElementById('hw-omr-submit-btn').disabled = true;
             loadHomeworks();
@@ -10622,7 +10630,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     rEl.innerHTML=html;
                     onXpGained(data.level_up);
                 } else {
-                    alert("제출 실패: " + data.detail);
+                    // 이미 제출했다고 막힌 것이면 원장님께 부탁할 길을 준다
+                    if (String(data.detail || "").includes("이미"))
+                        askQuizRetry(currentExamTitle, data.detail, "실시간 모의고사");
+                    else alert("제출 실패: " + data.detail);
                 }
             }catch(e){ alert("통신 오류: " + e.message); }
             hideLoader();
@@ -13061,12 +13072,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 startInfo = await res.json();
             } catch(e) { hideLoader(); return alert("서버 통신 오류. 잠시 후 다시 시도해주세요."); }
             hideLoader();
-            if (!startInfo.success) return alert(startInfo.detail || "시험을 시작할 수 없습니다.");
+            if (!startInfo.success) return askQuizRetry(currentVocabTest.title, startInfo.detail || "시험을 시작할 수 없습니다.", "영어 단어 시험");
 
             currentVocabTest = startInfo.test;
             const elapsed = Date.now() / 1000 - startInfo.started_at;
             const remainingSec = Math.floor(startInfo.time_limit * 60 - elapsed);
-            if (remainingSec <= 0) return alert("이 시험은 제한 시간이 이미 끝나서 더 이상 응시할 수 없습니다.");
+            if (remainingSec <= 0) return askQuizRetry(currentVocabTest.title, "제한 시간이 이미 끝났습니다.", "영어 단어 시험");
 
             const remainMin = Math.floor(remainingSec / 60), remainRest = remainingSec % 60;
             const already = elapsed > 5;
