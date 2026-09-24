@@ -2412,6 +2412,16 @@
 
                     <!-- 퀴즈 탭 -->
                     <div id="admin-quiz" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- 제한 시간이나 마감을 놓친 학생이 "다시 보게 해주세요" 하고 보낸 요청.
+                             허락하면 그 퀴즈만 한 번 열리고, 제출하면 다시 잠긴다. -->
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) refreshQuizRequests()">
+                            <summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-amber-300">
+                                <i class="fa-solid fa-hand mr-1"></i>재응시 요청
+                                <span id="qr-badge" class="hidden ml-1 bg-amber-500 text-black rounded-full px-2 py-0.5 text-[10px] font-black"></span>
+                                <span class="text-[11px] font-normal text-gray-500 ml-1">시간이나 마감을 놓친 학생의 부탁</span>
+                            </summary>
+                            <div id="qr-list" class="px-4 pb-4 space-y-2 max-h-80 overflow-y-auto"></div>
+                        </details>
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('quiz')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>퀴즈 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-quiz" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-quiz" oninput="renderActivity('quiz')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('quiz')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-quiz" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
@@ -4702,7 +4712,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     loadMySchedule();
                     document.getElementById('card-admin').style.display='none';
                 }
-                if(currentUser.isAdmin) { loadAdminSchedule(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
+                if(currentUser.isAdmin) { loadAdminSchedule(); refreshQuizRequests(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
                 document.getElementById('mobile-logout-btn').style.display='block';
                 if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup();
 
@@ -5274,6 +5284,78 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             bar.classList.toggle('hidden', !isPreviewUser());
             // 띠가 머리글을 가리지 않도록 본문을 그만큼 내린다
             document.body.style.paddingTop = isPreviewUser() ? (bar.offsetHeight + 'px') : '';
+        }
+
+
+        // ── 퀴즈 재응시 요청 ───────────────────────────────────
+        //   제한 시간을 넘겼거나 마감이 지나 못 푼 학생이 원장님께 부탁한다.
+        //   원장님이 허락하면 그 퀴즈만 한 번 더 열린다.
+        async function askQuizRetry(title, why) {
+            let st = { status: 'none' };
+            try {
+                const r = await fetch(`${API_URL}/api/quiz/retry_status?student_name=${encodeURIComponent(currentUser.name)}&title=${encodeURIComponent(title)}`);
+                st = await r.json();
+            } catch (e) { }
+
+            if (st.status === 'pending')
+                return alert(`${why}\n\n이미 원장님께 요청해 두었습니다.\n허락하시면 알림으로 알려드릴게요.`);
+            if (st.status === 'denied')
+                return alert(`${why}\n\n원장님께 요청했지만 이번에는 어렵다고 하셨습니다.\n직접 말씀드려 보세요.`);
+
+            if (!confirm(`${why}\n\n원장님께 "다시 보게 해주세요" 라고 요청할까요?`)) return;
+            const reason = (prompt('원장님께 전할 말이 있으면 적어주세요. (없으면 그냥 확인)') || '').trim();
+            showLoader('요청하는 중...');
+            try {
+                const r = await fetch(`${API_URL}/api/quiz/request_retry`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_name: currentUser.name, title, reason })
+                });
+                const d = await r.json();
+                hideLoader();
+                alert(d.detail || (d.success ? '원장님께 요청했습니다.' : '요청하지 못했습니다.'));
+            } catch (e) { hideLoader(); alert('서버 연결이 원활하지 않습니다. 잠시 후 다시 해주세요.'); }
+        }
+
+        // ── 원장님 쪽: 들어온 요청 목록 ─────────────────────────
+        async function refreshQuizRequests() {
+            const box = document.getElementById('qr-list');
+            if (!box) return;
+            const r = await adminGet('/api/admin/quiz_requests');
+            const rows = r.ok ? (r.data.rows || []) : [];
+            const badge = document.getElementById('qr-badge');
+            const pending = rows.filter(x => x.status === 'pending').length;
+            if (badge) {
+                badge.textContent = pending ? `${pending}건` : '';
+                badge.classList.toggle('hidden', !pending);
+            }
+            if (!rows.length) {
+                box.innerHTML = '<p class="text-[11px] text-gray-500">들어온 요청이 없습니다.</p>';
+                return;
+            }
+            box.innerHTML = rows.map(x => {
+                const 상태 = x.status === 'pending' ? ''
+                    : `<span class="text-[11px] ${x.status === 'granted' ? 'text-emerald-400' : 'text-gray-500'}">${x.status === 'granted' ? (x.used ? '허락함 · 사용함' : '허락함 · 아직 안 품') : '거절함'}</span>`;
+                const 버튼 = x.status === 'pending'
+                    ? `<div class="flex gap-1 shrink-0">
+                         <button onclick="decideQuizRequest('${escAttr(x.id)}', true)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded px-2.5 py-1.5">허락</button>
+                         <button onclick="decideQuizRequest('${escAttr(x.id)}', false)" class="bg-gray-700 hover:bg-gray-600 text-gray-200 text-[11px] font-bold rounded px-2.5 py-1.5">거절</button>
+                       </div>` : '';
+                return `<div class="flex items-start justify-between gap-2 bg-[#1e2430] border ${x.status === 'pending' ? 'border-amber-600' : 'border-gray-700'} rounded-lg px-3 py-2">
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-white word-break-keep-all">${escapeHtml(x.student_name || '')} <span class="text-gray-400 font-normal">· ${escapeHtml(x.title || '')}</span></p>
+                        ${x.reason ? `<p class="text-[11px] text-gray-400 mt-0.5 word-break-keep-all">"${escapeHtml(x.reason)}"</p>` : ''}
+                        <p class="text-[11px] text-gray-600 mt-0.5">${escapeHtml(x.requested_at || '')}</p>
+                        ${상태}
+                    </div>${버튼}</div>`;
+            }).join('');
+        }
+
+        async function decideQuizRequest(id, approve) {
+            if (!confirm(approve ? '이 학생이 다시 볼 수 있게 할까요?\n(한 번만 열리고, 제출하면 다시 잠깁니다)' : '이번에는 어렵다고 알릴까요?')) return;
+            const r = await adminPost('/api/admin/quiz_request/decide', { id, approve, admin_name: (currentUser && currentUser.name) || '' });
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || '처리하지 못했습니다.');
+            showToast(approve ? `${r.data.student_name} 학생이 다시 볼 수 있어요.` : '거절로 알렸습니다.');
+            refreshQuizRequests();
         }
 
         async function login() {
@@ -11910,11 +11992,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 startInfo = await res.json();
             } catch(e) { hideLoader(); return alert("서버 통신 오류. 잠시 후 다시 시도해주세요."); }
             hideLoader();
-            if (!startInfo.success) return alert(startInfo.detail || "퀴즈를 시작할 수 없습니다.");
+            // 막혔을 때는 그냥 알리고 끝내지 않고, 원장님께 부탁할 길을 준다.
+            if (!startInfo.success) return askQuizRetry(currentActiveQuiz.title, startInfo.detail || "퀴즈를 시작할 수 없습니다.");
 
             const elapsed = Date.now() / 1000 - startInfo.started_at;
             const remainingSec = Math.floor(startInfo.time_limit * 60 - elapsed);
-            if (remainingSec <= 0) return alert("이 퀴즈는 제한 시간이 이미 끝나서 더 이상 응시할 수 없습니다.");
+            if (remainingSec <= 0) return askQuizRetry(currentActiveQuiz.title, "제한 시간이 이미 끝났습니다.");
 
             const remainMin = Math.floor(remainingSec / 60), remainRest = remainingSec % 60;
             const already = elapsed > 5; // 처음 시작이 아니라 이어서 하는 경우
