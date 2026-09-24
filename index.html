@@ -9782,6 +9782,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     </div>
                 </div>`;
                 }
+                const pick = String(kind || '').startsWith('multi') ? (Number(String(kind).slice(5)) || 2) : 1;
                 const isShort = kind === 'short';
                 const body = isShort
                     ? `<input id="hwomr-short-${i}" type="text" value="${escAttr(v === OMR_UNSURE ? '' : v)}"
@@ -9794,6 +9795,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                        </div>`;
                 return `
                 <div id="hwomr-row-${i}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-1.5 transition-colors">
+                    ${pick > 1 ? `<p class="text-[11px] font-bold text-amber-300 pl-9 pt-0.5">${pick}개 고르기</p>` : ''}
                     <div class="flex items-center gap-2">
                         <span id="hwomr-no-${i}" class="text-gray-400 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
                         ${body}
@@ -9821,12 +9823,18 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
         }
 
+        function hwPickCount(idx) {
+            const k = String(((HW_OMR.kinds || [])[idx]) || '');
+            return k.startsWith('multi') ? (Number(k.slice(5)) || 2) : 1;
+        }
+
         function paintHomeworkOmrRow(idx) {
             const v = HW_OMR.answers[idx];
+            const chosen = answerPicksOf(v);
             [1, 2, 3, 4, 5, OMR_UNSURE].forEach(n => {
                 const b = document.getElementById(`hwomr-btn-${idx}-${n}`);
                 if (!b) return;
-                const marked = String(v) === String(n);
+                const marked = String(n) === OMR_UNSURE ? String(v) === OMR_UNSURE : chosen.includes(String(n));
                 const onCls = String(n) === OMR_UNSURE ? OMR_UNSURE_CLASS : OMR_MARK_CLASS;
                 b.classList.remove(...OMR_MARK_CLASS, ...OMR_UNSURE_CLASS, ...OMR_PLAIN_CLASS);
                 b.classList.add(...(marked ? onCls : OMR_PLAIN_CLASS));
@@ -9851,7 +9859,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         function pickHomeworkOmr(idx, val) {
-            HW_OMR.answers[idx] = String(HW_OMR.answers[idx]) === String(val) ? '' : String(val);
+            const pick = hwPickCount(idx);
+            if (pick > 1 && String(val) !== OMR_UNSURE) {
+                HW_OMR.answers[idx] = toggleOmrPick(HW_OMR.answers[idx], val, pick);
+            } else {
+                HW_OMR.answers[idx] = String(HW_OMR.answers[idx]) === String(val) ? '' : String(val);
+            }
             paintHomeworkOmrRow(idx);
             updateHomeworkOmrProgress();
             // 폰에서 눌렸는지 손끝으로도 알 수 있게 아주 짧게 진동
@@ -10324,6 +10337,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         }
 
         function buildStudentOMR(questions) {
+            // 답을 고를 때 '이 문항은 몇 개를 골라야 하는지'를 봐야 해서 들고 있는다
+            window.currentExamQuestions = questions;
             const c = document.getElementById('exam-omr-container');
             c.style.display = 'block';
             const n = questions.length;
@@ -10349,8 +10364,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             // 위쪽에 두고, 선택지 5개는 화면 폭을 꽉 채우는 grid로 배치해 터치 영역을 최대화
             let html = '<div class="space-y-2 pb-4">';
             questions.forEach((q, i) => {
+                const pick = omrPickCount(q);
                 html += `<div id="omr-row-${i}" class="rounded-lg p-2 bg-[#1e2430] border border-gray-700 transition-colors">
-                    <div class="text-white font-bold text-sm mb-1.5">${i + 1}번</div>`;
+                    <div class="text-white font-bold text-sm mb-1.5">${i + 1}번${pick > 1 ? `<span class="ml-1.5 text-[11px] font-bold text-amber-300">${pick}개 고르기</span>` : ''}</div>`;
                 if (q.qtype === 'short') {
                     html += `<div class="flex gap-1.5">
                         <input id="omr-short-${i}" type="text" oninput="setOmrShortAnswer(${i}, this.value)" placeholder="답을 적어주세요"
@@ -10468,18 +10484,45 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             box.classList.remove('hidden');
         }
 
+        // ── 답이 둘 이상인 문항 ────────────────────────────
+        //   정답표에 '3+5' 라고 적으면 둘 다 골라야 맞다. 학생 답도 '3+5' 로 담는다.
+        //   '3/5'(둘 중 아무거나 인정)와는 다른 것이다.
+        function omrPickCount(q) {
+            if (q && q.pick) return Number(q.pick) || 1;
+            const t = String((q && q.qtype) || '');
+            return t.startsWith('multi') ? (Number(t.slice(5)) || 2) : 1;
+        }
+        function answerPicksOf(v) {
+            return String(v == null ? '' : v).split('+').map(x => x.trim()).filter(Boolean);
+        }
+        /** 이미 고른 것을 다시 누르면 뺀다. 정해진 개수를 넘으면 가장 먼저 고른 것을 밀어낸다. */
+        function toggleOmrPick(cur, opt, pick) {
+            let list = answerPicksOf(cur).filter(x => x !== '?');
+            const v = String(opt);
+            if (list.includes(v)) list = list.filter(x => x !== v);
+            else { list.push(v); while (list.length > pick) list.shift(); }
+            return list.join('+');
+        }
+
         function setOmrAnswer(qIdx, opt) {
-            studentOmrAnswers[qIdx] = opt;
+            const q = (window.currentExamQuestions || [])[qIdx];
+            const pick = omrPickCount(q);
+            if (pick > 1 && String(opt) !== '?') {
+                studentOmrAnswers[qIdx] = toggleOmrPick(studentOmrAnswers[qIdx], opt, pick);
+            } else {
+                studentOmrAnswers[qIdx] = opt;
+            }
+            const chosen = answerPicksOf(studentOmrAnswers[qIdx]);
             for(let i=1; i<=5; i++) {
                 const b = document.getElementById(`omr-btn-${qIdx}-${i}`);
                 if(b) {
-                    if(String(i) === String(opt)) { b.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.remove('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
+                    if(chosen.includes(String(i))) { b.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.remove('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
                     else { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.add('text-gray-300', 'hover:bg-blue-800', 'border-gray-500'); }
                 }
             }
             const ub = document.getElementById(`omr-btn-${qIdx}-?`);
             if (ub) {
-                if (String(opt) === '?') { ub.classList.add('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.remove('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
+                if (String(studentOmrAnswers[qIdx]) === '?') { ub.classList.add('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.remove('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
                 else { ub.classList.remove('bg-amber-600', 'text-white', 'border-amber-400'); ub.classList.add('text-amber-300', 'hover:bg-amber-900', 'border-amber-700'); }
             }
             const jumpBtn = document.getElementById(`omr-jump-${qIdx}`);
@@ -12068,7 +12111,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 } else {
                     q.options.forEach((opt, optIdx) => {
                         if(!opt) return;
-                        optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="radio" name="qz_${qIndex}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeKeepUnderline(opt)}</span></label>`;
+                        // 답이 둘 이상인 문항은 체크상자로 — 라디오는 하나밖에 못 고른다
+                        const qPick = omrPickCount(q);
+                        optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-orange-500 transition mb-2"><input type="${qPick > 1 ? 'checkbox' : 'radio'}" name="qz_${qIndex}" id="qz-opt-${qIndex}-${optIdx + 1}" value="${optIdx + 1}" onchange="setQuizAnswer(${qIndex}, ${optIdx + 1})" class="w-5 h-5 text-orange-500 accent-orange-500"><span class="text-orange-400 font-bold">${circles[optIdx]||optIdx+1}</span><span class="text-sm text-gray-200">${escapeKeepUnderline(opt)}</span></label>`;
                     });
                     // 💡 찍지 말고 '모름'을 고르면, 무엇을 더 공부해야 할지 남는다
                     optsHtml += `<label class="flex items-center gap-3 p-3 bg-gray-800/60 rounded-lg cursor-pointer border border-amber-900/60 hover:border-amber-500 transition mb-2">
@@ -12086,7 +12131,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                            <p class="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">${escapeKeepUnderline(q.bogi)}</p>
                        </div>`
                     : '';
-                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeKeepUnderline(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
+                c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700"><div class="flex justify-between items-start mb-4"><h4 class="text-lg font-bold text-white"><span class="text-orange-400 mr-2">Q${qIndex + 1}.</span>${escapeKeepUnderline(q.q_text)}</h4><span class="bg-gray-800 text-orange-300 font-bold text-xs px-2 py-1 rounded border border-orange-900">[${q.score}점]</span></div>${omrPickCount(q) > 1 ? `<p class="text-xs font-bold text-amber-300 mb-3">${omrPickCount(q)}개 고르기</p>` : ''}${imgHtml}${bogiHtml}<div>${optsHtml}</div></div>`;
             });
             activeQuizTimeLeft = remainingSec; activeQuizTimer = setInterval(() => { activeQuizTimeLeft--; document.getElementById('quiz-timer').innerText = Math.floor(activeQuizTimeLeft/60)+":"+(activeQuizTimeLeft%60).toString().padStart(2,'0'); if(activeQuizTimeLeft<=0) submitQuizReal(); }, 1000);
         }
@@ -12855,7 +12900,21 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 : '<p class="text-xs text-gray-600 py-6 text-center">이 학생은 모른다고 표시한 문항이 없습니다.</p>';
         }
 
-        function setQuizAnswer(qIdx, val) { quizAnswers[qIdx] = val; }
+        function setQuizAnswer(qIdx, val) {
+            const q = (currentActiveQuiz && currentActiveQuiz.questions || [])[qIdx];
+            const pick = omrPickCount(q);
+            if (pick > 1 && String(val) !== '?' && !isNaN(Number(val))) {
+                quizAnswers[qIdx] = toggleOmrPick(quizAnswers[qIdx], val, pick);
+                // 밀려난 보기의 체크를 실제로 지운다
+                const chosen = answerPicksOf(quizAnswers[qIdx]);
+                for (let n = 1; n <= 5; n++) {
+                    const el = document.getElementById(`qz-opt-${qIdx}-${n}`);
+                    if (el) el.checked = chosen.includes(String(n));
+                }
+                return;
+            }
+            quizAnswers[qIdx] = val;
+        }
 
         // 단답형·서술형에서 '모름' 단추 — 입력칸을 비우고 답을 '?'로 표시한다
         function setQuizUnsure(qIdx) {
