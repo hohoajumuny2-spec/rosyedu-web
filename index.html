@@ -193,6 +193,57 @@
     </div>
 
     <!-- 💡 누락되었던 '학생 정보 수정' 팝업 모달창 원상복구 -->
+    <!-- 클리닉 학생 고르기 — 격자의 칸을 누르면 그 요일·시간이 채워진 채로 뜬다. -->
+    <div id="clinic-pick-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
+        <div class="bg-[#1e2430] p-6 rounded-2xl w-full max-w-lg shadow-2xl border border-sky-500 max-h-[90vh] flex flex-col">
+            <div class="flex items-start justify-between gap-2 mb-4">
+                <h2 id="clinic-pick-title" class="text-xl font-black text-white">클리닉 잡기</h2>
+                <button onclick="closeModal('clinic-pick-modal')" class="text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <input type="hidden" id="cp-id">
+            <input type="hidden" id="cp-kind">
+
+            <div id="cp-weekly-row" class="grid grid-cols-2 gap-2 mb-3">
+                <label class="block"><span class="text-[11px] text-gray-400 mb-1 block">요일</span>
+                    <select id="cp-weekday" class="w-full p-2.5 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                        <option value="0">월요일</option><option value="1">화요일</option><option value="2">수요일</option>
+                        <option value="3">목요일</option><option value="4">금요일</option><option value="5">토요일</option><option value="6">일요일</option>
+                    </select></label>
+                <label class="block"><span class="text-[11px] text-gray-400 mb-1 block">시간</span>
+                    <input id="cp-time" type="time" class="w-full p-2.5 bg-[#151922] border border-gray-600 rounded text-white text-sm"></label>
+            </div>
+
+            <div id="cp-once-row" class="hidden grid-cols-2 gap-2 mb-3">
+                <label class="block"><span class="text-[11px] text-gray-400 mb-1 block">날짜</span>
+                    <input id="cp-date" type="date" class="w-full p-2.5 bg-[#151922] border border-gray-600 rounded text-white text-sm"></label>
+                <label class="block"><span class="text-[11px] text-gray-400 mb-1 block">시간</span>
+                    <input id="cp-time2" type="time" class="w-full p-2.5 bg-[#151922] border border-gray-600 rounded text-white text-sm"></label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <input id="cp-subject" placeholder="과목 (선택)" class="p-2.5 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                <input id="cp-memo" placeholder="메모 (선택)" class="p-2.5 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+            </div>
+
+            <div id="cp-student-box" class="flex-1 min-h-0 flex flex-col">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                    <span class="text-[11px] text-sky-300 font-bold">학생 고르기</span>
+                    <span id="cp-count" class="text-[11px] text-gray-400">0명 선택</span>
+                </div>
+                <input id="cp-search" oninput="filterClinicStudents()" placeholder="이름을 치면 바로 찾습니다"
+                       class="w-full p-2.5 mb-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                <div id="cp-students" class="flex-1 min-h-[120px] max-h-56 overflow-y-auto bg-[#151922] rounded border border-gray-600 p-1"></div>
+                <p id="cp-empty" class="hidden text-[11px] text-gray-500 mt-2">그 이름을 가진 학생이 없습니다.</p>
+            </div>
+
+            <div class="flex gap-2 mt-4">
+                <button id="cp-delete" onclick="deleteClinicFromPick()" class="hidden px-4 py-2.5 rounded bg-red-900/60 hover:bg-red-900 text-red-200 font-bold text-sm">지우기</button>
+                <button onclick="saveClinic()" class="flex-1 bg-sky-600 hover:bg-sky-700 py-2.5 text-white font-bold rounded transition text-sm">저장</button>
+            </div>
+        </div>
+    </div>
+
     <div id="edit-student-modal" class="hidden fixed inset-0 z-[150] modal-bg flex items-center justify-center p-4">
         <div class="bg-[#1e2430] p-8 rounded-2xl w-full max-w-md shadow-2xl border border-blue-500">
             <button onclick="closeModal('edit-student-modal')" class="float-right text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -1979,32 +2030,33 @@
                         </div>
 
                         <div class="bg-[#151922] p-5 rounded-xl border border-gray-700">
-                            <h3 class="text-lg font-bold text-sky-300 mb-1"><i class="fa-solid fa-user-clock mr-2"></i>클리닉 일정</h3>
-                            <p class="text-[11px] text-gray-500 mb-4">매주 같은 요일에 오는 클리닉과, 날짜를 따로 잡은 보강을 모두 넣을 수 있습니다. 학생을 여러 명 골라 한 번에 잡아줄 수 있어요.</p>
-                            <div class="flex gap-2 mb-2">
-                                <button onclick="setClinicKind('weekly')" id="cl-kind-weekly" class="flex-1 py-2 rounded text-sm font-bold bg-sky-600 text-white">매주 같은 요일</button>
-                                <button onclick="setClinicKind('once')" id="cl-kind-once" class="flex-1 py-2 rounded text-sm font-bold bg-gray-700 text-gray-300">날짜로 한 번</button>
+                            <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                <h3 class="text-lg font-bold text-sky-300"><i class="fa-solid fa-user-clock mr-2"></i>클리닉 일정</h3>
+                                <div class="flex gap-1">
+                                    <button onclick="setClinicView('week')" id="cl-view-week" class="px-3 py-1.5 rounded text-xs font-bold bg-sky-600 text-white">매주</button>
+                                    <button onclick="setClinicView('once')" id="cl-view-once" class="px-3 py-1.5 rounded text-xs font-bold bg-gray-700 text-gray-300">날짜별 보강</button>
+                                </div>
                             </div>
-                            <div id="cl-weekly-row" class="grid grid-cols-2 gap-2 mb-2">
-                                <select id="cl-weekday" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
-                                    <option value="0">월요일</option><option value="1">화요일</option><option value="2">수요일</option>
-                                    <option value="3">목요일</option><option value="4">금요일</option><option value="5">토요일</option><option value="6">일요일</option>
-                                </select>
-                                <input id="cl-time" type="time" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+
+                            <!-- 매주 고정 클리닉 — 요일 × 시간 격자.
+                                 빈 칸을 누르면 그 자리에 학생을 넣는 창이 뜨고,
+                                 이름표를 누르면 그 클리닉을 고치거나 지운다. -->
+                            <div id="cl-week-view">
+                                <p class="text-[11px] text-gray-500 mb-3">빈 칸을 누르면 그 요일·시간에 학생을 넣습니다. 이름을 누르면 고치거나 지웁니다.</p>
+                                <div class="overflow-x-auto rounded-lg border border-gray-700">
+                                    <table id="cl-grid" class="w-full text-xs border-collapse"></table>
+                                </div>
+                                <button onclick="addClinicTimeRow()" class="mt-2 text-[11px] text-sky-300 hover:text-sky-200 font-bold">+ 다른 시간 추가</button>
                             </div>
-                            <div id="cl-once-row" class="hidden grid-cols-2 gap-2 mb-2">
-                                <input id="cl-date" type="date" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
-                                <input id="cl-time2" type="time" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+
+                            <!-- 날짜를 따로 잡은 보강 — 날짜별로 묶어서 보여준다. -->
+                            <div id="cl-once-view" class="hidden">
+                                <p class="text-[11px] text-gray-500 mb-3">날짜를 정해 한 번만 하는 보강입니다.</p>
+                                <button onclick="openClinicPick({kind:'once'})" class="w-full bg-sky-600 hover:bg-sky-700 py-2.5 text-white font-bold rounded transition text-sm mb-3">+ 보강 잡기</button>
+                                <div id="cl-once-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 mb-2">
-                                <input id="cl-subject" placeholder="과목 (선택)" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
-                                <input id="cl-memo" placeholder="메모 (선택)" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
-                            </div>
-                            <label class="text-[11px] text-sky-300 font-bold block mb-1">학생 고르기 (여러 명 가능)</label>
-                            <div id="cl-students" class="max-h-40 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1 mb-2"></div>
-                            <button onclick="saveClinic()" class="w-full bg-sky-600 hover:bg-sky-700 py-2.5 text-white font-bold rounded transition text-sm">클리닉 잡아주기</button>
-                            <div id="cl-list" class="mt-4 space-y-2 max-h-80 overflow-y-auto"></div>
                         </div>
+                    </div>
                     </div>
 
                     <div id="admin-users" class="admin-tab-content grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -4662,10 +4714,209 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function showLiveToast(m) { const c=document.getElementById('live-toast-container'); const t=document.createElement('div'); t.className='bg-red-600 text-white p-4 rounded-xl shadow-2xl font-bold text-center mb-2 animate-bounce'; t.innerText=m; c.appendChild(t); setTimeout(()=>t.remove(), 5000); }
         function toggleFullscreen() { const v=document.getElementById('pdf-viewer-section'); v.classList.toggle('fixed'); v.classList.toggle('inset-0'); v.classList.toggle('z-[120]'); v.classList.toggle('w-full'); v.classList.toggle('lg:w-2/3'); }
         // ── 원장님: 시험 일정 · 클리닉 관리 ─────────────────────
-        let CLINIC_KIND = 'weekly';
 
         async function initScheduleTab() {
             await Promise.all([refreshExamDates(), refreshClinics(), fillClinicStudents()]);
+        }
+
+
+        // ─────────────────────────────────────────────
+        // 클리닉 일정 — 요일 × 시간 격자로 잡는다.
+        //   예전에는 작은 칸에 전교생을 늘어놓고 체크하게 했는데, 학생이 많아지면
+        //   스크롤만 하다 끝났고 "월요일 5시에 누가 오는지"를 볼 방법이 없었다.
+        // ─────────────────────────────────────────────
+        const CLINIC_DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+        const CLINIC_BASE_TIMES = ['14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+        let CLINIC_ROWS = [];          // 서버에서 받아둔 클리닉 전부
+        let CLINIC_EXTRA_TIMES = [];   // 원장님이 손으로 더한 시간대
+        let CLINIC_STUDENTS = [];      // 학생 명단 (창을 열 때마다 다시 안 부르려고)
+        let CLINIC_VIEW = 'week';
+
+        function setClinicView(view) {
+            CLINIC_VIEW = view;
+            document.getElementById('cl-week-view').classList.toggle('hidden', view !== 'week');
+            document.getElementById('cl-once-view').classList.toggle('hidden', view !== 'once');
+            const on = 'px-3 py-1.5 rounded text-xs font-bold bg-sky-600 text-white';
+            const off = 'px-3 py-1.5 rounded text-xs font-bold bg-gray-700 text-gray-300';
+            document.getElementById('cl-view-week').className = view === 'week' ? on : off;
+            document.getElementById('cl-view-once').className = view === 'once' ? on : off;
+        }
+
+        /** 격자의 시간 줄 — 기본 시간대에, 실제로 쓰이는 시간을 더해서 차례대로. */
+        function clinicTimeRows() {
+            const used = CLINIC_ROWS.filter(x => x.kind !== 'once').map(x => x.time).filter(Boolean);
+            return [...new Set([...CLINIC_BASE_TIMES, ...used, ...CLINIC_EXTRA_TIMES])].sort();
+        }
+
+        function addClinicTimeRow() {
+            const t = prompt('추가할 시간을 적어주세요 (예: 13:30)');
+            if (!t) return;
+            if (!/^\d{1,2}:\d{2}$/.test(t.trim())) return alert('13:30 처럼 적어주세요.');
+            const [h, m] = t.trim().split(':');
+            CLINIC_EXTRA_TIMES.push(`${String(h).padStart(2, '0')}:${m}`);
+            renderClinicGrid();
+        }
+
+        function renderClinicGrid() {
+            const table = document.getElementById('cl-grid');
+            if (!table) return;
+            const times = clinicTimeRows();
+            // 요일·시간별로 누가 오는지 미리 모아둔다
+            const cell = {};
+            CLINIC_ROWS.filter(x => x.kind !== 'once').forEach(x => {
+                const key = `${Number(x.weekday) || 0}|${x.time || ''}`;
+                (cell[key] = cell[key] || []).push(x);
+            });
+            const head = `<thead><tr>
+                <th class="sticky left-0 bg-[#1b2130] text-gray-400 font-bold p-2 text-[11px] border border-gray-700 w-16">시간</th>
+                ${CLINIC_DAYS.map(d => `<th class="bg-[#1b2130] text-sky-300 font-bold p-2 text-[11px] border border-gray-700 min-w-[86px]">${d}</th>`).join('')}
+            </tr></thead>`;
+            const body = times.map(t => `<tr>
+                <th class="sticky left-0 bg-[#1b2130] text-gray-300 font-bold p-2 text-[11px] border border-gray-700 whitespace-nowrap">${escapeHtml(t)}</th>
+                ${CLINIC_DAYS.map((_, wd) => {
+                    const list = cell[`${wd}|${t}`] || [];
+                    const chips = list.map(x => `<button onclick="openClinicPick({id:'${escAttr(x.id)}'})"
+                            class="block w-full text-left bg-sky-900/60 hover:bg-sky-800 text-sky-100 rounded px-1.5 py-1 mb-1 truncate"
+                            title="${escAttr((x.student_name || '') + (x.subject ? ' · ' + x.subject : ''))}">${escapeHtml(x.student_name || '')}</button>`).join('');
+                    return `<td class="border border-gray-700 align-top p-1 cursor-pointer hover:bg-gray-800/60"
+                                onclick="if(event.target===this) openClinicPick({kind:'weekly',weekday:${wd},time:'${escAttr(t)}'})">
+                            ${chips}<span class="block text-center text-gray-600 text-[11px] py-0.5">+</span></td>`;
+                }).join('')}
+            </tr>`).join('');
+            table.innerHTML = head + `<tbody>${body}</tbody>`;
+        }
+
+        /** 날짜별 보강 — 날짜로 묶어서 보여준다. */
+        function renderClinicOnce() {
+            const box = document.getElementById('cl-once-list');
+            if (!box) return;
+            const rows = CLINIC_ROWS.filter(x => x.kind === 'once');
+            if (!rows.length) { box.innerHTML = '<p class="text-[11px] text-gray-500">잡아둔 보강이 없습니다.</p>'; return; }
+            const byDate = {};
+            rows.forEach(x => (byDate[x.date || ''] = byDate[x.date || ''] || []).push(x));
+            box.innerHTML = Object.keys(byDate).sort().map(d => `
+                <div>
+                    <p class="text-[11px] font-bold text-sky-300 mb-1">${escapeHtml(d) || '날짜 없음'}</p>
+                    ${byDate[d].sort((a, b) => String(a.time).localeCompare(String(b.time))).map(x => `
+                        <button onclick="openClinicPick({id:'${escAttr(x.id)}'})"
+                                class="w-full text-left flex items-center justify-between gap-2 bg-[#1e2430] border border-sky-900 rounded-lg px-3 py-2 mb-1 hover:border-sky-600">
+                            <span class="text-sm font-bold text-white truncate">${escapeHtml(x.student_name || '')}</span>
+                            <span class="text-[11px] text-sky-300 shrink-0">${escapeHtml(x.time || '')}${x.subject ? ' · ' + escapeHtml(x.subject) : ''}</span>
+                        </button>`).join('')}
+                </div>`).join('');
+        }
+
+        async function refreshClinics() {
+            const r = await adminGet('/api/admin/clinics');
+            CLINIC_ROWS = r.ok ? (r.data.rows || []) : [];
+            renderClinicGrid();
+            renderClinicOnce();
+        }
+
+        async function fillClinicStudents() {
+            const r = await adminGet('/api/admin/students');
+            const rows = r.ok ? (r.data.students || []) : [];
+            CLINIC_STUDENTS = rows
+                .map(x => (typeof x === 'string' ? x : (x.student_name || x.name || x.id)))
+                .filter(Boolean)
+                .sort((a, b) => String(a).localeCompare(String(b), 'ko'));
+        }
+
+        /** 창을 연다. {id} 면 고치기, {kind,weekday,time} 이면 그 자리에 새로 넣기. */
+        function openClinicPick(opt) {
+            const row = opt.id ? CLINIC_ROWS.find(x => x.id === opt.id) : null;
+            const kind = row ? (row.kind || 'weekly') : (opt.kind || 'weekly');
+            document.getElementById('cp-id').value = row ? row.id : '';
+            document.getElementById('cp-kind').value = kind;
+            document.getElementById('cp-weekly-row').classList.toggle('hidden', kind !== 'weekly');
+            document.getElementById('cp-weekly-row').classList.toggle('grid', kind === 'weekly');
+            document.getElementById('cp-once-row').classList.toggle('hidden', kind !== 'once');
+            document.getElementById('cp-once-row').classList.toggle('grid', kind === 'once');
+
+            document.getElementById('cp-weekday').value = String(row ? (row.weekday || 0) : (opt.weekday || 0));
+            document.getElementById('cp-time').value = row ? (row.time || '') : (opt.time || '');
+            document.getElementById('cp-date').value = row ? (row.date || '') : '';
+            document.getElementById('cp-time2').value = row ? (row.time || '') : '';
+            document.getElementById('cp-subject').value = row ? (row.subject || '') : '';
+            document.getElementById('cp-memo').value = row ? (row.memo || '') : '';
+            document.getElementById('cp-search').value = '';
+
+            // 고칠 때는 학생을 바꾸지 않는다 — 그 학생의 시간만 손보는 자리다.
+            document.getElementById('cp-student-box').classList.toggle('hidden', !!row);
+            document.getElementById('cp-delete').classList.toggle('hidden', !row);
+            document.getElementById('clinic-pick-title').textContent =
+                row ? `${row.student_name || ''} 클리닉 고치기` : '클리닉 잡기';
+
+            if (!row) renderClinicStudentList();
+            document.getElementById('clinic-pick-modal').classList.remove('hidden');
+            document.getElementById('clinic-pick-modal').style.display = 'flex';
+            if (!row) setTimeout(() => document.getElementById('cp-search').focus(), 50);
+        }
+
+        function renderClinicStudentList(keyword) {
+            const box = document.getElementById('cp-students');
+            const kw = String(keyword || '').trim().toLowerCase();
+            const picked = new Set([...box.querySelectorAll('input:checked')].map(i => i.value));
+            const list = kw ? CLINIC_STUDENTS.filter(n => String(n).toLowerCase().includes(kw)) : CLINIC_STUDENTS;
+            document.getElementById('cp-empty').classList.toggle('hidden', !!list.length || !CLINIC_STUDENTS.length);
+            box.innerHTML = list.map(n => `<label class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-700/60">
+                    <input type="checkbox" value="${escAttr(n)}" ${picked.has(n) ? 'checked' : ''}
+                           onchange="updateClinicPickCount()" class="w-4 h-4 accent-sky-500 shrink-0">
+                    <span class="text-xs text-gray-200">${escapeHtml(n)}</span></label>`).join('');
+            updateClinicPickCount();
+        }
+
+        function filterClinicStudents() {
+            renderClinicStudentList(document.getElementById('cp-search').value);
+        }
+
+        function updateClinicPickCount() {
+            const n = document.querySelectorAll('#cp-students input:checked').length;
+            document.getElementById('cp-count').textContent = `${n}명 선택`;
+        }
+
+        async function saveClinic() {
+            const id = document.getElementById('cp-id').value;
+            const kind = document.getElementById('cp-kind').value;
+            const body = {
+                kind,
+                subject: document.getElementById('cp-subject').value.trim(),
+                memo: document.getElementById('cp-memo').value.trim(),
+            };
+            if (kind === 'weekly') {
+                body.weekday = Number(document.getElementById('cp-weekday').value);
+                body.time = document.getElementById('cp-time').value;
+                if (!body.time) return alert('시간을 골라주세요.');
+            } else {
+                body.date = document.getElementById('cp-date').value;
+                body.time = document.getElementById('cp-time2').value;
+                if (!body.date) return alert('보강 날짜를 골라주세요.');
+            }
+            if (id) {
+                const row = CLINIC_ROWS.find(x => x.id === id);
+                body.id = id;
+                body.student_names = [row ? row.student_name : ''];
+            } else {
+                body.student_names = [...document.querySelectorAll('#cp-students input:checked')].map(i => i.value);
+                if (!body.student_names.length) return alert('학생을 한 명 이상 골라주세요.');
+            }
+            const r = await adminPost('/api/admin/clinic', body);
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || '저장하지 못했습니다.');
+            closeModal('clinic-pick-modal');
+            showToast(id ? '클리닉을 고쳤어요.' : `${r.data.saved}명에게 클리닉을 잡았어요.`);
+            refreshClinics();
+        }
+
+        async function deleteClinicFromPick() {
+            const id = document.getElementById('cp-id').value;
+            if (!id) return;
+            const row = CLINIC_ROWS.find(x => x.id === id);
+            if (!confirm(`${row ? row.student_name : '이'} 학생의 클리닉을 지울까요?`)) return;
+            const r = await adminPost('/api/admin/clinic/delete', { id });
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || '지우지 못했습니다.');
+            closeModal('clinic-pick-modal');
+            showToast('클리닉을 지웠어요.');
+            refreshClinics();
         }
 
         async function refreshExamDates() {
@@ -4706,79 +4957,6 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!confirm("이 시험 일정을 지울까요?")) return;
             await adminPost('/api/admin/exam_date/delete', { id: id });
             refreshExamDates();
-        }
-
-        function setClinicKind(kind) {
-            CLINIC_KIND = kind;
-            document.getElementById('cl-weekly-row').classList.toggle('hidden', kind !== 'weekly');
-            document.getElementById('cl-weekly-row').classList.toggle('grid', kind === 'weekly');
-            document.getElementById('cl-once-row').classList.toggle('hidden', kind !== 'once');
-            document.getElementById('cl-once-row').classList.toggle('grid', kind === 'once');
-            const on = 'flex-1 py-2 rounded text-sm font-bold bg-sky-600 text-white';
-            const off = 'flex-1 py-2 rounded text-sm font-bold bg-gray-700 text-gray-300';
-            document.getElementById('cl-kind-weekly').className = kind === 'weekly' ? on : off;
-            document.getElementById('cl-kind-once').className = kind === 'once' ? on : off;
-        }
-
-        async function fillClinicStudents() {
-            const box = document.getElementById('cl-students');
-            const r = await adminGet('/api/admin/students');
-            const rows = r.ok ? (r.data.students || []) : [];
-            const names = rows.map(x => (typeof x === 'string' ? x : (x.student_name || x.name || x.id))).filter(Boolean);
-            names.sort((a, b) => String(a).localeCompare(String(b), 'ko'));
-            box.innerHTML = names.length
-                ? names.map(n => `<label class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-700/60">
-                        <input type="checkbox" value="${escAttr(n)}" class="w-4 h-4 accent-sky-500 shrink-0">
-                        <span class="text-xs text-gray-200">${escapeHtml(n)}</span></label>`).join('')
-                : '<p class="text-[11px] text-gray-500 p-2">학생 명단을 불러오지 못했습니다.</p>';
-        }
-
-        async function saveClinic() {
-            const names = [...document.querySelectorAll('#cl-students input:checked')].map(i => i.value);
-            if (!names.length) return alert("학생을 한 명 이상 골라주세요.");
-            const body = {
-                student_names: names, kind: CLINIC_KIND,
-                subject: document.getElementById('cl-subject').value.trim(),
-                memo: document.getElementById('cl-memo').value.trim(),
-            };
-            if (CLINIC_KIND === 'weekly') {
-                body.weekday = Number(document.getElementById('cl-weekday').value);
-                body.time = document.getElementById('cl-time').value;
-            } else {
-                body.date = document.getElementById('cl-date').value;
-                body.time = document.getElementById('cl-time2').value;
-                if (!body.date) return alert("보강 날짜를 골라주세요.");
-            }
-            const r = await adminPost('/api/admin/clinic', body);
-            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || "저장하지 못했습니다.");
-            document.querySelectorAll('#cl-students input:checked').forEach(i => i.checked = false);
-            showToast(`${r.data.saved}명에게 클리닉을 잡았어요.`);
-            refreshClinics();
-        }
-
-        async function refreshClinics() {
-            const box = document.getElementById('cl-list');
-            const r = await adminGet('/api/admin/clinics');
-            const rows = r.ok ? (r.data.rows || []) : [];
-            if (!rows.length) { box.innerHTML = '<p class="text-[11px] text-gray-500">아직 잡아둔 클리닉이 없습니다.</p>'; return; }
-            box.innerHTML = rows.map(x => {
-                const 언제 = x.kind === 'once'
-                    ? `${escapeHtml(x.date || '')} ${escapeHtml(x.time || '')}`
-                    : `매주 ${escapeHtml(x.weekday_label || '')}요일 ${escapeHtml(x.time || '')}`;
-                return `<div class="flex items-center justify-between gap-2 bg-[#1e2430] border border-sky-900 rounded-lg px-3 py-2">
-                    <div class="min-w-0">
-                        <p class="text-sm font-bold text-white word-break-keep-all">${escapeHtml(x.student_name || '')}</p>
-                        <p class="text-[11px] text-sky-300">${언제}${x.subject ? ' · ' + escapeHtml(x.subject) : ''}${x.memo ? ' · ' + escapeHtml(x.memo) : ''}</p>
-                    </div>
-                    <button onclick="deleteClinic('${escAttr(x.id)}')" class="shrink-0 text-red-400 hover:text-red-300 text-xs font-bold">삭제</button>
-                </div>`;
-            }).join('');
-        }
-
-        async function deleteClinic(id) {
-            if (!confirm("이 클리닉을 지울까요?")) return;
-            await adminPost('/api/admin/clinic/delete', { id: id });
-            refreshClinics();
         }
 
         // ── 내 시험 D-day와 내 전체 클리닉 ──────────────────────
