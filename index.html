@@ -4753,6 +4753,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         let CLINIC_EXTRA_TIMES = [];   // 원장님이 손으로 더한 시간대
         let CLINIC_STUDENTS = [];      // 학생 명단 (창을 열 때마다 다시 안 부르려고)
         let CLINIC_VIEW = 'week';
+        let CLINIC_PICK_SLOT = null;   // 지금 학생을 넣으려는 요일·시간
 
         function setClinicView(view) {
             CLINIC_VIEW = view;
@@ -4797,12 +4798,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <th class="sticky left-0 bg-[#1b2130] text-gray-300 font-bold p-2 text-[11px] border border-gray-700 whitespace-nowrap">${escapeHtml(t)}</th>
                 ${CLINIC_DAYS.map((_, wd) => {
                     const list = cell[`${wd}|${t}`] || [];
-                    const chips = list.map(x => `<button onclick="openClinicPick({id:'${escAttr(x.id)}'})"
+                    // 💡 이름표는 그 클리닉을 고치는 것이라, 칸 전체에 걸린 '새로 넣기'가
+                    //    같이 열리지 않도록 여기서 이벤트를 멈춘다.
+                    const chips = list.map(x => `<button onclick="event.stopPropagation(); openClinicPick({id:'${escAttr(x.id)}'})"
                             class="block w-full text-left bg-sky-900/60 hover:bg-sky-800 text-sky-100 rounded px-1.5 py-1 mb-1 truncate"
                             title="${escAttr((x.student_name || '') + (x.subject ? ' · ' + x.subject : ''))}">${escapeHtml(x.student_name || '')}</button>`).join('');
+                    // 💡 예전에는 'event.target===this' 였다. 그래서 눈에 보이는 '+'를 누르면
+                    //    (그건 칸의 자식이라) 아무 일도 안 나고, 빈 여백을 정확히 눌러야만 열렸다.
+                    //    이제 칸 어디를 눌러도 열린다.
                     return `<td class="border border-gray-700 align-top p-1 cursor-pointer hover:bg-gray-800/60"
-                                onclick="if(event.target===this) openClinicPick({kind:'weekly',weekday:${wd},time:'${escAttr(t)}'})">
-                            ${chips}<span class="block text-center text-gray-600 text-[11px] py-0.5">+</span></td>`;
+                                onclick="openClinicPick({kind:'weekly',weekday:${wd},time:'${escAttr(t)}'})">
+                            ${chips}<span class="block text-center text-gray-500 text-base leading-none py-1.5">+</span></td>`;
                 }).join('')}
             </tr>`).join('');
             table.innerHTML = head + `<tbody>${body}</tbody>`;
@@ -4862,6 +4868,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('cp-subject').value = row ? (row.subject || '') : '';
             document.getElementById('cp-memo').value = row ? (row.memo || '') : '';
             document.getElementById('cp-search').value = '';
+            // 지금 넣으려는 자리 — 여기에 이미 있는 학생은 못 고르게 한다
+            CLINIC_PICK_SLOT = row ? null : { kind, weekday: Number(opt.weekday || 0), time: opt.time || '' };
 
             // 고칠 때는 학생을 바꾸지 않는다 — 그 학생의 시간만 손보는 자리다.
             document.getElementById('cp-student-box').classList.toggle('hidden', !!row);
@@ -4869,7 +4877,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             document.getElementById('clinic-pick-title').textContent =
                 row ? `${row.student_name || ''} 클리닉 고치기` : '클리닉 잡기';
 
-            if (!row) renderClinicStudentList();
+            // 💡 창을 새로 열 때는 골라둔 학생을 반드시 비운다. 안 비우면 지난번에
+            //    고른 학생이 체크된 채로 남아, 다른 학생을 넣으려다 그 학생까지
+            //    한 번 더 들어간다(같은 시간에 두 번 잡힘).
+            if (!row) {
+                document.getElementById('cp-students').innerHTML = '';
+                renderClinicStudentList();
+            }
             document.getElementById('clinic-pick-modal').classList.remove('hidden');
             document.getElementById('clinic-pick-modal').style.display = 'flex';
             if (!row) setTimeout(() => document.getElementById('cp-search').focus(), 50);
@@ -4881,10 +4895,24 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const picked = new Set([...box.querySelectorAll('input:checked')].map(i => i.value));
             const list = kw ? CLINIC_STUDENTS.filter(n => String(n).toLowerCase().includes(kw)) : CLINIC_STUDENTS;
             document.getElementById('cp-empty').classList.toggle('hidden', !!list.length || !CLINIC_STUDENTS.length);
-            box.innerHTML = list.map(n => `<label class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-700/60">
-                    <input type="checkbox" value="${escAttr(n)}" ${picked.has(n) ? 'checked' : ''}
+            // 이 자리에 이미 잡혀 있는 학생 — 또 고르면 같은 시간에 두 번 잡힌다
+            const 이미 = new Set();
+            if (CLINIC_PICK_SLOT) {
+                CLINIC_ROWS.forEach(x => {
+                    const 같은자리 = CLINIC_PICK_SLOT.kind === 'weekly'
+                        ? (x.kind !== 'once' && Number(x.weekday) === CLINIC_PICK_SLOT.weekday && (x.time || '') === CLINIC_PICK_SLOT.time)
+                        : false;
+                    if (같은자리) 이미.add(x.student_name);
+                });
+            }
+            box.innerHTML = list.map(n => {
+                const 있음 = 이미.has(n);
+                return `<label class="flex items-center gap-2 px-2 py-1.5 rounded ${있음 ? 'opacity-50' : 'cursor-pointer hover:bg-gray-700/60'}">
+                    <input type="checkbox" value="${escAttr(n)}" ${picked.has(n) && !있음 ? 'checked' : ''} ${있음 ? 'disabled' : ''}
                            onchange="updateClinicPickCount()" class="w-4 h-4 accent-sky-500 shrink-0">
-                    <span class="text-xs text-gray-200">${escapeHtml(n)}</span></label>`).join('');
+                    <span class="text-xs text-gray-200">${escapeHtml(n)}</span>
+                    ${있음 ? '<span class="text-[10px] text-sky-400 ml-auto shrink-0">이미 있음</span>' : ''}</label>`;
+            }).join('');
             updateClinicPickCount();
         }
 
