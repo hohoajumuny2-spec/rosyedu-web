@@ -158,6 +158,12 @@
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
+    <!-- 원장님이 학생 화면을 체험하는 동안 뜨는 띠.
+         여기서 푼 것은 기록에 남지 않는다는 걸 계속 보이게 해둔다. -->
+    <div id="preview-bar" class="hidden fixed top-0 inset-x-0 z-[200] bg-amber-500 text-black text-xs font-bold px-3 py-2 flex items-center justify-between gap-2">
+        <span class="word-break-keep-all"><i class="fa-solid fa-flask mr-1"></i>학생 화면 체험 중입니다. 푼 내용은 기록·점수에 남지 않습니다.</span>
+        <button onclick="exitPreview()" class="shrink-0 bg-black text-amber-300 rounded px-3 py-1">관리자로 돌아가기</button>
+    </div>
     <div id="global-loader" class="hidden fixed inset-0 z-[9999] bg-[#0f172a]/95 backdrop-blur-md flex flex-col items-center justify-center fade-in">
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
@@ -1930,6 +1936,7 @@
             <div id="prog-admin" class="prog-content w-full mx-auto">
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
                     <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
+                        <button onclick="enterPreview()" class="text-amber-300 font-bold border border-amber-500 px-4 py-2 rounded hover:bg-amber-500/10"><i class="fa-solid fa-user-graduate mr-1"></i>학생 화면으로 들어가기</button>
                         <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">학생 명단</button>
                         <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="text-pink-400 font-bold border border-pink-500 px-4 py-2 rounded">상담</button>
                         <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600 px-4 py-2 rounded">자료학습</button>
@@ -4671,7 +4678,11 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 currentUser=JSON.parse(u);
                 document.getElementById('auth-nav').style.display='none'; document.getElementById('user-nav').classList.replace('hidden','flex'); document.getElementById('header-user-info').innerText=currentUser.isAdmin?(currentUser.name==='원장님'?'원장님':currentUser.name+' 관리자'):currentUser.name;
                 loadHomeAvatarWidget();
+                showPreviewBar();
                 if(!currentUser.isAdmin) {
+                    // 원장님 체험은 출석 점수도 알림 권유도 받지 않는다.
+                    // 학생 화면 자체는 아래에서 똑같이 준비한다 — 그래야 체험이 된다.
+                    if(!isPreviewUser()) {
                     // 💡 앱을 다시 열면 저장된 세션으로 바로 들어와 로그인 요청을 보내지
                     //    않는다. 그래서 매일 들어와도 출석 점수가 오르지 않았다.
                     //    들어온 김에 출석을 알려 하루 한 번 점수를 받게 한다.
@@ -4680,6 +4691,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     //    들어가 본 적이 없으면 알림 카드를 볼 일이 없기 때문. 들어온 김에
                     //    한 번 권한다(세 번까지만, 사흘 간격으로).
                     maybeAskPush();
+                    }
                     document.getElementById('btn-mypage-nav').style.display='inline-block';
                     document.getElementById('btn-counsel-nav').style.display='inline-block';
                     document.getElementById('mobile-mypage-btn').style.display='block';
@@ -5226,6 +5238,42 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 }
             } catch(e) { alert("서버 통신 오류: " + e.message); }
             hideLoader();
+        }
+
+
+        // ── 원장님 학생 화면 체험 ──────────────────────────────
+        //   원장님이 퀴즈·단어시험·모의고사·과제를 학생과 똑같이 풀어보실 수 있게
+        //   한다. 서버가 이 이름(PREVIEW_NAME)은 기록·점수에 남기지 않는다.
+        const PREVIEW_NAME = '원장님(체험)';
+
+        function isPreviewUser() {
+            return !!(currentUser && currentUser.name === PREVIEW_NAME);
+        }
+
+        function enterPreview() {
+            if (!confirm('학생 화면으로 들어갑니다.\n\n여기서 푼 것은 기록에도 점수에도 남지 않습니다.\n반·과목·마감 시한에 상관없이 모두 보이고, 몇 번이든 다시 풀 수 있습니다.')) return;
+            // 관리자 자격을 따로 보관해둔다 — 돌아올 때 다시 로그인하지 않아도 되게
+            localStorage.setItem('logyedu_admin_backup', localStorage.getItem('logyedu_user') || '');
+            localStorage.setItem('logyedu_user', JSON.stringify({
+                school: '체험', grade: '-', name: PREVIEW_NAME, isAdmin: false, preview: true
+            }));
+            location.reload();
+        }
+
+        function exitPreview() {
+            const back = localStorage.getItem('logyedu_admin_backup');
+            if (back) localStorage.setItem('logyedu_user', back);
+            else localStorage.removeItem('logyedu_user');
+            localStorage.removeItem('logyedu_admin_backup');
+            location.reload();
+        }
+
+        function showPreviewBar() {
+            const bar = document.getElementById('preview-bar');
+            if (!bar) return;
+            bar.classList.toggle('hidden', !isPreviewUser());
+            // 띠가 머리글을 가리지 않도록 본문을 그만큼 내린다
+            document.body.style.paddingTop = isPreviewUser() ? (bar.offsetHeight + 'px') : '';
         }
 
         async function login() {
