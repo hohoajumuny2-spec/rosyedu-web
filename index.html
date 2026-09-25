@@ -8898,31 +8898,53 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
         }
 
-        // 💡 학생 상세 기록 맨 위에 보여줄 아바타 요약 카드 (마이페이지와 동일한 시각 언어 재사용)
+        // 💡 학생 상세 기록 맨 위의 아바타 카드.
+        //    예전에는 옛날 방식(👦/👧 + 배지 하나)만 그려서, 학생이 마이페이지에서 꾸민
+        //    여우 캐릭터 · 색 · 옷 · 모자 · 친구 · 사진이 원장님 화면에는 안 보였다.
+        //    학생 화면(paintAvatarPrefix)과 같은 재료로 그린다. 부르기 전에 loadAvatarCatalog() 를 기다릴 것.
         function buildAdminAvatarSummaryHtml(levelInfo, profile) {
             if (!levelInfo) return '';
-            const gender = (profile && profile.avatar_gender) === 'girl' ? '👧' : '👦';
-            const itemId = profile && profile.avatar_item;
-            const itemDef = LEVEL_ITEMS_REF.map(l => l.item).filter(Boolean).find(it => it.id === itemId);
-            const glow = LEVEL_GLOW[Math.min(Math.max(levelInfo.level, 1), 10) - 1];
+            profile = profile || {};
+            const look = Object.assign({ face: 'boy', color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false },
+                profile.avatar_look || {});
+            // 새 꾸미기 전의 학생: 성별 · 배지만 있던 시절 값을 옮겨 쓴다
+            if (!profile.avatar_look) {
+                if (profile.avatar_gender === 'girl') look.face = 'girl';
+                if (profile.avatar_item) look.badge = profile.avatar_item;
+            }
+            const colorDef = avatarItemDef('color', look.color);
+            const glow = colorDef ? colorDef.ring : LEVEL_GLOW[Math.min(Math.max(levelInfo.level, 1), 10) - 1];
+            const photo = look.use_photo && profile.profile_image;
+            const face = photo
+                ? `<img src="${API_URL}${encodeURI(profile.profile_image)}" class="w-full h-full object-cover" alt="${escAttr(profile.student_name || '')} 사진">`
+                : foxAvatarSvg(glow, look.face, look.outfit);
+            const bg = photo ? (colorDef ? colorDef.css : levelThemeGradient(levelInfo.level)) : '#151922';
+            const emo = slot => { const d = avatarItemDef(slot, look[slot]); return d && d.emoji ? d : null; };
+            const hat = emo('hat'), pet = emo('pet'), badge = emo('badge'), effect = emo('effect');
+            const worn = [['모자', hat], ['친구', pet], ['배지', badge], ['효과', effect]].filter(x => x[1])
+                .map(x => `<span class="text-xs bg-gray-800 border border-gray-700 rounded-full px-2 py-0.5 text-gray-300">${x[1].emoji} ${escapeHtml(x[1].label || x[0])}</span>`).join('');
             const cur = levelInfo.xp - levelInfo.current_threshold;
             const span = levelInfo.is_max ? 1 : (levelInfo.next_threshold - levelInfo.current_threshold);
             const pct = levelInfo.is_max ? 100 : Math.max(0, Math.min(100, Math.round((cur / span) * 100)));
             const progressText = levelInfo.is_max
                 ? `최고 레벨 달성 (누적 ${levelInfo.xp}점)`
                 : `다음 레벨까지 ${levelInfo.next_threshold - levelInfo.xp}점 남음 (${levelInfo.xp}/${levelInfo.next_threshold})`;
-            return `<div class="mb-4 bg-[#151922] rounded-xl p-4 border border-gray-700 flex flex-wrap items-center gap-3">
-                <div class="relative flex-shrink-0 w-16 h-16">
-                    <div class="absolute left-1/2 top-1/2 text-5xl opacity-25 pointer-events-none select-none" style="transform: translate(-50%, -50%);">${levelInfo.icon}</div>
-                    <div class="relative w-16 h-16 rounded-full flex items-center justify-center text-3xl border-4 bg-[#1e2430]" style="border-color:${glow};">${gender}</div>
-                    ${itemDef ? `<div class="absolute -top-1 -right-1 text-xl drop-shadow-lg">${itemDef.emoji}</div>` : ''}
+            return `<div class="mb-4 bg-[#151922] rounded-xl p-4 border border-gray-700 flex flex-wrap items-center gap-4">
+                <div class="relative flex-shrink-0 w-20 h-20">
+                    <div class="absolute left-1/2 top-1/2 text-6xl opacity-20 pointer-events-none select-none" style="transform: translate(-50%, -50%);">${levelInfo.icon}</div>
+                    <div class="relative w-20 h-20 rounded-full overflow-hidden border-4 flex items-center justify-center" style="border-color:${glow}; background:${bg};">${face}</div>
+                    ${hat ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl drop-shadow-lg z-20 pointer-events-none">${hat.emoji}</div>` : ''}
+                    ${badge ? `<div class="absolute -top-1 -right-1 text-2xl drop-shadow-lg z-10">${badge.emoji}</div>` : ''}
+                    ${pet ? `<div class="absolute -bottom-1 -left-2 text-2xl drop-shadow-lg z-10">${pet.emoji}</div>` : ''}
+                    ${effect ? `<div class="absolute -bottom-1 -right-2 text-xl drop-shadow-lg z-10">${effect.emoji}</div>` : ''}
                 </div>
                 <div class="flex-grow min-w-[10rem] basis-40">
                     <div class="flex items-center flex-wrap gap-2 mb-1">
+                        <span class="text-xl">${levelInfo.icon}</span>
                         <span class="font-black text-white">${escapeHtml(levelInfo.name)}</span>
                         <span class="text-xs bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Lv.${levelInfo.level}</span>
-                        ${itemDef ? `<span class="text-xs text-gray-400">착용중: ${itemDef.emoji} ${escapeHtml(itemDef.label)}</span>` : '<span class="text-xs text-gray-500">착용중인 아이템 없음</span>'}
                     </div>
+                    <div class="flex flex-wrap gap-1 mb-2">${worn || '<span class="text-xs text-gray-500">꾸민 아이템 없음</span>'}</div>
                     <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-700">
                         <div class="h-full bg-gradient-to-r from-emerald-500 to-blue-500" style="width:${pct}%"></div>
                     </div>
@@ -8941,23 +8963,37 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         titleSpan.innerHTML = `<i class="fa-solid fa-user mr-2"></i><span class="text-blue-400">${escapeHtml(filterName)}</span> 상세 기록`;
                         let avatarSummaryHtml = '';
                         try {
-                            const pRes = await fetch(`${API_URL}/api/student/profile/${encodeURIComponent(filterName)}`);
+                            const [pRes] = await Promise.all([
+                                fetch(`${API_URL}/api/student/profile/${encodeURIComponent(filterName)}`),
+                                loadAvatarCatalog()]);
                             const pData = await pRes.json();
                             if (pData.success) avatarSummaryHtml = buildAdminAvatarSummaryHtml(pData.level_info, pData.profile);
                         } catch (e) {}
+                        // 💡 전체 학생의 최근 300건 안에서 이름으로 거르면, 학생이 많을 때 한 학생의
+                        //    예전 기록이 밀려나 안 보였다. 이 학생 기록만 따로 받는다.
+                        let myReports = data.reports.filter(r => r.student_name === filterName);
+                        try {
+                            const sr = await (await fetch(`${API_URL}/api/admin/student_reports/${encodeURIComponent(filterName)}`)).json();
+                            if (sr.success) myReports = sr.reports;
+                        } catch (e) {}
                         let examHtml = '', hwHtml = '', qHtml = '', loginHtml = ''; let examCnt = 0, hwCnt = 0, qCnt = 0, loginCnt = 0;
-                        data.reports.forEach(r => {
+                        myReports.forEach(r => {
                             if (r.student_name === filterName) {
                                 const timeStr = `<span class="text-[10px] text-gray-500 ml-2">${escapeHtml(r.submitted_at)}</span>`;
-                                if (r.type === '모의고사' || r.type === '타임어택 퀴즈') {
+                                if (r.type === '모의고사' || r.type === '타임어택 퀴즈' || r.type === '영어 단어 시험' || r.type === '출제 문제') {
                                     examCnt++;
-                                    // 퀴즈는 눌러서 그 학생 답안지를, 모의고사는 성적 분석을 연다
-                                    const clickable = r.type === '타임어택 퀴즈'
-                                        ? `onclick="openViewResult('${escAttr(r.task_name)}','타임어택 퀴즈','${escAttr(filterName)}')" class="bg-gray-800 hover:bg-gray-700 cursor-pointer p-2 rounded mb-1 flex justify-between items-center text-sm transition"`
-                                        : r.type === '모의고사' ? `onclick="openExamAnalysis('${escAttr(filterName)}','${escAttr(r.task_name)}')" class="bg-gray-800 hover:bg-gray-700 cursor-pointer p-2 rounded mb-1 flex justify-between text-sm transition"` : `class="bg-gray-800 p-2 rounded mb-1 flex justify-between text-sm"`;
-                                    const hint = r.type === '모의고사' ? `<i class="fa-solid fa-chart-column ml-1 text-yellow-500 text-xs" title="성적 분석 보기"></i>`
-                                        : r.type === '타임어택 퀴즈' ? `<i class="fa-solid fa-list-check ml-1 text-orange-400 text-xs" title="틀린 문제 보기"></i>` : '';
-                                    examHtml += `<div ${clickable}><span>[${escapeHtml(r.type)}] ${escapeHtml(r.task_name)}${hint}</span><span class="text-yellow-400 font-bold">${r.score}점</span></div>`;
+                                    // 💡 무엇이든 누르면 그 학생의 문항별 답안지(틀린 문제 · 학생 답 · 정답 · 해설)가 열린다.
+                                    //    모의고사는 옆의 📊 로 예전 성적 분석(난이도별 정답률)도 볼 수 있다.
+                                    const wrongN = Array.isArray(r.wrongs) ? r.wrongs.length : null;
+                                    const wrongTag = wrongN === null ? '' : wrongN === 0
+                                        ? `<span class="text-[10px] text-emerald-400 ml-2">전부 정답</span>`
+                                        : `<span class="text-[10px] text-red-400 ml-2">${wrongN}문항 틀림</span>`;
+                                    const scoreTxt = typeof r.score === 'number' ? `${r.score}점` : escapeHtml(String(r.score ?? ''));
+                                    const analysis = r.type === '모의고사'
+                                        ? `<button onclick="event.stopPropagation(); openExamAnalysis('${escAttr(filterName)}','${escAttr(r.task_name)}')" class="ml-2 text-yellow-500 hover:text-yellow-300" title="성적 분석(난이도별)"><i class="fa-solid fa-chart-column"></i></button>` : '';
+                                    examHtml += `<div onclick="openViewResult('${escAttr(r.task_name)}','${escAttr(r.type)}','${escAttr(filterName)}')" class="bg-gray-800 hover:bg-gray-700 cursor-pointer p-2 rounded mb-1 flex justify-between items-center text-sm transition" title="눌러서 틀린 문제 보기">
+                                        <span>[${escapeHtml(r.type)}] ${escapeHtml(r.task_name)}<i class="fa-solid fa-list-check ml-1 text-orange-400 text-xs"></i>${wrongTag}</span>
+                                        <span class="flex items-center"><span class="text-yellow-400 font-bold">${scoreTxt}</span>${analysis}</span></div>`;
                                 }
                                 else if (r.type === '과제 제출' || r.type === '논술 첨삭') {
                                     hwCnt++;
@@ -8979,7 +9015,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                 else if (r.type === '로그인') { loginCnt++; loginHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-xs text-blue-300"><i class="fa-solid fa-right-to-bracket mr-1"></i>접속${timeStr}</div>`; }
                             }
                         });
-                        detailContainer.innerHTML = avatarSummaryHtml + `<div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 모의고사/퀴즈 이력 (${examCnt}건)</h4><div class="max-h-32 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>`;
+                        detailContainer.innerHTML = avatarSummaryHtml + `<div class="mb-4"><h4 class="text-emerald-400 font-bold mb-2 border-b border-gray-700 pb-1">📚 과제/논술 이력 (${hwCnt}건)</h4><div class="max-h-32 overflow-y-auto">${hwHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-yellow-400 font-bold mb-2 border-b border-gray-700 pb-1">⏳ 시험 · 퀴즈 · 단어 · 출제 문제 (${examCnt}건) <span class="text-[10px] text-gray-500 font-normal">눌러서 틀린 문제 보기</span></h4><div class="max-h-60 overflow-y-auto">${examHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div class="mb-4"><h4 class="text-pink-400 font-bold mb-2 border-b border-gray-700 pb-1">💬 AI 질문 이력 (${qCnt}건)</h4><div class="max-h-32 overflow-y-auto">${qHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div><div><h4 class="text-blue-400 font-bold mb-2 border-b border-gray-700 pb-1">🔑 로그인 이력 (${loginCnt}건)</h4><div class="max-h-32 overflow-y-auto">${loginHtml||'<p class="text-xs text-gray-500">기록 없음</p>'}</div></div>`;
                     } else {
                         titleSpan.innerHTML = `<i class="fa-solid fa-chart-line mr-2"></i>전체 누적 통계`;
                         let studentData = {};
@@ -12481,7 +12517,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 ? '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 학생의 답과 정답, 해설을 확인하세요.</p>'
                 : '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 정답, 해설을 확인하세요.</p>';
             showModal('viewresult');
-            if (focusNo) showViewResultItem(Number(focusNo));
+            // 원장님이 학생 답안지를 열면 첫 번째 틀린 문항부터 바로 보여준다
+            const firstWrong = studentName && !focusNo ? (data.items.find(x => x.is_wrong || x.is_unsure) || {}).no : null;
+            if (focusNo || firstWrong) showViewResultItem(Number(focusNo || firstWrong));
         }
 
         function showViewResultItem(no) {
@@ -12496,7 +12534,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             // 원장님이 볼 때는 '내 답'이 아니라 '학생 이름의 답'이어야 말이 된다
             const whose = VR.viewing_student ? escapeHtml(VR.viewing_student) + ' 답' : '내 답';
 
-            const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2">${escapeKeepUnderline(it.text)}</p>` : '';
+            const textHtml = it.text ? `<p class="text-white text-sm font-bold leading-relaxed mb-2 whitespace-pre-line">${escapeKeepUnderline(it.text)}</p>` : '';
             const imgHtml = it.image ? `<div class="mb-2"><img src="${API_URL}${encodeURI(it.image)}" class="max-w-full rounded border border-gray-700" alt="문항 그림"></div>` : '';
             const bogiHtml = (it.bogi || '').trim() ? `<div class="mb-2 border border-gray-600 rounded p-3 bg-[#151922]">
                 <div class="text-[10px] text-sky-400 font-bold mb-1">&lt;보기&gt;</div>
