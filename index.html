@@ -2308,7 +2308,7 @@
                         <!-- 반별 명단 -->
                         <div class="col-span-1 lg:col-span-3 bg-[#151922] p-4 rounded h-[600px] flex flex-col">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-3">
-                                <h3 class="text-white font-bold"><i class="fa-solid fa-list-check mr-2 text-emerald-400"></i>반별 명단 <span class="text-gray-400 font-normal text-sm">(총 <span id="total-student-count">0</span>명)</span></h3>
+                                <h3 class="text-white font-bold"><i class="fa-solid fa-list-check mr-2 text-emerald-400"></i>반별 명단 <span class="text-gray-400 font-normal text-sm">(총 <span id="total-student-count">0</span>명)</span> <span id="push-on-count" class="hidden text-[11px] font-normal bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded-full ml-1" title="휴대폰 알림을 켠 학생 수"></span></h3>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <select id="bulk-class" class="p-1.5 bg-gray-800 text-white rounded text-xs border border-gray-600 class-select"><option value="">반 미배정</option></select>
                                     <button onclick="assignSelectedClass()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 학생 반 배정</button>
@@ -2665,6 +2665,11 @@
                                 <input type="file" id="qz-capture-input" accept="image/*,.pdf" multiple class="hidden" onchange="handleQuizCapture(Array.from(this.files)); this.value='';">
                             </div>
                             <div id="qz-capture-preview" class="flex flex-wrap gap-2 mt-2"></div>
+                            <!-- 📋 문제와 선택지를 한 번에 복사해 붙여넣으면 칸마다 나눠 넣는다 -->
+                            <textarea id="qz-text-paste" rows="3"
+                                placeholder="📋 문제와 선택지를 통째로 복사해 여기에 붙여넣으세요 (Ctrl+V). 문제 · <보기> · ①~⑤ 선택지 칸으로 알아서 나눠 넣습니다. 여러 문제도 한 번에 됩니다. 정답: ③ 줄이 있으면 정답도 골라 둡니다."
+                                onpaste="const _t=(event.clipboardData||window.clipboardData).getData('text'); if(_t){ event.preventDefault(); if(!handleQuizTextPaste(_t, null)) alert('선택지(①~⑤ 또는 (1)~(5))를 찾지 못했습니다. 문제와 선택지를 함께 복사했는지 확인해 주세요.'); }"
+                                class="w-full mt-3 p-3 bg-gray-800 text-gray-300 rounded border border-dashed border-orange-700/60 focus:border-orange-500 outline-none text-sm resize-y"></textarea>
 
                             <div class="mt-4 border-t border-gray-700 pt-4">
                                 <div class="flex justify-between items-center mb-2">
@@ -9085,6 +9090,42 @@ let lavUid = 0;
             refreshClassSelects();
             renderClassManageList();
             renderAdminStudents();
+            loadAdminPushStatus();
+        }
+
+        // 🔔 학생마다 휴대폰 알림을 켰는지 — 명단을 먼저 그리고, 받아오는 대로 표시만 덧붙인다
+        let ADMIN_PUSH_STATUS = null;   // null = 아직 모름(서버가 옛 버전이거나 불러오는 중)
+        async function loadAdminPushStatus() {
+            const r = await adminGet('/api/admin/push_status');
+            ADMIN_PUSH_STATUS = r.ok ? (r.data.students || {}) : null;
+            renderAdminStudents();
+        }
+
+        function pushBadgeHtml(name) {
+            if (!ADMIN_PUSH_STATUS) return '';
+            const st = ADMIN_PUSH_STATUS[name];
+            if (!st) return `<span class="text-[10px] bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full ml-1" title="이 학생은 아직 휴대폰 알림을 켜지 않았습니다">🔕 알림 꺼짐</span>`;
+            const when = st.updated_at ? ` · 마지막으로 켠 때 ${st.updated_at.slice(0, 16)}` : '';
+            return `<span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="알림 켠 기기 ${st.devices}대${escAttr(when)}">🔔 알림 켬${st.devices > 1 ? ' ' + st.devices + '대' : ''}</span>`;
+        }
+
+        async function sendTestPush(name) {
+            showLoader("테스트 알림 보내는 중...");
+            let n = -1;
+            try {
+                const fd = new FormData();
+                fd.append('student_name', name);
+                const res = await fetch(`${API_URL}/api/admin/push_test`, { method: 'POST', body: fd });
+                const d = await res.json();
+                if (res.ok && d.success) n = d.sent || 0;
+            } catch (e) {}
+            hideLoader();
+            if (n < 0) return alert("테스트 알림을 보내지 못했습니다. 잠시 뒤 다시 시도해주세요.");
+            if (n === 0) {
+                alert(`${name} 학생에게 알림이 가지 않았습니다.\n휴대폰에서 알림이 꺼졌거나 앱을 지운 것 같습니다. 학생에게 마이페이지의 [알림 받기 → 켜기]를 다시 눌러 달라고 해주세요.`);
+                return loadAdminPushStatus();   // 끊긴 기기는 서버가 지웠으니 표시를 새로 고친다
+            }
+            showToast(`${name} 학생 휴대폰 ${n}대에 테스트 알림을 보냈습니다.`);
         }
         // 예전 이름으로 부르던 곳들이 있어서 그대로 유지
         const loadAdminStudents = loadAdminClassData;
@@ -9093,6 +9134,11 @@ let lavUid = 0;
             const c = document.getElementById('admin-student-list');
             if (!c) return;
             document.getElementById('total-student-count').innerText = ADMIN_STUDENTS.length;
+            const pushCountEl = document.getElementById('push-on-count');
+            if (pushCountEl) {
+                pushCountEl.classList.toggle('hidden', !ADMIN_PUSH_STATUS);
+                if (ADMIN_PUSH_STATUS) pushCountEl.innerText = `🔔 알림 켠 학생 ${ADMIN_STUDENTS.filter(s => ADMIN_PUSH_STATUS[s.student_name]).length}명`;
+            }
 
             const groups = ADMIN_CLASSES.map(cls => ({
                 key: cls.name,
@@ -9120,8 +9166,9 @@ let lavUid = 0;
                     return `<div class="flex items-center gap-2 bg-gray-800 p-2 rounded">
                         <input type="checkbox" class="student-checkbox shrink-0" value="${escAttr(s.id)}">
                         <span class="flex-grow min-w-0 truncate text-sm text-white">${escapeHtml(s.school||'')} ${escapeHtml(s.grade||'')} <b>${escapeHtml(s.student_name)}</b>
-                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}
+                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}${pushBadgeHtml(s.student_name)}
                         </span>
+                        ${(ADMIN_PUSH_STATUS && ADMIN_PUSH_STATUS[s.student_name]) ? `<button onclick="sendTestPush('${escAttr(s.student_name)}')" class="shrink-0 bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs text-emerald-300 font-bold transition" title="이 학생 휴대폰으로 테스트 알림을 한 번 보냅니다"><i class="fa-solid fa-bell"></i> 테스트</button>` : ''}
                         <button onclick="fetchReports('${escAttr(s.student_name)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded text-xs text-white font-bold transition">이력</button>
                         <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}','${escAttr(subs.join(','))}','${escAttr(JSON.stringify(s.class_names||{}))}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
                     </div>`;
@@ -12003,7 +12050,14 @@ let lavUid = 0;
             div.addEventListener('paste', (e) => {
                 const items = Array.from((e.clipboardData || {}).items || []);
                 const f = items.filter(it => it.type && it.type.startsWith('image/')).map(it => it.getAsFile()).filter(Boolean)[0];
-                if (!f) return;
+                if (!f) {
+                    // 💡 문제 칸이나 선택지 칸에 '문제 + 선택지'를 통째로 붙여넣으면 알아서 나눠 넣는다
+                    const tgt = e.target;
+                    if (!tgt || !tgt.classList || !(tgt.classList.contains('quiz-q-text') || tgt.classList.contains('quiz-q-opt'))) return;
+                    const text = (e.clipboardData || window.clipboardData).getData('text');
+                    if (text && handleQuizTextPaste(text, div)) { e.preventDefault(); e.stopPropagation(); }
+                    return;
+                }
                 e.preventDefault();
                 e.stopPropagation();
                 uploadQuizImage(div, f);
@@ -12093,6 +12147,123 @@ let lavUid = 0;
                 b.classList.toggle('bg-orange-600', on); b.classList.toggle('text-white', on);
                 b.classList.toggle('bg-gray-800', !on); b.classList.toggle('text-gray-400', !on);
             });
+        }
+
+        // ── 문제 통째로 붙여넣기 ─────────────────────────────
+        // 💡 문제와 선택지를 한 번에 복사해 붙여넣으면 문제 칸 · <보기> 칸 · 선택지
+        //    칸으로 알아서 나눠 넣는다. 여러 문제를 한꺼번에 붙여넣으면 문제마다
+        //    칸을 새로 만든다. 선택지는 ①~⑤ (또는 (1)~(5), 1)~5)) 로 알아본다.
+        const QZ_CIRCLED = '①②③④⑤';
+
+        function splitQuizPaste(raw) {
+            let t = String(raw || '').replace(/\r/g, '').replace(/ /g, ' ');
+            // 줄 맨 앞의 (1)~(5), 1)~5) 는 선택지다 — ①~⑤ 로 바꿔 한 가지로 다룬다.
+            // 동그라미 숫자가 하나도 없을 때만 줄 가운데의 (1) 1) 도 선택지로 본다.
+            const lineParen = /(^|\n)[ \t]*\(([1-5])\)[ \t]*/g;
+            const lineHalf = /(^|\n)[ \t]*([1-5])\)[ \t]*/g;
+            if ((t.match(lineParen) || []).length >= 2) t = t.replace(lineParen, (m, sp, n) => sp + QZ_CIRCLED[n - 1] + ' ');
+            if ((t.match(lineHalf) || []).length >= 2) t = t.replace(lineHalf, (m, sp, n) => sp + QZ_CIRCLED[n - 1] + ' ');
+            if (!/[①②③④⑤]/.test(t)) {
+                const paren = /(^|\s)\(([1-5])\)\s*/g;
+                const half = /(^|\s)([1-5])\)\s*/g;
+                if ((t.match(paren) || []).length >= 2) t = t.replace(paren, (m, sp, n) => sp + QZ_CIRCLED[n - 1] + ' ');
+                else if ((t.match(half) || []).length >= 2) t = t.replace(half, (m, sp, n) => sp + QZ_CIRCLED[n - 1] + ' ');
+            }
+
+            // 선택지 번호만 골라낸다. 정답·해설 줄에 나오는 ③ 같은 것은 선택지가 아니다.
+            // ① 로 새 문제가 시작되고, ②③④⑤ 는 바로 앞 번호 다음일 때만 이어 붙인다.
+            const groups = [];
+            for (let i = 0; i < t.length; i++) {
+                const k = QZ_CIRCLED.indexOf(t[i]);
+                if (k < 0) continue;
+                const lineHead = t.slice(t.lastIndexOf('\n', i - 1) + 1, i);
+                if (/^\s*[\[【]?\s*(정답|답|해설|풀이)/.test(lineHead)) continue;
+                const m = { pos: i, n: k + 1 };
+                const g = groups[groups.length - 1];
+                if (m.n === 1) groups.push([m]);
+                else if (g && g[g.length - 1].n === m.n - 1) g.push(m);
+            }
+            for (let i = groups.length - 1; i >= 0; i--) if (groups[i].length < 2) groups.splice(i, 1);
+            if (!groups.length) return [];
+
+            const out = [];
+            let cursor = 0;
+            groups.forEach((g, gi) => {
+                const stemRaw = t.slice(cursor, g[0].pos);
+                const nextStart = gi + 1 < groups.length ? groups[gi + 1][0].pos : t.length;
+                const opts = [];
+                let tail = '';
+                g.forEach((m, i) => {
+                    const end = i + 1 < g.length ? g[i + 1].pos : nextStart;
+                    let seg = t.slice(m.pos + 1, end);
+                    if (i === g.length - 1) {
+                        // 마지막 선택지는 줄이 바뀌면 끝난다 — 그 뒤는 정답·해설이거나 다음 문제
+                        const nl = seg.search(/\n/);
+                        if (nl >= 0) { tail = seg.slice(nl + 1); seg = seg.slice(0, nl); }
+                    }
+                    opts[m.n - 1] = seg.replace(/\s+/g, ' ').trim();
+                });
+                let answer = '', expl = '';
+                const ansM = tail.match(/(?:^|\n)\s*(?:\[?정답\]?|답)\s*[:：]?\s*([①②③④⑤1-5](?:\s*[,/]\s*[①②③④⑤1-5])*)/);
+                if (ansM) {
+                    answer = ansM[1].replace(/\s/g, '').replace(/[①②③④⑤]/g, c => String(QZ_CIRCLED.indexOf(c) + 1)).replace(/,/g, '/');
+                    const after = tail.slice(ansM.index + ansM[0].length);
+                    const exM = after.match(/^\s*\n?\s*(?:\[?해설\]?\s*[:：]?)([\s\S]*?)(?=\n\s*\n|\n\s*\d{1,3}\s*[.)．]|$)/);
+                    if (exM) expl = exM[1].trim();
+                }
+                out.push({ stemRaw, opts, answer, expl });
+                // 다음 문제 글은 꼬리 속 '번호로 시작하는 줄'부터 — 없으면 꼬리 전체
+                const tailStart = nextStart - tail.length;
+                const cut = tail.search(/(?:^|\n)\s*(?:문제\s*)?\[?\d{1,3}\]?\s*(?:[.)．]|번)/);
+                cursor = tailStart + (cut >= 0 ? cut : 0);
+            });
+
+            return out.map(q => {
+                let stem = q.stemRaw.replace(/(^|\n)\s*(?:\[?정답\]?|답|해설)\s*[:：][^\n]*/g, '').trim();
+                // 앞의 문제 번호("3.", "[3]", "3번", "문제 3.") 는 뗀다
+                stem = stem.replace(/^\s*(?:문제\s*)?\[?\d{1,3}\]?\s*(?:[.)．]|번\.?)\s*/, '');
+                // <보기> 상자: 따로 한 줄에 선 <보기> 뒤를 보기 칸으로. 문장 속 "<보기>를 참고하여"는 건드리지 않는다
+                let bogi = '';
+                const bm = stem.match(/(?:^|\n)[ \t]*[<〈《\[【]\s*보\s*기\s*[>〉》\]】][ \t]*(?:\n|$)/)
+                    || stem.match(/[<〈《\[【]\s*보\s*기\s*[>〉》\]】](?![을를의에와과은는이가로])/);
+                if (bm) {
+                    bogi = stem.slice(bm.index + bm[0].length).trim();
+                    stem = stem.slice(0, bm.index).trim();
+                }
+                return {
+                    q_text: stem.replace(/\s*\n\s*/g, ' ').trim(),
+                    bogi: bogi,
+                    options: [0, 1, 2, 3, 4].map(i => q.opts[i] || ''),
+                    answer: q.answer, explanation: q.expl,
+                };
+            }).filter(q => q.options.filter(Boolean).length >= 2);
+        }
+
+        // 이미 있는 문항 칸 하나에 나눈 결과를 채운다 (비어 있는 칸만 덮지 않고 모두 바꾼다)
+        function applyQuizPasteToItem(item, q) {
+            item.querySelector('.quiz-q-text').value = q.q_text;
+            const bogiEl = item.querySelector('.quiz-q-bogi');
+            if (bogiEl) bogiEl.value = q.bogi;
+            const typeSel = item.querySelector('.quiz-q-type');
+            if (typeSel.value !== 'choice') { typeSel.value = 'choice'; onQuizTypeChange(typeSel); }
+            item.querySelectorAll('.quiz-q-opt').forEach((el, i) => { el.value = q.options[i] || ''; });
+            if (q.answer) setQuizAnsBoxes(item, q.answer);
+            const explEl = item.querySelector('.quiz-q-expl');
+            if (explEl && q.explanation) explEl.value = q.explanation;
+        }
+
+        // 붙여넣은 글이 '문제 + 선택지' 모양이면 나눠 넣고 true
+        function handleQuizTextPaste(text, item) {
+            const qs = splitQuizPaste(text);
+            if (!qs.length) return false;
+            if (item) applyQuizPasteToItem(item, qs[0]);
+            (item ? qs.slice(1) : qs).forEach(q => fillQuizQuestion(Object.assign({ qtype: 'choice', score: 10 }, q)));
+            if (!item) {
+                const board = document.getElementById('qz-questions-board');
+                board.lastElementChild && board.lastElementChild.scrollIntoView({ block: 'nearest' });
+            }
+            showToast(qs.length > 1 ? `${qs.length}문제를 나눠 넣었습니다. 정답을 확인해 주세요.` : '문제와 선택지를 나눠 넣었습니다.');
+            return true;
         }
 
         function fillQuizQuestion(q) {
