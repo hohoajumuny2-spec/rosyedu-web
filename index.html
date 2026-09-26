@@ -136,6 +136,38 @@
         @keyframes levelUpPop { 0% { opacity: 0; transform: scale(0.5); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes levelUpBounce { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(3deg); } }
         @keyframes avatarGlowPulse { 0%, 100% { box-shadow: 0 0 14px 2px var(--glow-color, rgba(251,191,36,0.6)); } 50% { box-shadow: 0 0 32px 10px var(--glow-color, rgba(251,191,36,0.9)); } }
+        /* 🐾 새 아바타 (동물·그림 모자·움직이는 효과) */
+        /* 아바타 본체 */
+        .lav { width:100%; height:100%; display:block; overflow:visible; }
+        .lav .lav-breath { animation: lavBreath 3.2s ease-in-out infinite; transform-origin: 60px 110px; transform-box: view-box; }
+        @keyframes lavBreath { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-1.2px) scale(1.012); } }
+        .lav .lav-eyes { animation: lavBlink 4.6s infinite; transform-origin: 60px 62px; transform-box: view-box; }
+        @keyframes lavBlink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } }
+        .lav .lav-halo { animation: lavHalo 2.4s ease-in-out infinite; transform-box: view-box; }
+        @keyframes lavHalo { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+
+        /* 효과 */
+        .lav-fx-twinkle path { animation: lavTwinkle 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+        .lav-fx-twinkle path:nth-child(2) { animation-delay: .45s; } .lav-fx-twinkle path:nth-child(3) { animation-delay: .9s; } .lav-fx-twinkle path:nth-child(4) { animation-delay: 1.35s; }
+        @keyframes lavTwinkle { 0%,100% { opacity:.15; transform: scale(.4) rotate(0deg); } 50% { opacity:1; transform: scale(1.15) rotate(45deg); } }
+        .lav-fx-hearts path { animation: lavFloatUp 3s ease-in infinite; opacity:0; transform-box: view-box; }
+        .lav-fx-hearts path:nth-child(2) { animation-delay: 1s; } .lav-fx-hearts path:nth-child(3) { animation-delay: 2s; }
+        @keyframes lavFloatUp { 0% { opacity:0; transform: translateY(0) scale(.6); } 15% { opacity:1; } 100% { opacity:0; transform: translateY(-48px) scale(1.1); } }
+        .lav-fx-spin { animation: lavSpin 7s linear infinite; transform-origin: 60px 60px; transform-box: view-box; }
+        .lav-fx-spin-fast { animation: lavSpin 2.6s linear infinite; transform-origin: 60px 60px; transform-box: view-box; }
+        .lav-fx-spin-slow { animation: lavSpin 30s linear infinite; transform-origin: 60px 60px; transform-box: view-box; }
+        @keyframes lavSpin { to { transform: rotate(360deg); } }
+        .lav-fx-flame path { animation: lavFlicker .9s ease-in-out infinite alternate; transform-origin: 60px 100px; transform-box: view-box; }
+        .lav-fx-flame path:nth-child(2) { animation-duration: .7s; animation-delay: .2s; }
+        @keyframes lavFlicker { from { transform: scaleY(.94) scaleX(1.02); opacity:.85; } to { transform: scaleY(1.07) scaleX(.97); opacity:1; } }
+        .lav-fx-galaxy circle { animation: lavStarBlink 2.2s ease-in-out infinite; }
+        .lav-fx-galaxy circle:nth-child(3n) { animation-delay: .7s; } .lav-fx-galaxy circle:nth-child(3n+1) { animation-delay: 1.4s; }
+        @keyframes lavStarBlink { 0%,100% { opacity:.3; } 50% { opacity:1; } }
+
+        /* 친구(펫) */
+        .lav-pet { display:inline-block; animation: lavPetHop 1.6s ease-in-out infinite; }
+        @keyframes lavPetHop { 0%,100% { transform: translateY(0) rotate(-4deg); } 40% { transform: translateY(-14%) rotate(4deg); } 55% { transform: translateY(-14%) rotate(4deg); } }
+              @media (prefers-reduced-motion: reduce) { .lav *, .lav-pet { animation: none !important; } }
         @keyframes avatarHaloSpin { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
         #avatar-display.avatar-maxlevel { animation: avatarGlowPulse 1.8s ease-in-out infinite; }
         #avatar-halo.avatar-maxlevel { animation: avatarHaloSpin 4s linear infinite; }
@@ -3792,7 +3824,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         let AVATAR_CATALOG = null;          // 서버가 주는 항목 목록
         let myAvatarLook = { face: 'boy', color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false };
         let myProfileImage = '';            // 올려둔 내 사진 경로
-        let avatarSlotOpen = 'face';        // 지금 보고 있는 갈래
+        let avatarSlotOpen = 'animal';        // 지금 보고 있는 갈래
 
         async function loadAvatarCatalog() {
             if (AVATAR_CATALOG) return AVATAR_CATALOG;
@@ -3955,6 +3987,273 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }
         }
 
+        // ═════════════════════════════════════════════
+        // 🐾 새 아바타 — 동물 8종 · 머리에 씌우는 그림 모자 · 움직이는 효과
+        //   예전에는 모자·효과가 동그라미 바깥에 얹은 이모지라 모자가 머리 위에
+        //   떠 있고 효과는 구석에 가만히 있었다. 모두 한 장의 SVG 안에 그린다.
+        //   look: {animal, face, outfit, hat, effect}, ringHex: 색깔(털색)
+        // ═════════════════════════════════════════════
+let lavUid = 0;
+        function lavShade(hex, amt) {
+          const n = parseInt(hex.slice(1), 16);
+          let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+          const f = v => Math.max(0, Math.min(255, Math.round(amt < 0 ? v * (1 + amt) : v + (255 - v) * amt)));
+          return '#' + [f(r), f(g), f(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+        }
+        
+        /* ── 옷 ── 몸통(아래쪽 둥근 부분) 위에 그린다 */
+        function lavOutfit(id, fur) {
+          const body = 'M26 120 Q26 92 60 89 Q94 92 94 120 Z';
+          switch (id) {
+            case 'tshirt': return `<path d="${body}" fill="#ef4444"/><path d="M50 90 Q60 99 70 90" fill="none" stroke="#fecaca" stroke-width="3" stroke-linecap="round"/>
+              <text x="60" y="112" text-anchor="middle" font-size="10" font-weight="900" fill="#fff" font-family="sans-serif">A+</text>`;
+            case 'vest': return `<path d="${body}" fill="#fff7ed"/><path d="M34 94 Q40 92 48 91 L52 120 L30 120 Z M86 94 Q80 92 72 91 L68 120 L90 120 Z" fill="#92400e"/>
+              <circle cx="60" cy="104" r="1.6" fill="#92400e"/><circle cx="60" cy="112" r="1.6" fill="#92400e"/>`;
+            case 'hoodie': return `<path d="${body}" fill="#2563eb"/><path d="M38 92 Q60 84 82 92 Q76 102 60 102 Q44 102 38 92 Z" fill="#1d4ed8"/>
+              <path d="M54 101 L53 112 M66 101 L67 112" stroke="#bfdbfe" stroke-width="1.6" stroke-linecap="round"/><rect x="47" y="110" width="26" height="8" rx="3" fill="#1e40af"/>`;
+            case 'jacket': return `<path d="${body}" fill="#111827"/><path d="M48 90 L60 108 L72 90" fill="#f9fafb"/><path d="M48 90 L56 120 M72 90 L64 120" stroke="#374151" stroke-width="3"/>
+              <rect x="74" y="104" width="9" height="2.5" rx="1" fill="#f59e0b"/>`;
+            case 'cape': return `<path d="M14 120 Q18 90 40 88 L36 120 Z M106 120 Q102 90 80 88 L84 120 Z" fill="#dc2626"/>
+              <path d="${body}" fill="#fde68a"/><path d="M42 92 Q60 99 78 92" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+              <path d="M60 104 l2.4 5 5.4.6 -4 3.7 1.1 5.3 -4.9 -2.7 -4.9 2.7 1.1 -5.3 -4 -3.7 5.4 -.6 z" fill="#dc2626"/>`;
+            case 'suit': return `<path d="${body}" fill="#1f2937"/><path d="M50 90 L60 116 L70 90 Q60 94 50 90 Z" fill="#fff"/>
+              <path d="M55 95 L60 98 L65 95 L65 100 L60 98 L55 100 Z" fill="#dc2626"/>`;
+            case 'royal': return `<path d="${body}" fill="#b45309"/><path d="M26 120 Q27 98 38 93 L44 120 Z M94 120 Q93 98 82 93 L76 120 Z" fill="#fff" opacity=".95"/>
+              <g fill="#111827"><circle cx="33" cy="106" r="1.2"/><circle cx="37" cy="114" r="1.2"/><circle cx="87" cy="106" r="1.2"/><circle cx="83" cy="114" r="1.2"/></g>
+              <path d="M44 92 Q60 100 76 92" fill="none" stroke="#fde68a" stroke-width="3"/><circle cx="60" cy="104" r="4" fill="#fde68a" stroke="#f59e0b" stroke-width="1.5"/>`;
+            default: return `<path d="${body}" fill="${fur}"/><path d="M48 92 Q60 100 72 92 Q70 118 60 118 Q50 118 48 92 Z" fill="#fff7ed"/>`;
+          }
+        }
+        
+        /* ── 모자 ── 머리 꼭대기(y≈36)에 맞춰 직접 그린다. 귀는 모자 종류에 따라 가린다 */
+        function lavHat(id) {
+          switch (id) {
+            case 'cap': return `<path d="M33 44 Q34 20 60 19 Q86 20 87 44 Q60 36 33 44 Z" fill="#dc2626"/>
+              <path d="M33 44 Q60 36 87 44 L99 48 Q88 50 80 47 Q60 41 36 47 Z" fill="#991b1b"/>
+              <circle cx="60" cy="19.5" r="2.4" fill="#991b1b"/><path d="M52 30 L60 26 L68 30" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`;
+            case 'ribbon': return `<g transform="translate(78 30) rotate(18)">
+              <path d="M0 0 Q-15 -13 -16 1 Q-15 14 0 0 Z" fill="#f472b6"/><path d="M0 0 Q15 -13 16 1 Q15 14 0 0 Z" fill="#ec4899"/>
+              <path d="M-11 -2 Q-9 0 -11 3 M11 -2 Q9 0 11 3" stroke="#be185d" stroke-width="1.2" fill="none"/>
+              <circle r="4.2" fill="#be185d"/><circle cx="-1.2" cy="-1.2" r="1.3" fill="#fbcfe8"/></g>`;
+            case 'headband': return `<path d="M30 58 Q28 22 60 21 Q92 22 90 58" fill="none" stroke="#1f2937" stroke-width="6" stroke-linecap="round"/>
+              <path d="M30 58 Q28 22 60 21 Q92 22 90 58" fill="none" stroke="#6366f1" stroke-width="2.4" stroke-linecap="round"/>
+              <rect x="22" y="50" width="13" height="19" rx="6" fill="#6366f1" stroke="#1f2937" stroke-width="2"/>
+              <rect x="85" y="50" width="13" height="19" rx="6" fill="#6366f1" stroke="#1f2937" stroke-width="2"/>
+              <circle cx="28.5" cy="59.5" r="2.4" fill="#c7d2fe"/><circle cx="91.5" cy="59.5" r="2.4" fill="#c7d2fe"/>`;
+            case 'gradcap': return `<path d="M42 32 L42 42 Q60 48 78 42 L78 32 Z" fill="#111827"/>
+              <path d="M60 18 L94 30 L60 42 L26 30 Z" fill="#1f2937" stroke="#111827" stroke-width="1.5"/>
+              <circle cx="60" cy="30" r="2" fill="#fbbf24"/><path d="M60 30 L86 36 L86 50" fill="none" stroke="#fbbf24" stroke-width="1.8"/>
+              <path d="M83 50 L89 50 L88 57 L84 57 Z" fill="#fbbf24"/>`;
+            case 'tophat': return `<ellipse cx="60" cy="38" rx="28" ry="6" fill="#111827"/>
+              <path d="M44 38 L46 8 Q60 4 74 8 L76 38 Z" fill="#1f2937"/><path d="M45 30 L75 30 L75.6 36 L44.4 36 Z" fill="#7c3aed"/>
+              <path d="M49 12 L50 26" stroke="#4b5563" stroke-width="2" stroke-linecap="round"/>`;
+            case 'crown': return `<path d="M38 40 L36 16 L48 28 L60 11 L72 28 L84 16 L82 40 Z" fill="#fbbf24" stroke="#b45309" stroke-width="1.8" stroke-linejoin="round"/>
+              <rect x="37" y="36" width="46" height="7" rx="2.5" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/>
+              <circle cx="60" cy="30" r="3.4" fill="#ef4444"/><circle cx="46" cy="33" r="2.2" fill="#3b82f6"/><circle cx="74" cy="33" r="2.2" fill="#22c55e"/>
+              <circle cx="36" cy="16" r="2.2" fill="#fde68a"/><circle cx="60" cy="11" r="2.4" fill="#fde68a"/><circle cx="84" cy="16" r="2.2" fill="#fde68a"/>
+              <path d="M44 24 L46 30" stroke="#fef3c7" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>`;
+            case 'halo': return `<g class="lav-halo"><ellipse cx="60" cy="16" rx="21" ry="6" fill="none" stroke="#fde68a" stroke-width="8" opacity=".35"/>
+              <ellipse cx="60" cy="16" rx="21" ry="6" fill="none" stroke="#fde047" stroke-width="3.6"/></g>`;
+            default: return '';
+          }
+        }
+        
+        /* ── 얼굴 ── 눈·표정과 캐릭터별 소품 */
+        function lavFace(face, ink, fur, dark) {
+          const bigEyes = `<g class="lav-eyes">
+              <ellipse cx="47" cy="62" rx="6" ry="7" fill="${ink}"/><ellipse cx="73" cy="62" rx="6" ry="7" fill="${ink}"/>
+              <circle cx="49.2" cy="59.2" r="2.4" fill="#fff"/><circle cx="75.2" cy="59.2" r="2.4" fill="#fff"/>
+              <circle cx="45.4" cy="64.8" r="1.1" fill="#fff" opacity=".85"/><circle cx="71.4" cy="64.8" r="1.1" fill="#fff" opacity=".85"/></g>`;
+          let eyes = bigEyes, extra = '', top = '';
+          switch (face) {
+            case 'girl':
+              eyes = `<g class="lav-eyes">
+                <ellipse cx="47" cy="62" rx="6" ry="7" fill="${ink}"/><ellipse cx="73" cy="62" rx="6" ry="7" fill="${ink}"/>
+                <circle cx="49.2" cy="59.2" r="2.4" fill="#fff"/><circle cx="75.2" cy="59.2" r="2.4" fill="#fff"/>
+                <path d="M40 57 L37 54 M42 55.5 L40 52 M80 57 L83 54 M78 55.5 L80 52" stroke="${ink}" stroke-width="1.5" stroke-linecap="round"/></g>`;
+              break;
+            case 'student': case 'nerd':
+              extra = `<circle cx="47" cy="62" r="10" fill="#fff" fill-opacity=".12" stroke="#374151" stroke-width="2.6"/>
+                <circle cx="73" cy="62" r="10" fill="#fff" fill-opacity=".12" stroke="#374151" stroke-width="2.6"/>
+                <path d="M57 61 Q60 58.5 63 61" fill="none" stroke="#374151" stroke-width="2.6"/>
+                <path d="M41 56 L44 53" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`;
+              if (face === 'student') top = `<path d="M60 20 L92 31 L60 42 L28 31 Z" fill="#1f2937"/><path d="M60 31 L84 37 L84 48" fill="none" stroke="#fbbf24" stroke-width="1.8"/>`;
+              break;
+            case 'cool':
+              eyes = '';
+              extra = `<path d="M34 55 L58 55 Q58 68 47 68 Q36 68 34 55 Z M62 55 L86 55 Q84 68 73 68 Q62 68 62 55 Z" fill="#111827"/>
+                <path d="M58 57 Q60 55 62 57" stroke="#111827" stroke-width="2.4" fill="none"/>
+                <path d="M38 58 L44 58 M66 58 L72 58" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" opacity=".9"/>`;
+              break;
+            case 'star':
+              eyes = `<g class="lav-eyes">
+                <path d="M47 53 l2.6 5.6 6.1.6 -4.6 4.1 1.3 6 -5.4 -3.1 -5.4 3.1 1.3 -6 -4.6 -4.1 6.1 -.6 z" fill="#fbbf24" stroke="#b45309" stroke-width=".8"/>
+                <path d="M73 53 l2.6 5.6 6.1.6 -4.6 4.1 1.3 6 -5.4 -3.1 -5.4 3.1 1.3 -6 -4.6 -4.1 6.1 -.6 z" fill="#fbbf24" stroke="#b45309" stroke-width=".8"/></g>`;
+              break;
+            case 'ninja':
+              extra = `<path d="M30 54 Q60 44 90 54 L90 70 Q60 62 30 70 Z" fill="#111827"/>`;
+              eyes = `<g class="lav-eyes"><ellipse cx="47" cy="61" rx="5" ry="5.5" fill="#fff"/><ellipse cx="73" cy="61" rx="5" ry="5.5" fill="#fff"/>
+                <circle cx="48" cy="61" r="3" fill="${ink}"/><circle cx="74" cy="61" r="3" fill="${ink}"/></g>`;
+              top = `<rect x="31" y="40" width="58" height="6" rx="3" fill="#dc2626"/><path d="M88 42 Q100 38 104 44 Q97 46 100 52 Q92 48 88 46 Z" fill="#dc2626"/>`;
+              break;
+            case 'wizard':
+              top = `<path d="M60 0 Q66 14 84 38 L36 38 Q52 18 60 0 Z" fill="#5b21b6"/><ellipse cx="60" cy="38" rx="30" ry="6" fill="#4c1d95"/>
+                <path d="M55 20 l1.6 3.4 3.7.4 -2.8 2.5 .8 3.6 -3.3 -1.9 -3.3 1.9 .8 -3.6 -2.8 -2.5 3.7 -.4 z" fill="#fde68a"/>
+                <circle cx="68" cy="30" r="1.6" fill="#fde68a"/><circle cx="62" cy="10" r="1.2" fill="#fde68a"/>`;
+              break;
+            case 'astro':
+              extra = `<circle cx="60" cy="62" r="37" fill="#bae6fd" fill-opacity=".14" stroke="#e0f2fe" stroke-width="4"/>
+                <path d="M32 48 Q42 30 62 27" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".75"/>`;
+              top = `<line x1="60" y1="25" x2="60" y2="12" stroke="#e0f2fe" stroke-width="2.6"/><circle cx="60" cy="10" r="3.4" fill="#f87171"/>`;
+              break;
+            case 'hero':
+              extra = `<path d="M33 58 Q45 49 57 57 Q60 55 63 57 Q75 49 87 58 Q84 70 73 70 Q64 70 60 64 Q56 70 47 70 Q36 70 33 58 Z" fill="#dc2626"/>`;
+              eyes = `<g class="lav-eyes"><ellipse cx="47" cy="61" rx="5" ry="4.5" fill="#fff"/><ellipse cx="73" cy="61" rx="5" ry="4.5" fill="#fff"/>
+                <circle cx="47.5" cy="61" r="2.6" fill="${ink}"/><circle cx="73.5" cy="61" r="2.6" fill="${ink}"/></g>`;
+              break;
+            case 'dragon':
+              top = `<path d="M40 40 Q34 22 42 10 Q46 26 52 36 Z M80 40 Q86 22 78 10 Q74 26 68 36 Z" fill="#fde68a" stroke="#b45309" stroke-width="1.6" stroke-linejoin="round"/>`;
+              extra = `<path d="M56 38 L60 30 L64 38 Z" fill="${dark}"/>`;
+              break;
+          }
+          return { eyes, extra, top };
+        }
+        
+        /* ── 효과 ── 배경(뒤)과 앞에 나뉘어 그린다 */
+        function lavEffect(id, ring, u) {
+          const sparkle = (x, y, s, c) => `<path d="M${x} ${y - s} Q${x + s * .18} ${y - s * .18} ${x + s} ${y} Q${x + s * .18} ${y + s * .18} ${x} ${y + s} Q${x - s * .18} ${y + s * .18} ${x - s} ${y} Q${x - s * .18} ${y - s * .18} ${x} ${y - s} Z" fill="${c}"/>`;
+          const heart = (x, y, s, c) => `<path d="M${x} ${y + s * .9} C${x - s * 1.6} ${y - s * .1} ${x - s * .8} ${y - s * 1.3} ${x} ${y - s * .4} C${x + s * .8} ${y - s * 1.3} ${x + s * 1.6} ${y - s * .1} ${x} ${y + s * .9} Z" fill="${c}"/>`;
+          switch (id) {
+            case 'twinkle': return { back: '', front: `<g class="lav-fx-twinkle">${sparkle(20, 34, 7, '#fef9c3')}${sparkle(100, 28, 6, '#fff')}${sparkle(98, 88, 7.5, '#fde68a')}${sparkle(18, 90, 5, '#fff')}</g>` };
+            case 'hearts': return { back: '', front: `<g class="lav-fx-hearts">${heart(24, 96, 8, '#fb7185')}${heart(96, 92, 7, '#f472b6')}${heart(90, 72, 5.5, '#fda4af')}</g>` };
+            case 'stars': return { back: '', front: `<g class="lav-fx-spin">${sparkle(60, 4, 6, '#fde047')}${sparkle(112, 72, 5, '#fef08a')}${sparkle(14, 88, 5.5, '#facc15')}</g>` };
+            case 'comet': return { back: '', front: `<g class="lav-fx-spin-fast"><defs><linearGradient id="cm${u}" x1="0" x2="1"><stop offset="0" stop-color="#7dd3fc" stop-opacity="0"/><stop offset="1" stop-color="#e0f2fe"/></linearGradient></defs>
+                <path d="M6 60 A54 54 0 0 1 36 12" fill="none" stroke="url(#cm${u})" stroke-width="4" stroke-linecap="round"/><circle cx="36" cy="12" r="4" fill="#fff"/></g>` };
+            case 'flame': return { back: `<g class="lav-fx-flame"><path d="M14 118 Q6 80 22 60 Q22 76 30 80 Q28 50 46 30 Q46 52 56 58 Q58 34 74 22 Q70 46 80 56 Q88 44 90 34 Q100 58 94 80 Q102 74 104 64 Q116 94 104 118 Z" fill="#f97316" opacity=".85"/>
+                <path d="M24 118 Q20 92 32 78 Q34 90 40 92 Q42 70 56 56 Q56 74 64 78 Q68 62 78 54 Q78 72 86 80 Q92 72 94 66 Q102 90 96 118 Z" fill="#fde047" opacity=".9"/></g>`, front: '' };
+            case 'rainbow': return { back: '', front: `<g class="lav-fx-spin"><defs><linearGradient id="rb${u}" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ef4444"/><stop offset=".2" stop-color="#f59e0b"/><stop offset=".4" stop-color="#fde047"/><stop offset=".6" stop-color="#22c55e"/><stop offset=".8" stop-color="#3b82f6"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+                <circle cx="60" cy="60" r="57" fill="none" stroke="url(#rb${u})" stroke-width="5"/></g>` };
+            case 'galaxy': {
+              let stars = '';
+              const pts = [[18,22],[30,12],[92,18],[104,40],[12,56],[100,70],[24,78],[86,98],[44,8],[70,10],[108,56],[8,38]];
+              pts.forEach(([x, y], i) => { stars += `<circle cx="${x}" cy="${y}" r="${i % 3 ? 1.1 : 1.8}" fill="#fff"/>`; });
+              return { back: `<g class="lav-fx-spin-slow"><rect x="-10" y="-10" width="140" height="140" fill="#1e1b4b"/>
+                  <ellipse cx="40" cy="40" rx="46" ry="22" fill="#7c3aed" opacity=".45" transform="rotate(-30 40 40)"/>
+                  <ellipse cx="84" cy="80" rx="40" ry="18" fill="#db2777" opacity=".35" transform="rotate(-30 84 80)"/>
+                  <g class="lav-fx-galaxy">${stars}</g></g>`, front: '' };
+            }
+            default: return { back: '', front: '' };
+          }
+        }
+        
+        /* ── 동물 ── 귀(머리 뒤), 무늬(머리 위), 주둥이·코·입을 동물마다 다르게 */
+        function lavAnimal(animal, furFill, fur, dark, ink) {
+          const pinkIn = '#fda4af';
+          const cream = '#fff7ed';
+          const whisk = `<path d="M40 76 L26 73 M40 79 L27 80 M80 76 L94 73 M80 79 L93 80" stroke="${ink}" stroke-width="1.1" stroke-linecap="round" opacity=".55"/>`;
+          const catMouth = `<path d="M60 74.6 Q57 79 54 77 M60 74.6 Q63 79 66 77" stroke="${ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+          const nose = (w = 3.6, h = 2.6, y = 72) => `<ellipse cx="60" cy="${y}" rx="${w}" ry="${h}" fill="${ink}"/><ellipse cx="59" cy="${y - .8}" rx="1.2" ry=".7" fill="#fff" opacity=".7"/>`;
+          const muzzle = (rx = 15, ry = 10.5, c = cream) => `<ellipse cx="60" cy="77" rx="${rx}" ry="${ry}" fill="${c}"/>`;
+          switch (animal) {
+            case 'cat':
+              return { head: furFill,
+                behind: `<path d="M28 50 L30 20 L52 36 Z" fill="${furFill}"/><path d="M32 44 L33 27 L46 36 Z" fill="${pinkIn}"/>
+                         <path d="M92 50 L90 20 L68 36 Z" fill="${furFill}"/><path d="M88 44 L87 27 L74 36 Z" fill="${pinkIn}"/>`,
+                over: `<path d="M52 36 Q54 42 52 46 M60 34 L60 44 M68 36 Q66 42 68 46" stroke="${dark}" stroke-width="2.4" stroke-linecap="round" fill="none"/>`,
+                snout: muzzle(12, 8.5) + whisk + `<path d="M56.5 71 L63.5 71 L60 74.5 Z" fill="#f472b6"/>` + catMouth };
+            case 'dog':
+              return { head: furFill,
+                behind: '',
+                over: `<path d="M30 42 Q16 46 20 72 Q24 82 32 76 Q34 60 38 48 Z" fill="${dark}"/>
+                       <path d="M90 42 Q104 46 100 72 Q96 82 88 76 Q86 60 82 48 Z" fill="${dark}"/>
+                       <ellipse cx="73" cy="54" rx="9" ry="7" fill="${cream}" opacity=".35"/>`,
+                snout: muzzle(16, 11) + nose(5, 3.6, 72) +
+                       `<path d="M60 75.6 L60 78 M60 78 Q55 82 51 79 M60 78 Q65 82 69 79" stroke="${ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                        <path d="M57 80 Q60 88 63 80 Z" fill="#fb7185"/>` };
+            case 'bunny':
+              return { head: furFill,
+                behind: `<path d="M38 44 Q30 18 34 2 Q46 4 48 38 Z" fill="${furFill}"/><path d="M40 38 Q35 20 37 8 Q43 10 45 36 Z" fill="${pinkIn}"/>
+                         <path d="M82 44 Q90 18 86 2 Q74 4 72 38 Z" fill="${furFill}"/><path d="M80 38 Q85 20 83 8 Q77 10 75 36 Z" fill="${pinkIn}"/>`,
+                over: '',
+                snout: muzzle(11, 8) + `<path d="M57 71 Q60 69 63 71 Q61.5 74 60 74 Q58.5 74 57 71 Z" fill="#f472b6"/>` + catMouth +
+                       `<rect x="57.4" y="78" width="5.2" height="5" rx="1.2" fill="#fff" stroke="${ink}" stroke-width=".8"/><line x1="60" y1="78" x2="60" y2="83" stroke="${ink}" stroke-width=".8"/>` };
+            case 'bear':
+              return { head: furFill,
+                behind: `<circle cx="33" cy="38" r="11" fill="${furFill}"/><circle cx="33" cy="38" r="6" fill="${dark}"/>
+                         <circle cx="87" cy="38" r="11" fill="${furFill}"/><circle cx="87" cy="38" r="6" fill="${dark}"/>`,
+                over: '',
+                snout: muzzle(15, 11, lavShade(fur, .55)) + nose(5, 3.4, 72) + catMouth };
+            case 'panda':
+              return { head: '#f8fafc',
+                behind: `<circle cx="33" cy="38" r="11" fill="#111827"/><circle cx="87" cy="38" r="11" fill="#111827"/>`,
+                over: `<ellipse cx="46" cy="62" rx="9.5" ry="11.5" transform="rotate(25 46 62)" fill="#111827"/>
+                       <ellipse cx="74" cy="62" rx="9.5" ry="11.5" transform="rotate(-25 74 62)" fill="#111827"/>`,
+                snout: muzzle(13, 9, '#fff') + nose(4.4, 3, 72) + catMouth,
+                lightEyes: true };
+            case 'hamster':
+              return { head: furFill,
+                behind: `<circle cx="36" cy="40" r="8" fill="${furFill}"/><circle cx="36" cy="40" r="4.4" fill="${pinkIn}"/>
+                         <circle cx="84" cy="40" r="8" fill="${furFill}"/><circle cx="84" cy="40" r="4.4" fill="${pinkIn}"/>`,
+                over: `<ellipse cx="33" cy="76" rx="12" ry="10" fill="${cream}"/><ellipse cx="87" cy="76" rx="12" ry="10" fill="${cream}"/>
+                       <path d="M52 36 Q60 32 68 36 Q64 50 60 50 Q56 50 52 36 Z" fill="${cream}" opacity=".7"/>`,
+                snout: muzzle(10, 7.5) + `<ellipse cx="60" cy="72" rx="2.6" ry="1.9" fill="#f472b6"/>` + catMouth };
+            case 'tiger':
+              return { head: furFill,
+                behind: `<circle cx="34" cy="38" r="10" fill="${furFill}"/><circle cx="34" cy="38" r="5.5" fill="#111827"/><circle cx="34" cy="38" r="2.6" fill="#fff"/>
+                         <circle cx="86" cy="38" r="10" fill="${furFill}"/><circle cx="86" cy="38" r="5.5" fill="#111827"/><circle cx="86" cy="38" r="2.6" fill="#fff"/>`,
+                over: `<g fill="#1f2937"><path d="M52 34 L60 46 L68 34 Q60 38 52 34 Z"/><path d="M50 40 L56 44 L50 46 Z"/><path d="M70 40 L64 44 L70 46 Z"/>
+                       <path d="M27 58 L40 62 L27 64 Z"/><path d="M28 68 L39 69 L29 73 Z"/><path d="M93 58 L80 62 L93 64 Z"/><path d="M92 68 L81 69 L91 73 Z"/></g>`,
+                snout: muzzle(15, 10.5, '#fff') + whisk + nose(4.4, 3, 72) + catMouth };
+            default:   // 여우
+              return { head: furFill,
+                behind: `<path d="M30 44 Q24 22 28 12 Q40 20 50 34 Z" fill="${furFill}"/><path d="M32 38 Q30 26 31 19 Q38 25 44 33 Z" fill="${pinkIn}"/>
+                         <path d="M90 44 Q96 22 92 12 Q80 20 70 34 Z" fill="${furFill}"/><path d="M88 38 Q90 26 89 19 Q82 25 76 33 Z" fill="${pinkIn}"/>`,
+                over: '',
+                snout: muzzle() + nose() + `<path d="M60 74.6 Q56.5 79 53 77 M60 74.6 Q63.5 79 67 77" stroke="${ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>` };
+          }
+        }
+        
+        function lavAvatarSvg(o, ringHex, opts) {
+          const u = ++lavUid;
+          const ring = /^#[0-9a-f]{6}$/i.test(ringHex || '') ? ringHex : '#3b82f6';
+          const fur = ring;
+          const dark = lavShade(fur, -0.35), light = lavShade(fur, 0.35);
+          const ink = '#2d2013';
+          const f = lavFace(o.face, ink, fur, dark);
+          const an = lavAnimal(o.animal || 'fox', `url(#fur${u})`, fur, dark, ink);
+          const fx = lavEffect(o.effect, ring, u);
+          const hatTop = o.hat !== 'none' ? lavHat(o.hat) : f.top;   // 모자를 쓰면 캐릭터 소품 모자(마법사 모자 등) 대신 모자를 씌운다
+          const bg = `<radialGradient id="bg${u}" cx=".5" cy=".35" r=".75"><stop offset="0" stop-color="${lavShade(ring, .15)}" stop-opacity=".55"/><stop offset="1" stop-color="#151922"/></radialGradient>`;
+          return `<svg class="lav" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <defs>${bg}
+              <radialGradient id="fur${u}" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="${light}"/><stop offset=".6" stop-color="${fur}"/><stop offset="1" stop-color="${dark}"/></radialGradient>
+              <clipPath id="clip${u}"><circle cx="60" cy="60" r="56"/></clipPath></defs>
+            <g clip-path="url(#clip${u})">
+              <rect width="120" height="120" fill="url(#bg${u})"/>
+              ${fx.back}
+              <g class="lav-breath">
+                ${lavOutfit(o.outfit, fur)}
+                ${an.behind}
+                <ellipse cx="60" cy="62" rx="33" ry="29" fill="${an.head}"/>
+                ${an.over}
+                <ellipse cx="38" cy="72" rx="5.5" ry="3.4" fill="#fb7185" opacity=".55"/><ellipse cx="82" cy="72" rx="5.5" ry="3.4" fill="#fb7185" opacity=".55"/>
+                ${an.snout}
+                ${f.extra}
+                ${an.lightEyes ? f.eyes.replace(/fill="#2d2013"/g, 'fill="#0b0f19" stroke="#e5e7eb" stroke-width="1.3"') : f.eyes}
+                ${hatTop}
+              </g>
+              ${o.effect === 'rainbow' ? '' : fx.front}
+            </g>
+            ${o.effect === 'rainbow' ? fx.front : ''}
+          </svg>`;
+        }
+
+        // 사이트 곳곳에서 부르는 한 가지 입구 — 동그라미 안을 채울 SVG
+        function avatarLookSvg(look, ringHex) {
+            return lavAvatarSvg(Object.assign({ animal: 'fox', face: 'boy', outfit: 'none', hat: 'none', effect: 'none' }, look || {}), ringHex);
+        }
+
         function foxAvatarSvg(furHex, faceId, outfitId) {
             const fur = furHex || '#f59e0b';
             const dark = shadeColor(fur, -0.35);
@@ -4032,7 +4331,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 disp.innerHTML = `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-full h-full object-cover" alt="내 사진">`;
                 disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
             } else {
-                disp.innerHTML = foxAvatarSvg(glow, myAvatarLook.face, myAvatarLook.outfit);
+                disp.innerHTML = avatarLookSvg(myAvatarLook, glow);
                 disp.style.background = '#151922';
             }
             disp.style.borderColor = glow;
@@ -4047,8 +4346,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 halo.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
             }
             const hatEl = g('avatar-hat'), petEl = g('avatar-pet'), badgeEl = g('avatar-item-badge');
-            if (hatEl) hatEl.innerText = (avatarItemDef('hat', myAvatarLook.hat) || {}).emoji || '';
-            if (petEl) petEl.innerText = (avatarItemDef('pet', myAvatarLook.pet) || {}).emoji || '';
+            // 💡 모자는 캐릭터 그림 안에 씌운다. 사진을 쓸 때만 예전처럼 이모지로 얹는다.
+            const usePhoto = !!(myAvatarLook.use_photo && myProfileImage);
+            if (hatEl) hatEl.innerText = usePhoto ? ((avatarItemDef('hat', myAvatarLook.hat) || {}).emoji || '') : '';
+            if (petEl) petEl.innerHTML = petEmojiHtml(myAvatarLook.pet);
             if (badgeEl) badgeEl.innerText = (avatarItemDef('badge', myAvatarLook.badge) || {}).emoji || '';
 
             const iconEl = g('avatar-level-icon'), nameEl = g('avatar-level-name'), numEl = g('avatar-level-num');
@@ -4240,17 +4541,19 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 disp.innerHTML = `<img src="${API_URL}${encodeURI(myProfileImage)}" class="w-full h-full object-cover" alt="내 사진">`;
                 disp.style.background = colorDef ? colorDef.css : levelThemeGradient(myLevelInfo.level);
             } else {
-                disp.innerHTML = foxAvatarSvg(glow, myAvatarLook.face, myAvatarLook.outfit);
+                disp.innerHTML = avatarLookSvg(myAvatarLook, glow);
                 disp.style.background = '#151922';
             }
             disp.style.borderColor = glow;
+            const usePhoto = !!(myAvatarLook.use_photo && myProfileImage);
 
             const hatDef = avatarItemDef('hat', myAvatarLook.hat);
             const petDef = avatarItemDef('pet', myAvatarLook.pet);
             const effDef = avatarItemDef('effect', myAvatarLook.effect);
-            document.getElementById('avatar-hat').innerText = hatDef ? (hatDef.emoji || '') : '';
-            document.getElementById('avatar-pet').innerText = petDef ? (petDef.emoji || '') : '';
-            document.getElementById('avatar-effect').innerText = effDef ? (effDef.emoji || '') : '';
+            // 모자·효과는 그림 안에 들어가 있다 — 사진을 쓸 때만 예전처럼 이모지로 얹는다
+            document.getElementById('avatar-hat').innerText = (usePhoto && hatDef) ? (hatDef.emoji || '') : '';
+            document.getElementById('avatar-pet').innerHTML = petEmojiHtml(myAvatarLook.pet);
+            document.getElementById('avatar-effect').innerText = (usePhoto && effDef) ? (effDef.emoji || '') : '';
             disp.style.setProperty('--glow-color', glow + '99');
             disp.classList.toggle('avatar-maxlevel', !!myLevelInfo.is_max);
 
@@ -4285,6 +4588,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
             renderWardrobeGrid();
             renderPersistentAvatarWidgets();
+        }
+
+        // 친구(펫)는 캐릭터 옆에서 통통 튄다
+        function petEmojiHtml(petId) {
+            const d = avatarItemDef('pet', petId);
+            return d && d.emoji ? `<span class="lav-pet">${d.emoji}</span>` : '';
         }
 
         function nextLevelUnlocks(level) {
@@ -8905,7 +9214,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function buildAdminAvatarSummaryHtml(levelInfo, profile) {
             if (!levelInfo) return '';
             profile = profile || {};
-            const look = Object.assign({ face: 'boy', color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false },
+            const look = Object.assign({ animal: 'fox', face: 'boy', color: 'blue', outfit: 'none', hat: 'none', pet: 'none', badge: 'none', effect: 'none', use_photo: false },
                 profile.avatar_look || {});
             // 새 꾸미기 전의 학생: 성별 · 배지만 있던 시절 값을 옮겨 쓴다
             if (!profile.avatar_look) {
@@ -8917,7 +9226,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const photo = look.use_photo && profile.profile_image;
             const face = photo
                 ? `<img src="${API_URL}${encodeURI(profile.profile_image)}" class="w-full h-full object-cover" alt="${escAttr(profile.student_name || '')} 사진">`
-                : foxAvatarSvg(glow, look.face, look.outfit);
+                : avatarLookSvg(look, glow);
             const bg = photo ? (colorDef ? colorDef.css : levelThemeGradient(levelInfo.level)) : '#151922';
             const emo = slot => { const d = avatarItemDef(slot, look[slot]); return d && d.emoji ? d : null; };
             const hat = emo('hat'), pet = emo('pet'), badge = emo('badge'), effect = emo('effect');
@@ -8933,10 +9242,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 <div class="relative flex-shrink-0 w-20 h-20">
                     <div class="absolute left-1/2 top-1/2 text-6xl opacity-20 pointer-events-none select-none" style="transform: translate(-50%, -50%);">${levelInfo.icon}</div>
                     <div class="relative w-20 h-20 rounded-full overflow-hidden border-4 flex items-center justify-center" style="border-color:${glow}; background:${bg};">${face}</div>
-                    ${hat ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl drop-shadow-lg z-20 pointer-events-none">${hat.emoji}</div>` : ''}
+                    ${(hat && photo) ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl drop-shadow-lg z-20 pointer-events-none">${hat.emoji}</div>` : ''}
                     ${badge ? `<div class="absolute -top-1 -right-1 text-2xl drop-shadow-lg z-10">${badge.emoji}</div>` : ''}
-                    ${pet ? `<div class="absolute -bottom-1 -left-2 text-2xl drop-shadow-lg z-10">${pet.emoji}</div>` : ''}
-                    ${effect ? `<div class="absolute -bottom-1 -right-2 text-xl drop-shadow-lg z-10">${effect.emoji}</div>` : ''}
+                    ${pet ? `<div class="absolute -bottom-1 -left-2 text-2xl drop-shadow-lg z-10"><span class="lav-pet">${pet.emoji}</span></div>` : ''}
+                    ${(effect && photo) ? `<div class="absolute -bottom-1 -right-2 text-xl drop-shadow-lg z-10">${effect.emoji}</div>` : ''}
                 </div>
                 <div class="flex-grow min-w-[10rem] basis-40">
                     <div class="flex items-center flex-wrap gap-2 mb-1">
