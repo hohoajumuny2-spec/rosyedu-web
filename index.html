@@ -9009,7 +9009,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                         ? `onclick="openViewResult('${escAttr(r.task_name)}','과제 제출','${escAttr(filterName)}')" class="bg-gray-800 hover:bg-gray-700 cursor-pointer p-2 rounded mb-1 flex justify-between items-center text-sm transition"`
                                         : `class="bg-gray-800 p-2 rounded mb-1 flex justify-between items-center text-sm"`;
                                     const 안내 = 볼수있음 ? `<i class="fa-solid fa-list-check ml-1 text-emerald-500 text-xs" title="틀린 문제 보기"></i>` : '';
-                                    const 수정표시 = r.edit_count ? `<span class="text-[10px] text-amber-300 ml-2" title="학생이 고쳐서 다시 낸 과제">${r.edit_count}번 수정 · ${escapeHtml(String(r.updated_at || '').slice(5,16))}</span>` : '';
+                                    const 수정표시 = r.edit_count ? `<span class="text-[10px] text-amber-300 ml-2" title="학생이 고쳐서 다시 낸 과제">${r.edit_count}번 수정${r.first_score ? ` (처음 ${escapeHtml(String(r.first_score))} → 지금 ${escapeHtml(String(r.score || ''))})` : ''} · ${escapeHtml(String(r.updated_at || '').slice(5,16))}</span>` : '';
                                     hwHtml += `<div ${감싸기}><div><span>${escapeHtml(r.task_name)}</span>${안내}${fileLinks}${수정표시}</div><span class="text-emerald-400 font-bold">제출완료</span></div>`;
                                 }
                                 else if (r.type === '질문') { qCnt++; qHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-sm text-gray-300">Q. ${escapeHtml(r.task_name)}${timeStr}</div>`; }
@@ -9641,6 +9641,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
         function editHomework(idx) {
             const h = ADMIN_HW_LIST[idx];
             if (!h) return;
+            if ((h.question_count || 0) > 0 && !Array.isArray(h.answers)) {
+                return alert("정답표를 불러오지 못했습니다. 관리자 로그인이 만료되었을 수 있어요.\n다시 로그인한 뒤 고쳐주세요. (이대로 저장하면 정답표가 지워집니다)");
+            }
             EDITING_HW_TITLE = h.title;
             document.getElementById('hw-title').value = h.title;
             document.getElementById('hw-kind').value = h.kind === 'clinic' ? 'clinic' : 'class';
@@ -9888,7 +9891,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
                         let submitBtnHtml;
                         if (isSubmitted && hasOmr) {
-                            submitBtnHtml = `<button onclick="openViewResult('${escAttr(h.title)}', '과제 제출')" class="flex-1 md:flex-none bg-sky-700 hover:bg-sky-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition"><i class="fa-solid fa-file-lines mr-1"></i>결과 다시보기</button>`;
+                            // 💡 정답은 보여주지 않으므로(해설만), 틀린 답을 스스로 고쳐 다시 낼 수 있다
+                            submitBtnHtml = `<button onclick="openViewResult('${escAttr(h.title)}', '과제 제출')" class="flex-1 md:flex-none bg-sky-700 hover:bg-sky-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition"><i class="fa-solid fa-file-lines mr-1"></i>결과 다시보기</button>
+                                <button onclick="openHomeworkOmr(${i})" class="flex-1 md:flex-none bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition"><i class="fa-solid fa-pen mr-1"></i>답 고쳐서 다시 제출</button>`;
                         } else if (isSubmitted) {
                             // 💡 한 번 내면 끝이 아니다 — 고쳐서 다시 낼 수 있다
                             submitBtnHtml = `<button onclick="openHomeworkUpload(${i})" class="flex-1 md:flex-none bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition"><i class="fa-solid fa-pen mr-1"></i>고쳐서 다시 제출</button>`;
@@ -9905,7 +9910,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                                 <span class="font-bold text-lg text-emerald-400 block mb-1">
                                     <span class="text-[10px] px-2 py-0.5 rounded-full mr-2 align-middle ${kindTone}">${kindLabel}</span>
                                     <i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}</span>
-                                <span class="text-xs text-gray-400">${isSubmitted ? '과제를 성공적으로 제출했습니다. 정답과 해설을 확인하세요.'
+                                <span class="text-xs text-gray-400">${isSubmitted
+                                    ? (hasOmr ? (() => { const m = MY_HW_REPORTS[h.title] || {}; return `${m.score ? escapeHtml(String(m.score)) + '문항 맞음 · ' : ''}해설을 보고 틀린 답을 고쳐 다시 낼 수 있어요.`; })()
+                                              : '과제를 성공적으로 제출했습니다. 해설 자료를 확인하세요.')
                                     : (hasOmr ? `${h.question_count}문항 · 답만 마킹하면 바로 채점됩니다.` : '파일을 첨부하여 과제를 제출하면 해설 자료가 오픈됩니다.')}</span>
                                 ${(() => {
                                     // 내가 낸 파일을 다시 볼 수 있어야 무엇을 고칠지 안다
@@ -9930,7 +9937,10 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
         async function loadAdminHWList() {
             try {
-                const res = await fetch(`${API_URL}/api/homeworks`);
+                // 💡 정답표는 관리자 토큰이 있을 때만 온다 (학생이 주소만 열어 정답을 못 보게)
+                const res = await fetch(`${API_URL}/api/homeworks`, {
+                    headers: (currentUser && currentUser.admin_token) ? { 'x-admin-token': currentUser.admin_token } : {},
+                });
                 const data = await res.json();
                 const c = document.getElementById('admin-hw-view-list');
                 c.innerHTML = '';
@@ -9978,11 +9988,17 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!h) return;
             const count = h.question_count || 0;
             const kindLabel = h.kind === 'clinic' ? '클리닉 과제' : '수업 과제';
-            HW_OMR = { title: h.title, count: count, answers: new Array(count).fill(''),
-                       kinds: (h.omr_kinds && h.omr_kinds.length === count) ? h.omr_kinds : new Array(count).fill('choice') };
+            const mineBefore = ((MY_HW_REPORTS[h.title] || {}).mine) || [];
+            HW_OMR = { title: h.title, count: count,
+                       answers: Array.from({ length: count }, (_, k) => (mineBefore[k] == null ? '' : String(mineBefore[k]))),
+                       kinds: (h.omr_kinds && h.omr_kinds.length === count) ? h.omr_kinds : new Array(count).fill('choice'),
+                       editing: !!MY_HW_REPORTS[h.title] };
             document.getElementById('hw-omr-title').innerText = h.title;
-            document.getElementById('hw-omr-kind').innerText = kindLabel || '';
+            document.getElementById('hw-omr-kind').innerText = (kindLabel || '') + (HW_OMR.editing ? ' · 전에 낸 답이 채워져 있어요. 고칠 문항만 고쳐 다시 내세요.' : '');
             document.getElementById('hw-omr-result').innerHTML = '';
+            const sb = document.getElementById('hw-omr-submit-btn');
+            sb.disabled = false;
+            sb.innerText = HW_OMR.editing ? '고친 답으로 다시 제출하기' : '제출하고 채점받기';
             renderHomeworkOmr();
             showModal('hwomr');
         }
@@ -10135,7 +10151,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const unsure = new Set((d.unsure || []).map(Number));
             const expl = d.explanations || {};
             const mine = d.mine || [];
-            const total = d.total || (d.answers || []).length;
+            const total = d.total || (d.omr_kinds || []).length;
 
             let grid = '';
             for (let i = 1; i <= total; i++) {
@@ -10158,9 +10174,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
 
             document.getElementById('hw-omr-result').innerHTML = `
                 <div class="bg-[#151922] border border-emerald-700 rounded-xl p-3">
-                    <p class="text-emerald-300 font-black text-lg text-center mb-1">${d.correct} / ${total}문항 정답 (${d.score}점)</p>
+                    <p class="text-emerald-300 font-black text-lg text-center mb-1">${d.correct} / ${total}문항 맞음 (${d.score}점)</p>
                     ${unsureNote}
-                    <p class="text-[11px] text-gray-500 text-center mb-2">문항을 누르면 정답과 해설을 볼 수 있어요</p>
+                    <p class="text-[11px] text-gray-500 text-center mb-2">문항을 누르면 해설을 볼 수 있어요. 틀린 답은 위에서 고쳐 다시 낼 수 있어요.</p>
                     <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-40 overflow-y-auto">${grid}</div>
                     <div id="hw-omr-explain" class="hidden mt-2 bg-[#1e2430] border border-gray-600 rounded-lg p-3"></div>
                 </div>`;
@@ -10170,14 +10186,13 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             const d = OMR_RESULT || {};
             const box = document.getElementById('hw-omr-explain');
             if (!box) return;
-            const key = (d.answers || [])[no - 1];
+            // 💡 과제는 정답을 보여주지 않는다 — 내 답과 맞고 틀림, 해설만
             const mine = (d.mine || [])[no - 1];
             const isUnsure = (d.unsure || []).map(Number).includes(no);
             const isWrong = (d.wrongs || []).map(Number).includes(no);
             const text = (d.explanations || {})[String(no)] || '';
-            const isShort = answerSlotKind(key) === 'short';
+            const isShort = ((d.omr_kinds || HW_OMR.kinds || [])[no - 1]) === 'short';
             const mineLabel = isUnsure ? '모르겠다고 표시' : (mine ? (isShort ? mine : mine + '번') : '표시 안 함');
-            const ansLabel = isShort ? String(key || '-') : formatAnswerLabel(key);
             const verdict = isUnsure ? '<span class="text-amber-300">모름</span>'
                 : (isWrong ? '<span class="text-red-300">틀림</span>' : '<span class="text-emerald-300">맞음</span>');
             box.innerHTML = `
@@ -10185,7 +10200,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                     <p class="text-sm font-bold text-white">${no}번 ${verdict}</p>
                     <button onclick="document.getElementById('hw-omr-explain').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs">닫기</button>
                 </div>
-                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(ansLabel)}</p>
+                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))}</p>
                 ${text ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(text)}</p>`
                        : '<p class="text-xs text-gray-500">이 문항은 해설이 등록되어 있지 않습니다.</p>'}`;
             box.classList.remove('hidden');
@@ -10203,14 +10218,12 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             hideLoader();
             if (!r.ok) return alert(r.message);
             const d = r.data;
-            // 이미 냈다고 막힌 것이면 원장님께 부탁할 길을 준다
-            if (d && d.success === false) {
-                if (String(d.detail || "").includes("이미"))
-                    return askQuizRetry(HW_OMR.title, d.detail, "과제 제출");
-                return alert(d.detail || "제출하지 못했습니다.");
-            }
+            if (d && d.success === false) return alert(d.detail || "제출하지 못했습니다.");
             showOmrResult(d);
-            document.getElementById('hw-omr-submit-btn').disabled = true;
+            // 💡 한 번 내고 끝이 아니다. 틀린 문항의 답을 고쳐 바로 다시 낼 수 있다.
+            HW_OMR.editing = true;
+            document.getElementById('hw-omr-submit-btn').innerText = '고친 답으로 다시 제출하기';
+            if (d.edited) showToast("고친 답으로 다시 채점했습니다.");
             loadHomeworks();
         }
 
@@ -12520,7 +12533,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             if (!who) return alert("학생을 찾지 못했습니다.");
             let data;
             try {
-                const res = await fetch(`${API_URL}/api/student/view_result?student_name=${encodeURIComponent(who)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`);
+                const res = await fetch(`${API_URL}/api/student/view_result?student_name=${encodeURIComponent(who)}&title=${encodeURIComponent(title)}&kind=${encodeURIComponent(kind)}`, {
+                    headers: (currentUser && currentUser.admin_token) ? { 'x-admin-token': currentUser.admin_token } : {},
+                });
                 data = await res.json();
             } catch (e) { return alert("결과를 불러오지 못했습니다: " + e.message); }
             if (!data.success) return alert(data.detail || "결과를 불러오지 못했습니다.");
@@ -12535,7 +12550,8 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 `${kind} · ${data.submitted_at || ''}` +
                 (data.score !== '' && data.score != null ? ` · 점수 ${data.score}` : '') +
                 (pct != null ? ` (${pct}%)` : '') +
-                (data.retry && data.retry.count ? ` · 다시 풀어 ${(data.retry.fixed || []).length}개 맞힘` : '');
+                (data.retry && data.retry.count ? ` · 다시 풀어 ${(data.retry.fixed || []).length}개 맞힘` : '') +
+                (data.edit_count ? ` · ${data.edit_count}번 고쳐 냄 (처음 ${data.first_score || '-'})` : '');
 
             const grid = document.getElementById('vr-grid');
             grid.innerHTML = data.items.map(it => {
@@ -12550,7 +12566,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             }).join('');
             document.getElementById('vr-detail').innerHTML = studentName
                 ? '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 학생의 답과 정답, 해설을 확인하세요.</p>'
-                : '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 정답, 해설을 확인하세요.</p>';
+                : (data.answers_hidden
+                    ? '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 해설을 확인하세요.</p>'
+                    : '<p class="text-center text-gray-500 text-sm py-8">문항 번호를 눌러 내 답과 정답, 해설을 확인하세요.</p>');
             showModal('viewresult');
             // 원장님이 학생 답안지를 열면 첫 번째 틀린 문항부터 바로 보여준다
             const firstWrong = studentName && !focusNo ? (data.items.find(x => x.is_wrong || x.is_unsure) || {}).no : null;
@@ -12587,7 +12605,7 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                 ? `<p class="text-[11px] text-gray-400 mb-2">${whose}: ${escapeHtml(String(mineLabel))}</p>
                    ${it.rubric ? `<p class="text-[11px] text-gray-500 mb-2">채점 기준: ${escapeHtml(it.rubric)}</p>` : ''}
                    ${it.ai_feedback ? `<div class="text-sky-300 text-xs bg-[#151922] border border-gray-700 rounded p-2 mb-2"><i class="fa-solid fa-robot mr-1"></i>${escapeHtml(it.ai_feedback)}</div>` : ''}`
-                : `<p class="text-[11px] text-gray-400 mb-2">${whose}: ${escapeHtml(String(mineLabel))} · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}</p>`;
+                : `<p class="text-[11px] text-gray-400 mb-2">${whose}: ${escapeHtml(String(mineLabel))}${VR.answers_hidden ? '' : ` · 정답: ${escapeHtml(String(it.answer_text || it.answer || '-'))}`}</p>`;
 
             box.innerHTML = `
                 <div class="bg-[#1e2430] border border-gray-600 rounded-lg p-3">
