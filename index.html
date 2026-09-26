@@ -11585,6 +11585,64 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
             renderJobList();
         }
 
+        // ── 선택지 한꺼번에 붙여 넣기 ──────────────────────
+        // 💡 ① 가 ② 나 ③ 다 ④ 라 ⑤ 마 (한 줄이든 여러 줄이든), (1) 가 (2) 나 …, 1) 가 2) 나 …,
+        //    또는 다섯 줄을 통째로 붙여 넣으면 다섯 칸에 나눠 넣는다.
+        function splitQuizChoices(raw) {
+            const t = String(raw || '').replace(/\r/g, '').trim();
+            if (!t) return null;
+            const tidy = arr => arr.map(x => x.replace(/\s+/g, ' ').trim());
+            // ① ~ ⑩
+            if ((t.match(/[\u2460-\u2469]/g) || []).length >= 2)
+                return tidy(t.split(/[\u2460-\u2469]/).slice(1));
+            // (1) (2) … 또는 1) 2) … — 번호가 1부터 차례로일 때만 선택지로 본다
+            for (const re of [/\((\d{1,2})\)/g, /(?:^|\s)(\d{1,2})\)/g]) {
+                const marks = [...t.matchAll(re)];
+                if (marks.length >= 2 && marks.every((m, i) => Number(m[1]) === i + 1)) {
+                    const out = [];
+                    marks.forEach((m, i) => {
+                        const from = m.index + m[0].length;
+                        const to = i + 1 < marks.length ? marks[i + 1].index : t.length;
+                        out.push(t.slice(from, to));
+                    });
+                    return tidy(out);
+                }
+            }
+            // 줄마다 하나 (앞에 붙은 1. / 가. 같은 번호는 뗀다)
+            const lines = t.split('\n').map(x => x.trim()).filter(Boolean);
+            if (lines.length >= 2)
+                return tidy(lines.map(l => l.replace(/^(?:\d{1,2}[.)]|[가나다라마][.)])\s*/, '')));
+            return null;
+        }
+        function fillQuizOptions(item, parts, startAt) {
+            const boxes = Array.from(item.querySelectorAll('.quiz-q-opt'));
+            // 칸이 모자라면 첫 칸부터 채운다
+            const start = startAt + parts.length > boxes.length ? 0 : startAt;
+            parts.slice(0, boxes.length - start).forEach((v, i) => { boxes[start + i].value = v; });
+            const extra = parts.length - (boxes.length - start);
+            showToast(extra > 0 ? `선택지 ${boxes.length}칸에 나눠 넣었습니다. (${extra}개는 칸이 없어 뺐습니다)`
+                                : `선택지 ${parts.length}개를 칸에 나눠 넣었습니다.`);
+        }
+        function pasteQuizOptions(e, input) {
+            const parts = splitQuizChoices((e.clipboardData || window.clipboardData).getData('text'));
+            if (!parts || parts.length < 2) return;           // 하나뿐이면 평소처럼 붙여 넣기
+            e.preventDefault();
+            const item = input.closest('.quiz-q-item');
+            const boxes = Array.from(item.querySelectorAll('.quiz-q-opt'));
+            fillQuizOptions(item, parts, boxes.indexOf(input));
+        }
+        // 문제 칸에 '문제 + ①~⑤' 를 통째로 붙여 넣으면 문제와 선택지를 나눈다
+        function pasteQuizStem(e, input) {
+            const raw = String((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\r/g, '');
+            const at = raw.search(/[\u2460-\u2469]/);
+            if (at < 0 || (raw.match(/[\u2460-\u2469]/g) || []).length < 2) return;
+            const parts = splitQuizChoices(raw.slice(at));
+            if (!parts) return;
+            e.preventDefault();
+            input.value = raw.slice(0, at).replace(/^\s*\d{1,3}\s*[.)]\s*/, '').replace(/\s+/g, ' ').trim();
+            fillQuizOptions(input.closest('.quiz-q-item'), parts, 0);
+        }
+
         // 퀴즈 관련 추가 함수 복구
         function addQuizQuestionUI() {
             const container = document.getElementById('qz-questions-board');
@@ -11598,16 +11656,16 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                         <option value="short">단답형</option>
                         <option value="essay">서술형</option>
                     </select>
-                    <input type="text" placeholder="${qIdx + 1}번 문제 내용" class="flex-grow p-2 bg-gray-800 text-white rounded quiz-q-text border border-gray-600 outline-none">
+                    <input type="text" placeholder="${qIdx + 1}번 문제 내용 (선택지까지 한꺼번에 붙여 넣어도 됩니다)" onpaste="pasteQuizStem(event, this)" class="flex-grow p-2 bg-gray-800 text-white rounded quiz-q-text border border-gray-600 outline-none">
                 </div>
                 <textarea rows="2" placeholder="&lt;보기&gt; 상자에 들어갈 내용 (없으면 비워두세요)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-3 quiz-q-bogi text-sm resize-y border border-gray-700 outline-none focus:border-orange-500"></textarea>
                 <div class="quiz-q-choice-only">
                     <div class="space-y-2 mb-3 pl-2 border-l-2 border-orange-900">
-                        <input type="text" placeholder="① 보기 1" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                        <input type="text" placeholder="② 보기 2" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                        <input type="text" placeholder="③ 보기 3" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                        <input type="text" placeholder="④ 보기 4" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
-                        <input type="text" placeholder="⑤ 보기 5" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="① 보기 1" onpaste="pasteQuizOptions(event, this)" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="② 보기 2" onpaste="pasteQuizOptions(event, this)" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="③ 보기 3" onpaste="pasteQuizOptions(event, this)" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="④ 보기 4" onpaste="pasteQuizOptions(event, this)" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
+                        <input type="text" placeholder="⑤ 보기 5" onpaste="pasteQuizOptions(event, this)" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-opt text-sm outline-none border border-transparent">
                     </div>
                     <div class="mb-2">
                         <label class="text-[11px] text-gray-400 block mb-1">정답 <span class="text-gray-600">(문항에 결함이 있을 땐 여러 개를 함께 고를 수 있습니다)</span></label>
