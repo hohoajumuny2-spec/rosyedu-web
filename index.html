@@ -441,6 +441,25 @@
         </div>
     </div>
 
+    <!-- 💬 원장님 톡 — 원장님과 학생 1:1 대화 (학생 화면 · 원장님 화면 같이 쓴다) -->
+    <div id="dm-modal" class="hidden fixed inset-0 z-[198] modal-bg flex items-end md:items-center justify-center p-0 md:p-4" onclick="if(event.target===this) closeDm()">
+        <div class="bg-[#1e2430] w-full md:max-w-md h-[85vh] md:h-[640px] md:rounded-2xl rounded-t-2xl shadow-2xl border border-indigo-600 flex flex-col">
+            <div class="px-5 py-4 border-b border-gray-700 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <h2 id="dm-title" class="text-lg font-black text-white truncate"><i class="fa-solid fa-comments mr-2 text-indigo-400"></i>원장님 톡</h2>
+                    <p id="dm-sub" class="text-[11px] text-gray-400 mt-0.5"></p>
+                </div>
+                <button onclick="closeDm()" aria-label="닫기" class="shrink-0 w-9 h-9 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="dm-list" class="flex-grow overflow-y-auto px-4 py-3 space-y-2" aria-live="polite"></div>
+            <form id="dm-form" class="p-3 border-t border-gray-700 flex gap-2 items-end" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));" onsubmit="event.preventDefault(); sendDm();">
+                <label for="dm-input" class="sr-only">보낼 말</label>
+                <textarea id="dm-input" rows="1" placeholder="메시지를 입력하세요" onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing){event.preventDefault(); sendDm();}" class="flex-grow resize-none max-h-32 p-3 bg-[#151922] text-white rounded-xl border border-gray-600 focus:border-indigo-500 outline-none text-sm"></textarea>
+                <button id="dm-send-btn" type="submit" class="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-3 rounded-xl text-sm">보내기</button>
+            </form>
+        </div>
+    </div>
+
     <!-- ⏱ 공부 중일 때 다른 화면에서도 보이는 작은 시계 -->
     <button id="study-pill" onclick="openStudy()" class="hidden fixed right-4 z-[150] bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-full shadow-2xl px-4 py-2 text-sm tabular-nums" style="bottom: calc(1rem + env(safe-area-inset-bottom, 0px));">
         <i class="fa-solid fa-stopwatch mr-1"></i>공부 중 <span id="study-pill-time">0:00:00</span>
@@ -1098,6 +1117,7 @@
                     <button onclick="openProgram('homework'); loadHomeworks();" class="nav-word hover:text-emerald-400">과제 제출</button>
                     <button onclick="openStudy()" class="nav-word hover:text-teal-400">스터디룸</button>
                     <button onclick="openProgram('qna'); loadQna();" class="nav-word hover:text-rose-400">질문 게시판</button>
+                    <button onclick="openDm()" class="nav-word hover:text-indigo-400">원장님 톡</button>
                     <button onclick="openProgram('essay')" class="nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
                 </span>
             </div>
@@ -1143,6 +1163,7 @@
                 <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
                 <button onclick="openStudy(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
                 <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
+                <button onclick="openDm(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-indigo-400 w-full">원장님 톡</button>
                 <button onclick="openProgram('essay'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
             </span>
             <button onclick="openProgram('mypage'); loadMyPage(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-emerald-400 w-full" id="mobile-mypage-btn" style="display:none;">마이페이지</button>
@@ -2270,6 +2291,7 @@
                         <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
                         <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
                         <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="text-lime-400 font-bold border border-lime-600 px-4 py-2 rounded">대신 채점</button>
+                        <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="text-indigo-300 font-bold border border-indigo-600 px-4 py-2 rounded">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
                         <button onclick="switchAdminTab('admin-study')" id="btn-admin-study" class="text-teal-300 font-bold border border-teal-600 px-4 py-2 rounded">공부 현황</button>
                         <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="text-amber-400 font-bold border border-amber-600 px-4 py-2 rounded">모른다고 한 문항</button>
                         <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
@@ -2324,6 +2346,13 @@
                     <!-- 학생이 '모르겠다'고 표시한 문항 모아보기 -->
                     <!-- 💡 찍어서 맞힌 문항은 점수에 묻혀 보이지 않는다. 학생이 스스로
                          모른다고 누른 것만 모으면 무엇을 다시 가르쳐야 할지 드러난다. -->
+                    <div id="admin-dm" class="admin-tab-content" style="display:none">
+                        <div class="bg-[#151922] p-6 rounded max-w-2xl">
+                            <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-comments text-indigo-400 mr-2"></i>학생 톡</h3>
+                            <p class="text-[12px] text-gray-400 mb-4">학생과 1:1로 나눈 대화입니다. 새 대화는 스터디룸이나 공부 현황에서 학생 옆 [말 걸기]를 누르세요.</p>
+                            <div id="admin-dm-list" class="space-y-2"></div>
+                        </div>
+                    </div>
                     <div id="admin-study" class="admin-tab-content" style="display:none">
                         <div class="bg-[#151922] p-6 rounded">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -5187,6 +5216,7 @@ let lavUid = 0;
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#','');
+            if (h === 'dm') { window.location.hash = 'dashboard'; setTimeout(openDm, 400); return; }
             // 💡 #dashboard-home(학습실 첫 화면 타일들)이 이 초기화 대상에 빠져 있어서,
             // 프로그램(예: 관리자 화면)으로 들어가도 타일이 그대로 위에 남아있는 채
             // 실제 내용이 1500px 가까이 아래로 밀려나 있었다 — 스크롤해야만 보이는
@@ -5344,9 +5374,10 @@ let lavUid = 0;
                     loadMySchedule();
                     loadTodo(true);
                     startStudyHeartbeat();
+                    startStudentDmPoll();
                     document.getElementById('card-admin').style.display='none';
                 }
-                if(currentUser.isAdmin) { loadAdminSchedule(); refreshQuizRequests(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
+                if(currentUser.isAdmin) { loadAdminSchedule(); refreshQuizRequests(); startAdminDmPoll(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
                 document.getElementById('mobile-logout-btn').style.display='block';
                 if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup();
 
@@ -5859,6 +5890,7 @@ let lavUid = 0;
             if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner); document.getElementById('ai-status-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-study'){loadAdminStudy();}
+            if(id==='admin-dm'){refreshAdminDmThreads();}
             if(id==='admin-vocab'){loadVocabAdmin();}
 
             // 💡 드물게(느린 네트워크·브라우저 확장 프로그램 간섭 등으로 추정) 이 탭이
@@ -6244,6 +6276,172 @@ let lavUid = 0;
         });
 
         // ── 알림 켜기를 먼저 설명하고 권하기 ──────────────────────
+        // ── 원장님 톡 (1:1 대화) ─────────────────────────
+        // 💡 학생 화면은 10초마다 '새 말 있어요?'(poll)만 묻고, 번호가 바뀌었을 때만 대화를
+        //    읽는다. 원장님이 말을 걸면 학생 화면에 창이 저절로 뜬다.
+        const DM = { role: '', student: '', messages: [], v: '', open: false };
+        let DM_POLL_TIMER = null;
+        let DM_ADMIN_V = '';
+        let DM_ADMIN_THREADS = [];
+
+        function dmIsOpen() { const m = document.getElementById('dm-modal'); return !!m && m.style.display === 'flex'; }
+
+        function renderDm() {
+            const list = document.getElementById('dm-list');
+            if (!list) return;
+            const mineFrom = DM.role === 'admin' ? 'admin' : 'student';
+            list.innerHTML = DM.messages.length ? DM.messages.map(m => {
+                const mine = m.from === mineFrom;
+                const who = m.from === 'admin' ? (m.admin_name || '원장님') : DM.student;
+                return `<div class="flex ${mine ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%]">
+                        ${mine ? '' : `<p class="text-[11px] text-gray-400 mb-0.5">${escapeHtml(who)}</p>`}
+                        <div class="${mine ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-[#151922] text-gray-100 border border-gray-700 rounded-bl-sm'} rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words">${escapeHtml(m.text)}</div>
+                        <p class="text-[10px] text-gray-500 mt-0.5 ${mine ? 'text-right' : ''}">${escapeHtml(String(m.at || '').slice(5, 16))}</p>
+                    </div>
+                </div>`;
+            }).join('') : `<p class="text-center text-sm text-gray-500 py-10">${DM.role === 'admin' ? '아직 나눈 대화가 없어요. 먼저 말을 걸어 보세요.' : '원장님께 궁금한 것을 편하게 물어보세요.'}</p>`;
+            list.scrollTop = list.scrollHeight;
+        }
+
+        async function loadDmThread(markRead) {
+            const url = DM.role === 'admin'
+                ? `${API_URL}/api/admin/dm/thread?student_name=${encodeURIComponent(DM.student)}&mark_read=${markRead ? 'true' : 'false'}`
+                : `${API_URL}/api/dm/thread?student_name=${encodeURIComponent(DM.student)}&mark_read=${markRead ? 'true' : 'false'}`;
+            try {
+                const res = await fetch(url);
+                const d = await res.json();
+                if (!d.success) return null;
+                DM.messages = d.messages || [];
+                DM.v = d.v || DM.v;
+                if (DM.role === 'admin') {
+                    document.getElementById('dm-sub').innerText = d.student_unread ? `학생이 아직 안 읽은 말 ${d.student_unread}개` : '학생이 모두 읽었어요.';
+                }
+                renderDm();
+                return d;
+            } catch (e) { return null; }
+        }
+
+        function showDmModal() {
+            showModal('dm');
+            setTimeout(() => { const i = document.getElementById('dm-input'); if (i && window.innerWidth >= 768) i.focus(); }, 50);
+        }
+
+        // 학생: 메뉴에서 열기 / 원장님이 말을 걸면 저절로 열림
+        async function openDm() {
+            if (!currentUser || currentUser.isAdmin) return;
+            DM.role = 'student'; DM.student = currentUser.name;
+            document.getElementById('dm-title').innerHTML = '<i class="fa-solid fa-comments mr-2 text-indigo-400"></i>원장님 톡';
+            document.getElementById('dm-sub').innerText = '원장님과 나만 보는 대화예요.';
+            showDmModal();
+            await loadDmThread(true);
+        }
+
+        // 원장님: 학생 한 명과 대화 열기
+        async function openAdminDm(name) {
+            if (!currentUser || !currentUser.isAdmin || !name) return;
+            DM.role = 'admin'; DM.student = name; DM.messages = [];
+            document.getElementById('dm-title').innerHTML = `<i class="fa-solid fa-comments mr-2 text-indigo-400"></i>${escapeHtml(name)} 학생과 톡`;
+            document.getElementById('dm-sub').innerText = '';
+            renderDm();
+            showDmModal();
+            await loadDmThread(true);
+            refreshAdminDmThreads();
+        }
+
+        function closeDm() { closeModal('dm-modal'); }
+
+        async function sendDm() {
+            const inp = document.getElementById('dm-input');
+            const text = inp.value.trim();
+            if (!text || !DM.student) return;
+            const btn = document.getElementById('dm-send-btn');
+            btn.disabled = true;
+            let d = null;
+            try {
+                const res = await fetch(`${API_URL}${DM.role === 'admin' ? '/api/admin/dm/send' : '/api/dm/send'}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_name: DM.student, text }),
+                });
+                d = await res.json();
+            } catch (e) {}
+            btn.disabled = false;
+            if (!d || !d.success) return alert((d && d.detail) || '보내지 못했습니다. 잠시 뒤 다시 해 주세요.');
+            inp.value = '';
+            DM.messages.push(d.message);
+            renderDm();
+            inp.focus();
+        }
+
+        // 학생: 10초마다 새 말이 있는지 본다 (화면이 보일 때만)
+        async function pollStudentDm(first) {
+            if (!currentUser || currentUser.isAdmin || document.visibilityState !== 'visible') return;
+            let v;
+            try { v = (await (await fetch(`${API_URL}/api/dm/poll?student_name=${encodeURIComponent(currentUser.name)}`)).json()).v; } catch (e) { return; }
+            if (!first && v === DM.v) return;
+            DM.v = v;
+            DM.role = 'student'; DM.student = currentUser.name;
+            const open = dmIsOpen();
+            const d = await loadDmThread(open);
+            if (d && d.unread && !open) {
+                showToast('원장님이 말을 걸었어요!');
+                openDm();
+            }
+        }
+
+        function startStudentDmPoll() {
+            if (DM_POLL_TIMER || !currentUser || currentUser.isAdmin || isPreviewUser()) return;
+            pollStudentDm(true);
+            DM_POLL_TIMER = setInterval(() => pollStudentDm(false), 10000);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pollStudentDm(false); });
+        }
+
+        // 원장님: 새 말이 오면 '학생 톡' 탭에 숫자를 띄우고, 열어 둔 대화는 새로 고친다
+        async function refreshAdminDmThreads() {
+            const r = await adminGet('/api/admin/dm/threads');
+            if (!r.ok) return;
+            DM_ADMIN_THREADS = r.data.threads || [];
+            DM_ADMIN_V = r.data.v;
+            const badge = document.getElementById('admin-dm-badge');
+            if (badge) { badge.innerText = r.data.unread_total || ''; badge.classList.toggle('hidden', !r.data.unread_total); }
+            renderAdminDmList();
+        }
+
+        function renderAdminDmList() {
+            const box = document.getElementById('admin-dm-list');
+            if (!box) return;
+            box.innerHTML = DM_ADMIN_THREADS.length ? DM_ADMIN_THREADS.map(t => `
+                <button onclick="openAdminDm('${escAttr(t.student_name)}')" class="w-full text-left bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2.5 flex items-center justify-between gap-3 transition">
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-white">${escapeHtml(t.student_name)}</span>
+                        <span class="block text-[12px] text-gray-400 truncate">${t.last_from === 'admin' ? '나: ' : ''}${escapeHtml(t.last_text)}</span>
+                    </span>
+                    <span class="shrink-0 text-right">
+                        <span class="block text-[10px] text-gray-500">${escapeHtml(String(t.last_at).slice(5, 16))}</span>
+                        ${t.unread ? `<span class="inline-block mt-0.5 text-[11px] font-bold bg-rose-600 text-white rounded-full px-2">${t.unread}</span>` : ''}
+                    </span>
+                </button>`).join('') : '<p class="text-sm text-gray-500 text-center py-8">아직 대화가 없습니다. 스터디룸이나 공부 현황에서 학생에게 [말 걸기]를 눌러 보세요.</p>';
+        }
+
+        async function pollAdminDm() {
+            if (!currentUser || !currentUser.isAdmin || document.visibilityState !== 'visible') return;
+            const r = await adminGet('/api/admin/dm/poll');
+            if (!r.ok || r.data.v === DM_ADMIN_V) return;
+            await refreshAdminDmThreads();
+            if (dmIsOpen() && DM.role === 'admin') loadDmThread(true);
+        }
+
+        function startAdminDmPoll() {
+            if (DM_POLL_TIMER || !currentUser || !currentUser.isAdmin) return;
+            refreshAdminDmThreads();
+            DM_POLL_TIMER = setInterval(pollAdminDm, 10000);
+        }
+
+        function dmTalkButton(name) {
+            if (!currentUser || !currentUser.isAdmin) return '';
+            return `<button onclick="event.stopPropagation(); openAdminDm('${escAttr(name)}')" class="shrink-0 text-[11px] font-bold text-indigo-200 bg-indigo-900/50 hover:bg-indigo-800 px-2 py-0.5 rounded-full" title="이 학생에게 말 걸기"><i class="fa-solid fa-comment-dots mr-0.5"></i>말 걸기</button>`;
+        }
+
         // ── 스터디룸: 온라인 표시 · 학습 시간 ─────────────────
         // 💡 시간은 서버가 센다. 화면은 1분마다 '여기 있어요'(beat)를 보내고, 받은 값에
         //    지난 초만 더해 보여준다. 앱이 가려져 있으면(다른 앱·화면 꺼짐) beat 를 보내지
@@ -6409,7 +6607,7 @@ let lavUid = 0;
             document.getElementById('study-live-list').innerHTML = d.live.length ? d.live.map(p => `
                 <div class="flex items-center justify-between gap-2 bg-[#151922] rounded-lg px-3 py-2 ${p.name === me ? 'ring-1 ring-teal-500' : ''}">
                     <span class="min-w-0 truncate text-sm">${studyWho(p)}</span>
-                    <span class="shrink-0 flex items-center gap-2"><span class="text-[11px] text-gray-400 tabular-nums">${fmtStudy(p.today)}</span>${tag[p.status] || ''}</span>
+                    <span class="shrink-0 flex items-center gap-2"><span class="text-[11px] text-gray-400 tabular-nums">${fmtStudy(p.today)}</span>${tag[p.status] || ''}${dmTalkButton(p.name)}</span>
                 </div>`).join('') : '<p class="text-sm text-gray-500 text-center py-6">지금 접속한 학생이 없어요.</p>';
             document.getElementById('study-ranking').innerHTML = d.ranking.length ? d.ranking.map((p, i) => `
                 <li class="flex items-center justify-between gap-2 bg-[#151922] rounded-lg px-3 py-2 ${p.name === me ? 'ring-1 ring-yellow-500' : ''}">
@@ -6428,7 +6626,7 @@ let lavUid = 0;
             if (!r.ok) { box.innerHTML = `<tr><td colspan="5" class="px-3 py-6 text-center text-red-400">${escapeHtml(r.message)}</td></tr>`; return; }
             const label = { studying: '<span class="text-teal-300 font-bold">공부 중</span>', away: '<span class="text-amber-300">자리 비움</span>', online: '<span class="text-emerald-300">온라인</span>', offline: '<span class="text-gray-500">-</span>' };
             box.innerHTML = r.data.rows.length ? r.data.rows.map(x => `<tr class="border-t border-gray-700">
-                <td class="px-3 py-2 text-white font-bold">${escapeHtml(x.name)}</td>
+                <td class="px-3 py-2 text-white font-bold">${escapeHtml(x.name)} ${dmTalkButton(x.name)}</td>
                 <td class="px-3 py-2">${label[x.status] || ''}</td>
                 <td class="px-3 py-2 text-right tabular-nums">${fmtStudy(x.today)}</td>
                 <td class="px-3 py-2 text-right tabular-nums text-teal-200 font-bold">${fmtStudy(x.recent)}</td>
