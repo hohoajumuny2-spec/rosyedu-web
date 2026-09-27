@@ -441,6 +441,23 @@
         </div>
     </div>
 
+    <!-- 📋 학생이 들어오면 아직 안 한 것(안 낸 과제 · 안 본 공지 · 안 푼 퀴즈 · 안 본 모의고사)을 알려준다 -->
+    <div id="todo-modal" class="hidden fixed inset-0 z-[197] modal-bg flex items-center justify-center p-4" onclick="if(event.target===this) closeTodoModal()">
+        <div class="bg-[#1e2430] rounded-2xl w-full max-w-md shadow-2xl border border-sky-600 max-h-[85vh] flex flex-col">
+            <div class="p-5 pb-3 border-b border-gray-700 flex items-start justify-between gap-3">
+                <div>
+                    <h2 id="todo-title" class="text-lg font-black text-white"><i class="fa-solid fa-list-check mr-2 text-sky-400"></i>확인할 것이 있어요</h2>
+                    <p class="text-[12px] text-gray-400 mt-1">누르면 바로 그 화면으로 갑니다.</p>
+                </div>
+                <button onclick="closeTodoModal()" aria-label="닫기" class="shrink-0 w-9 h-9 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="todo-body" class="overflow-y-auto overflow-x-hidden p-4 space-y-4"></div>
+            <div class="p-4 pt-2">
+                <button onclick="closeTodoModal()" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl transition">확인했어요</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🔔 알림을 왜 켜는지 먼저 알려주고, 그다음에 브라우저 권한을 묻는다.
          💡 로그인하자마자 브라우저 권한 창을 띄우면 학생이 영문도 모르고 '차단'을
             누르기 쉽고, 한 번 차단되면 다시 물어볼 수가 없다. 그래서 우리 화면으로
@@ -1739,6 +1756,16 @@
 
     <div id="dashboard-screen" class="hidden flex-grow pt-24 px-4 max-w-7xl mx-auto w-full fade-in pb-12">
         <div id="dashboard-home" class="active-tab">
+            <!-- 📋 아직 안 한 것 요약 — 로그인 때 뜬 창을 닫아도 여기서 다시 볼 수 있다 -->
+            <button id="todo-strip" onclick="openTodoModal()" class="hidden w-full mb-4 bg-sky-900/30 hover:bg-sky-900/50 border border-sky-700 rounded-xl px-4 py-3 text-left transition">
+                <span class="flex items-center justify-between gap-3">
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-sky-200"><i class="fa-solid fa-list-check mr-2"></i>아직 확인할 것 <span id="todo-strip-count">0</span>개</span>
+                        <span id="todo-strip-detail" class="block text-[11px] text-gray-400 mt-0.5 truncate"></span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-sky-400 shrink-0"></i>
+                </span>
+            </button>
             <div id="home-welcome-banner" class="bg-[#1e2430] border border-teal-700/50 rounded-2xl p-4 md:p-5 mb-6 flex flex-wrap items-center gap-3 md:gap-5">
                 <div class="relative shrink-0">
                     <div id="home-avatar-avatar-halo" class="absolute left-1/2 top-1/2 text-6xl opacity-20 pointer-events-none select-none transition-all duration-700" style="transform: translate(-50%, -50%);"></div>
@@ -5054,7 +5081,7 @@ let lavUid = 0;
             // 상태. 이제 모든 화면 전환 시 확실히 숨겼다가 필요한 곳에서만 다시 켠다.
             document.querySelectorAll('#home-view, #dashboard-screen, #dashboard-home, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); loadHomeAvatarWidget(); }
+            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); loadHomeAvatarWidget(); loadTodo(false); }
             else {
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); }
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
@@ -5200,6 +5227,7 @@ let lavUid = 0;
                     document.getElementById('mobile-student-menu').style.display='block';
                     document.getElementById('student-smart-room').classList.remove('hidden');
                     loadMySchedule();
+                    loadTodo(true);
                     document.getElementById('card-admin').style.display='none';
                 }
                 if(currentUser.isAdmin) { loadAdminSchedule(); refreshQuizRequests(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
@@ -6099,6 +6127,109 @@ let lavUid = 0;
         });
 
         // ── 알림 켜기를 먼저 설명하고 권하기 ──────────────────────
+        // ── 로그인하면 알려주는 '아직 안 한 것' ─────────────────
+        // 💡 과제·공지·퀴즈·모의고사를 각각 들어가 봐야 새로 올라온 걸 알 수 있었다.
+        //    들어오자마자 한 창에 모아 보여주고, 바탕화면 위에도 줄로 남겨 둔다.
+        //    창은 한 번 열린 앱(세션)에서 한 번만 자동으로 띄운다.
+        const TODO_SHOWN_KEY = 'logyedu_todo_shown';
+        let TODO_DATA = null;
+        let TODO_LOADING = null;
+        let PUSH_ASK_AFTER_TODO = false;   // 할 일 창이 떠 있으면 알림 권유는 창을 닫은 뒤에
+
+        const TODO_GROUPS = [
+            { key: 'homeworks', label: '아직 안 낸 과제', short: '과제', icon: 'fa-pen-to-square', tone: 'text-emerald-300', go: "openProgram('homework'); loadHomeworks();" },
+            { key: 'notices',   label: '확인 안 한 공지', short: '공지', icon: 'fa-bullhorn',      tone: 'text-blue-300',    go: "openProgram('board'); loadBoard();" },
+            { key: 'quizzes',   label: '안 푼 타임어택 퀴즈', short: '퀴즈', icon: 'fa-stopwatch', tone: 'text-orange-300',  go: "openProgram('quiz-list'); loadStudentQuizzes();" },
+            { key: 'exams',     label: '안 본 모의고사', short: '모의고사',  icon: 'fa-file-signature', tone: 'text-yellow-300', go: "openProgram('exam-list'); loadStudentExams();" },
+        ];
+
+        function todoCount(d) {
+            return d ? TODO_GROUPS.reduce((n, g) => n + (d[g.key] || []).length, 0) : 0;
+        }
+
+        async function loadTodo(autoOpen) {
+            if (!currentUser || currentUser.isAdmin) return;
+            if (!TODO_LOADING) {
+                TODO_LOADING = (async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/api/student/todo?student_name=${encodeURIComponent(currentUser.name)}`);
+                        const d = await res.json();
+                        TODO_DATA = d && d.success ? d : null;
+                    } catch (e) { /* 서버가 깨는 중이면 다음에 다시 */ }
+                })().finally(() => { TODO_LOADING = null; });
+            }
+            await TODO_LOADING;
+            renderTodoStrip();
+            if (!autoOpen || !todoCount(TODO_DATA)) return;
+            let shown = false;
+            try { shown = sessionStorage.getItem(TODO_SHOWN_KEY) === '1'; sessionStorage.setItem(TODO_SHOWN_KEY, '1'); } catch (e) {}
+            if (!shown) openTodoModal();
+        }
+
+        function renderTodoStrip() {
+            const strip = document.getElementById('todo-strip');
+            if (!strip) return;
+            const n = todoCount(TODO_DATA);
+            strip.classList.toggle('hidden', !n);
+            if (!n) return;
+            document.getElementById('todo-strip-count').innerText = n;
+            document.getElementById('todo-strip-detail').innerText = TODO_GROUPS
+                .filter(g => (TODO_DATA[g.key] || []).length)
+                .map(g => `${g.short} ${TODO_DATA[g.key].length}`)
+                .join(' · ');
+        }
+
+        function todoItemNote(kind, it) {
+            if (kind === 'homeworks' && it.deadline) {
+                return it.overdue
+                    ? `<span class="text-rose-300 font-bold">마감 ${escapeHtml(hwDeadlineLabel(it.deadline))} 지남 · 지금 내도 돼요</span>`
+                    : `<span class="text-sky-300">마감 ${escapeHtml(hwDeadlineLabel(it.deadline))}</span>`;
+            }
+            if (kind === 'quizzes') {
+                const bits = [];
+                if (it.time_limit) bits.push(`제한 ${escapeHtml(String(it.time_limit))}분`);
+                if (it.deadline) bits.push(`마감 ${escapeHtml(hwDeadlineLabel(it.deadline))}`);
+                return bits.length ? `<span class="text-gray-400">${bits.join(' · ')}</span>` : '';
+            }
+            if (kind === 'notices' && it.created_at) {
+                return `<span class="text-gray-500">${escapeHtml(String(it.created_at).slice(5, 16))}</span>`;
+            }
+            return '';
+        }
+
+        function openTodoModal() {
+            const d = TODO_DATA;
+            if (!todoCount(d)) return;
+            document.getElementById('todo-body').innerHTML = TODO_GROUPS
+                .filter(g => (d[g.key] || []).length)
+                .map(g => `<section>
+                    <h3 class="text-sm font-bold ${g.tone} mb-2"><i class="fa-solid ${g.icon} mr-1.5"></i>${g.label} <span class="text-gray-400 font-normal">${d[g.key].length}개</span></h3>
+                    <div class="space-y-1.5">${d[g.key].map(it => `
+                        <button onclick="closeTodoModal(); ${g.go}" class="w-full text-left bg-[#151922] hover:bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 transition flex items-center justify-between gap-2">
+                            <span class="min-w-0">
+                                <span class="block text-sm text-white font-bold truncate">${escapeHtml(it.title)}</span>
+                                ${todoItemNote(g.key, it) ? `<span class="block text-[11px] mt-0.5">${todoItemNote(g.key, it)}</span>` : ''}
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-gray-500 text-xs shrink-0"></i>
+                        </button>`).join('')}
+                    </div>
+                </section>`).join('');
+            showModal('todo');
+        }
+
+        function isTodoModalOpen() {
+            const el = document.getElementById('todo-modal');
+            return !!el && el.style.display === 'flex';
+        }
+
+        function closeTodoModal() {
+            closeModal('todo-modal');
+            if (PUSH_ASK_AFTER_TODO) {
+                PUSH_ASK_AFTER_TODO = false;
+                setTimeout(() => showModal('pushask'), 400);
+            }
+        }
+
         // 💡 브라우저 권한 창은 한 번 '차단'되면 코드로 다시 띄울 수 없다. 그래서
         //    우리 안내창을 먼저 보여주고, '받을래요'를 누른 학생에게만 권한을 묻는다.
         const PUSH_ASK_KEY = 'logyedu_push_ask_at';
@@ -6136,7 +6267,11 @@ let lavUid = 0;
 
                 // 들어오자마자 들이대면 놀라니, 화면을 한번 보고 난 뒤에 띄운다
                 console.log('[알림 안내] 잠시 뒤 안내창을 띄웁니다');
-                setTimeout(() => showModal('pushask'), 2500);
+                setTimeout(() => {
+                    // 할 일 창을 보고 있으면 겹쳐 띄우지 않고, 그 창을 닫을 때 띄운다
+                    if (isTodoModalOpen()) PUSH_ASK_AFTER_TODO = true;
+                    else showModal('pushask');
+                }, 2500);
             } catch (e) {
                 console.log('[알림 안내] 오류로 못 띄움 —', e && e.message);
             }
@@ -9793,10 +9928,12 @@ let lavUid = 0;
                 const c = document.getElementById('board-list');
                 c.innerHTML = '';
                 if(data.success) {
+                    const isStudent = !!who && !isPreviewUser();
                     data.posts.forEach(p => {
                         const attachId = 'board-attach-' + p.id;
-                        let html = `<div class="bg-[#151922] p-6 rounded-xl mb-4 text-white border border-gray-700 shadow-lg">`;
-                        html += `<h3 class="text-xl font-bold text-blue-300 mb-2">${escapeHtml(p.title)}</h3>`;
+                        const isNew = isStudent && p.is_read === false;
+                        let html = `<div class="bg-[#151922] p-6 rounded-xl mb-4 text-white border ${isNew ? 'border-blue-400' : 'border-gray-700'} shadow-lg">`;
+                        html += `<h3 class="text-xl font-bold text-blue-300 mb-2">${isNew ? '<span class="text-[10px] align-middle bg-rose-600 text-white px-1.5 py-0.5 rounded mr-2">NEW</span>' : ''}${escapeHtml(p.title)}</h3>`;
                         html += `<p class="text-gray-300 text-sm whitespace-pre-wrap mb-4">${escapeHtml(p.desc)}</p>`;
                         if (p.file_url) {
                             html += `<div id="${attachId}" class="w-full"></div>`;
@@ -9805,6 +9942,14 @@ let lavUid = 0;
                         html += `</div>`;
                         c.innerHTML += html;
                     });
+                    // 💡 목록을 열어 본 공지는 '읽음'으로 남긴다 — 다음 로그인 때 다시 알리지 않는다
+                    const unread = isStudent ? data.posts.filter(p => p.is_read === false).map(p => p.id) : [];
+                    if (unread.length) {
+                        fetch(`${API_URL}/api/board/read`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ student_name: who, post_ids: unread }),
+                        }).then(() => { if (TODO_DATA) { TODO_DATA.notices = []; renderTodoStrip(); } }).catch(() => {});
+                    }
                 }
             } catch(e) {}
         }
@@ -9845,7 +9990,7 @@ let lavUid = 0;
             } else { c.innerHTML = `<a href="${encodeURI(url)}" target="_blank" class="text-blue-400 text-sm inline-block bg-blue-900/30 hover:bg-blue-900/50 px-3 py-2 rounded transition"><i class="fa-solid fa-download mr-1"></i>첨부파일 보기</a>`; }
         }
 
-        async function loadAdminBoardList() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('admin-board-view-list'); c.innerHTML=''; if(data.success){ data.posts.forEach((p,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a><button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
+        async function loadAdminBoardList() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('admin-board-view-list'); c.innerHTML=''; if(data.success){ data.posts.forEach((p,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a><span class="shrink-0 text-[10px] text-gray-400 mx-2 text-right">${(p.target_classes||[]).length ? escapeHtml(p.target_classes.join(', ')) : '전체'}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span><button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
 
         // ── 관리자 — 레벨업 룰렛 상품 편집 ──────────────────
         let ROULETTE_ADMIN_CONFIG = {};
