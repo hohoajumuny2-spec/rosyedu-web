@@ -10518,9 +10518,9 @@ let lavUid = 0;
                                     <i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}${isSubmitted ? hwLateBadge(MY_HW_REPORTS[h.title]) : ''}</span>
                                 ${h.deadline ? `<div class="mb-1">${hwDeadlineChip(h.deadline, isSubmitted)}</div>` : ''}
                                 <span class="text-xs text-gray-400">${isSubmitted
-                                    ? (hasOmr ? (() => { const m = MY_HW_REPORTS[h.title] || {}; return `${m.score ? escapeHtml(String(m.score)) + '문항 맞음 · ' : ''}해설을 보고 틀린 답을 고쳐 다시 낼 수 있어요.`; })()
-                                              : '과제를 성공적으로 제출했습니다. 해설 자료를 확인하세요.')
-                                    : (hasOmr ? `${h.question_count}문항 · 답만 마킹하면 바로 채점됩니다.` : '파일을 첨부하여 과제를 제출하면 해설 자료가 오픈됩니다.')}</span>
+                                    ? (hasOmr ? (() => { const m = MY_HW_REPORTS[h.title] || {}; return `${m.score ? escapeHtml(String(m.score)) + '문항 맞음 · ' : ''}${h.expl_locked ? `틀린 번호를 보고 고쳐 다시 낼 수 있어요. 해설은 마감(${escapeHtml(hwDeadlineLabel(h.expl_open_at))}) 뒤에 열려요.` : '해설을 보고 틀린 답을 고쳐 다시 낼 수 있어요.'}`; })()
+                                              : (h.answer_file_waiting ? `과제를 제출했습니다. 해설 자료는 마감(${escapeHtml(hwDeadlineLabel(h.expl_open_at))}) 뒤에 열려요.` : '과제를 성공적으로 제출했습니다. 해설 자료를 확인하세요.'))
+                                    : (hasOmr ? `${h.question_count}문항 · 답만 마킹하면 바로 채점됩니다.` : (h.expl_locked ? '파일을 첨부하여 제출하세요. 해설 자료는 마감 뒤에 열립니다.' : '파일을 첨부하여 과제를 제출하면 해설 자료가 오픈됩니다.'))}</span>
                                 ${(() => {
                                     // 내가 낸 파일을 다시 볼 수 있어야 무엇을 고칠지 안다
                                     const mine = (isSubmitted && !hasOmr) ? MY_HW_REPORTS[h.title] : null;
@@ -10828,6 +10828,10 @@ let lavUid = 0;
             const d = r.data;
             if (d && d.success === false) return alert(d.detail || "제출하지 못했습니다.");
             showOmrResult(d);
+            if (d.expl_locked) {
+                document.getElementById('hw-omr-result').insertAdjacentHTML('afterbegin',
+                    `<p class="mb-2 text-center text-[12px] text-sky-200 bg-sky-900/30 border border-sky-800 rounded-lg py-2">틀린 번호를 보고 답을 고쳐 다시 낼 수 있어요. 해설은 마감(${escapeHtml(hwDeadlineLabel(d.expl_open_at))}) 뒤에 열립니다.</p>`);
+            }
             if (d.late) {
                 document.getElementById('hw-omr-result').insertAdjacentHTML('afterbegin',
                     `<p class="mb-2 text-center text-sm font-bold text-rose-300 bg-rose-900/30 border border-rose-800 rounded-lg py-2">⏰ 제출 기한이 지나 '${d.edited ? '기한 후 수정' : '기한 후 제출'}'로 기록되었습니다.</p>`);
@@ -13288,7 +13292,8 @@ let lavUid = 0;
                 (pct != null ? ` (${pct}%)` : '') +
                 (data.retry && data.retry.count ? ` · 다시 풀어 ${(data.retry.fixed || []).length}개 맞힘` : '') +
                 (data.edit_count ? ` · ${data.edit_count}번 고쳐 냄 (처음 ${data.first_score || '-'})` : '') +
-                (data.late ? ` · ⏰ 기한 후 제출 (마감 ${hwDeadlineLabel(data.deadline)})` : data.late_edit ? ' · 기한 후 수정' : '');
+                (data.late ? ` · ⏰ 기한 후 제출 (마감 ${hwDeadlineLabel(data.deadline)})` : data.late_edit ? ' · 기한 후 수정' : '') +
+                (data.expl_locked ? ` · 해설은 마감(${hwDeadlineLabel(data.expl_open_at)}) 뒤 공개` : '');
 
             const grid = document.getElementById('vr-grid');
             grid.innerHTML = data.items.map(it => {
