@@ -3027,6 +3027,12 @@
                                 </select>
                                 <input type="text" id="hw-title" placeholder="과제명" class="w-2/3 p-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500">
                             </div>
+                            <!-- 💡 제출 기한 — 지나도 낼 수는 있고, 늦게 낸 과제는 '기한 후 제출'로 표시된다 -->
+                            <label for="hw-deadline" class="text-[11px] text-rose-300 font-bold block mb-1 mt-2">제출 기한 (선택 · 지나도 낼 수 있지만 '기한 후 제출'로 표시됩니다)</label>
+                            <div class="flex gap-2 mb-2">
+                                <input type="datetime-local" id="hw-deadline" class="flex-grow p-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-rose-500">
+                                <button type="button" onclick="document.getElementById('hw-deadline').value=''" class="shrink-0 text-[11px] text-gray-400 hover:text-white px-2">기한 없음</button>
+                            </div>
 
                             <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">과제 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
                             <div id="hw-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
@@ -9366,7 +9372,7 @@ let lavUid = 0;
                                         : `class="bg-gray-800 p-2 rounded mb-1 flex justify-between items-center text-sm"`;
                                     const 안내 = 볼수있음 ? `<i class="fa-solid fa-list-check ml-1 text-emerald-500 text-xs" title="틀린 문제 보기"></i>` : '';
                                     const 수정표시 = r.edit_count ? `<span class="text-[10px] text-amber-300 ml-2" title="학생이 고쳐서 다시 낸 과제">${r.edit_count}번 수정${r.first_score ? ` (처음 ${escapeHtml(String(r.first_score))} → 지금 ${escapeHtml(String(r.score || ''))})` : ''} · ${escapeHtml(String(r.updated_at || '').slice(5,16))}</span>` : '';
-                                    hwHtml += `<div ${감싸기}><div><span>${escapeHtml(r.task_name)}</span>${안내}${fileLinks}${수정표시}</div><span class="text-emerald-400 font-bold">제출완료</span></div>`;
+                                    hwHtml += `<div ${감싸기}><div><span>${escapeHtml(r.task_name)}</span>${hwLateBadge(r)}${안내}${fileLinks}${수정표시}</div><span class="text-emerald-400 font-bold">제출완료</span></div>`;
                                 }
                                 else if (r.type === '질문') { qCnt++; qHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-sm text-gray-300">Q. ${escapeHtml(r.task_name)}${timeStr}</div>`; }
                                 else if (r.type === '로그인') { loginCnt++; loginHtml += `<div class="bg-gray-800 p-2 rounded mb-1 text-xs text-blue-300"><i class="fa-solid fa-right-to-bracket mr-1"></i>접속${timeStr}</div>`; }
@@ -9391,7 +9397,7 @@ let lavUid = 0;
                                     const urls = r.file_url.split(',');
                                     fileLinks = `<a href="${API_URL}${encodeURI(urls[0])}" target="_blank" class="text-blue-400 hover:text-white ml-2 underline text-xs bg-blue-900/40 px-2 py-0.5 rounded"><i class="fa-solid fa-paperclip"></i>자료보기</a>`;
                                 }
-                                scoreTxt = `<span class="text-emerald-400">제출완료</span>${fileLinks}`;
+                                scoreTxt = `<span class="text-emerald-400">제출완료</span>${hwLateBadge(r)}${fileLinks}`;
                             }
                             allHtml += `<div class="bg-gray-800 p-2 rounded text-xs flex justify-between text-gray-300 items-center"><span><span class="text-indigo-400 font-bold mr-1">[${escapeHtml(r.type)}]</span>${escapeHtml(r.student_name)} - ${escapeHtml(r.task_name.substring(0,10))}</span> <div>${scoreTxt}</div></div>`;
                         });
@@ -10004,6 +10010,7 @@ let lavUid = 0;
             document.getElementById('hw-title').value = h.title;
             document.getElementById('hw-kind').value = h.kind === 'clinic' ? 'clinic' : 'class';
             document.getElementById('hw-answers').value = (h.answers || []).join(', ');
+            document.getElementById('hw-deadline').value = String(h.deadline || '').slice(0, 16);
             setPickedClasses('hw-target-class', h.target_classes || []);
             HW_EXPLANATIONS = Object.assign({}, h.explanations || {});
             updateHomeworkAnswerCount();
@@ -10017,6 +10024,7 @@ let lavUid = 0;
             EDITING_HW_TITLE = '';
             document.getElementById('hw-title').value = '';
             document.getElementById('hw-answers').value = '';
+            document.getElementById('hw-deadline').value = '';
             clearClassPicker('hw-target-class');
             HW_EXPLANATIONS = {};
             updateHomeworkAnswerCount();
@@ -10041,6 +10049,7 @@ let lavUid = 0;
             fd.append("explanations", JSON.stringify(HW_EXPLANATIONS || {}));
             fd.append("old_title", isEdit ? EDITING_HW_TITLE : "");
             fd.append("target_classes", getPickedClasses('hw-target-class').join(","));
+            fd.append("deadline", document.getElementById('hw-deadline').value || "");
             if (hwFilesAdmin.length) fd.append("answer_file", hwFilesAdmin[0]);
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
@@ -10175,13 +10184,59 @@ let lavUid = 0;
                 const data = await uploadFormData(`${API_URL}/api/homework/submit`, fd);
                 if(data.success) {
                     const 수정 = titleEl.dataset.edit === '1';
-                    document.getElementById('hw-result-area').innerHTML = `<div class="bg-emerald-900/30 border border-emerald-500 p-4 rounded-xl text-center"><p class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>${수정 ? '고친 과제로 바꿔 냈습니다!' : '과제 제출이 완료되었습니다!'}</p></div>`;
+                    const 늦음 = data.late ? `<p class="text-rose-300 text-sm font-bold">⏰ 제출 기한이 지나 '${수정 ? '기한 후 수정' : '기한 후 제출'}'로 기록되었습니다.</p>` : '';
+                    document.getElementById('hw-result-area').innerHTML = `<div class="bg-emerald-900/30 border border-emerald-500 p-4 rounded-xl text-center"><p class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>${수정 ? '고친 과제로 바꿔 냈습니다!' : '과제 제출이 완료되었습니다!'}</p>${늦음}</div>`;
                     document.getElementById('hw-result-area').style.display='block';
                     fileInput.value = ''; loadHomeworks();
                     onXpGained(data.level_up);
                 } else { alert("제출 실패: " + (data.detail || '알 수 없는 오류')); }
             } catch(e) { alert("과제 전송 중 오류가 발생했습니다.\n상세원인: " + e.message); }
             hideLoader();
+        }
+
+        // ── 과제 제출 기한 ─────────────────────────────
+        // 💡 기한이 지나도 낼 수는 있다. 대신 늦게 낸 과제는 '기한 후 제출'로 남는다.
+        //    기한은 원장님이 한국 시각으로 적은 '2026-10-05T18:00' 모양이다.
+        function parseHwDeadline(dl) {
+            const t = String(dl || '').trim();
+            if (!t) return null;
+            const m = t.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+            if (!m) return null;
+            return m[4] != null ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5])
+                                : new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59);
+        }
+
+        function hwDeadlineLabel(dl) {
+            const d = parseHwDeadline(dl);
+            if (!d) return '';
+            const hasTime = /[T ]\d{2}:\d{2}/.test(String(dl));
+            const day = `${d.getMonth() + 1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`;
+            return hasTime ? `${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : day;
+        }
+
+        // 학생 과제 목록에 붙이는 기한 표시 — 남은 시간에 따라 색이 바뀐다
+        function hwDeadlineChip(dl, submitted) {
+            const d = parseHwDeadline(dl);
+            if (!d) return '';
+            const left = d - Date.now();
+            const label = hwDeadlineLabel(dl);
+            if (left < 0) {
+                return submitted ? `<span class="text-[11px] text-gray-500"><i class="fa-regular fa-clock mr-1"></i>마감 ${label}</span>`
+                    : `<span class="text-[11px] font-bold text-rose-300 bg-rose-900/40 px-2 py-0.5 rounded-full"><i class="fa-solid fa-clock mr-1"></i>마감 ${label} 지남 · 지금 내면 '기한 후 제출'</span>`;
+            }
+            const hours = left / 36e5;
+            const rest = hours < 1 ? `${Math.max(1, Math.round(left / 6e4))}분 남음`
+                : hours < 24 ? `${Math.floor(hours)}시간 남음` : `D-${Math.ceil(hours / 24)}`;
+            const tone = submitted ? 'text-gray-400' : (hours < 24 ? 'text-amber-300 font-bold' : 'text-sky-300');
+            return `<span class="text-[11px] ${tone}"><i class="fa-regular fa-clock mr-1"></i>마감 ${label}${submitted ? '' : ' · ' + rest}</span>`;
+        }
+
+        // 제출 기록(report)에 붙이는 표시 — 원장님 장부와 학생 화면에서 같이 쓴다
+        function hwLateBadge(r) {
+            if (!r) return '';
+            if (r.late) return `<span class="text-[10px] font-bold text-rose-200 bg-rose-900/60 px-1.5 py-0.5 rounded-full ml-2" title="마감 ${escAttr(hwDeadlineLabel(r.deadline))} 뒤에 냈습니다">⏰ 기한 후 제출</span>`;
+            if (r.late_edit) return `<span class="text-[10px] font-bold text-amber-200 bg-amber-900/50 px-1.5 py-0.5 rounded-full ml-2" title="처음에는 기한 안에 냈고, 마감 뒤에 고쳐 냈습니다">기한 후 수정</span>`;
+            return '';
         }
 
         let STUDENT_HW_LIST = [];
@@ -10265,7 +10320,8 @@ let lavUid = 0;
                             <div class="flex-grow">
                                 <span class="font-bold text-lg text-emerald-400 block mb-1">
                                     <span class="text-[10px] px-2 py-0.5 rounded-full mr-2 align-middle ${kindTone}">${kindLabel}</span>
-                                    <i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}</span>
+                                    <i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}${isSubmitted ? hwLateBadge(MY_HW_REPORTS[h.title]) : ''}</span>
+                                ${h.deadline ? `<div class="mb-1">${hwDeadlineChip(h.deadline, isSubmitted)}</div>` : ''}
                                 <span class="text-xs text-gray-400">${isSubmitted
                                     ? (hasOmr ? (() => { const m = MY_HW_REPORTS[h.title] || {}; return `${m.score ? escapeHtml(String(m.score)) + '문항 맞음 · ' : ''}해설을 보고 틀린 답을 고쳐 다시 낼 수 있어요.`; })()
                                               : '과제를 성공적으로 제출했습니다. 해설 자료를 확인하세요.')
@@ -10313,6 +10369,7 @@ let lavUid = 0;
                                     ? `<a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" class="hover:text-blue-400 font-bold underline cursor-pointer">${escapeHtml(h.title)}</a>`
                                     : `<span class="font-bold">${escapeHtml(h.title)}</span>`}
                                 <div class="text-[10px] text-gray-400 mt-0.5">
+                                    ${h.deadline ? `<span class="text-rose-300">마감 ${escapeHtml(hwDeadlineLabel(h.deadline))}</span> · ` : ''}
                                     ${h.question_count ? `정답 ${h.question_count}문항 · OMR 자동 채점` : '정답표 없음 · 파일 제출 방식'}
                                     ${h.answer_file ? ' · 해답 파일 있음' : ''}</div>
                             </div>
@@ -10576,6 +10633,10 @@ let lavUid = 0;
             const d = r.data;
             if (d && d.success === false) return alert(d.detail || "제출하지 못했습니다.");
             showOmrResult(d);
+            if (d.late) {
+                document.getElementById('hw-omr-result').insertAdjacentHTML('afterbegin',
+                    `<p class="mb-2 text-center text-sm font-bold text-rose-300 bg-rose-900/30 border border-rose-800 rounded-lg py-2">⏰ 제출 기한이 지나 '${d.edited ? '기한 후 수정' : '기한 후 제출'}'로 기록되었습니다.</p>`);
+            }
             // 💡 한 번 내고 끝이 아니다. 틀린 문항의 답을 고쳐 바로 다시 낼 수 있다.
             HW_OMR.editing = true;
             document.getElementById('hw-omr-submit-btn').innerText = '고친 답으로 다시 제출하기';
@@ -13031,7 +13092,8 @@ let lavUid = 0;
                 (data.score !== '' && data.score != null ? ` · 점수 ${data.score}` : '') +
                 (pct != null ? ` (${pct}%)` : '') +
                 (data.retry && data.retry.count ? ` · 다시 풀어 ${(data.retry.fixed || []).length}개 맞힘` : '') +
-                (data.edit_count ? ` · ${data.edit_count}번 고쳐 냄 (처음 ${data.first_score || '-'})` : '');
+                (data.edit_count ? ` · ${data.edit_count}번 고쳐 냄 (처음 ${data.first_score || '-'})` : '') +
+                (data.late ? ` · ⏰ 기한 후 제출 (마감 ${hwDeadlineLabel(data.deadline)})` : data.late_edit ? ' · 기한 후 수정' : '');
 
             const grid = document.getElementById('vr-grid');
             grid.innerHTML = data.items.map(it => {
