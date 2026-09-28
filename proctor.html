@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>자습 감독 · 로지에듀</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a1e29">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  body { font-family: 'Pretendard', sans-serif; background: #1a1e29; color: #fff; word-break: keep-all; }
+  #alarm { animation: flash 0.6s steps(2) infinite; }
+  @keyframes flash { 50% { background: rgba(220, 38, 38, 0.25); } }
+  @media (prefers-reduced-motion: reduce) { #alarm { animation: none; } }
+</style>
+</head>
+<body class="min-h-screen">
+<!--
+  자습 감독 — 교실 태블릿 카메라로 휴대폰 사용 · 엎드림 · 자리 비움을 알아채 경고한다.
+  💡 영상은 태블릿 안에서만 판단하고 버린다. 경고 순간의 사진 한 장만 원장님 텔레그램으로 간다.
+  💡 교실 태블릿에 관리자 로그인을 하지 않도록, 원장님이 만든 6자리 '감독 코드'로 켠다.
+-->
+<main class="max-w-5xl mx-auto px-4 py-6">
+  <header class="flex items-center justify-between gap-3 mb-5">
+    <h1 class="text-2xl font-black"><i class="fa-solid fa-video text-rose-400 mr-2"></i>자습 감독</h1>
+    <a href="./" class="text-sm text-gray-400 hover:text-white">로지에듀로</a>
+  </header>
+
+  <!-- 1. 원장님 기기: 감독 코드 만들기 -->
+  <section id="owner-box" class="hidden bg-[#1e2430] border border-amber-700 rounded-2xl p-5 mb-5">
+    <h2 class="font-bold text-amber-200 mb-1">원장님: 감독 코드 만들기</h2>
+    <p class="text-[13px] text-gray-400 mb-3">교실 태블릿에서 이 주소(logyedu.co.kr/proctor.html)를 열고 아래 코드를 넣으세요. 코드는 12시간 동안 쓸 수 있습니다.</p>
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="make-code" class="bg-amber-600 hover:bg-amber-700 font-bold px-4 py-2 rounded-lg">감독 코드 만들기</button>
+      <span id="made-code" class="text-4xl font-black tracking-[0.3em] tabular-nums text-white"></span>
+    </div>
+  </section>
+
+  <!-- 2. 교실 태블릿: 코드 넣고 시작 -->
+  <section id="setup" class="bg-[#1e2430] border border-gray-700 rounded-2xl p-5">
+    <h2 class="font-bold mb-3">교실 태블릿 준비</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label for="code" class="text-sm text-gray-300 block mb-1">감독 코드 (6자리)</label>
+        <input id="code" inputmode="numeric" maxlength="6" autocomplete="off" class="w-full p-3 text-2xl tracking-[0.3em] tabular-nums bg-[#151922] rounded-lg border border-gray-600 focus:border-rose-500 outline-none" placeholder="000000">
+      </div>
+      <div>
+        <label for="room" class="text-sm text-gray-300 block mb-1">교실 이름 (알림에 함께 적힙니다)</label>
+        <input id="room" maxlength="20" class="w-full p-3 bg-[#151922] rounded-lg border border-gray-600 focus:border-rose-500 outline-none" placeholder="예: 2강의실">
+      </div>
+      <div>
+        <label for="camera" class="text-sm text-gray-300 block mb-1">카메라</label>
+        <select id="camera" class="w-full p-3 bg-[#151922] rounded-lg border border-gray-600">
+          <option value="user">앞면 카메라 (화면 쪽)</option>
+          <option value="environment">뒷면 카메라</option>
+        </select>
+      </div>
+      <div>
+        <label for="expected" class="text-sm text-gray-300 block mb-1">자습하는 학생 수 (자리 비움 확인용, 비우면 시작할 때 센 인원)</label>
+        <input id="expected" type="number" min="0" max="30" class="w-full p-3 bg-[#151922] rounded-lg border border-gray-600" placeholder="자동">
+      </div>
+    </div>
+    <fieldset class="mt-4">
+      <legend class="text-sm text-gray-300 mb-2">잡을 행동</legend>
+      <div class="flex flex-wrap gap-4 text-sm">
+        <label><input type="checkbox" id="w-phone" checked class="mr-1 accent-rose-500">휴대폰 사용</label>
+        <label><input type="checkbox" id="w-sleep" checked class="mr-1 accent-rose-500">엎드려 자기 (<input id="sleep-sec" type="number" value="90" min="30" max="600" class="w-16 bg-[#151922] rounded px-1 border border-gray-600">초 넘게)</label>
+        <label><input type="checkbox" id="w-away" checked class="mr-1 accent-rose-500">자리 비움 (<input id="away-min" type="number" value="3" min="1" max="30" class="w-14 bg-[#151922] rounded px-1 border border-gray-600">분 넘게)</label>
+      </div>
+    </fieldset>
+    <p class="text-[12px] text-gray-500 mt-4 leading-relaxed">
+      영상은 이 태블릿 안에서만 확인하고 저장하지 않습니다. 소리는 녹음하지 않습니다. 경고 순간의 사진 한 장만 원장님께 전송됩니다.
+      학생 · 학부모님께 미리 알리고 동의를 받은 뒤 사용해 주세요. 교실에 '자습 감독 카메라 작동 중' 안내문을 붙여 주세요.
+    </p>
+    <p id="setup-msg" class="text-sm text-rose-300 mt-3 min-h-[1.25rem]" role="status"></p>
+    <button id="start" class="mt-2 w-full md:w-auto md:px-12 py-4 bg-rose-600 hover:bg-rose-700 rounded-xl font-black text-lg"><i class="fa-solid fa-play mr-2"></i>감독 시작</button>
+  </section>
+
+  <!-- 3. 감독 중 -->
+  <section id="running" class="hidden">
+    <div class="relative rounded-2xl overflow-hidden border border-gray-700 bg-black">
+      <video id="video" playsinline muted class="w-full block"></video>
+      <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+      <div id="alarm" class="hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+        <p id="alarm-text" class="bg-red-600 text-white text-2xl md:text-4xl font-black px-6 py-4 rounded-2xl shadow-2xl text-center"></p>
+      </div>
+      <p id="loading" class="absolute inset-0 flex items-center justify-center text-gray-300 bg-black/70 text-center px-4">AI 모델을 불러오는 중입니다… (처음 한 번은 30초쯤 걸릴 수 있어요)</p>
+    </div>
+    <div class="grid grid-cols-3 gap-3 mt-4 text-center">
+      <div class="bg-[#1e2430] rounded-xl p-3"><p class="text-[12px] text-gray-400">지금 보이는 학생</p><p id="stat-people" class="text-2xl font-black tabular-nums">-</p></div>
+      <div class="bg-[#1e2430] rounded-xl p-3"><p class="text-[12px] text-gray-400">기준 인원</p><p id="stat-expected" class="text-2xl font-black tabular-nums">-</p></div>
+      <div class="bg-[#1e2430] rounded-xl p-3"><p class="text-[12px] text-gray-400">오늘 경고</p><p id="stat-alerts" class="text-2xl font-black tabular-nums text-rose-300">0</p></div>
+    </div>
+    <p id="pose-note" class="hidden text-[12px] text-amber-300 mt-2">엎드림 확인 모델을 불러오지 못해 휴대폰 · 자리 비움만 확인합니다.</p>
+    <div class="flex gap-2 mt-4">
+      <button id="stop" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold"><i class="fa-solid fa-stop mr-1"></i>감독 끝내기</button>
+      <button id="test-alarm" class="py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm">경고음 시험</button>
+    </div>
+    <h3 class="font-bold mt-6 mb-2 text-sm text-gray-300">경고 기록</h3>
+    <ol id="log" class="space-y-1 text-sm text-gray-300"></ol>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  const API_URL = 'https://korean-ai-tutor.onrender.com';
+  const $ = id => document.getElementById(id);
+  const CHECK_MS = 2000;                 // 2초마다 한 장씩 본다
+  const PHONE_SCORE = 0.55;              // 이만큼 확실할 때만 휴대폰으로 본다
+  const ALARM_COOLDOWN_MS = 60000;       // 같은 경고는 1분에 한 번
+
+  // ── 원장님 기기: 관리자로 로그인돼 있으면 코드 만들기 칸을 보여준다 ──
+  let owner = null;
+  try { owner = JSON.parse(localStorage.getItem('logyedu_user') || 'null'); } catch (e) {}
+  if (owner && owner.isAdmin && owner.admin_token) $('owner-box').classList.remove('hidden');
+  $('make-code').onclick = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/proctor/code`, { method: 'POST', headers: { 'x-admin-token': owner.admin_token } });
+      const d = await res.json();
+      if (!d.success) throw new Error(d.detail || '관리자 로그인이 풀렸습니다.');
+      $('made-code').innerText = d.code;
+      $('code').value = d.code;
+    } catch (e) { alert('코드를 만들지 못했습니다: ' + e.message); }
+  };
+  try { const saved = JSON.parse(localStorage.getItem('proctor_setup') || '{}'); if (saved.room) $('room').value = saved.room; if (saved.camera) $('camera').value = saved.camera; } catch (e) {}
+
+  // ── 소리 ──
+  let audio = null;
+  function beep() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.35, 0.7].forEach(t => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.type = 'square'; o.frequency.value = 880;
+        g.gain.setValueAtTime(0.25, audio.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + t + 0.3);
+        o.connect(g); g.connect(audio.destination);
+        o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.3);
+      });
+    } catch (e) {}
+  }
+  function speak(text) {
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ko-KR'; u.rate = 0.95;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  // ── 상태 ──
+  let code = '', room = '', running = false, timer = null, stream = null, wake = null;
+  let coco = null, poser = null;
+  let expected = 0, baselineSamples = [];
+  let phoneHits = [];                       // 최근 판단 결과 (휴대폰 보였나)
+  let tracks = [];                          // 엎드림을 사람마다 따라가기 위한 자리
+  let fewerSince = 0;                       // 인원이 기준보다 적어진 때
+  const lastAlarm = {};
+  let alertCount = 0;
+
+  const WHAT = {
+    phone: { label: '휴대폰 사용', say: '휴대폰을 내려놓고 문제에 집중하세요.' },
+    sleep: { label: '엎드려 있음', say: '엎드려 있는 학생은 일어나서 문제를 풀어 주세요.' },
+    away:  { label: '자리 비움', say: '자리를 비운 학생이 있습니다. 자리로 돌아와 주세요.' },
+  };
+
+  function where(box, w) {
+    const cx = box[0] + box[2] / 2;
+    return cx < w / 3 ? '왼쪽' : cx > w * 2 / 3 ? '오른쪽' : '가운데';
+  }
+
+  async function alarm(kind, detail, box) {
+    const now = Date.now();
+    if (now - (lastAlarm[kind] || 0) < ALARM_COOLDOWN_MS) return;
+    lastAlarm[kind] = now;
+    alertCount++;
+    $('stat-alerts').innerText = alertCount;
+    $('alarm-text').innerText = `${WHAT[kind].label}${detail ? ' · ' + detail : ''}`;
+    $('alarm').classList.remove('hidden');
+    setTimeout(() => $('alarm').classList.add('hidden'), 6000);
+    beep();
+    setTimeout(() => speak(WHAT[kind].say), 1100);
+    const li = document.createElement('li');
+    li.innerText = `${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}  ${WHAT[kind].label}${detail ? ' · ' + detail : ''}`;
+    $('log').prepend(li);
+    // 원장님께 사진 한 장 (저장하지 않고 텔레그램으로만)
+    try {
+      const v = $('video'), k = Math.min(1, 960 / v.videoWidth);
+      const c = document.createElement('canvas');
+      c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      const g = c.getContext('2d');
+      g.drawImage(v, 0, 0, c.width, c.height);
+      if (box) { g.strokeStyle = '#ef4444'; g.lineWidth = 4; g.strokeRect(box[0] * k, box[1] * k, box[2] * k, box[3] * k); }
+      const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.7));
+      const fd = new FormData();
+      fd.append('code', code); fd.append('room', room);
+      fd.append('message', `${WHAT[kind].label}${detail ? ' · ' + detail : ''}`);
+      if (blob) fd.append('photo', blob, 'alert.jpg');
+      const res = await fetch(`${API_URL}/api/proctor/alert`, { method: 'POST', body: fd });
+      const d = await res.json();
+      if (!d.success) li.innerText += ' (원장님 알림 실패: ' + (d.detail || '') + ')';
+    } catch (e) { li.innerText += ' (원장님 알림 실패)'; }
+  }
+
+  // 엎드림: 어깨는 보이는데 코가 어깨선보다 아래이거나 얼굴이 안 보이면 '고개 숙임'
+  function headDown(p) {
+    const k = {}; (p.keypoints || []).forEach(x => { k[x.name] = x; });
+    const ls = k.left_shoulder, rs = k.right_shoulder, nose = k.nose;
+    if (!ls || !rs || ls.score < 0.3 || rs.score < 0.3) return null;
+    const shoulderY = (ls.y + rs.y) / 2, width = Math.abs(ls.x - rs.x) || 1;
+    if (!nose || nose.score < 0.2) return true;
+    return nose.y > shoulderY - width * 0.15;
+  }
+
+  function updateTracks(poses, now) {
+    const w = $('video').videoWidth || 640;
+    const seen = poses.map(p => {
+      const k = {}; (p.keypoints || []).forEach(x => { k[x.name] = x; });
+      const ls = k.left_shoulder, rs = k.right_shoulder;
+      if (!ls || !rs) return null;
+      return { x: (ls.x + rs.x) / 2, y: (ls.y + rs.y) / 2, down: headDown(p), box: p.box ? [p.box.xMin, p.box.yMin, p.box.width, p.box.height] : null };
+    }).filter(Boolean);
+    const next = [];
+    seen.forEach(s => {
+      let best = null, bestD = w * 0.15;
+      tracks.forEach(t => { const d = Math.hypot(t.x - s.x, t.y - s.y); if (d < bestD && !next.includes(t)) { best = t; bestD = d; } });
+      const t = best || { downSince: 0 };
+      t.x = s.x; t.y = s.y; t.box = s.box;
+      t.downSince = s.down ? (t.downSince || now) : 0;
+      next.push(t);
+    });
+    tracks = next;
+  }
+
+  async function check() {
+    if (!running) return;
+    const v = $('video');
+    if (!v.videoWidth) return;
+    const now = Date.now();
+    const ov = $('overlay'), g = ov.getContext('2d');
+    ov.width = v.videoWidth; ov.height = v.videoHeight;
+    g.clearRect(0, 0, ov.width, ov.height);
+
+    let people = 0;
+    try {
+      const found = await coco.detect(v, 20, 0.4);
+      const persons = found.filter(f => f.class === 'person' && f.score >= 0.5);
+      const phones = found.filter(f => f.class === 'cell phone' && f.score >= PHONE_SCORE);
+      people = persons.length;
+      g.lineWidth = 3;
+      persons.forEach(p => { g.strokeStyle = 'rgba(52,211,153,0.8)'; g.strokeRect(...p.bbox); });
+      phones.forEach(p => { g.strokeStyle = '#ef4444'; g.strokeRect(...p.bbox); });
+      // 한 번 보였다고 바로 울리지 않고, 최근 3번 중 2번 보이면 울린다
+      phoneHits.push(phones.length > 0); phoneHits = phoneHits.slice(-3);
+      if ($('w-phone').checked && phoneHits.filter(Boolean).length >= 2 && phones.length)
+        alarm('phone', where(phones[0].bbox, v.videoWidth), phones[0].bbox);
+    } catch (e) {}
+
+    if (poser && $('w-sleep').checked) {
+      try {
+        const poses = await poser.estimatePoses(v);
+        updateTracks(poses, now);
+        const limit = (+$('sleep-sec').value || 90) * 1000;
+        const sleeper = tracks.find(t => t.downSince && now - t.downSince > limit);
+        tracks.forEach(t => { if (t.downSince && t.box) { g.strokeStyle = 'rgba(251,191,36,0.9)'; g.strokeRect(...t.box); } });
+        if (sleeper) alarm('sleep', where(sleeper.box || [sleeper.x, 0, 0, 0], v.videoWidth), sleeper.box);
+      } catch (e) {}
+    }
+
+    // 자리 비움: 처음 20초 동안 센 인원(또는 원장님이 적은 인원)보다 적은 채로 오래 가면
+    if (!expected) {
+      baselineSamples.push(people);
+      if (baselineSamples.length >= 10) {
+        const sorted = baselineSamples.slice().sort((a, b) => a - b);
+        expected = sorted[Math.floor(sorted.length / 2)];
+      }
+    }
+    $('stat-people').innerText = people;
+    $('stat-expected').innerText = expected || '세는 중';
+    if (expected && $('w-away').checked) {
+      if (people < expected) {
+        fewerSince = fewerSince || now;
+        if (now - fewerSince > (+$('away-min').value || 3) * 60000)
+          alarm('away', `${expected}명 중 ${people}명만 보임`);
+      } else fewerSince = 0;
+    }
+  }
+
+  async function loadModels() {
+    if (!coco) coco = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+    if (!poser && $('w-sleep').checked) {
+      try {
+        poser = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet,
+          { modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING, enableTracking: false });
+      } catch (e) { poser = null; $('pose-note').classList.remove('hidden'); }
+    }
+  }
+
+  $('start').onclick = async () => {
+    const msg = $('setup-msg');
+    code = $('code').value.replace(/\D/g, '');
+    room = $('room').value.trim();
+    if (code.length !== 6) { msg.innerText = '6자리 감독 코드를 넣어 주세요.'; return; }
+    msg.innerText = '코드를 확인하는 중…';
+    try {
+      const d = await (await fetch(`${API_URL}/api/proctor/check?code=${code}`)).json();
+      if (!d.success) { msg.innerText = d.detail; return; }
+    } catch (e) { msg.innerText = '서버에 연결하지 못했습니다. 잠시 뒤 다시 눌러 주세요.'; return; }
+    try { localStorage.setItem('proctor_setup', JSON.stringify({ room, camera: $('camera').value })); } catch (e) {}
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: $('camera').value, width: { ideal: 1280 } }, audio: false });
+    } catch (e) { msg.innerText = '카메라를 켜지 못했습니다. 브라우저에서 카메라 사용을 허용해 주세요.'; return; }
+    msg.innerText = '';
+    beep();                                   // 버튼을 누를 때 소리를 한 번 내 두어야 나중에 경고음이 난다
+    const v = $('video');
+    v.srcObject = stream; await v.play();
+    $('setup').classList.add('hidden'); $('owner-box').classList.add('hidden');
+    $('running').classList.remove('hidden');
+    expected = +$('expected').value || 0; baselineSamples = []; tracks = []; fewerSince = 0; phoneHits = [];
+    try { if ('wakeLock' in navigator) wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+    await loadModels();
+    $('loading').classList.add('hidden');
+    running = true;
+    timer = setInterval(check, CHECK_MS);
+  };
+
+  $('stop').onclick = () => {
+    running = false; clearInterval(timer);
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    try { if (wake) wake.release(); } catch (e) {}
+    $('running').classList.add('hidden'); $('setup').classList.remove('hidden');
+    if (owner && owner.isAdmin) $('owner-box').classList.remove('hidden');
+  };
+  $('test-alarm').onclick = () => { beep(); setTimeout(() => speak('경고음 시험입니다.'), 1100); };
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && running && 'wakeLock' in navigator) {
+      try { wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+    }
+  });
+})();
+</script>
+</body>
+</html>
