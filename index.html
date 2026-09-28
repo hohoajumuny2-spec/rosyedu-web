@@ -3235,7 +3235,10 @@
                             <div id="admin-hw-view-list" class="mt-4 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
                         <div class="bg-[#151922] p-6 rounded">
-                            <h3 class="text-white font-bold mb-4">공지사항 등록</h3>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 id="bd-form-title-admin" class="text-white font-bold">공지사항 등록</h3>
+                                <button id="bd-cancel-edit-admin" onclick="cancelEditBoard()" class="hidden text-[11px] text-gray-400 hover:text-white"><i class="fa-solid fa-xmark mr-1"></i>수정 취소</button>
+                            </div>
                             <input type="text" id="bd-title-admin" placeholder="공지제목" class="w-full p-2 mb-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-blue-500">
                             <textarea id="bd-desc-admin" placeholder="내용을 입력하세요" class="w-full p-2 mb-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-blue-500 h-24"></textarea>
 
@@ -3244,7 +3247,9 @@
                             <p id="bd-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
                             <input type="file" id="bd-file-admin" class="mb-2 text-white" onchange="handleFileSelect(event, bdFilesAdmin, 'bd-file-admin-visual')">
                             <div id="bd-file-admin-visual" class="flex flex-wrap gap-2 mb-4"></div>
-                            <button onclick="createBoardAdmin()" class="w-full bg-gray-600 hover:bg-gray-500 py-2 text-white font-bold rounded transition shadow-lg">공지 등록</button>
+                            <!-- 고치는 중일 때: 지금 붙어 있는 첨부파일 -->
+                            <div id="bd-edit-file-admin" class="hidden mb-3 text-[12px] text-gray-300 bg-gray-800 rounded px-3 py-2"></div>
+                            <button id="bd-submit-admin" onclick="createBoardAdmin()" class="w-full bg-gray-600 hover:bg-gray-500 py-2 text-white font-bold rounded transition shadow-lg">공지 등록</button>
                             <div id="admin-board-view-list" class="mt-4 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
                     </div>
@@ -10657,18 +10662,20 @@ let lavUid = 0;
         async function createBoardAdmin() {
             const t=document.getElementById('bd-title-admin').value, d=document.getElementById('bd-desc-admin').value;
             if(!t) return alert("공지 제목을 입력하세요.");
-            showLoader("공지사항 및 첨부파일을 서버에 업로드 중입니다...");
+            const isEdit = !!EDITING_BOARD_ID;
+            showLoader(isEdit ? "공지를 고치는 중입니다..." : "공지사항 및 첨부파일을 서버에 업로드 중입니다...");
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
             fd.append("target_classes", getPickedClasses('bd-target-class').join(","));
             if(bdFilesAdmin.length) fd.append("file",bdFilesAdmin[0]);
+            if(isEdit) { const rm = document.getElementById('bd-remove-file-admin'); fd.append("remove_file", rm && rm.checked ? "true" : "false"); }
             try {
-                const data = await uploadFormData(`${API_URL}/api/admin/board`, fd);
+                const url = isEdit ? `${API_URL}/api/admin/board/${encodeURIComponent(EDITING_BOARD_ID)}/update` : `${API_URL}/api/admin/board`;
+                const data = await uploadFormData(url, fd);
                 if(data.success) {
                     loadAdminBoardList();
-                    document.getElementById('bd-title-admin').value=''; document.getElementById('bd-desc-admin').value='';
-                    clearClassPicker('bd-target-class');
-                    clearAllFiles('bd-file-admin-visual');
-                } else { alert("업로드 실패: " + data.detail); }
+                    if (isEdit) showToast("공지를 고쳤습니다.");
+                    cancelEditBoard();
+                } else { alert((isEdit ? "수정 실패: " : "업로드 실패: ") + data.detail); }
             } catch(e){ alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message + "\n(첨부파일 용량이 너무 크면 막힐 수 있습니다)"); }
             hideLoader();
         }
@@ -10705,7 +10712,7 @@ let lavUid = 0;
                         const attachId = 'board-attach-' + p.id;
                         const isNew = isStudent && p.is_read === false;
                         let html = `<div class="bg-[#151922] p-6 rounded-xl mb-4 text-white border ${isNew ? 'border-blue-400' : 'border-gray-700'} shadow-lg">`;
-                        html += `<h3 class="text-xl font-bold text-blue-300 mb-2">${isNew ? '<span class="text-[10px] align-middle bg-rose-600 text-white px-1.5 py-0.5 rounded mr-2">NEW</span>' : ''}${escapeHtml(p.title)}</h3>`;
+                        html += `<div class="flex items-start justify-between gap-3 mb-2"><h3 class="text-xl font-bold text-blue-300">${isNew ? '<span class="text-[10px] align-middle bg-rose-600 text-white px-1.5 py-0.5 rounded mr-2">NEW</span>' : ''}${escapeHtml(p.title)}</h3>${(currentUser && currentUser.isAdmin) ? `<button onclick="goEditBoard('${escAttr(p.id)}')" class="shrink-0 text-[12px] font-bold text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/60 px-3 py-1 rounded"><i class="fa-solid fa-pen mr-1"></i>수정</button>` : ''}</div>`;
                         html += `<p class="text-gray-300 text-sm whitespace-pre-wrap mb-4">${escapeHtml(p.desc)}</p>`;
                         if (p.file_url) {
                             html += `<div id="${attachId}" class="w-full"></div>`;
@@ -10762,7 +10769,64 @@ let lavUid = 0;
             } else { c.innerHTML = `<a href="${encodeURI(url)}" target="_blank" class="text-blue-400 text-sm inline-block bg-blue-900/30 hover:bg-blue-900/50 px-3 py-2 rounded transition"><i class="fa-solid fa-download mr-1"></i>첨부파일 보기</a>`; }
         }
 
-        async function loadAdminBoardList() { try{ const res=await fetch(`${API_URL}/api/board`); const data=await res.json(); const c=document.getElementById('admin-board-view-list'); c.innerHTML=''; if(data.success){ data.posts.forEach((p,i)=>c.innerHTML+=`<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 text-white"><a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate w-2/3 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a><span class="shrink-0 text-[10px] text-gray-400 mx-2 text-right">${(p.target_classes||[]).length ? escapeHtml(p.target_classes.join(', ')) : '전체'}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span><button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button></div>`); } }catch(e){} }
+        let ADMIN_BOARD_POSTS = [];
+        let EDITING_BOARD_ID = '';
+        async function loadAdminBoardList() {
+            try {
+                const res = await fetch(`${API_URL}/api/board`); const data = await res.json();
+                const c = document.getElementById('admin-board-view-list'); c.innerHTML = '';
+                if (!data.success) return;
+                ADMIN_BOARD_POSTS = data.posts || [];
+                ADMIN_BOARD_POSTS.forEach(p => c.innerHTML += `<div class="flex justify-between items-center gap-2 bg-gray-800 p-3 rounded mb-2 text-white ${p.id === EDITING_BOARD_ID ? 'ring-1 ring-blue-400' : ''}">
+                    ${p.file_url ? `<a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate min-w-0 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a>` : `<span class="font-bold truncate min-w-0"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</span>`}
+                    <span class="shrink-0 text-[10px] text-gray-400 text-right">${(p.target_classes||[]).length ? escapeHtml(p.target_classes.join(', ')) : '전체'}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span>
+                    <span class="shrink-0 flex gap-1">
+                        <button onclick="editBoardPost('${escAttr(p.id)}')" title="이 공지 고치기" class="text-emerald-300 text-[11px] bg-emerald-900/30 hover:bg-emerald-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-pen"></i> 수정</button>
+                        <button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
+                    </span></div>`);
+            } catch (e) {}
+        }
+
+        // 💡 올려 둔 공지를 고친다 — 등록 칸에 내용을 채우고 [수정 저장]으로 바꾼다
+        async function editBoardPost(id) {
+            let p = ADMIN_BOARD_POSTS.find(x => x.id === id);
+            if (!p) { await loadAdminBoardList(); p = ADMIN_BOARD_POSTS.find(x => x.id === id); }
+            if (!p) return alert("공지를 찾지 못했습니다. 이미 지워졌을 수 있어요.");
+            EDITING_BOARD_ID = id;
+            document.getElementById('bd-title-admin').value = p.title || '';
+            document.getElementById('bd-desc-admin').value = p.desc || '';
+            setPickedClasses('bd-target-class', p.target_classes || []);
+            clearAllFiles('bd-file-admin-visual');
+            const fileBox = document.getElementById('bd-edit-file-admin');
+            fileBox.innerHTML = p.file_url
+                ? `지금 첨부: <a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="text-blue-400 underline">파일 보기</a> <label class="ml-3"><input type="checkbox" id="bd-remove-file-admin"> 첨부 빼기</label><span class="block text-gray-500 mt-1">새 파일을 고르면 그 파일로 바뀝니다.</span>`
+                : '지금은 첨부파일이 없습니다. 위에서 파일을 고르면 붙습니다.';
+            fileBox.classList.remove('hidden');
+            document.getElementById('bd-form-title-admin').innerText = `'${p.title}' 수정 중`;
+            document.getElementById('bd-submit-admin').innerText = '수정 저장';
+            document.getElementById('bd-cancel-edit-admin').classList.remove('hidden');
+            loadAdminBoardList();
+            document.getElementById('bd-title-admin').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cancelEditBoard() {
+            EDITING_BOARD_ID = '';
+            document.getElementById('bd-title-admin').value = '';
+            document.getElementById('bd-desc-admin').value = '';
+            clearClassPicker('bd-target-class');
+            clearAllFiles('bd-file-admin-visual');
+            const fileBox = document.getElementById('bd-edit-file-admin');
+            fileBox.innerHTML = ''; fileBox.classList.add('hidden');
+            document.getElementById('bd-form-title-admin').innerText = '공지사항 등록';
+            document.getElementById('bd-submit-admin').innerText = '공지 등록';
+            document.getElementById('bd-cancel-edit-admin').classList.add('hidden');
+        }
+
+        // 공지사항 화면에서 [수정]을 누르면 관리자 화면의 공지 칸으로 가서 고친다
+        function goEditBoard(id) {
+            openProgram('admin');
+            setTimeout(() => { switchAdminTab('admin-hw'); editBoardPost(id); }, 150);
+        }
 
         // ── 관리자 — 레벨업 룰렛 상품 편집 ──────────────────
         let ROULETTE_ADMIN_CONFIG = {};
@@ -12978,6 +13042,10 @@ let lavUid = 0;
             const div = document.createElement('div');
             div.className = "bg-[#1e2430] p-4 rounded border border-gray-600 quiz-q-item";
             div.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <span class="quiz-q-no text-sm font-black text-orange-300">${qIdx + 1}번</span>
+                    <button type="button" onclick="removeQuizQuestion(this)" class="text-[11px] font-bold text-red-400 bg-red-900/20 hover:bg-red-900/50 px-2.5 py-1 rounded transition"><i class="fa-solid fa-trash mr-1"></i>이 문제 삭제</button>
+                </div>
                 <div class="flex gap-2 mb-3">
                     <select onchange="onQuizTypeChange(this)" class="quiz-q-type p-2 bg-gray-800 text-orange-300 font-bold rounded border border-gray-600 outline-none text-sm">
                         <option value="choice">객관식</option>
@@ -13043,6 +13111,26 @@ let lavUid = 0;
                 e.preventDefault();
                 e.stopPropagation();
                 uploadQuizImage(div, f);
+            });
+        }
+
+        // 💡 출제 중인 문제를 하나씩 뺀다. 빼고 나면 번호를 다시 매긴다.
+        function removeQuizQuestion(btn) {
+            const item = btn.closest('.quiz-q-item');
+            if (!item) return;
+            const no = item.querySelector('.quiz-q-no');
+            const text = (item.querySelector('.quiz-q-text') || {}).value || '';
+            if (text.trim() && !confirm(`${no ? no.innerText : '이'} 문제를 지울까요?\n${text.slice(0, 40)}`)) return;
+            item.remove();
+            renumberQuizQuestions();
+        }
+
+        function renumberQuizQuestions() {
+            document.querySelectorAll('#qz-questions-board .quiz-q-item').forEach((item, i) => {
+                const no = item.querySelector('.quiz-q-no');
+                if (no) no.innerText = `${i + 1}번`;
+                const q = item.querySelector('.quiz-q-text');
+                if (q) q.placeholder = `${i + 1}번 문제 내용`;
             });
         }
 
