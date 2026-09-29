@@ -2279,25 +2279,56 @@
                             <button id="tzfix-apply-btn" onclick="applyTzFix()" class="hidden bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded text-xs">9시간 더해 바로잡기</button>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-700 pb-4">
-                        <button onclick="enterPreview()" class="text-amber-300 font-bold border border-amber-500 px-4 py-2 rounded hover:bg-amber-500/10"><i class="fa-solid fa-user-graduate mr-1"></i>학생 화면으로 들어가기</button>
-                        <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="text-white font-bold bg-gray-800 px-4 py-2 rounded">학생 명단</button>
-                        <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="text-pink-400 font-bold border border-pink-500 px-4 py-2 rounded">상담</button>
-                        <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="text-emerald-500 font-bold border border-emerald-600 px-4 py-2 rounded">자료학습</button>
-                        <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="text-yellow-500 font-bold border border-yellow-600 px-4 py-2 rounded">출제</button>
-                        <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="text-indigo-400 font-bold border border-indigo-600 px-4 py-2 rounded">모의고사 개설</button>
-                        <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="text-orange-400 font-bold border border-orange-600 px-4 py-2 rounded">퀴즈 출제</button>
-                        <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="text-cyan-400 font-bold border border-cyan-600 px-4 py-2 rounded">영어 단어 시험</button>
-                        <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="text-purple-400 font-bold border border-purple-600 px-4 py-2 rounded">강의</button>
-                        <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="text-blue-400 font-bold border border-blue-600 px-4 py-2 rounded">과제/공지</button>
-                        <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="text-lime-400 font-bold border border-lime-600 px-4 py-2 rounded">대신 채점</button>
-                        <a href="./proctor.html" target="_blank" rel="noopener" class="text-rose-300 font-bold border border-rose-600 px-4 py-2 rounded" title="교실 태블릿 카메라로 자습 중 딴짓을 알려 줍니다"><i class="fa-solid fa-video mr-1"></i>자습 감독</a>
-                        <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="text-indigo-300 font-bold border border-indigo-600 px-4 py-2 rounded">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
-                        <button onclick="switchAdminTab('admin-study')" id="btn-admin-study" class="text-teal-300 font-bold border border-teal-600 px-4 py-2 rounded">공부 현황</button>
-                        <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="text-amber-400 font-bold border border-amber-600 px-4 py-2 rounded">모른다고 한 문항</button>
-                        <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="text-yellow-400 font-bold border border-yellow-500 px-4 py-2 rounded">레벨업 룰렛</button>
-                        <button onclick="switchAdminTab('admin-schedule')" id="btn-admin-schedule" class="text-sky-400 font-bold border border-sky-500 px-4 py-2 rounded">시험일정 · 클리닉</button>
-                    </div>
+                    <!-- 💡 관리자 메뉴를 쓰임새별 네 묶음으로 나눴다. 예전에는 16개 단추가 색도 모양도 제각각인 채
+                         한 줄로 늘어서 있어 찾기 어려웠다. 고른 메뉴만 초록으로 표시한다. -->
+                    <style>
+                        .admin-nav-group { background:#151922; border:1px solid #2b3240; border-radius:0.75rem; padding:0.75rem; }
+                        .admin-nav-title { font-size:11px; font-weight:700; letter-spacing:0.04em; color:#8b95a7; margin-bottom:0.5rem; }
+                        .admin-nav-btn { font-size:13px; font-weight:700; color:#cbd2dd; border:1px solid #394153; border-radius:0.5rem; padding:0.4rem 0.7rem; background:transparent; transition:background .15s, color .15s, border-color .15s; }
+                        .admin-nav-btn:hover { color:#fff; border-color:#5b6477; background:#1f2533; }
+                        .admin-nav-btn:focus-visible { outline:2px solid #34d399; outline-offset:2px; }
+                        .admin-nav-btn.admin-nav-active { color:#fff; background:#065f46; border-color:#10b981; }
+                        .admin-nav-link { color:#9aa3b5; font-weight:600; }
+                    </style>
+                    <nav aria-label="관리자 메뉴" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-6 pb-5 border-b border-gray-700">
+                        <div class="admin-nav-group">
+                            <p class="admin-nav-title"><i class="fa-solid fa-user-group mr-1.5"></i>학생 관리</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="admin-nav-btn">학생 명단</button>
+                                <button onclick="switchAdminTab('admin-study')" id="btn-admin-study" class="admin-nav-btn">공부 현황</button>
+                                <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="admin-nav-btn">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
+                                <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="admin-nav-btn">상담</button>
+                                <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="admin-nav-btn">모른다고 한 문항</button>
+                            </div>
+                        </div>
+                        <div class="admin-nav-group">
+                            <p class="admin-nav-title"><i class="fa-solid fa-book-open mr-1.5"></i>수업 · 과제</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="admin-nav-btn">과제 · 공지</button>
+                                <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="admin-nav-btn">강의</button>
+                                <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="admin-nav-btn">대신 채점</button>
+                                <button onclick="switchAdminTab('admin-schedule')" id="btn-admin-schedule" class="admin-nav-btn">시험일정 · 클리닉</button>
+                            </div>
+                        </div>
+                        <div class="admin-nav-group">
+                            <p class="admin-nav-title"><i class="fa-solid fa-file-pen mr-1.5"></i>시험 · 출제</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="admin-nav-btn">출제</button>
+                                <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="admin-nav-btn">퀴즈 출제</button>
+                                <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="admin-nav-btn">모의고사 개설</button>
+                                <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="admin-nav-btn">영어 단어 시험</button>
+                            </div>
+                        </div>
+                        <div class="admin-nav-group">
+                            <p class="admin-nav-title"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i>운영 도구</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="admin-nav-btn">자료학습 (AI)</button>
+                                <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="admin-nav-btn">레벨업 룰렛</button>
+                                <a href="./proctor.html" target="_blank" rel="noopener" class="admin-nav-btn admin-nav-link" title="교실 태블릿 카메라로 자습 중 딴짓을 알려 줍니다">자습 감독 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a>
+                                <button onclick="enterPreview()" class="admin-nav-btn admin-nav-link" title="학생에게 보이는 화면 그대로 들어가 봅니다">학생 화면 보기 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></button>
+                            </div>
+                        </div>
+                    </nav>
 
                     <!-- 원장님이 학생 대신 채점하기 -->
                     <!-- 💡 기록은 학생이 직접 낸 것과 똑같이 남는다 (같은 제출 경로를 쓴다). -->
@@ -5236,7 +5267,7 @@ let lavUid = 0;
                 document.getElementById('dashboard-screen').style.display='block'; document.getElementById('program-view').style.display='block';
                 const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block';
                 showProgramIntro(h.replace('prog-',''), t);
-                if(h==='prog-admin') { switchAdminTab('admin-users'); checkTzFix(); }
+                if(h==='prog-admin') { switchAdminTab(lastAdminTab()); checkTzFix(); }
                 if(h==='prog-study') loadStudyRoom();
                 if(h==='prog-qna') loadQna();
                 renderStudyMe();
@@ -5873,16 +5904,23 @@ let lavUid = 0;
         function closeExamRoomStrict() { clearInterval(examTimerInterval); isDrawing=false; document.getElementById('pdf-inner-container').innerHTML=''; document.getElementById('exam-prep-overlay').style.display='none'; if(wsLive) wsLive.close(); }
         function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); }
 
+        function lastAdminTab() {
+            let id = '';
+            try { id = localStorage.getItem('logyedu_admin_tab') || ''; } catch (e) {}
+            return (id && document.getElementById(id) && document.getElementById('btn-' + id)) ? id : 'admin-users';
+        }
+
         function switchAdminTab(id) {
             // 💡 관리자 화면에 들어오면 맡겨둔 작업이 어떻게 되어가는지 계속 지켜본다 —
             //    출제를 맡겨놓고 다른 탭으로 옮겨도 끝나면 알려주기 위함.
             if (!JOB_TIMER) startJobPolling();
-            document.querySelectorAll('.admin-tab-content').forEach(el=>el.style.display='none'); document.querySelectorAll('#prog-admin button').forEach(b=>{if(b.id.startsWith('btn-admin-')) b.classList.replace('bg-gray-800','border');});
+            document.querySelectorAll('.admin-tab-content').forEach(el=>el.style.display='none'); document.querySelectorAll('#prog-admin .admin-nav-btn').forEach(b => { const on = b.id === 'btn-' + id; b.classList.toggle('admin-nav-active', on); if (b.id) b.setAttribute('aria-current', on ? 'page' : 'false'); });
             // 💡 탭 내용은 대부분 grid 레이아웃인데 display:'block'으로 덮어써서
             //    칸이 옆으로 나뉘지 않고 전부 위아래로 쌓여버리던 문제 수정
             const tabEl = document.getElementById(id);
             tabEl.style.display = tabEl.classList.contains('grid') ? 'grid' : 'block';
-            const btn = document.getElementById('btn-'+id); if(btn) btn.classList.replace('border','bg-gray-800');
+            // 다음에 관리자 화면을 열면 마지막으로 쓰던 메뉴로 연다
+            try { localStorage.setItem('logyedu_admin_tab', id); } catch (e) {}
             if(id==='admin-users'){fetchReports(); loadAdminStudents(); loadAdminAccounts();}
             if(id==='admin-counsel'){initCounselTab();}
             if(id==='admin-schedule'){initScheduleTab();}
@@ -5908,7 +5946,7 @@ let lavUid = 0;
             const retryCount = (adminTabRetries[id] || 0);
             if (retryCount < 2) {
                 setTimeout(() => {
-                    if (document.getElementById('btn-'+id)?.classList.contains('border')) return; // 이미 다른 탭으로 옮김
+                    if (!document.getElementById('btn-'+id)?.classList.contains('admin-nav-active')) return; // 이미 다른 탭으로 옮김
                     if (getComputedStyle(tabEl).display === 'none') {
                         adminTabRetries[id] = retryCount + 1;
                         switchAdminTab(id);
