@@ -3246,7 +3246,7 @@
                             <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">공지 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
                             <div id="bd-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
                             <p id="bd-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
-                            <input type="file" id="bd-file-admin" class="mb-2 text-white" onchange="handleFileSelect(event, bdFilesAdmin, 'bd-file-admin-visual')">
+                            <input type="file" id="bd-file-admin" multiple class="mb-2 text-white" onchange="handleFileSelect(event, bdFilesAdmin, 'bd-file-admin-visual')">
                             <div id="bd-file-admin-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <!-- 고치는 중일 때: 지금 붙어 있는 첨부파일 -->
                             <div id="bd-edit-file-admin" class="hidden mb-3 text-[12px] text-gray-300 bg-gray-800 rounded px-3 py-2"></div>
@@ -10660,6 +10660,15 @@ let lavUid = 0;
             hideLoader();
         }
 
+        function boardFiles(p) {
+            return (p && p.file_urls && p.file_urls.length) ? p.file_urls : ((p && p.file_url) ? [p.file_url] : []);
+        }
+        function boardFileName(u, i) {
+            const raw = decodeURIComponent(String(u).split('/').pop() || '');
+            const name = raw.replace(/^[0-9a-f-]{36}_/i, '');
+            return name || `첨부 ${i + 1}`;
+        }
+
         async function createBoardAdmin() {
             const t=document.getElementById('bd-title-admin').value, d=document.getElementById('bd-desc-admin').value;
             if(!t) return alert("공지 제목을 입력하세요.");
@@ -10667,8 +10676,9 @@ let lavUid = 0;
             showLoader(isEdit ? "공지를 고치는 중입니다..." : "공지사항 및 첨부파일을 서버에 업로드 중입니다...");
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
             fd.append("target_classes", getPickedClasses('bd-target-class').join(","));
-            if(bdFilesAdmin.length) fd.append("file",bdFilesAdmin[0]);
-            if(isEdit) { const rm = document.getElementById('bd-remove-file-admin'); fd.append("remove_file", rm && rm.checked ? "true" : "false"); }
+            bdFilesAdmin.forEach(f => fd.append("files", f));
+            // 고치는 중이면 체크된(남길) 기존 첨부만 보낸다
+            if(isEdit) fd.append("keep_files", JSON.stringify(Array.from(document.querySelectorAll('.bd-keep-file:checked')).map(x => x.value)));
             try {
                 const url = isEdit ? `${API_URL}/api/admin/board/${encodeURIComponent(EDITING_BOARD_ID)}/update` : `${API_URL}/api/admin/board`;
                 const data = await uploadFormData(url, fd);
@@ -10686,7 +10696,7 @@ let lavUid = 0;
             if(!t) return alert("제목을 입력하세요.");
             showLoader("공지사항 및 파일을 업로드 중입니다...");
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
-            if(bdFiles.length) fd.append("file",bdFiles[0]);
+            bdFiles.forEach(f => fd.append("files", f));
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/board`, fd);
                 if(data.success) {
@@ -10715,10 +10725,11 @@ let lavUid = 0;
                         let html = `<div class="bg-[#151922] p-6 rounded-xl mb-4 text-white border ${isNew ? 'border-blue-400' : 'border-gray-700'} shadow-lg">`;
                         html += `<div class="flex items-start justify-between gap-3 mb-2"><h3 class="text-xl font-bold text-blue-300">${isNew ? '<span class="text-[10px] align-middle bg-rose-600 text-white px-1.5 py-0.5 rounded mr-2">NEW</span>' : ''}${escapeHtml(p.title)}</h3>${(currentUser && currentUser.isAdmin) ? `<button onclick="goEditBoard('${escAttr(p.id)}')" class="shrink-0 text-[12px] font-bold text-emerald-300 bg-emerald-900/30 hover:bg-emerald-900/60 px-3 py-1 rounded"><i class="fa-solid fa-pen mr-1"></i>수정</button>` : ''}</div>`;
                         html += `<p class="text-gray-300 text-sm whitespace-pre-wrap mb-4">${escapeHtml(p.desc)}</p>`;
-                        if (p.file_url) {
-                            html += `<div id="${attachId}" class="w-full"></div>`;
-                            setTimeout(() => renderBoardAttachment(API_URL + p.file_url, attachId), 50);
-                        }
+                        boardFiles(p).forEach((u, i) => {
+                            const id = `${attachId}-${i}`;
+                            html += `<div id="${id}" class="w-full mb-3"></div>`;
+                            setTimeout(() => renderBoardAttachment(API_URL + u, id), 50);
+                        });
                         html += `</div>`;
                         c.innerHTML += html;
                     });
@@ -10780,7 +10791,7 @@ let lavUid = 0;
                 ADMIN_BOARD_POSTS = data.posts || [];
                 ADMIN_BOARD_POSTS.forEach(p => c.innerHTML += `<div class="flex justify-between items-center gap-2 bg-gray-800 p-3 rounded mb-2 text-white ${p.id === EDITING_BOARD_ID ? 'ring-1 ring-blue-400' : ''}">
                     ${p.file_url ? `<a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate min-w-0 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a>` : `<span class="font-bold truncate min-w-0"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</span>`}
-                    <span class="shrink-0 text-[10px] text-gray-400 text-right">${(p.target_classes||[]).length ? escapeHtml(p.target_classes.join(', ')) : '전체'}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span>
+                    <span class="shrink-0 text-[10px] text-gray-400 text-right">${boardFiles(p).length > 1 ? `<i class="fa-solid fa-paperclip"></i> ${boardFiles(p).length} · ` : ''}${(p.target_classes||[]).length ? escapeHtml(p.target_classes.join(', ')) : '전체'}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span>
                     <span class="shrink-0 flex gap-1">
                         <button onclick="editBoardPost('${escAttr(p.id)}')" title="이 공지 고치기" class="text-emerald-300 text-[11px] bg-emerald-900/30 hover:bg-emerald-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-pen"></i> 수정</button>
                         <button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
@@ -10799,8 +10810,9 @@ let lavUid = 0;
             setPickedClasses('bd-target-class', p.target_classes || []);
             clearAllFiles('bd-file-admin-visual');
             const fileBox = document.getElementById('bd-edit-file-admin');
-            fileBox.innerHTML = p.file_url
-                ? `지금 첨부: <a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="text-blue-400 underline">파일 보기</a> <label class="ml-3"><input type="checkbox" id="bd-remove-file-admin"> 첨부 빼기</label><span class="block text-gray-500 mt-1">새 파일을 고르면 그 파일로 바뀝니다.</span>`
+            const files = boardFiles(p);
+            fileBox.innerHTML = files.length
+                ? `<p class="mb-1">지금 붙어 있는 첨부 (체크를 풀면 뺍니다)</p>` + files.map((u, i) => `<label class="flex items-center gap-2 py-0.5"><input type="checkbox" class="bd-keep-file" value="${escAttr(u)}" checked> <a href="${API_URL}${encodeURI(u)}" target="_blank" class="text-blue-400 underline truncate">${escapeHtml(boardFileName(u, i))}</a></label>`).join('') + `<span class="block text-gray-500 mt-1">위에서 파일을 더 고르면 뒤에 붙습니다.</span>`
                 : '지금은 첨부파일이 없습니다. 위에서 파일을 고르면 붙습니다.';
             fileBox.classList.remove('hidden');
             document.getElementById('bd-form-title-admin').innerText = `'${p.title}' 수정 중`;
