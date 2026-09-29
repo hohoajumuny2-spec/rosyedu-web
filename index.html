@@ -3264,7 +3264,12 @@
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual')">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <button onclick="createHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded transition shadow-lg">배포하기</button>
-                            <div id="admin-hw-view-list" class="mt-4 h-64 overflow-auto text-white space-y-2"></div>
+                            <!-- 💡 지난 과제는 숨겨 학생 화면을 깔끔하게. 숨겨도 제출 기록 · 채점은 그대로 남는다 -->
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-[12px]">
+                                <label class="text-gray-400 flex items-center gap-1.5"><input type="checkbox" id="admin-hw-show-hidden" onchange="loadAdminHWList()" class="accent-emerald-500"> 숨긴 과제도 보기 <span id="admin-hw-hidden-count" class="text-gray-500"></span></label>
+                                <button id="admin-hw-hide-past" onclick="hidePastHomeworks()" class="hidden bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded"><i class="fa-solid fa-eye-slash mr-1"></i>마감 지난 과제 모두 숨기기 <span id="admin-hw-past-count"></span></button>
+                            </div>
+                            <div id="admin-hw-view-list" class="mt-2 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
                         <div class="bg-[#151922] p-6 rounded">
                             <div class="flex justify-between items-center mb-4">
@@ -11390,22 +11395,34 @@ let lavUid = 0;
                 c.innerHTML = '';
                 if (!data.success) return;
                 ADMIN_HW_LIST = data.homeworks;
+                const showHidden = document.getElementById('admin-hw-show-hidden').checked;
+                const hiddenN = ADMIN_HW_LIST.filter(h => h.hidden).length;
+                document.getElementById('admin-hw-hidden-count').innerText = hiddenN ? `(${hiddenN}개)` : '';
+                const past = ADMIN_HW_LIST.filter(h => !h.hidden && isHomeworkPast(h));
+                const pastBtn = document.getElementById('admin-hw-hide-past');
+                pastBtn.classList.toggle('hidden', !past.length);
+                document.getElementById('admin-hw-past-count').innerText = past.length ? `(${past.length}개)` : '';
+                let shown = 0;
                 data.homeworks.forEach((h, hwIdx) => {
+                    if (h.hidden && !showHidden) return;
+                    shown++;
                     const kindLabel = h.kind === 'clinic' ? '클리닉' : '수업';
                     const kindTone = h.kind === 'clinic' ? 'bg-purple-900/60 text-purple-200' : 'bg-blue-900/60 text-blue-200';
-                    c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white">
+                    c.innerHTML += `<div class="bg-gray-800 p-3 rounded mb-2 text-white ${h.hidden ? 'opacity-60' : ''}">
                         <div class="flex justify-between items-center gap-2">
                             <div class="min-w-0">
                                 <span class="text-[10px] px-2 py-0.5 rounded-full mr-1 ${kindTone}">${kindLabel}</span>
+                                ${h.hidden ? '<span class="text-[10px] px-2 py-0.5 rounded-full mr-1 bg-gray-600 text-gray-200"><i class="fa-solid fa-eye-slash mr-0.5"></i>학생에게 숨김</span>' : ''}
                                 ${h.answer_file
                                     ? `<a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" class="hover:text-blue-400 font-bold underline cursor-pointer">${escapeHtml(h.title)}</a>`
                                     : `<span class="font-bold">${escapeHtml(h.title)}</span>`}
                                 <div class="text-[10px] text-gray-400 mt-0.5">
-                                    ${h.deadline ? `<span class="text-rose-300">마감 ${escapeHtml(hwDeadlineLabel(h.deadline))}</span> · ` : ''}
+                                    ${h.deadline ? `<span class="${isHomeworkPast(h) ? 'text-gray-500' : 'text-rose-300'}">마감 ${escapeHtml(hwDeadlineLabel(h.deadline))}${isHomeworkPast(h) ? ' (지남)' : ''}</span> · ` : ''}
                                     ${h.question_count ? `정답 ${h.question_count}문항 · OMR 자동 채점` : '정답표 없음 · 파일 제출 방식'}
                                     ${h.answer_file ? ' · 해답 파일 있음' : ''}</div>
                             </div>
                             <div class="flex gap-1 shrink-0">
+                                <button onclick="setHomeworkHidden('${escAttr(h.title)}', ${!h.hidden})" title="${h.hidden ? '학생 화면에 다시 보이게 합니다' : '학생 화면에서 숨깁니다 (제출 기록은 남습니다)'}" class="text-gray-300 text-[11px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition font-bold"><i class="fa-solid ${h.hidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${h.hidden ? '보이기' : '숨기기'}</button>
                                 <button onclick="editHomework(${hwIdx})" title="이 과제 내용 고치기" class="text-emerald-300 text-[11px] bg-emerald-900/30 hover:bg-emerald-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-pen"></i></button>
                                 ${h.question_count ? `<button onclick="openExplEditor('${escAttr(h.title)}', '과제 제출')" title="문항별 해설 넣기" class="text-sky-300 text-[11px] bg-sky-900/30 hover:bg-sky-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>` : ''}
                                 ${h.answer_file ? `<button onclick="deleteHomeworkFile('${escAttr(h.title)}')" class="text-yellow-400 text-[11px] bg-yellow-900/30 hover:bg-yellow-900/50 px-2 py-1 rounded transition" title="과제는 두고 해답 파일만 뗍니다">파일만 삭제</button>` : ''}
@@ -11414,7 +11431,31 @@ let lavUid = 0;
                         </div>
                     </div>`;
                 });
+                if (!shown) c.innerHTML = `<p class="text-center text-gray-500 text-sm py-6">${hiddenN ? '보이는 과제가 없습니다. 숨긴 과제는 위 [숨긴 과제도 보기]로 볼 수 있습니다.' : '올린 과제가 없습니다.'}</p>`;
             } catch (e) {}
+        }
+
+        // 마감이 지난 과제 (기한이 없는 과제는 원장님이 하나씩 숨긴다)
+        function isHomeworkPast(h) {
+            const d = parseHwDeadline(h && h.deadline);
+            return !!d && d.getTime() < Date.now();
+        }
+
+        async function setHomeworkHidden(title, hidden) {
+            const r = await adminPost('/api/admin/homework/hide', { titles: [title], hidden: !!hidden });
+            if (!r.ok) return alert(r.message);
+            showToast(hidden ? '학생 화면에서 숨겼습니다. 제출 기록은 그대로 남습니다.' : '학생 화면에 다시 보이게 했습니다.');
+            loadAdminHWList();
+        }
+
+        async function hidePastHomeworks() {
+            const past = (ADMIN_HW_LIST || []).filter(h => !h.hidden && isHomeworkPast(h));
+            if (!past.length) return;
+            if (!confirm(`마감이 지난 과제 ${past.length}개를 학생 화면에서 숨깁니다.\n제출 기록과 채점은 그대로 남고, 언제든 다시 보이게 할 수 있습니다.`)) return;
+            const r = await adminPost('/api/admin/homework/hide', { titles: past.map(h => h.title), hidden: true });
+            if (!r.ok) return alert(r.message);
+            showToast(`지난 과제 ${r.data.count}개를 숨겼습니다.`);
+            loadAdminHWList();
         }
 
         async function deleteHomeworkFile(title) {
