@@ -2846,15 +2846,25 @@
                                     <div class="w-full"><div id="qz-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="qz-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
                                 </div>
                             </div>
+                            <!-- 오픈 일시: 미리 여러 개 올려 두고, 정한 시각부터 학생이 풀게 한다 -->
                             <div class="flex gap-2 mb-2">
+                                <div class="w-1/2">
+                                    <label class="text-xs text-gray-400 mb-1 block">오픈 일시 <span class="text-gray-500">(비우면 바로 열림)</span></label>
+                                    <input type="datetime-local" id="qz-open" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
+                                </div>
                                 <div class="w-1/2">
                                     <label class="text-xs text-gray-400 mb-1 block">마감 일시 (기한)</label>
                                     <input type="datetime-local" id="qz-deadline" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
                                 </div>
+                            </div>
+                            <div class="flex gap-2 mb-2">
                                 <div class="w-1/2">
                                     <label class="text-xs text-gray-400 mb-1 block">제한 시간 (분)</label>
                                     <input type="number" id="qz-limit" placeholder="예: 10" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
                                 </div>
+                                <p class="w-1/2 self-end text-[11px] text-gray-500 leading-snug pb-1">
+                                    <i class="fa-solid fa-clock mr-1 text-orange-400"></i>오픈 일시를 정하면 미리 올려 둘 수 있어요. 그 전에는 학생 화면에 🔒 '언제 열리는지'만 보이고 문제는 보이지 않아요.
+                                </p>
                             </div>
                             <!-- 📸 문제지를 파일이나 캡처로 올리면 AI가 읽어 문항을 채워준다 -->
                             <div id="qz-capture-drop" onclick="document.getElementById('qz-capture-input').click()"
@@ -13516,8 +13526,10 @@ let lavUid = 0;
         async function createQuiz() {
             const title = document.getElementById('qz-title').value.trim();
             const deadline = document.getElementById('qz-deadline').value;
+            const openAt = document.getElementById('qz-open').value;   // 비우면 바로 열림
             const limit = parseInt(document.getElementById('qz-limit').value);
             if(!title || !deadline || !limit) return alert("제목, 마감일, 제한 시간을 모두 입력하세요.");
+            if(openAt && openAt >= deadline) return alert("오픈 일시가 마감 일시보다 앞서야 합니다.");
             const qItems = document.querySelectorAll('.quiz-q-item');
             if(qItems.length === 0) return alert("문제를 최소 1개 이상 추가하세요.");
 
@@ -13555,11 +13567,13 @@ let lavUid = 0;
                 const res = await fetch(`${API_URL}/api/admin/quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_classes: getPickedClasses('qz-target-class') })
+                    body: JSON.stringify({ title: title, open_at: openAt, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_classes: getPickedClasses('qz-target-class') })
                 });
                 const data = await res.json();
                 if(data.success) {
-                    alert(EDITING_QUIZ_TITLE ? "수정한 내용을 저장했습니다." : "퀴즈가 성공적으로 배포되었습니다!");
+                    const later = openAt && quizNotOpenYet(openAt);
+                    alert((EDITING_QUIZ_TITLE ? "수정한 내용을 저장했습니다." : (later ? "퀴즈를 올려 두었습니다." : "퀴즈가 성공적으로 배포되었습니다!"))
+                          + (later ? `\n${quizWhenLabel(openAt)}에 학생들에게 열립니다.` : ''));
                     EDITING_QUIZ_TITLE = '';
                     updateQuizEditState();
                     document.getElementById('qz-title').value = ''; document.getElementById('qz-questions-board').innerHTML = '';
@@ -13582,7 +13596,7 @@ let lavUid = 0;
                         c.innerHTML += `<div class="bg-gray-800 p-4 rounded mb-2 border ${on ? 'border-orange-500' : 'border-gray-700'} flex justify-between items-center gap-2">
                             <div class="min-w-0">
                                 <div class="font-bold text-orange-400 mb-1 truncate">${escapeHtml(q.title)}${on ? ' <span class="text-[10px] text-orange-300">· 편집 중</span>' : ''}</div>
-                                <div class="text-xs text-gray-400">마감 ${escapeHtml(q.deadline || '')} · ${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
+                                <div class="text-xs text-gray-400">${quizStatusBadge(q)}${q.open_at ? '오픈 ' + escapeHtml(quizWhenLabel(q.open_at)) + ' · ' : ''}마감 ${escapeHtml(q.deadline ? quizWhenLabel(q.deadline) : '')} · ${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
                             </div>
                             <div class="shrink-0 flex gap-1">
                                 <button onclick="openExplEditor('${escAttr(q.title)}', '타임어택 퀴즈')" title="문항별 해설 넣기" class="text-sky-300 text-xs bg-sky-900/30 hover:bg-sky-900/60 px-3 py-2 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>
@@ -13607,6 +13621,7 @@ let lavUid = 0;
             EDITING_QUIZ_TITLE = q.title;
             document.getElementById('qz-title').value = q.title || '';
             document.getElementById('qz-deadline').value = (q.deadline || '').slice(0, 16);
+            document.getElementById('qz-open').value = (q.open_at || '').replace(' ', 'T').slice(0, 16);
             document.getElementById('qz-limit').value = q.time_limit || '';
             document.getElementById('qz-subject').value = q.subject || 'korean';
             setPickedClasses('qz-target-class', q.target_classes || q.target_class || []);
@@ -13939,6 +13954,40 @@ let lavUid = 0;
                 <script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
         }
 
+        // ─── 퀴즈 오픈·마감 시각 ('2026-10-05T18:00' — 원장님이 적은 한국 시각) ───
+        let quizOpenRefresh = null;
+        function quizTimeMs(v) {
+            const m = String(v || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+            if (!m) return null;
+            return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime();
+        }
+        function quizNotOpenYet(v) { const t = quizTimeMs(v); return !!t && Date.now() < t; }
+        // '2026-10-05T18:00' → '10/5(월) 18:00'
+        function quizWhenLabel(v) {
+            const t = quizTimeMs(v);
+            if (!t) return String(v || '');
+            const d = new Date(t), hasTime = /[T ]\d{2}:\d{2}/.test(String(v));
+            const day = `${d.getMonth() + 1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`;
+            return hasTime ? `${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : day;
+        }
+        // 열리기까지 남은 시간: '3시간 20분 뒤' · '2일 뒤' · '곧'
+        function quizUntilLabel(v) {
+            const t = quizTimeMs(v);
+            if (!t) return '';
+            const min = Math.max(0, Math.round((t - Date.now()) / 60000));
+            if (min < 1) return '곧 열려요';
+            if (min < 60) return `${min}분 뒤`;
+            if (min < 24 * 60) return `${Math.floor(min / 60)}시간${min % 60 ? ' ' + (min % 60) + '분' : ''} 뒤`;
+            return `${Math.round(min / 1440)}일 뒤`;
+        }
+        // 원장님 목록의 상태 표시: 예약 · 진행 중 · 마감
+        function quizStatusBadge(q) {
+            if (quizNotOpenYet(q.open_at)) return '<span class="text-sky-300 font-bold mr-1">⏰ 예약</span>';
+            const end = quizTimeMs(q.deadline);
+            if (end && Date.now() > end) return '<span class="text-gray-500 font-bold mr-1">마감됨</span>';
+            return '<span class="text-emerald-400 font-bold mr-1">● 진행 중</span>';
+        }
+
         async function loadStudentQuizzes() {
             try {
                 let done = new Set();
@@ -13948,13 +13997,32 @@ let lavUid = 0;
                 const c = document.getElementById('student-quiz-list'); c.innerHTML = '';
                 if(data.success) {
                     allQuizzes = data.quizzes;
+                    let nextOpen = null;   // 가장 먼저 열릴 예약 퀴즈 — 그때 목록을 저절로 새로 고친다
                     data.quizzes.forEach((q, i) => {
                         const isDone = done.has(q.title);
+                        if (q.locked && !isDone) {
+                            // 🔒 아직 열리지 않은 퀴즈: 언제 열리는지만 보여 준다 (문제는 서버가 보내지 않는다)
+                            const at = quizTimeMs(q.open_at);
+                            if (at && (!nextOpen || at < nextOpen)) nextOpen = at;
+                            c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border border-gray-700 cursor-pointer opacity-90" onclick="showToast('${escAttr(quizWhenLabel(q.open_at))}에 열려요. 조금만 기다려 주세요!')">
+                                <div><h3 class="font-bold text-xl text-gray-300 mb-2"><i class="fa-solid fa-lock text-gray-500 mr-2"></i>${escapeHtml(q.title)}</h3>
+                                <p class="text-xs text-sky-300 font-bold">${escapeHtml(quizWhenLabel(q.open_at))} 오픈 <span class="text-gray-500 font-normal">· ${escapeHtml(quizUntilLabel(q.open_at))}</span></p>
+                                <p class="text-[11px] text-gray-500 mt-1">제한 시간 ${escapeHtml(q.time_limit)}분${q.question_count ? ' · ' + q.question_count + '문항' : ''}${q.deadline ? ' · 마감 ' + escapeHtml(quizWhenLabel(q.deadline)) : ''}</p></div>
+                                <button class="bg-gray-700 text-gray-300 px-3 py-2 rounded font-bold text-sm w-full mt-4 cursor-not-allowed"><i class="fa-solid fa-lock mr-1"></i>오픈 전</button></div>`;
+                            return;
+                        }
                         const btn = isDone
                             ? `<button onclick="event.stopPropagation(); openViewResult('${escAttr(q.title)}', '타임어택 퀴즈')" class="bg-sky-700 hover:bg-sky-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4"><i class="fa-solid fa-file-lines mr-1"></i>결과 다시보기</button>`
                             : '<button class="bg-orange-600 text-white px-3 py-2 rounded font-bold text-sm w-full mt-4">퀴즈 시작</button>';
-                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border ${isDone ? 'border-gray-600' : 'border-orange-500 cursor-pointer shadow-lg shadow-orange-500/20'}" ${isDone ? '' : `onclick="enterQuizRoom(${i})"`}><div><h3 class="font-bold text-xl text-white mb-2">${escapeHtml(q.title)}</h3><p class="text-xs ${isDone ? 'text-gray-500' : 'text-orange-400'} font-bold">${isDone ? '이미 제출했어요' : '제한 시간: ' + escapeHtml(q.time_limit) + '분'}</p></div>${btn}</div>`;
+                        c.innerHTML += `<div class="bg-[#151922] p-6 rounded-xl border ${isDone ? 'border-gray-600' : 'border-orange-500 cursor-pointer shadow-lg shadow-orange-500/20'}" ${isDone ? '' : `onclick="enterQuizRoom(${i})"`}><div><h3 class="font-bold text-xl text-white mb-2">${escapeHtml(q.title)}</h3><p class="text-xs ${isDone ? 'text-gray-500' : 'text-orange-400'} font-bold">${isDone ? '이미 제출했어요' : '제한 시간: ' + escapeHtml(q.time_limit) + '분' + (q.deadline ? ' · 마감 ' + escapeHtml(quizWhenLabel(q.deadline)) : '')}</p></div>${btn}</div>`;
                     });
+                    // 예약 퀴즈가 열리는 시각에 목록을 새로 불러, 학생이 새로 고치지 않아도 [퀴즈 시작]이 뜨게 한다
+                    clearTimeout(quizOpenRefresh);
+                    if (nextOpen && nextOpen - Date.now() < 12 * 3600 * 1000) {
+                        quizOpenRefresh = setTimeout(() => {
+                            if (location.hash === '#prog-quiz-list') loadStudentQuizzes();
+                        }, Math.max(1000, nextOpen - Date.now() + 1500));
+                    }
                 }
             } catch(e){}
         }
@@ -13965,6 +14033,8 @@ let lavUid = 0;
         // 먼저 확인해서, 재입장해도 남은 시간만 이어서 준다(리셋 불가).
         async function enterQuizRoom(idx) {
             currentActiveQuiz = allQuizzes[idx];
+            if (currentActiveQuiz.locked && quizNotOpenYet(currentActiveQuiz.open_at))
+                return alert(`'${currentActiveQuiz.title}' 퀴즈는 ${quizWhenLabel(currentActiveQuiz.open_at)}에 열려요.`);
             showLoader("확인 중...");
             let startInfo;
             try {
@@ -13972,8 +14042,12 @@ let lavUid = 0;
                 startInfo = await res.json();
             } catch(e) { hideLoader(); return alert("서버 통신 오류. 잠시 후 다시 시도해주세요."); }
             hideLoader();
+            // 아직 열리지 않았으면 그냥 알린다 (재응시를 부탁할 일이 아니다)
+            if (!startInfo.success && startInfo.not_open) return alert(startInfo.detail);
             // 막혔을 때는 그냥 알리고 끝내지 않고, 원장님께 부탁할 길을 준다.
             if (!startInfo.success) return askQuizRetry(currentActiveQuiz.title, startInfo.detail || "퀴즈를 시작할 수 없습니다.");
+            // 오픈 전에 받은 목록에는 문제가 없으니, 시작할 때 서버가 준 문제로 채운다
+            if (Array.isArray(startInfo.questions) && startInfo.questions.length) currentActiveQuiz.questions = startInfo.questions;
 
             const elapsed = Date.now() / 1000 - startInfo.started_at;
             const remainingSec = Math.floor(startInfo.time_limit * 60 - elapsed);
