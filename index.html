@@ -19,6 +19,8 @@
     <!-- 상담 화면의 '지원 가능 대학 지도'에 쓰는 행정구역 데이터 -->
     <script src="korea-map.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- 시험지에 넣는 과제 QR (찍으면 그 과제 OMR이 바로 열림) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -5259,6 +5261,11 @@ let lavUid = 0;
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#','');
             if (h === 'dm') { window.location.hash = 'dashboard'; setTimeout(openDm, 400); return; }
+            // 💡 시험지 QR(#hw-과제id, 또는 문제지 만들기에서 찍은 #hwt-과제이름): 어떤 과제였는지 적어두고
+            //    과제 화면으로. 로그인 전이면 로그인 뒤 학습실(#dashboard)로 오므로, 거기서 적어둔 과제를 보고
+            //    다시 과제 화면으로 보낸다.
+            if (rememberQrHomework(h)) { window.location.hash = 'prog-homework'; return; }
+            if (h === 'dashboard' && currentUser && pendingHomeworkId()) { window.location.hash = 'prog-homework'; return; }
             // 💡 #dashboard-home(학습실 첫 화면 타일들)이 이 초기화 대상에 빠져 있어서,
             // 프로그램(예: 관리자 화면)으로 들어가도 타일이 그대로 위에 남아있는 채
             // 실제 내용이 1500px 가까이 아래로 밀려나 있었다 — 스크롤해야만 보이는
@@ -5273,6 +5280,7 @@ let lavUid = 0;
                 const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block';
                 showProgramIntro(h.replace('prog-',''), t);
                 if(h==='prog-admin') { switchAdminTab(lastAdminTab()); checkTzFix(); }
+                if(h==='prog-homework' && pendingHomeworkId()) openPendingHomework();
                 if(h==='prog-study') loadStudyRoom();
                 if(h==='prog-qna') loadQna();
                 renderStudyMe();
@@ -5386,6 +5394,11 @@ let lavUid = 0;
 
         window.addEventListener('DOMContentLoaded', () => {
             fetch(`${API_URL}/api/health`).catch(()=>{});
+            // 💡 시험지 QR로 처음 들어온 경우: 어떤 과제인지 먼저 적어둔다. 로그인 전이면 로그인 창을 띄우고,
+            //    로그인하면 학습실을 거쳐 그 과제 OMR이 열린다(hashchange 쪽 참고).
+            if (rememberQrHomework(location.hash.replace('#', '')) && !localStorage.getItem('logyedu_user')) {
+                history.replaceState(null, '', location.pathname + '#home'); setTimeout(() => showModal('auth'), 300);
+            }
             loadClassAutocomplete();
             const u = localStorage.getItem('logyedu_user');
             if(u) {
@@ -5927,6 +5940,9 @@ let lavUid = 0;
             // 다음에 관리자 화면을 열면 마지막으로 쓰던 메뉴로 연다
             try { localStorage.setItem('logyedu_admin_tab', id); } catch (e) {}
             if(id==='admin-users'){fetchReports(); loadAdminStudents(); loadAdminAccounts();}
+            // 💡 반 목록은 원래 '학생 명단' 을 열 때만 불러왔다. 마지막 메뉴(예: 과제·공지)로 바로 열리면
+            //    반 고르기 칸이 텅 빈 채로 남아서, 반 고르기 칸이 있는 메뉴는 아직이면 여기서 불러온다.
+            else if (!CLASS_DATA_LOADED && tabEl.querySelector('.class-picker, .class-select')) loadAdminClassData();
             if(id==='admin-counsel'){initCounselTab();}
             if(id==='admin-schedule'){initScheduleTab();}
             if(id==='admin-exam'){loadAdminExams();}
@@ -9819,6 +9835,9 @@ let lavUid = 0;
         }
         let ADMIN_CLASSES = [];
         let CLASSES_UNAVAILABLE = false;
+        // 반 목록을 한 번이라도 불러왔는지. 관리자 화면이 '학생 명단' 이 아닌 메뉴로 바로 열려도
+        // 반 고르기 칸이 비지 않게, 그 메뉴를 열 때 아직이면 불러온다(switchAdminTab).
+        let CLASS_DATA_LOADED = false;
         let ADMIN_STUDENTS = [];
         const collapsedClassGroups = new Set();
 
@@ -10010,6 +10029,7 @@ let lavUid = 0;
                 ADMIN_STUDENTS = sData.success ? (sData.students||[]) : [];
             } catch(e) { ADMIN_CLASSES = []; ADMIN_STUDENTS = []; }
             CLASSES_UNAVAILABLE = classesFailed;
+            CLASS_DATA_LOADED = true;
             refreshClassSelects();
             renderClassManageList();
             renderAdminStudents();
@@ -11423,6 +11443,7 @@ let lavUid = 0;
                             </div>
                             <div class="flex gap-1 shrink-0">
                                 <button onclick="setHomeworkHidden('${escAttr(h.title)}', ${!h.hidden})" title="${h.hidden ? '학생 화면에 다시 보이게 합니다' : '학생 화면에서 숨깁니다 (제출 기록은 남습니다)'}" class="text-gray-300 text-[11px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition font-bold"><i class="fa-solid ${h.hidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${h.hidden ? '보이기' : '숨기기'}</button>
+                                <button onclick="showHomeworkQr(${hwIdx})" title="시험지에 넣을 QR — 찍으면 이 과제 OMR이 바로 열립니다" class="text-amber-300 text-[11px] bg-amber-900/30 hover:bg-amber-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-qrcode"></i> QR</button>
                                 <button onclick="editHomework(${hwIdx})" title="이 과제 내용 고치기" class="text-emerald-300 text-[11px] bg-emerald-900/30 hover:bg-emerald-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-pen"></i></button>
                                 ${h.question_count ? `<button onclick="openExplEditor('${escAttr(h.title)}', '과제 제출')" title="문항별 해설 넣기" class="text-sky-300 text-[11px] bg-sky-900/30 hover:bg-sky-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>` : ''}
                                 ${h.answer_file ? `<button onclick="deleteHomeworkFile('${escAttr(h.title)}')" class="text-yellow-400 text-[11px] bg-yellow-900/30 hover:bg-yellow-900/50 px-2 py-1 rounded transition" title="과제는 두고 해답 파일만 뗍니다">파일만 삭제</button>` : ''}
@@ -11464,6 +11485,121 @@ let lavUid = 0;
             if (!r.ok) return alert(r.message);
             showToast("해답 파일을 뗐습니다.");
             loadAdminHWList();
+        }
+
+        // ── 시험지 QR → 그 과제 OMR 바로 열기 ─────────────
+        // 💡 학생이 과제 목록에서 찾지 않아도 되게, 시험지에 QR(주소 #hw-과제id)을 넣는다.
+        //    찍으면 (로그인 뒤) 과제 화면이 열리고 그 과제의 OMR(정답표 없는 과제는 파일 제출 칸)이 뜬다.
+        //    · #hw-과제id   : 로지에듀 과제 목록의 [QR] (이름을 고쳐도 그 과제로 간다)
+        //    · #hwt-과제이름 : 바탕화면 '문제지 만들기' 가 찍는 QR. 과제를 배포하기 전에 시험지를 먼저 뽑으므로
+        //                      번호 대신 이름으로 찾는다 — 같은 이름으로 배포하면 된다(띄어쓰기 차이는 봐준다).
+        //    적어두는 값은 'id:…' 또는 't:…'.
+        function rememberQrHomework(h) {
+            let v = '';
+            try {
+                if (h.startsWith('hwt-')) v = 't:' + decodeURIComponent(h.slice(4));
+                else if (h.startsWith('hw-')) v = 'id:' + decodeURIComponent(h.slice(3));
+            } catch (e) { return false; }
+            if (!v) return false;
+            try { sessionStorage.setItem('logyedu_open_hw', v); } catch (e) {}
+            return true;
+        }
+
+        function pendingHomeworkId() {
+            try { return sessionStorage.getItem('logyedu_open_hw') || ''; } catch (e) { return ''; }
+        }
+
+        async function openPendingHomework() {
+            const want = pendingHomeworkId();
+            try { sessionStorage.removeItem('logyedu_open_hw'); } catch (e) {}
+            if (!want) return;
+            await loadHomeworks();
+            const squash = t => String(t || '').replace(/\s+/g, '');
+            let i = -1;
+            if (want.startsWith('t:')) {
+                const t = want.slice(2);
+                i = STUDENT_HW_LIST.findIndex(h => h.title === t);
+                if (i < 0) i = STUDENT_HW_LIST.findIndex(h => squash(h.title) === squash(t));
+            } else {
+                const id = want.startsWith('id:') ? want.slice(3) : want;
+                i = STUDENT_HW_LIST.findIndex(h => h.id === id);
+            }
+            if (i < 0) { alert('이 과제를 찾을 수 없어요. 아직 배포 전이거나, 내 반 과제가 아니거나, 원장님이 내렸을 수 있어요.'); return; }
+            if ((STUDENT_HW_LIST[i].question_count || 0) > 0) openHomeworkOmr(i);
+            else openHomeworkUpload(i);
+        }
+
+        function homeworkQrUrl(h) {
+            const origin = /^https?:/.test(location.origin) ? location.origin : 'https://logyedu.co.kr';
+            return origin + '/#hw-' + encodeURIComponent(h.id);
+        }
+
+        // 인쇄용 그림: QR + 아래에 안내 · 과제 이름. 한글 · 워드에 붙여넣어도 또렷하게 크게 만든다.
+        function homeworkQrCanvas(h) {
+            const qr = qrcode(0, 'M');
+            qr.addData(homeworkQrUrl(h));
+            qr.make();
+            const n = qr.getModuleCount(), cell = 12, quiet = 4 * cell, size = n * cell + quiet * 2, textH = 110;
+            const cv = document.createElement('canvas');
+            cv.width = size; cv.height = size + textH;
+            const g = cv.getContext('2d');
+            g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+            g.fillStyle = '#000';
+            for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+                if (qr.isDark(r, c)) g.fillRect(quiet + c * cell, quiet + r * cell, cell, cell);
+            g.textAlign = 'center';
+            g.font = 'bold 34px "Noto Sans KR", "Malgun Gothic", sans-serif';
+            g.fillText('📱 찍으면 바로 답 제출 · 채점', size / 2, size + 30);
+            g.font = '28px "Noto Sans KR", "Malgun Gothic", sans-serif';
+            let t = h.title || '';
+            while (t.length > 1 && g.measureText(t).width > size - 40) t = t.slice(0, -1);
+            if (t !== (h.title || '')) t = t.slice(0, -1) + '…';
+            g.fillText(t, size / 2, size + 80);
+            return cv;
+        }
+
+        function showHomeworkQr(idx) {
+            const h = ADMIN_HW_LIST[idx];
+            if (!h || !h.id) return;
+            if (typeof qrcode !== 'function') { alert('QR 도구를 불러오지 못했습니다. 새로고침 후 다시 해 주세요.'); return; }
+            const cv = homeworkQrCanvas(h);
+            const url = cv.toDataURL('image/png');
+            const old = document.getElementById('hw-qr-overlay'); if (old) old.remove();
+            const wrap = document.createElement('div');
+            wrap.id = 'hw-qr-overlay';
+            wrap.className = 'fixed inset-0 z-[200] modal-bg flex items-center justify-center p-4';
+            wrap.innerHTML = `<div class="bg-[#1e2430] border border-emerald-500 rounded-2xl p-5 w-full max-w-sm text-white shadow-2xl">
+                <div class="flex justify-between items-start gap-2 mb-3">
+                    <div><div class="font-bold">시험지에 넣을 QR</div><div class="text-xs text-gray-400 mt-0.5">${escapeHtml(h.title)}</div></div>
+                    <button type="button" data-close class="text-gray-400 hover:text-white text-xl leading-none px-1">&times;</button>
+                </div>
+                <img src="${url}" alt="과제 QR" class="w-full rounded-lg bg-white">
+                <p class="text-[11px] text-gray-400 mt-2 leading-relaxed">학생이 폰 카메라로 찍으면 (로그인 뒤) 이 과제의
+                    ${h.question_count ? '<b class="text-emerald-300">OMR 답안 창</b>' : '<b class="text-emerald-300">파일 제출 칸</b>'}이 바로 열립니다.
+                    [복사]를 누른 뒤 한글 · 워드 시험지에 붙여넣으세요.</p>
+                <div class="grid grid-cols-2 gap-2 mt-3">
+                    <button type="button" data-copy class="bg-emerald-600 hover:bg-emerald-700 py-2 rounded font-bold text-sm"><i class="fa-solid fa-copy mr-1"></i>그림 복사</button>
+                    <a download="${escAttr('QR_' + (h.title || '과제').replace(/[\\/:*?"<>|]/g, '_') + '.png')}" href="${url}" class="bg-gray-700 hover:bg-gray-600 py-2 rounded font-bold text-sm text-center"><i class="fa-solid fa-download mr-1"></i>그림 저장</a>
+                </div>
+                <button type="button" data-link class="w-full mt-2 text-xs text-sky-300 hover:text-sky-200 underline">주소만 복사</button>
+            </div>`;
+            document.body.appendChild(wrap);
+            const close = () => wrap.remove();
+            wrap.addEventListener('click', e => { if (e.target === wrap || e.target.closest('[data-close]')) close(); });
+            wrap.querySelector('[data-copy]').addEventListener('click', async (e) => {
+                const btn = e.currentTarget;
+                try {
+                    const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>복사했어요';
+                } catch (err) {
+                    alert('이 브라우저에서는 그림 복사가 안 됩니다. [그림 저장]으로 받아서 넣어 주세요.');
+                }
+            });
+            wrap.querySelector('[data-link]').addEventListener('click', async (e) => {
+                try { await navigator.clipboard.writeText(homeworkQrUrl(h)); e.currentTarget.innerText = '주소를 복사했어요'; }
+                catch (err) { prompt('주소를 복사하세요', homeworkQrUrl(h)); }
+            });
         }
 
         // ── 과제 OMR 제출 (수업·클리닉 공통) ──────────────
