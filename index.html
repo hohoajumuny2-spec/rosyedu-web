@@ -3285,7 +3285,17 @@
                             <label class="text-[11px] text-gray-400 block mb-1">해답지 파일 (선택)</label>
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual')">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
-                            <button onclick="createHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded transition shadow-lg">배포하기</button>
+                            <!-- 💡 같은 날 과제가 여러 개면 과제마다 제목·정답표를 따로 넣고 한 번에 배포한다.
+                                 위 칸이 첫 번째 과제, 여기서 더한 칸이 두 번째·세 번째 과제가 된다. -->
+                            <div id="hw-extra-wrap" class="mb-3">
+                                <div id="hw-extra-list" class="space-y-2"></div>
+                                <button type="button" id="hw-extra-add" onclick="addHwExtra()" class="w-full mt-2 py-2 rounded border border-dashed border-amber-600 text-amber-300 hover:bg-amber-900/20 text-xs font-bold transition">
+                                    <i class="fa-solid fa-plus mr-1"></i>같은 묶음에 과제 하나 더 (제목 · 정답표 따로)
+                                </button>
+                                <p id="hw-extra-hint" class="hidden text-[11px] text-gray-500 mt-1">위 칸이 <b class="text-gray-300">과제 1</b>입니다. 배포하기를 누르면 모든 과제가 같은 묶음·종류·마감·대상 반으로 한꺼번에 올라갑니다.
+                                    추가한 과제의 해설·해답 파일은 배포한 뒤 목록에서 ✏(고치기)로 넣을 수 있습니다.</p>
+                            </div>
+                            <button id="hw-submit-btn-admin" onclick="createHomework()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded transition shadow-lg">배포하기</button>
                             <!-- 💡 지난 과제는 숨겨 학생 화면을 깔끔하게. 숨겨도 제출 기록 · 채점은 그대로 남는다 -->
                             <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-[12px]">
                                 <label class="text-gray-400 flex items-center gap-1.5"><input type="checkbox" id="admin-hw-show-hidden" onchange="loadAdminHWList()" class="accent-emerald-500"> 숨긴 과제도 보기 <span id="admin-hw-hidden-count" class="text-gray-500"></span></label>
@@ -11094,6 +11104,8 @@ let lavUid = 0;
             updateHomeworkAnswerCount();
             updateHwExplCount();
             document.getElementById('hw-form-title').innerText = `'${h.title}' 수정 중`;
+            clearHwExtras();
+            document.getElementById('hw-extra-wrap').classList.add('hidden');
             document.getElementById('hw-cancel-edit-btn').classList.remove('hidden');
             document.getElementById('hw-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -11112,8 +11124,59 @@ let lavUid = 0;
             updateHomeworkAnswerCount();
             updateHwExplCount();
             document.getElementById('hw-form-title').innerText = '과제/정답 배포';
+            document.getElementById('hw-extra-wrap').classList.remove('hidden');
             document.getElementById('hw-cancel-edit-btn').classList.add('hidden');
             clearAllFiles('hw-ans-file-visual');
+        }
+
+        // ── 같은 묶음에 과제 여러 개 (제목 · 정답표 따로) ──
+        let HW_EXTRA_SEQ = 0;
+        function addHwExtra(title, answers) {
+            const id = ++HW_EXTRA_SEQ;
+            const n = document.querySelectorAll('#hw-extra-list > div').length + 2;
+            document.getElementById('hw-extra-list').insertAdjacentHTML('beforeend', `
+                <div id="hw-extra-${id}" class="hw-extra bg-gray-800/70 border border-amber-800/60 rounded p-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="hw-extra-no shrink-0 text-[11px] font-bold text-amber-300">과제 ${n}</span>
+                        <input type="text" class="hw-extra-title flex-grow p-1.5 bg-gray-800 text-white text-sm rounded outline-none border border-gray-600 focus:border-amber-500" placeholder="과제명 (예: 문법 2강)">
+                        <button type="button" onclick="removeHwExtra(${id})" title="이 과제 빼기" class="shrink-0 text-gray-400 hover:text-red-400 px-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <textarea rows="2" class="hw-extra-answers w-full p-1.5 bg-gray-800 text-white text-sm rounded outline-none border border-gray-600 focus:border-amber-500 resize-y" placeholder="정답표 — 예) 1,3,5,2,4 (단답형은 한 줄에 하나씩)" oninput="hwExtraCount(this)"></textarea>
+                    <span class="hw-extra-count text-[10px] text-gray-500"></span>
+                </div>`);
+            const box = document.getElementById('hw-extra-' + id);
+            box.querySelector('.hw-extra-title').value = title || '';
+            box.querySelector('.hw-extra-answers').value = answers || '';
+            hwExtraCount(box.querySelector('.hw-extra-answers'));
+            if (!document.getElementById('hw-group').value.trim()) fillTodayHwGroup();   // 여러 개를 올리면 묶음이 필요하다
+            hwExtraRefresh();
+            if (!title) box.querySelector('.hw-extra-title').focus();
+        }
+        function removeHwExtra(id) {
+            const box = document.getElementById('hw-extra-' + id);
+            if (box) box.remove();
+            hwExtraRefresh();
+        }
+        function hwExtraCount(ta) {
+            const n = parseAnswerListJS(ta.value).length;
+            ta.parentElement.querySelector('.hw-extra-count').innerText = n ? `정답 ${n}문항` : '';
+        }
+        function hwExtraRefresh() {
+            const rows = [...document.querySelectorAll('#hw-extra-list > div')];
+            rows.forEach((r, k) => { r.querySelector('.hw-extra-no').innerText = `과제 ${k + 2}`; });
+            document.getElementById('hw-extra-hint').classList.toggle('hidden', !rows.length);
+            document.getElementById('hw-title').placeholder = rows.length ? '과제 1 — 과제명' : '과제명';
+            document.getElementById('hw-submit-btn-admin').innerText = rows.length ? `과제 ${rows.length + 1}개 한꺼번에 배포하기` : '배포하기';
+        }
+        function hwExtraRows() {
+            return [...document.querySelectorAll('#hw-extra-list > div')].map(r => ({
+                title: r.querySelector('.hw-extra-title').value.trim(),
+                answers: r.querySelector('.hw-extra-answers').value.trim(),
+            })).filter(r => r.title || r.answers);
+        }
+        function clearHwExtras() {
+            document.getElementById('hw-extra-list').innerHTML = '';
+            hwExtraRefresh();
         }
 
         async function createHomework() {
@@ -11123,6 +11186,18 @@ let lavUid = 0;
             if (!answers && hwFilesAdmin.length === 0)
                 return alert("정답표를 넣거나 해답지 파일을 올려주세요.\n(정답표를 넣으면 학생이 OMR로 답만 마킹해도 자동 채점됩니다)");
             const isEdit = !!EDITING_HW_TITLE;
+            const extras = isEdit ? [] : hwExtraRows();
+            if (extras.length) {
+                const bad = extras.findIndex(r => !r.title || !parseAnswerListJS(r.answers).length);
+                if (bad >= 0) return alert(`과제 ${bad + 2}의 ${extras[bad].title ? '정답표' : '과제명'}를 넣어주세요. (필요 없으면 ✕로 빼세요)`);
+                const names = [t, ...extras.map(r => r.title)];
+                const dup = names.find((x, k) => names.indexOf(x) !== k);
+                if (dup) return alert(`'${dup}' 과제명이 겹칩니다. 과제마다 다른 이름을 넣어주세요.`);
+                const clash = names.find(x => ADMIN_HW_LIST.some(h => h.title === x));
+                if (clash && !confirm(`'${clash}'는 이미 있는 과제입니다. 덮어쓸까요?`)) return;
+                if (!document.getElementById('hw-group').value.trim()) fillTodayHwGroup();
+                return createHomeworkBundle(t, answers, extras);
+            }
             showLoader(isEdit ? "과제를 수정하는 중입니다..." : "과제를 배포하는 중입니다...");
             const fd = new FormData();
             fd.append("title", t); fd.append("desc", ""); fd.append("answer_text", "");
@@ -11149,6 +11224,51 @@ let lavUid = 0;
                 } else { alert("업로드 실패: " + data.detail); }
             } catch(e) { alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message); }
             hideLoader();
+        }
+
+        // 과제 1(위 칸) + 추가한 과제들을 같은 묶음으로 한꺼번에 올린다
+        async function createHomeworkBundle(t, answers, extras) {
+            const group = document.getElementById('hw-group').value.trim();
+            const common = {
+                kind: document.getElementById('hw-kind').value,
+                target_classes: getPickedClasses('hw-target-class').join(","),
+                deadline: document.getElementById('hw-deadline').value || "",
+                group,
+            };
+            const items = [{ title: t, answers, explanations: HW_EXPLANATIONS || {}, file: hwFilesAdmin[0] }]
+                .concat(extras.map(r => ({ title: r.title, answers: r.answers, explanations: {} })));
+            const done = [], failed = [];
+            for (let k = 0; k < items.length; k++) {
+                const it = items[k];
+                showLoader(`과제를 배포하는 중입니다... (${k + 1}/${items.length})`);
+                const fd = new FormData();
+                fd.append("title", it.title); fd.append("desc", ""); fd.append("answer_text", "");
+                fd.append("answers", it.answers);
+                fd.append("explanations", JSON.stringify(it.explanations));
+                fd.append("old_title", "");
+                Object.entries(common).forEach(([key, v]) => fd.append(key, v));
+                if (it.file) fd.append("answer_file", it.file);
+                try {
+                    const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
+                    if (data.success) done.push(`${it.title} (${data.question_count || 0}문항)`);
+                    else failed.push(`${it.title}: ${data.detail || '실패'}`);
+                } catch (e) { failed.push(`${it.title}: ${e.message}`); }
+            }
+            hideLoader();
+            loadAdminHWList();
+            alert(`'${group}' 묶음에 과제 ${done.length}개를 배포했습니다.\n· ` + done.join('\n· ')
+                + (failed.length ? `\n\n올리지 못한 과제:\n· ${failed.join('\n· ')}` : '')
+                + '\n\n학생 화면에서는 게시물 하나 안에 모여 보이고, 알림은 한 번만 갑니다.');
+            if (failed.length) {
+                // 실패한 과제만 다시 올릴 수 있게 남겨 둔다
+                const left = extras.filter(r => failed.some(f => f.startsWith(r.title + ':')));
+                const firstFailed = failed.some(f => f.startsWith(t + ':'));
+                if (!firstFailed) cancelEditHomework(true);
+                clearHwExtras(); left.forEach(r => addHwExtra(r.title, r.answers));
+                return;
+            }
+            clearHwExtras();
+            cancelEditHomework(true);
         }
 
         // '10월 4일 과제' — 묶음 이름을 오늘 날짜로 채운다
