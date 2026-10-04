@@ -3239,6 +3239,16 @@
                                 </select>
                                 <input type="text" id="hw-title" placeholder="과제명" class="w-2/3 p-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500">
                             </div>
+                            <!-- 💡 같은 날 낸 과제가 여러 개면 공지를 따로따로 내야 했다 — 묶음 이름이 같은 과제는
+                                 학생 화면에서 게시물 하나로 모이고, 학생은 그 안에서 과제마다 정답을 체크한다 -->
+                            <label for="hw-group" class="text-[11px] text-amber-300 font-bold block mb-1 mt-2">묶음 이름 (선택 · 같은 날 낸 과제 여러 개를 학생 화면에서 게시물 하나로 모읍니다)</label>
+                            <div class="flex gap-2 mb-1">
+                                <input type="text" id="hw-group" list="hw-group-list" maxlength="60" placeholder="예) 10월 4일 과제 — 비우면 과제 하나가 게시물 하나" class="flex-grow p-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-amber-500">
+                                <button type="button" onclick="fillTodayHwGroup()" class="shrink-0 text-[11px] text-amber-300 hover:text-amber-200 px-2">오늘 날짜로</button>
+                            </div>
+                            <datalist id="hw-group-list"></datalist>
+                            <p class="text-[11px] text-gray-500 mb-2">묶음 이름을 넣고 배포하면 <b class="text-gray-300">묶음 이름·마감·대상 반은 그대로 남고 과제명·정답표만 비워져</b> 다음 과제를 바로 이어 올릴 수 있습니다.
+                                학생 알림은 묶음마다 한 번만 갑니다. 이미 올린 묶음에 더 넣으려면 같은 이름을 고르세요.</p>
                             <!-- 💡 제출 기한 — 지나도 낼 수는 있고, 늦게 낸 과제는 '기한 후 제출'로 표시된다 -->
                             <label for="hw-deadline" class="text-[11px] text-rose-300 font-bold block mb-1 mt-2">제출 기한 (선택 · 지나도 낼 수 있지만 '기한 후 제출'로 표시됩니다)</label>
                             <div class="flex gap-2 mb-2">
@@ -11078,6 +11088,7 @@ let lavUid = 0;
             document.getElementById('hw-kind').value = h.kind === 'clinic' ? 'clinic' : 'class';
             document.getElementById('hw-answers').value = (h.answers || []).join(', ');
             document.getElementById('hw-deadline').value = String(h.deadline || '').slice(0, 16);
+            document.getElementById('hw-group').value = h.group || '';
             setPickedClasses('hw-target-class', h.target_classes || []);
             HW_EXPLANATIONS = Object.assign({}, h.explanations || {});
             updateHomeworkAnswerCount();
@@ -11087,12 +11098,16 @@ let lavUid = 0;
             document.getElementById('hw-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        function cancelEditHomework() {
+        function cancelEditHomework(keepGroup) {
             EDITING_HW_TITLE = '';
             document.getElementById('hw-title').value = '';
             document.getElementById('hw-answers').value = '';
-            document.getElementById('hw-deadline').value = '';
-            clearClassPicker('hw-target-class');
+            if (!keepGroup) {
+                // 💡 묶음에 이어 올릴 때는 묶음 이름·종류·마감·대상 반을 그대로 둔다
+                document.getElementById('hw-deadline').value = '';
+                document.getElementById('hw-group').value = '';
+                clearClassPicker('hw-target-class');
+            }
             HW_EXPLANATIONS = {};
             updateHomeworkAnswerCount();
             updateHwExplCount();
@@ -11117,18 +11132,29 @@ let lavUid = 0;
             fd.append("old_title", isEdit ? EDITING_HW_TITLE : "");
             fd.append("target_classes", getPickedClasses('hw-target-class').join(","));
             fd.append("deadline", document.getElementById('hw-deadline').value || "");
+            const group = document.getElementById('hw-group').value.trim();
+            fd.append("group", group);
             if (hwFilesAdmin.length) fd.append("answer_file", hwFilesAdmin[0]);
             try {
                 const data = await uploadFormData(`${API_URL}/api/admin/homework`, fd);
                 if (data.success) {
                     loadAdminHWList();
+                    const inGroup = !isEdit && group;
                     alert(isEdit ? "과제를 수정했습니다." : (data.question_count
                         ? `과제를 배포했습니다. 정답 ${data.question_count}문항이 등록되어 OMR 자동 채점이 됩니다.`
-                        : "과제를 배포했습니다. (정답표가 없어 자동 채점은 되지 않습니다)"));
-                    cancelEditHomework();
+                        : "과제를 배포했습니다. (정답표가 없어 자동 채점은 되지 않습니다)")
+                        + (inGroup ? `\n\n'${group}' 묶음에 들어갔습니다. 같은 묶음에 넣을 과제가 더 있으면 과제명과 정답표만 넣고 이어서 배포하세요.` : ''));
+                    cancelEditHomework(!!inGroup);
+                    if (inGroup) document.getElementById('hw-title').focus();
                 } else { alert("업로드 실패: " + data.detail); }
             } catch(e) { alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message); }
             hideLoader();
+        }
+
+        // '10월 4일 과제' — 묶음 이름을 오늘 날짜로 채운다
+        function fillTodayHwGroup() {
+            const d = new Date();
+            document.getElementById('hw-group').value = `${d.getMonth() + 1}월 ${d.getDate()}일 과제`;
         }
 
         function updateHomeworkAnswerCount() {
@@ -11354,8 +11380,20 @@ let lavUid = 0;
                 c.innerHTML='';
                 if(data.success){
                     STUDENT_HW_LIST = data.homeworks;
+                    HW_SUBMITTED = submittedTasks;
+                    // 💡 묶음 이름이 같은 과제는 게시물 하나로 모은다. 묶음 안 과제들의 마감이
+                    //    모두 같으면 마감은 묶음 머리에 한 번만 보여준다.
+                    const groupDeadline = {};
+                    data.homeworks.forEach(h => {
+                        if (!h.group) return;
+                        const d = h.deadline || '';
+                        groupDeadline[h.group] = (h.group in groupDeadline && groupDeadline[h.group] !== d) ? null : d;
+                    });
+                    const itemHtml = [];
                     data.homeworks.forEach((h,i) => {
                         const isSubmitted = submittedTasks.has(h.title);
+                        const nested = !!h.group;
+                        const showDeadline = h.deadline && !(nested && groupDeadline[h.group] === h.deadline);
                         const hwId = `hw-item-${i}`;
 
                         let answerLinkHtml = '';
@@ -11382,13 +11420,13 @@ let lavUid = 0;
                             submitBtnHtml = `<button onclick="openHomeworkUpload(${i})" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/30 transition text-white">과제 제출하기</button>`;
                         }
 
-                        c.innerHTML += `
-                        <div id="${hwId}" class="bg-[#151922] p-5 rounded-xl border ${isSubmitted ? 'border-gray-600' : 'border-emerald-700'} shadow flex flex-col md:flex-row justify-between items-start md:items-center text-white gap-4 mb-3">
+                        itemHtml[i] = `
+                        <div id="${hwId}" class="${nested ? 'bg-[#1b212c] p-4 rounded-lg' : 'bg-[#151922] p-5 rounded-xl shadow mb-3'} border ${isSubmitted ? 'border-gray-600' : 'border-emerald-700'} flex flex-col md:flex-row justify-between items-start md:items-center text-white gap-4">
                             <div class="flex-grow">
-                                <span class="font-bold text-lg text-emerald-400 block mb-1">
+                                <span class="font-bold ${nested ? 'text-base' : 'text-lg'} text-emerald-400 block mb-1">
                                     <span class="text-[10px] px-2 py-0.5 rounded-full mr-2 align-middle ${kindTone}">${kindLabel}</span>
                                     <i class="fa-solid ${isSubmitted ? 'fa-check' : 'fa-pen-to-square'} mr-2"></i>${escapeHtml(h.title)}${isSubmitted ? hwLateBadge(MY_HW_REPORTS[h.title]) : ''}</span>
-                                ${h.deadline ? `<div class="mb-1">${hwDeadlineChip(h.deadline, isSubmitted)}</div>` : ''}
+                                ${showDeadline ? `<div class="mb-1">${hwDeadlineChip(h.deadline, isSubmitted)}</div>` : ''}
                                 <span class="text-xs text-gray-400">${isSubmitted
                                     ? (hasOmr ? (() => { const m = MY_HW_REPORTS[h.title] || {}; return `${m.score ? escapeHtml(String(m.score)) + '문항 맞음 · ' : ''}${h.expl_locked ? `틀린 번호를 보고 고쳐 다시 낼 수 있어요. 해설은 마감(${escapeHtml(hwDeadlineLabel(h.expl_open_at))}) 뒤에 열려요.` : '해설을 보고 틀린 답을 고쳐 다시 낼 수 있어요.'}`; })()
                                               : (h.answer_file_waiting ? `과제를 제출했습니다. 해설 자료는 마감(${escapeHtml(hwDeadlineLabel(h.expl_open_at))}) 뒤에 열려요.` : '과제를 성공적으로 제출했습니다. 해설 자료를 확인하세요.'))
@@ -11408,8 +11446,54 @@ let lavUid = 0;
                             </div>
                         </div>`;
                     });
+                    const done = new Set();
+                    data.homeworks.forEach((h, i) => {
+                        if (!h.group) { c.innerHTML += itemHtml[i]; return; }
+                        if (done.has(h.group)) return;
+                        done.add(h.group);
+                        // 묶음 안에서는 올린 순서대로 (1번 과제가 맨 위)
+                        const idx = hwGroupIndexes(h.group);
+                        const n = idx.length, sub = idx.filter(k => submittedTasks.has(data.homeworks[k].title)).length;
+                        const dl = groupDeadline[h.group];
+                        c.innerHTML += `
+                        <div class="bg-[#151922] p-4 md:p-5 rounded-xl border ${sub === n ? 'border-gray-600' : 'border-emerald-700'} shadow mb-3 text-white">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/60 text-amber-200"><i class="fa-solid fa-layer-group mr-1"></i>과제 ${n}개</span>
+                                <span class="font-black text-lg text-white">${escapeHtml(h.group)}</span>
+                            </div>
+                            ${dl ? `<div class="mb-1">${hwDeadlineChip(dl, sub === n)}</div>` : ''}
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="flex-grow max-w-[220px] h-1.5 bg-gray-700 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width:${Math.round(sub / n * 100)}%"></div></div>
+                                <span class="text-[11px] ${sub === n ? 'text-emerald-300 font-bold' : 'text-gray-400'}">${sub === n ? '모두 냈어요 👍' : `${n}개 중 ${sub}개 냈어요`}</span>
+                            </div>
+                            <div class="space-y-2">${idx.map(k => itemHtml[k]).join('')}</div>
+                        </div>`;
+                    });
                 }
             } catch(e){}
+        }
+
+        let HW_SUBMITTED = new Set();
+        // 같은 묶음 과제의 자리(STUDENT_HW_LIST 순번)를 올린 순서대로
+        function hwGroupIndexes(group) {
+            return STUDENT_HW_LIST.map((h, k) => k).filter(k => STUDENT_HW_LIST[k].group === group)
+                .sort((a, b) => String(STUDENT_HW_LIST[a].created_at || '').localeCompare(String(STUDENT_HW_LIST[b].created_at || '')) || b - a);
+        }
+        // 채점이 끝나면 같은 묶음에서 아직 안 낸 다음 과제로 바로 넘어갈 수 있게
+        function nextHwInGroup(title) {
+            const cur = STUDENT_HW_LIST.find(h => h.title === title);
+            if (!cur || !cur.group) return null;
+            const idx = hwGroupIndexes(cur.group);
+            const at = idx.findIndex(k => STUDENT_HW_LIST[k].title === title);
+            const order = idx.slice(at + 1).concat(idx.slice(0, at));
+            const k = order.find(k => !HW_SUBMITTED.has(STUDENT_HW_LIST[k].title));
+            return k == null ? null : { idx: k, hw: STUDENT_HW_LIST[k], left: order.filter(j => !HW_SUBMITTED.has(STUDENT_HW_LIST[j].title)).length };
+        }
+        function openHwFromGroup(title) {
+            const k = STUDENT_HW_LIST.findIndex(h => h.title === title);
+            if (k < 0) return;
+            closeModal('hwomr-modal');
+            if ((STUDENT_HW_LIST[k].question_count || 0) > 0) openHomeworkOmr(k); else openHomeworkUpload(k);
         }
 
         let ADMIN_HW_LIST = [];
@@ -11425,6 +11509,9 @@ let lavUid = 0;
                 c.innerHTML = '';
                 if (!data.success) return;
                 ADMIN_HW_LIST = data.homeworks;
+                // 최근 묶음 이름을 고를 수 있게 (같은 묶음에 과제를 더 넣을 때)
+                const groups = [...new Set(ADMIN_HW_LIST.filter(h => h.group && !h.hidden).map(h => h.group))].slice(0, 12);
+                document.getElementById('hw-group-list').innerHTML = groups.map(g => `<option value="${escAttr(g)}"></option>`).join('');
                 const showHidden = document.getElementById('admin-hw-show-hidden').checked;
                 const hiddenN = ADMIN_HW_LIST.filter(h => h.hidden).length;
                 document.getElementById('admin-hw-hidden-count').innerText = hiddenN ? `(${hiddenN}개)` : '';
@@ -11442,6 +11529,7 @@ let lavUid = 0;
                         <div class="flex justify-between items-center gap-2">
                             <div class="min-w-0">
                                 <span class="text-[10px] px-2 py-0.5 rounded-full mr-1 ${kindTone}">${kindLabel}</span>
+                                ${h.group ? `<span class="text-[10px] px-2 py-0.5 rounded-full mr-1 bg-amber-900/50 text-amber-200" title="학생 화면에서 이 묶음 게시물 안에 함께 보입니다"><i class="fa-solid fa-layer-group mr-0.5"></i>${escapeHtml(h.group)}</span>` : ''}
                                 ${h.hidden ? '<span class="text-[10px] px-2 py-0.5 rounded-full mr-1 bg-gray-600 text-gray-200"><i class="fa-solid fa-eye-slash mr-0.5"></i>학생에게 숨김</span>' : ''}
                                 ${h.answer_file
                                     ? `<a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" class="hover:text-blue-400 font-bold underline cursor-pointer">${escapeHtml(h.title)}</a>`
@@ -11864,6 +11952,14 @@ let lavUid = 0;
             HW_OMR.editing = true;
             document.getElementById('hw-omr-submit-btn').innerText = '고친 답으로 다시 제출하기';
             if (d.edited) showToast("고친 답으로 다시 채점했습니다.");
+            HW_SUBMITTED.add(HW_OMR.title);
+            const nx = nextHwInGroup(HW_OMR.title);
+            if (nx) {
+                document.getElementById('hw-omr-result').insertAdjacentHTML('beforeend',
+                    `<button onclick="openHwFromGroup('${escAttr(nx.hw.title)}')" class="w-full mt-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold text-sm transition">
+                        다음 과제: ${escapeHtml(nx.hw.title)} ${(nx.hw.question_count || 0) > 0 ? '채점하기' : '제출하기'} <i class="fa-solid fa-arrow-right ml-1"></i>
+                        <span class="block text-[11px] font-normal text-amber-100/80 mt-0.5">'${escapeHtml(nx.hw.group)}'에 안 낸 과제가 ${nx.left}개 남았어요</span></button>`);
+            }
             loadHomeworks();
         }
 
