@@ -1,0 +1,27 @@
+# 💡 index.html·proctor.html 에 새 Tailwind 이름(bg-..., text-...)을 쓰면 tailwind.css 에도 들어가야 화면에 보인다.
+#    main 에 올라올 때마다 tailwind.css 를 다시 만들고, 바뀌었으면 그대로 커밋한다.
+name: tailwind.css 다시 만들기
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'proctor.html', 'tailwind/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx -y tailwindcss@3.4.17 -c tailwind/tailwind.config.js -i tailwind/input.css -o tailwind.css --minify
+      - run: |
+          if ! git diff --quiet tailwind.css; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add tailwind.css
+            git commit -m "tailwind.css 다시 만들기"
+            git push
+          fi

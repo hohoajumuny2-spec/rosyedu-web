@@ -1,6 +1,7 @@
-const CACHE_NAME = 'logyedu-app-v2';
+const CACHE_NAME = 'logyedu-app-v3';
 const urlsToCache = [
   './index.html',
+  './tailwind.css',
   './manifest.json'
 ];
 
