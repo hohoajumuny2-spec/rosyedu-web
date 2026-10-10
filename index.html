@@ -562,6 +562,55 @@
     </div>
 
     <!-- 🏆 시험 성적 모아보기 (원장님) -->
+    <!-- 📝 종이 OMR: 답안지를 뽑아 나눠 주고, 칠한 답안지를 찍어 올리면 채점한다 -->
+    <div id="paperomr-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-stretch md:items-center justify-center md:p-4">
+        <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-4xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-amber-600 flex flex-col">
+            <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-start shrink-0">
+                <div class="min-w-0">
+                    <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-file-pen mr-2 text-amber-400"></i>종이 OMR · <span id="pomr-title"></span></h2>
+                    <p id="pomr-sub" class="text-[11px] text-gray-400 mt-0.5"></p>
+                </div>
+                <button onclick="closeModal('paperomr-modal')" class="shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-4 space-y-5">
+                <section>
+                    <h3 class="text-sm font-black text-amber-300 mb-1">① 답안지 뽑기</h3>
+                    <p class="text-[11px] text-gray-400 mb-2">학생 이름과 답안지 번호가 찍혀 나옵니다. 꼭 여기서 뽑은 답안지를 A4에 <b class="text-gray-300">실제 크기(100%)</b>로 인쇄해 주세요.</p>
+                    <div class="flex flex-wrap items-center gap-2 mb-2 text-[11px]">
+                        <button onclick="pomrSelect('notdone')" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-bold">안 낸 학생만</button>
+                        <button onclick="pomrSelect('all')" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-bold">모두</button>
+                        <button onclick="pomrSelect('none')" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded font-bold">모두 빼기</button>
+                        <span id="pomr-count" class="text-gray-400"></span>
+                    </div>
+                    <div id="pomr-students" class="grid grid-cols-2 md:grid-cols-4 gap-1 max-h-48 overflow-y-auto bg-[#151922] rounded p-2"></div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                        <label class="text-[12px] text-gray-300">이름 없는 답안지 <input id="pomr-blank" type="number" min="0" max="100" value="0" class="w-16 p-1 bg-gray-800 text-white rounded border border-gray-600 text-center"> 장 더</label>
+                        <button id="pomr-print-btn" onclick="pomrPrint()" class="ml-auto bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded text-sm"><i class="fa-solid fa-print mr-1"></i>답안지 PDF 만들기</button>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-black text-amber-300 mb-1">② 칠한 답안지 올리기</h3>
+                    <div onclick="document.getElementById('pomr-files').click()" class="border-2 border-dashed border-amber-700/60 hover:border-amber-500 rounded-lg p-5 text-center cursor-pointer transition">
+                        <i class="fa-solid fa-camera text-amber-400 text-2xl mb-1"></i>
+                        <p class="text-amber-200 text-sm font-bold">사진이나 스캔한 PDF 고르기 (여러 장 한꺼번에)</p>
+                        <p class="text-[11px] text-gray-400 mt-1">폰으로 찍을 때는 <b class="text-gray-300">네 모서리의 까만 네모가 모두</b> 나오게, 밝은 곳에서 한 장씩 찍어 주세요.</p>
+                        <input type="file" id="pomr-files" accept="image/*,.pdf" multiple class="hidden" onchange="pomrUpload(Array.from(this.files)); this.value='';">
+                    </div>
+                    <p id="pomr-progress" class="text-[12px] text-gray-300 mt-2"></p>
+                </section>
+                <section id="pomr-review-wrap" class="hidden">
+                    <h3 class="text-sm font-black text-amber-300 mb-1">③ 확인하고 저장</h3>
+                    <p class="text-[11px] text-gray-400 mb-2">노란 칸은 흐리게 칠했거나 여러 개 칠한 문항, 파란 칸은 단답형입니다. 답안지를 보고 고친 뒤 저장하세요. 점수는 저장할 때 학생이 직접 낸 것과 똑같이 매깁니다.</p>
+                    <div id="pomr-review" class="space-y-2"></div>
+                    <div class="flex items-center gap-2 mt-3">
+                        <span id="pomr-save-count" class="text-[12px] text-gray-400"></span>
+                        <button id="pomr-save-btn" onclick="pomrSave()" class="ml-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded"><i class="fa-solid fa-check mr-1"></i>채점 저장</button>
+                    </div>
+                    <div id="pomr-result" class="mt-2 space-y-1"></div>
+                </section>
+            </div>
+        </div>
+    </div>
     <div id="results-modal" class="hidden fixed inset-0 z-[190] modal-bg flex items-stretch md:items-center justify-center md:p-4">
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-5xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-lime-600 flex flex-col">
             <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-start shrink-0">
@@ -11685,6 +11734,7 @@ let lavUid = 0;
                             <div class="flex gap-1 shrink-0">
                                 <button onclick="setHomeworkHidden('${escAttr(h.title)}', ${!h.hidden})" title="${h.hidden ? '학생 화면에 다시 보이게 합니다' : '학생 화면에서 숨깁니다 (제출 기록은 남습니다)'}" class="text-gray-300 text-[11px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition font-bold"><i class="fa-solid ${h.hidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${h.hidden ? '보이기' : '숨기기'}</button>
                                 <button onclick="showHomeworkQr(${hwIdx})" title="시험지에 넣을 QR — 찍으면 이 과제 OMR이 바로 열립니다" class="text-amber-300 text-[11px] bg-amber-900/30 hover:bg-amber-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-qrcode"></i> QR</button>
+                                ${h.question_count ? `<button onclick="openPaperOmr('homework', '${escAttr(h.title)}')" title="종이 OMR 답안지 뽑기 · 칠한 답안지 찍어서 채점" class="text-amber-300 text-[11px] bg-amber-900/30 hover:bg-amber-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-file-pen"></i> 종이 OMR</button>` : ''}
                                 <button onclick="editHomework(${hwIdx})" title="이 과제 내용 고치기" class="text-emerald-300 text-[11px] bg-emerald-900/30 hover:bg-emerald-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-pen"></i></button>
                                 ${h.question_count ? `<button onclick="openExplEditor('${escAttr(h.title)}', '과제 제출')" title="문항별 해설 넣기" class="text-sky-300 text-[11px] bg-sky-900/30 hover:bg-sky-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>` : ''}
                                 ${h.answer_file ? `<button onclick="deleteHomeworkFile('${escAttr(h.title)}')" class="text-yellow-400 text-[11px] bg-yellow-900/30 hover:bg-yellow-900/50 px-2 py-1 rounded transition" title="과제는 두고 해답 파일만 뗍니다">파일만 삭제</button>` : ''}
@@ -15715,6 +15765,7 @@ let lavUid = 0;
                                 <button onclick="startAdminLiveByIndex(${i})" title="실시간 감독" class="w-8 h-8 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-xs rounded font-bold text-white"><i class="fa-solid fa-eye"></i></button>
                                 <button onclick="triggerDiffPhotoUpload('${escAttr(ex.id)}')" title="EBS 등 오답률표 사진을 올리면 문항 난이도가 자동으로 반영됩니다" class="w-8 h-8 flex items-center justify-center bg-emerald-700 hover:bg-emerald-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-camera"></i></button>
                                 <button onclick="openExamFiles('${escAttr(ex.title)}')" title="붙여둔 시험지·해답지 파일만 떼어냅니다" class="w-8 h-8 flex items-center justify-center bg-yellow-700 hover:bg-yellow-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-paperclip"></i></button>
+                                <button onclick="openPaperOmr('exam', '${escAttr(ex.title)}')" title="종이 OMR 답안지 뽑기 · 칠한 답안지 찍어서 채점" class="w-8 h-8 flex items-center justify-center bg-amber-700 hover:bg-amber-600 text-xs rounded font-bold text-white"><i class="fa-solid fa-file-pen"></i></button>
                                 <button onclick="deleteExam('${escAttr(ex.id)}')" title="삭제" class="w-8 h-8 flex items-center justify-center text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 rounded transition"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>`;
@@ -15724,6 +15775,201 @@ let lavUid = 0;
         }
 
         async function deleteExam(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/exam/${id}`,{method:'DELETE'}); loadAdminExams(); hideLoader(); } }
+
+        // ── 종이 OMR ─────────────────────────────────
+        //   학생 이름이 찍힌 답안지를 뽑아 나눠 주고, 칠한 답안지를 폰으로 찍거나 스캔해 올리면
+        //   서버가 읽는다. 읽은 답은 바로 저장하지 않고 여기서 원장님이 보고 고친 뒤 저장한다.
+        let POMR = null;     // {kind, title, students, kinds, picked:Set, rows:[]}
+
+        async function openPaperOmr(kind, title) {
+            POMR = { kind, title, students: [], kinds: [], picked: new Set(), rows: [] };
+            document.getElementById('pomr-title').innerText = title;
+            document.getElementById('pomr-sub').innerText = '불러오는 중...';
+            document.getElementById('pomr-students').innerHTML = '';
+            document.getElementById('pomr-progress').innerText = '';
+            document.getElementById('pomr-result').innerHTML = '';
+            document.getElementById('pomr-review-wrap').classList.add('hidden');
+            showModal('paperomr');
+            const r = await adminGet(`/api/admin/omr/roster?kind=${encodeURIComponent(kind)}&title=${encodeURIComponent(title)}`);
+            if (!r.ok) { document.getElementById('pomr-sub').innerText = r.message; return; }
+            POMR.title = r.data.title || title;
+            POMR.students = r.data.students || [];
+            POMR.kinds = r.data.kinds || [];
+            POMR.students.forEach(s => { if (!s.done) POMR.picked.add(s.name); });
+            const short = POMR.kinds.filter(k => k === 'short').length;
+            document.getElementById('pomr-sub').innerText = `${POMR.kinds.length}문항` +
+                (short ? ` · 단답형 ${short}문항은 답안지에 따로 쓰고, 저장 전에 여기 적어 주세요` : '') +
+                ` · 대상 학생 ${POMR.students.length}명`;
+            renderPomrStudents();
+        }
+
+        function renderPomrStudents() {
+            const box = document.getElementById('pomr-students');
+            box.innerHTML = POMR.students.length ? POMR.students.map((s, i) => `
+                <label class="flex items-center gap-1.5 text-[12px] text-white bg-gray-800 rounded px-2 py-1 cursor-pointer">
+                    <input type="checkbox" class="accent-amber-500" ${POMR.picked.has(s.name) ? 'checked' : ''} onchange="pomrPick(${i}, this.checked)">
+                    <span class="truncate">${escapeHtml(s.name)}</span>
+                    ${s.done ? '<span class="text-[10px] text-emerald-400 shrink-0">냄</span>' : ''}
+                </label>`).join('') : '<p class="text-[12px] text-gray-500 col-span-full">이 시험이 보이는 학생이 없습니다. 이름 없는 답안지를 뽑아 쓰세요.</p>';
+            document.getElementById('pomr-count').innerText = `${POMR.picked.size}명 고름`;
+        }
+
+        function pomrPick(i, on) {
+            const name = POMR.students[i].name;
+            on ? POMR.picked.add(name) : POMR.picked.delete(name);
+            document.getElementById('pomr-count').innerText = `${POMR.picked.size}명 고름`;
+        }
+
+        function pomrSelect(mode) {
+            POMR.picked = new Set(POMR.students.filter(s => mode === 'all' || (mode === 'notdone' && !s.done)).map(s => s.name));
+            renderPomrStudents();
+        }
+
+        async function pomrPrint() {
+            if (!POMR) return;
+            const students = POMR.students.map(s => s.name).filter(n => POMR.picked.has(n));
+            const blank = Math.max(0, Math.min(100, parseInt(document.getElementById('pomr-blank').value, 10) || 0));
+            if (!students.length && !blank) return alert('학생을 고르거나 이름 없는 답안지 장수를 적어 주세요.');
+            const btn = document.getElementById('pomr-print-btn');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>만드는 중...';
+            try {
+                const res = await fetch(`${API_URL}/api/admin/omr/sheets`, { method: 'POST', body: JSON.stringify({ kind: POMR.kind, title: POMR.title, students, blank }) });
+                if (!res.ok) {
+                    let msg = `서버 오류가 발생했습니다. (${res.status})`;
+                    try { const j = await res.json(); if (j.detail) msg = j.detail; } catch (e) {}
+                    if (res.status === 404) msg = '서버에 새 기능이 아직 반영되지 않았습니다.\n1~2분 뒤에 다시 시도해주세요.';
+                    return alert(msg);
+                }
+                const url = URL.createObjectURL(await res.blob());
+                const a = document.createElement('a');
+                a.href = url; a.download = `OMR_${POMR.title}.pdf`;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+                showToast(`답안지 ${students.length + blank}장을 만들었습니다.`);
+            } catch (e) {
+                alert('서버에 연결하지 못했습니다. 인터넷 연결을 확인해주세요.');
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-print mr-1"></i>답안지 PDF 만들기';
+            }
+        }
+
+        // 💡 사진은 한 장에 몇 MB씩이라 한꺼번에 보내면 서버 기억 공간이 모자란다. 몇 장씩 나눠 보낸다.
+        async function pomrUpload(files) {
+            if (!POMR || !files.length) return;
+            const prog = document.getElementById('pomr-progress');
+            const BATCH = 5;
+            let done = 0;
+            for (let i = 0; i < files.length; i += BATCH) {
+                prog.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>답안지 읽는 중... (${done}/${files.length})`;
+                const fd = new FormData();
+                fd.append('kind', POMR.kind);
+                fd.append('title', POMR.title);
+                files.slice(i, i + BATCH).forEach(f => fd.append('files', f));
+                try {
+                    const data = await uploadFormData(`${API_URL}/api/admin/omr/read`, fd);
+                    if (!data.success) { prog.innerText = data.detail || '읽지 못했습니다.'; return; }
+                    (data.rows || []).forEach(row => {
+                        row.use = !!row.ok;
+                        row.open = !row.student_name || Object.keys(row.flags || {}).length > 0 || POMR.kinds.includes('short');
+                        POMR.rows.push(row);
+                    });
+                } catch (e) {
+                    prog.innerText = String(e.message || e).startsWith('[404]')
+                        ? '서버에 새 기능이 아직 반영되지 않았습니다. 1~2분 뒤에 다시 시도해주세요.'
+                        : '답안지를 보내지 못했습니다: ' + (e.message || e);
+                    renderPomrReview();
+                    return;
+                }
+                done = Math.min(files.length, i + BATCH);
+            }
+            const okN = POMR.rows.filter(r => r.ok).length;
+            prog.innerText = `${files.length}개 파일을 읽었습니다. 읽은 답안지 ${okN}장${POMR.rows.length > okN ? ` · 못 읽은 것 ${POMR.rows.length - okN}장` : ''}`;
+            renderPomrReview();
+        }
+
+        function pomrDupNames() {
+            const cnt = {};
+            POMR.rows.forEach(r => { if (r.use && r.student_name) cnt[r.student_name] = (cnt[r.student_name] || 0) + 1; });
+            return new Set(Object.keys(cnt).filter(n => cnt[n] > 1));
+        }
+
+        function renderPomrReview() {
+            const wrap = document.getElementById('pomr-review-wrap');
+            wrap.classList.toggle('hidden', !POMR.rows.length);
+            const dup = pomrDupNames();
+            const opts = POMR.students.map(s => s.name);
+            document.getElementById('pomr-review').innerHTML = POMR.rows.map((r, i) => {
+                const where = `${escapeHtml(r.file || '')}${r.page > 1 ? ` ${r.page}쪽` : ''}`;
+                if (!r.ok) return `<div class="bg-red-950/30 border border-red-900/60 rounded-lg p-3 text-[12px]">
+                    <span class="text-red-300 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${where}</span>
+                    <span class="text-gray-300 ml-1">${escapeHtml(r.detail || r.note || '읽지 못했습니다.')}</span></div>`;
+                const pv = r.preview || {};
+                const flags = r.flags || {};
+                const names = r.student_name && !opts.includes(r.student_name) ? [r.student_name, ...opts] : opts;
+                const warn = r.saved ? '' : (dup.has(r.student_name) ? `${r.student_name} 학생 답안지가 두 장입니다. 하나만 저장하세요.` : (r.note || ''));
+                const cells = POMR.kinds.map((k, q) => {
+                    if (k === 'none') return '';
+                    const tone = flags[q + 1] ? 'border-amber-400 bg-amber-900/40' : k === 'short' ? 'border-sky-500 bg-sky-900/30' : 'border-gray-600 bg-gray-800';
+                    return `<label class="flex flex-col items-center text-[10px] text-gray-400" title="${flags[q + 1] ? escapeHtml(flags[q + 1]) : ''}">${q + 1}
+                        <input value="${escapeHtml(r.answers[q] || '')}" ${r.saved ? 'disabled' : ''} oninput="pomrSetAnswer(${i}, ${q}, this.value)" placeholder="${k === 'short' ? '단답' : ''}"
+                            class="w-full p-1 rounded border ${tone} text-white text-center text-[12px] outline-none"></label>`;
+                }).join('');
+                const flagText = Object.keys(flags).map(n => `${n}번 ${flags[n]}`).join(', ');
+                return `<div class="rounded-lg p-3 border ${r.saved ? 'border-emerald-800 bg-emerald-950/20' : warn ? 'border-amber-700 bg-[#151922]' : 'border-gray-700 bg-[#151922]'}">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input type="checkbox" class="accent-emerald-500 w-4 h-4" ${r.use ? 'checked' : ''} ${r.saved ? 'disabled' : ''} onchange="pomrUse(${i}, this.checked)">
+                        <select ${r.saved ? 'disabled' : ''} onchange="pomrSetStudent(${i}, this.value)" class="p-1.5 bg-gray-800 text-white rounded border ${r.student_name ? 'border-gray-600' : 'border-amber-500'} text-sm font-bold">
+                            <option value="">학생 고르기</option>
+                            ${names.map(n => `<option value="${escapeHtml(n)}" ${n === r.student_name ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}
+                        </select>
+                        <span class="text-[12px] text-gray-300">${r.saved ? `<b class="text-emerald-400">저장함 ${escapeHtml(r.saved)}</b>` : `읽은 답 기준 <b class="text-white">${pv.correct ?? '-'}/${pv.total ?? '-'}</b> 맞음`}</span>
+                        <span class="text-[11px] text-gray-500 truncate">${where}</span>
+                        <button onclick="pomrToggle(${i})" class="ml-auto text-[11px] text-gray-300 bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded font-bold">${r.open ? '답 접기' : '답 보기 · 고치기'}</button>
+                    </div>
+                    ${warn ? `<p class="text-[11px] text-amber-300 mt-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>${escapeHtml(warn)}</p>` : ''}
+                    ${flagText && !r.saved ? `<p class="text-[11px] text-amber-200 mt-1">확인할 문항: ${escapeHtml(flagText)}</p>` : ''}
+                    ${r.open ? `<div class="grid grid-cols-8 md:grid-cols-10 gap-1 mt-2">${cells}</div>` : ''}
+                </div>`;
+            }).join('');
+            const n = POMR.rows.filter(r => r.use && r.ok && !r.saved).length;
+            document.getElementById('pomr-save-count').innerText = n ? `저장할 답안지 ${n}장` : '';
+        }
+
+        function pomrSetAnswer(i, q, v) { POMR.rows[i].answers[q] = v.trim(); }
+        function pomrSetStudent(i, name) { POMR.rows[i].student_name = name; POMR.rows[i].note = ''; renderPomrReview(); }
+        function pomrUse(i, on) { POMR.rows[i].use = on; renderPomrReview(); }
+        function pomrToggle(i) { POMR.rows[i].open = !POMR.rows[i].open; renderPomrReview(); }
+
+        // 두 개 고르는 문항에 '24' 처럼 붙여 적어도 '2+4' 로 맞춘다
+        function pomrNormalize(ans) {
+            return POMR.kinds.map((k, q) => {
+                const v = String(ans[q] || '').trim();
+                if (k.startsWith('multi') && /^[1-5]{2,}$/.test(v)) return v.split('').join('+');
+                return v.replace(/[①②③④⑤]/g, c => '①②③④⑤'.indexOf(c) + 1);
+            });
+        }
+
+        async function pomrSave() {
+            const rows = POMR.rows.filter(r => r.use && r.ok && !r.saved);
+            if (!rows.length) return alert('저장할 답안지가 없습니다.');
+            if (rows.some(r => !r.student_name)) return alert('학생을 고르지 않은 답안지가 있습니다. 학생을 고르거나 체크를 빼 주세요.');
+            const dup = pomrDupNames();
+            if (dup.size) return alert(`같은 학생 답안지가 두 장 있습니다: ${[...dup].join(', ')}\n하나만 체크해 주세요.`);
+            const btn = document.getElementById('pomr-save-btn');
+            btn.disabled = true;
+            const r = await adminPost('/api/admin/omr/save', { kind: POMR.kind, title: POMR.title,
+                items: rows.map(x => ({ student_name: x.student_name, answers: pomrNormalize(x.answers) })) });
+            btn.disabled = false;
+            if (!r.ok) return alert(r.message);
+            const res = r.data.results || [];
+            res.forEach((x, k) => { if (x.ok) { rows[k].saved = x.score || '✓'; rows[k].use = false; } });
+            document.getElementById('pomr-result').innerHTML = res.map(x => `<p class="text-[12px] ${x.ok ? 'text-emerald-300' : 'text-red-300'}">
+                <i class="fa-solid ${x.ok ? 'fa-circle-check' : 'fa-circle-xmark'} mr-1"></i>${escapeHtml(x.student_name || '(학생 없음)')} — ${escapeHtml(x.ok ? (x.score + (x.detail ? ' · ' + x.detail : '')) : x.detail)}</p>`).join('');
+            POMR.students.forEach(s => { if (res.some(x => x.ok && x.student_name === s.name)) s.done = true; });
+            renderPomrStudents();
+            renderPomrReview();
+            showToast(`${r.data.saved}명 채점을 저장했습니다.`);
+        }
 
         // ── 모의고사에 붙인 파일만 떼어내기 ─────────────
         //   잘못 올렸을 때 시험을 통째로 지웠다가 다시 만들지 않아도 되도록.
