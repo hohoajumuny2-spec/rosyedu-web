@@ -10297,7 +10297,22 @@ let lavUid = 0;
             if (!r.ok) return alert(r.message);
             await loadAdminClassData();
         }
-        async function deleteSelectedStudents() { const ids=Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value); if(!ids.length) return; showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/student/delete_bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}); loadAdminStudents(); hideLoader(); }
+        // 💡 예전에는 '선택 삭제'를 누르면 묻지도 않고 바로 지웠다. 체크를 잘못한 채로 누르면
+        //    학생이 명단에서 사라져 로그인도 못 하게 되므로, 누구를 지우는지 보여 주고 한 번 묻는다.
+        async function deleteSelectedStudents() {
+            const ids = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+            if (!ids.length) return alert('삭제할 학생을 먼저 체크해 주세요.');
+            const shown = ids.slice(0, 10).map(n => '· ' + n).join('\n') + (ids.length > 10 ? `\n… 외 ${ids.length - 10}명` : '');
+            const msg = `선택한 ${ids.length}명을 학생 명단에서 삭제할까요?\n\n${shown}\n\n` +
+                '삭제하면 이 학생은 로그인할 수 없게 됩니다.\n(시험 점수 · 과제 · 상담 기록은 지워지지 않고 남습니다)';
+            if (!confirm(msg)) return;
+            showLoader("삭제 중...");
+            const r = await adminPost('/api/admin/student/delete_bulk', { ids: ids });
+            hideLoader();
+            if (!r.ok) return alert('삭제하지 못했습니다.\n' + r.message);
+            showToast(`${ids.length}명을 명단에서 삭제했습니다.`);
+            loadAdminStudents();
+        }
 
         // 💡 팝업 모달을 띄우고 기존 정보를 채워넣는 함수
         function openEditStudent(id,n,s,g,cls,subs,classNamesJson) {
