@@ -2575,6 +2575,8 @@
                                     <label class="flex items-center gap-1 text-gray-300"><input type="checkbox" class="bulk-subject-cb" value="english" id="bulk-subject-english"> 영어</label>
                                         <button onclick="assignSelectedSubjects()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded font-bold transition">선택 학생 과목 배정</button>
                                     </span>
+                                    <button onclick="withdrawSelectedStudents(true)" title="기록은 남기고 로그인 · 과제 · 알림에서 뺍니다. 다시 다니면 되돌릴 수 있어요" class="bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 퇴원 처리</button>
+                                    <button onclick="withdrawSelectedStudents(false)" title="퇴원생 칸에서 체크한 학생을 다시 다니는 학생으로 되돌립니다" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 복귀</button>
                                     <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 삭제</button>
                                 </div>
                             </div>
@@ -7301,6 +7303,7 @@ let lavUid = 0;
                     }),
                 });
                 const d = await res.json();
+                if (d && d.withdrawn) { alert(d.detail || '퇴원 처리된 학생입니다.'); return logout(); }
                 if (d && d.granted) {
                     showToast(`오늘 출석! 성장 포인트 ${d.xp_gain}점을 받았어요.`);
                     if (d.level_up && typeof showLevelUp === 'function') showLevelUp(d.level_up);
@@ -7602,6 +7605,9 @@ let lavUid = 0;
         function openNewStudentForm() {
             const name = (prompt("새로 등록할 학생의 이름을 입력해주세요.") || '').trim();
             if (!name) return;
+            if (ADMIN_WITHDRAWN.some(s => s.student_name === name)) {
+                return alert("퇴원생 칸에 같은 이름이 있습니다.\n다시 다니는 학생이면 학생 명단 맨 아래 '퇴원생'에서 체크하고 [선택 복귀]를 눌러 주세요.");
+            }
             if (ADMIN_STUDENTS.some(s => s.student_name === name)) {
                 return alert("이미 명단에 있는 이름입니다.\n동명이인이라면 '김민준B'처럼 구분을 붙여주세요.");
             }
@@ -9940,8 +9946,9 @@ let lavUid = 0;
         // 반 목록을 한 번이라도 불러왔는지. 관리자 화면이 '학생 명단' 이 아닌 메뉴로 바로 열려도
         // 반 고르기 칸이 비지 않게, 그 메뉴를 열 때 아직이면 불러온다(switchAdminTab).
         let CLASS_DATA_LOADED = false;
-        let ADMIN_STUDENTS = [];
-        const collapsedClassGroups = new Set();
+        let ADMIN_STUDENTS = [];      // 다니는 학생만(반 배정 · 과제 대상 고르기 등에 쓴다)
+        let ADMIN_WITHDRAWN = [];     // 퇴원 처리한 학생 — 명단 맨 아래 '퇴원생' 칸에만 보인다
+        const collapsedClassGroups = new Set(['__withdrawn__']);   // 퇴원생 칸은 처음에 접어 둔다
 
         function renderDayCheckboxes() {
             const box = document.getElementById('cls-days');
@@ -10128,8 +10135,10 @@ let lavUid = 0;
                 const cData = cRes.ok ? await cRes.json() : {};
                 const sData = await sRes.json();
                 ADMIN_CLASSES = cData.success ? (cData.classes||[]) : [];
-                ADMIN_STUDENTS = sData.success ? (sData.students||[]) : [];
-            } catch(e) { ADMIN_CLASSES = []; ADMIN_STUDENTS = []; }
+                const everyone = sData.success ? (sData.students||[]) : [];
+                ADMIN_STUDENTS = everyone.filter(s => !s.withdrawn);
+                ADMIN_WITHDRAWN = everyone.filter(s => s.withdrawn);
+            } catch(e) { ADMIN_CLASSES = []; ADMIN_STUDENTS = []; ADMIN_WITHDRAWN = []; }
             CLASSES_UNAVAILABLE = classesFailed;
             CLASS_DATA_LOADED = true;
             refreshClassSelects();
@@ -10233,13 +10242,15 @@ let lavUid = 0;
             const assigned = new Set(ADMIN_CLASSES.map(x=>x.name));
             const rest = ADMIN_STUDENTS.filter(s => !assigned.has(s.class_name||''));
             if (rest.length) groups.push({ key:'__none__', title:'반 미배정', sub:'아래에서 학생을 선택하고 반을 배정해주세요', students: rest });
+            if (ADMIN_WITHDRAWN.length) groups.push({ key:'__withdrawn__', title:'퇴원생', sub:'로그인할 수 없고 과제 · 알림이 가지 않습니다. 기록은 남아 있어요', students: ADMIN_WITHDRAWN });
 
             if (!groups.length) { c.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">등록된 학생이 없습니다.</p>'; return; }
 
             c.innerHTML = groups.map(g => {
                 const open = !collapsedClassGroups.has(g.key);
                 const isNone = g.key === '__none__';
-                const head = isNone ? 'bg-gray-700/40 border-gray-600' : 'bg-blue-900/30 border-blue-700';
+                const isLeft = g.key === '__withdrawn__';
+                const head = isLeft ? 'bg-gray-900 border-gray-700' : isNone ? 'bg-gray-700/40 border-gray-600' : 'bg-blue-900/30 border-blue-700';
 
                 const subjectLabels = { korean: '국어', math: '수학', english: '영어' };
                 const subjectColors = { korean: 'bg-blue-900/50 text-blue-300', math: 'bg-indigo-900/50 text-indigo-300', english: 'bg-cyan-900/50 text-cyan-300' };
@@ -10247,10 +10258,11 @@ let lavUid = 0;
                     const lv = computeLevelFromXp(s.xp);
                     const subs = (s.subjects && s.subjects.length) ? s.subjects : ['korean'];
                     const subjBadges = subs.map(sub => `<span class="text-[10px] ${subjectColors[sub]||'bg-gray-700 text-gray-300'} px-1.5 py-0.5 rounded-full ml-1">${subjectLabels[sub]||sub}</span>`).join('');
-                    return `<div class="flex items-center gap-2 bg-gray-800 p-2 rounded">
+                    const leftBadge = s.withdrawn ? `<span class="text-[10px] bg-gray-600 text-gray-200 px-1.5 py-0.5 rounded-full ml-1">퇴원${s.withdrawn_at ? ' ' + escapeHtml(s.withdrawn_at.slice(2)) : ''}</span>` : '';
+                    return `<div class="flex items-center gap-2 bg-gray-800 p-2 rounded ${s.withdrawn ? 'opacity-60' : ''}">
                         <input type="checkbox" class="student-checkbox shrink-0" value="${escAttr(s.id)}">
                         <span class="flex-grow min-w-0 truncate text-sm text-white">${escapeHtml(s.school||'')} ${escapeHtml(s.grade||'')} <b>${escapeHtml(s.student_name)}</b>
-                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}${pushBadgeHtml(s.student_name)}
+                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}${leftBadge}${pushBadgeHtml(s.student_name)}
                         </span>
                         ${(ADMIN_PUSH_STATUS && ADMIN_PUSH_STATUS[s.student_name]) ? `<button onclick="sendTestPush('${escAttr(s.student_name)}')" class="shrink-0 bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs text-emerald-300 font-bold transition" title="이 학생 휴대폰으로 테스트 알림을 한 번 보냅니다"><i class="fa-solid fa-bell"></i> 테스트</button>` : ''}
                         <button onclick="fetchReports('${escAttr(s.student_name)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded text-xs text-white font-bold transition">이력</button>
@@ -10297,6 +10309,25 @@ let lavUid = 0;
             if (!r.ok) return alert(r.message);
             await loadAdminClassData();
         }
+        // 퇴원 처리 / 복귀 — 지우지 않고 표시만 한다(성적 · 과제 · 상담 기록은 그대로).
+        async function withdrawSelectedStudents(on) {
+            const ids = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+            const left = new Set(ADMIN_WITHDRAWN.map(s => s.id));
+            const pick = ids.filter(id => on ? !left.has(id) : left.has(id));
+            if (!pick.length) return alert(on ? '퇴원 처리할 학생을 먼저 체크해 주세요.' : '맨 아래 \'퇴원생\' 칸에서 다시 다닐 학생을 체크해 주세요.');
+            const shown = pick.slice(0, 10).map(n => '· ' + n).join('\n') + (pick.length > 10 ? `\n… 외 ${pick.length - 10}명` : '');
+            const msg = on
+                ? `${pick.length}명을 퇴원 처리할까요?\n\n${shown}\n\n· 로그인할 수 없고 과제 · 시험 · 알림이 가지 않습니다.\n· 성적 · 과제 · 상담 기록은 그대로 남습니다.\n· 다시 다니면 [선택 복귀]로 되돌릴 수 있어요.`
+                : `${pick.length}명을 다시 다니는 학생으로 되돌릴까요?\n\n${shown}\n\n(휴대폰 알림은 학생이 다시 켜야 합니다)`;
+            if (!confirm(msg)) return;
+            showLoader(on ? '퇴원 처리 중...' : '복귀 처리 중...');
+            const r = await adminPost('/api/admin/student/withdraw', { ids: pick, withdrawn: !!on });
+            hideLoader();
+            if (!r.ok) return alert((on ? '퇴원 처리하지 못했습니다.\n' : '되돌리지 못했습니다.\n') + r.message);
+            showToast(on ? `${r.data.count}명을 퇴원 처리했습니다.` : `${r.data.count}명이 다시 다니는 학생이 됐습니다.`);
+            loadAdminStudents();
+        }
+
         // 💡 예전에는 '선택 삭제'를 누르면 묻지도 않고 바로 지웠다. 체크를 잘못한 채로 누르면
         //    학생이 명단에서 사라져 로그인도 못 하게 되므로, 누구를 지우는지 보여 주고 한 번 묻는다.
         async function deleteSelectedStudents() {
