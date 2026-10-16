@@ -1173,6 +1173,7 @@
                     <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
                     <button onclick="openProgram('homework'); loadHomeworks();" class="nav-word hover:text-emerald-400">과제 제출</button>
                     <button onclick="openStudy()" class="nav-word hover:text-teal-400">스터디룸</button>
+                    <button onclick="openProgram('whatif')" class="nav-word hover:text-emerald-400">어땠을까</button>
                     <button onclick="openProgram('qna'); loadQna();" class="nav-word hover:text-rose-400">질문 게시판</button>
                     <button onclick="openDm()" class="nav-word hover:text-indigo-400">원장님 톡</button>
                     <button onclick="openProgram('essay')" class="nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
@@ -1219,6 +1220,7 @@
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
                 <button onclick="openStudy(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
+                <button onclick="openProgram('whatif'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">어땠을까</button>
                 <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
                 <button onclick="openDm(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-indigo-400 w-full">원장님 톡</button>
                 <button onclick="openProgram('essay'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
@@ -1957,6 +1959,11 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">스터디룸</h3>
                         <p class="text-teal-200/70 text-[11px] md:text-sm word-break-keep-all">공부 시간을 재고 함께 공부해요.</p>
                     </div>
+                    <div onclick="openProgram('whatif')" class="bg-[#1e2430] border border-emerald-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🔮</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">어땠을까</h3>
+                        <p class="text-emerald-200/70 text-[11px] md:text-sm word-break-keep-all">내 선택이 대학·진로를 어떻게 바꿀지 살아 봐요.</p>
+                    </div>
                     <div onclick="openProgram('qna'); loadQna();" class="bg-[#1e2430] border border-rose-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-rose-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🙋</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">질문 게시판</h3>
@@ -2085,6 +2092,14 @@
             </div>
 
             <!-- 공지사항 -->
+            <!-- 🔮 어땠을까 — 고등학교 선택이 대학·진로·서른 살을 어떻게 바꾸는지 살아 보는 입시 인생 시뮬레이션 (eottae/ 폴더) -->
+            <div id="prog-whatif" class="prog-content w-full max-w-5xl mx-auto">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h2 class="text-3xl font-bold text-white"><i class="fa-solid fa-route text-emerald-400 mr-3"></i>어땠을까</h2>
+                    <a href="eottae/" target="_blank" rel="noopener" class="text-sm font-bold text-emerald-300 border border-emerald-600/60 rounded-lg px-3 py-2">새 창으로 크게 보기</a>
+                </div>
+                <iframe id="whatif-frame" title="어땠을까" allow="autoplay" style="display:block;width:100%;height:80vh;min-height:560px;border:0;border-radius:16px;background:#fff"></iframe>
+            </div>
             <!-- ⏱ 스터디룸 — 앱을 켜 두고 공부하면 시간이 쌓이고, 누가 공부 중인지 모두가 본다 -->
             <div id="prog-study" class="prog-content w-full max-w-4xl mx-auto">
                 <h2 class="text-3xl font-bold text-white mb-6"><i class="fa-solid fa-stopwatch text-teal-400 mr-3"></i>스터디룸</h2>
@@ -2449,7 +2464,7 @@
                                 <h3 class="text-white font-bold"><i class="fa-solid fa-route text-teal-400 mr-2"></i>어땠을까 <span class="text-[12px] text-gray-400 font-normal ml-1">그때 다른 선택을 했다면 — 입시·진로 인생 시뮬레이션</span></h3>
                                 <a href="eottae/" target="_blank" rel="noopener" class="admin-nav-btn">새 창으로 열기</a>
                             </div>
-                            <iframe id="admin-whatif-frame" title="어땠을까" style="display:block;width:100%;height:82vh;min-height:560px;border:0;border-radius:10px;background:#fff"></iframe>
+                            <iframe id="admin-whatif-frame" title="어땠을까" allow="autoplay" style="display:block;width:100%;height:82vh;min-height:560px;border:0;border-radius:10px;background:#fff"></iframe>
                         </div>
                     </div>
                     <div id="admin-unsure" class="admin-tab-content grid grid-cols-1 lg:grid-cols-3 gap-4" style="display:none">
@@ -5362,6 +5377,7 @@ let lavUid = 0;
                 if(h==='prog-admin') { switchAdminTab(lastAdminTab()); checkTzFix(); }
                 if(h==='prog-homework' && pendingHomeworkId()) openPendingHomework();
                 if(h==='prog-study') loadStudyRoom();
+                if(h==='prog-whatif') { const fr=document.getElementById('whatif-frame'); if(!fr.getAttribute('src')) fr.setAttribute('src','eottae/'); }
                 if(h==='prog-qna') loadQna();
                 renderStudyMe();
             }
@@ -5937,6 +5953,10 @@ let lavUid = 0;
         //    빈 목록만 보는 일이 많았다. 화면마다 '어떤 곳이고, 어떻게 쓰고,
         //    무엇을 알아두면 좋은지'를 제목 바로 아래에 한 덩어리로 붙인다.
         const PROGRAM_INTRO = {
+            'whatif': { 색: 'emerald', 무엇: '고등학교 3년을 직접 살아 보며, 지금의 선택이 대학·진로·서른 살을 어떻게 바꾸는지 보는 시뮬레이션이에요.',
+                할일: ['내 성적·성향·학원·부모님·친구를 넣고 지금 학기부터 시작해요',
+                       '과목별 공부법과 시간, 학평을 어떻게 볼지 고르면 성적과 입시 결과가 달라져요',
+                       '끝나면 "그때 다른 걸 골랐다면 어땠을까"를 같은 운으로 다시 돌려 보여 줘요'] },
             'mypage': { 색: 'teal', 무엇: '지금까지 공부한 기록이 모두 모이는 곳이에요.',
                 할일: ['푼 퀴즈·모의고사·과제와 점수를 한눈에 봐요',
                        '틀린 문제만 모아 다시 풀 수 있어요',
