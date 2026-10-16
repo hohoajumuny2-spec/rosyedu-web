@@ -2352,7 +2352,7 @@
                             <p class="admin-nav-title"><i class="fa-solid fa-user-group mr-1.5"></i>학생 관리</p>
                             <div class="flex flex-wrap gap-1.5">
                                 <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="admin-nav-btn">학생 명단</button>
-                                <button onclick="switchAdminTab('admin-study')" id="btn-admin-study" class="admin-nav-btn">공부 현황</button>
+                                <button onclick="switchAdminTab('admin-whatif')" id="btn-admin-whatif" class="admin-nav-btn">어땠을까</button>
                                 <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="admin-nav-btn">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
                                 <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="admin-nav-btn">상담</button>
                                 <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="admin-nav-btn">모른다고 한 문항</button>
@@ -2438,25 +2438,18 @@
                     <div id="admin-dm" class="admin-tab-content" style="display:none">
                         <div class="bg-[#151922] p-6 rounded max-w-2xl">
                             <h3 class="text-white font-bold mb-1"><i class="fa-solid fa-comments text-indigo-400 mr-2"></i>학생 톡</h3>
-                            <p class="text-[12px] text-gray-400 mb-4">학생과 1:1로 나눈 대화입니다. 새 대화는 스터디룸이나 공부 현황에서 학생 옆 [말 걸기]를 누르세요.</p>
+                            <p class="text-[12px] text-gray-400 mb-4">학생과 1:1로 나눈 대화입니다. 새 대화는 스터디룸에서 학생 옆 [말 걸기]를 누르세요.</p>
                             <div id="admin-dm-list" class="space-y-2"></div>
                         </div>
                     </div>
-                    <div id="admin-study" class="admin-tab-content" style="display:none">
-                        <div class="bg-[#151922] p-6 rounded">
-                            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                                <h3 class="text-white font-bold"><i class="fa-solid fa-stopwatch text-teal-400 mr-2"></i>학생별 공부 시간</h3>
-                                <label class="text-xs text-gray-400">최근
-                                    <select id="admin-study-days" onchange="loadAdminStudy()" class="ml-1 p-1.5 bg-gray-800 text-white rounded border border-gray-600 text-xs">
-                                        <option value="7">7일</option><option value="30">30일</option><option value="1">오늘</option>
-                                    </select></label>
+                    <!-- 어땠을까: 고등학교 선택이 대학·진로·서른 살을 어떻게 바꾸는지 살아 보는 입시 인생 시뮬레이션 (eottae/ 폴더) -->
+                    <div id="admin-whatif" class="admin-tab-content" style="display:none">
+                        <div class="bg-[#151922] p-4 rounded">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <h3 class="text-white font-bold"><i class="fa-solid fa-route text-teal-400 mr-2"></i>어땠을까 <span class="text-[12px] text-gray-400 font-normal ml-1">그때 다른 선택을 했다면 — 입시·진로 인생 시뮬레이션</span></h3>
+                                <a href="eottae/" target="_blank" rel="noopener" class="admin-nav-btn">새 창으로 열기</a>
                             </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm text-gray-300">
-                                    <thead><tr class="text-left text-[12px] text-gray-400"><th class="px-3 py-2">이름</th><th class="px-3 py-2">지금</th><th class="px-3 py-2 text-right">오늘</th><th class="px-3 py-2 text-right">최근</th><th class="px-3 py-2 text-right">전체</th></tr></thead>
-                                    <tbody id="admin-study-body"></tbody>
-                                </table>
-                            </div>
+                            <iframe id="admin-whatif-frame" title="어땠을까" style="display:block;width:100%;height:82vh;min-height:560px;border:0;border-radius:10px;background:#fff"></iframe>
                         </div>
                     </div>
                     <div id="admin-unsure" class="admin-tab-content grid grid-cols-1 lg:grid-cols-3 gap-4" style="display:none">
@@ -6041,7 +6034,7 @@ let lavUid = 0;
             if(id==='admin-unsure'){loadUnsureReport();}
             if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner); document.getElementById('ai-status-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
-            if(id==='admin-study'){loadAdminStudy();}
+            if(id==='admin-whatif'){const fr=document.getElementById('admin-whatif-frame'); if(!fr.getAttribute('src')) fr.setAttribute('src','eottae/');}
             if(id==='admin-dm'){refreshAdminDmThreads();}
             if(id==='admin-vocab'){loadVocabAdmin();}
 
@@ -6582,7 +6575,7 @@ let lavUid = 0;
                         <span class="block text-[10px] text-gray-500">${escapeHtml(String(t.last_at).slice(5, 16))}</span>
                         ${t.unread ? `<span class="inline-block mt-0.5 text-[11px] font-bold bg-rose-600 text-white rounded-full px-2">${t.unread}</span>` : ''}
                     </span>
-                </button>`).join('') : '<p class="text-sm text-gray-500 text-center py-8">아직 대화가 없습니다. 스터디룸이나 공부 현황에서 학생에게 [말 걸기]를 눌러 보세요.</p>';
+                </button>`).join('') : '<p class="text-sm text-gray-500 text-center py-8">아직 대화가 없습니다. 스터디룸에서 학생에게 [말 걸기]를 눌러 보세요.</p>';
         }
 
         async function pollAdminDm() {
@@ -6777,23 +6770,6 @@ let lavUid = 0;
                     <span class="shrink-0 text-sm font-bold text-white tabular-nums">${fmtStudy(p.today)}</span>
                 </li>`).join('') : '<p class="text-sm text-gray-500 text-center py-6">오늘 아직 공부 기록이 없어요. 첫 번째가 되어 보세요!</p>';
             renderStudyMe();
-        }
-
-        // 원장님: 학생별 학습 시간
-        async function loadAdminStudy() {
-            const box = document.getElementById('admin-study-body');
-            const days = document.getElementById('admin-study-days').value || 7;
-            box.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-gray-500">불러오는 중…</td></tr>';
-            const r = await adminGet(`/api/admin/study/report?days=${days}`);
-            if (!r.ok) { box.innerHTML = `<tr><td colspan="5" class="px-3 py-6 text-center text-red-400">${escapeHtml(r.message)}</td></tr>`; return; }
-            const label = { studying: '<span class="text-teal-300 font-bold">공부 중</span>', away: '<span class="text-amber-300">자리 비움</span>', online: '<span class="text-emerald-300">온라인</span>', offline: '<span class="text-gray-500">-</span>' };
-            box.innerHTML = r.data.rows.length ? r.data.rows.map(x => `<tr class="border-t border-gray-700">
-                <td class="px-3 py-2 text-white font-bold">${escapeHtml(x.name)} ${dmTalkButton(x.name)}</td>
-                <td class="px-3 py-2">${label[x.status] || ''}</td>
-                <td class="px-3 py-2 text-right tabular-nums">${fmtStudy(x.today)}</td>
-                <td class="px-3 py-2 text-right tabular-nums text-teal-200 font-bold">${fmtStudy(x.recent)}</td>
-                <td class="px-3 py-2 text-right tabular-nums text-gray-400">${fmtStudy(x.total)}</td></tr>`).join('')
-                : '<tr><td colspan="5" class="px-3 py-6 text-center text-gray-500">아직 공부 기록이 없습니다.</td></tr>';
         }
 
         // ── 질문 게시판 ─────────────────────────────
