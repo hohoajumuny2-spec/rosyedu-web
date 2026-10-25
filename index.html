@@ -2626,6 +2626,7 @@
                                     <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 삭제</button>
                                 </div>
                             </div>
+                            <div id="roster-filters" class="flex flex-col gap-1.5 mb-2 text-xs"></div>
                             <div id="admin-student-list" class="flex-grow overflow-y-auto pr-1"></div>
                         </div>
 
@@ -10278,11 +10279,15 @@ let lavUid = 0;
         }
 
         async function assignSelectedClass() {
-            const ids = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value);
+            const ids = Array.from(new Set(Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb=>cb.value)));
             if (!ids.length) return alert("반을 배정할 학생을 먼저 선택해주세요.");
             const target = document.getElementById('bulk-class').value;
+            // 💡 어느 과목 반인지 함께 보낸다. 반을 고르면 그 반의 과목, '미배정'이면 지금 보고 있는 과목.
+            //    (예전에는 국어 칸 하나만 바꿔서, 수학반에 넣으면 국어반에서 빠졌다)
+            let subject = target ? (rosterClassSubjects()[target] || '') : (rosterSubject === 'all' ? '' : rosterSubject);
+            if (!target && !subject) return alert("어느 과목의 반을 비울지 위에서 과목(국어 · 수학 · 영어)을 먼저 골라 주세요.");
             showLoader("반 배정 중...");
-            const r = await adminPost('/api/admin/student/assign_class', {ids:ids, class_name:target});
+            const r = await adminPost('/api/admin/student/assign_class', {ids:ids, class_name:target, subject:subject});
             hideLoader();
             if (!r.ok) return alert(r.message);
             await loadAdminClassData();
@@ -10405,22 +10410,37 @@ let lavUid = 0;
                 if (ADMIN_PUSH_STATUS) pushCountEl.innerText = `🔔 알림 켠 학생 ${ADMIN_STUDENTS.filter(s => ADMIN_PUSH_STATUS[s.student_name]).length}명`;
             }
 
-            const groups = ADMIN_CLASSES.map(cls => ({
-                key: cls.name,
-                title: cls.name,
-                sub: classScheduleLabel(cls),
-                students: ADMIN_STUDENTS.filter(s => (s.class_name||'') === cls.name)
-            }));
-            const assigned = new Set(ADMIN_CLASSES.map(x=>x.name));
-            const rest = ADMIN_STUDENTS.filter(s => !assigned.has(s.class_name||''));
-            if (rest.length) groups.push({ key:'__none__', title:'반 미배정', sub:'아래에서 학생을 선택하고 반을 배정해주세요', students: rest });
-            if (ADMIN_WITHDRAWN.length) groups.push({ key:'__withdrawn__', title:'퇴원생', sub:'로그인할 수 없고 과제 · 알림이 가지 않습니다. 기록은 남아 있어요', students: ADMIN_WITHDRAWN });
+            // 💡 2026-10-25: 반별 명단을 과목(국어 · 수학 · 영어)별 · 학년별로 나눈다.
+            //    예전에는 예전 한 칸(class_name, 국어)으로만 묶어서 수학반 · 영어반에 넣은 학생이 명단에 안 보였다.
+            renderRosterFilters();
+            const SUBJ = { korean: '국어', math: '수학', english: '영어' };
+            const gradeOk = s => rosterGrade === 'all' || rosterGradeKey(s) === rosterGrade;
+            const byGrade = (a, b) => rosterGradeRank(rosterGradeKey(a)) - rosterGradeRank(rosterGradeKey(b)) || String(a.student_name).localeCompare(String(b.student_name), 'ko');
+            const classSubj = rosterClassSubjects();
+            const groups = [];
+            (rosterSubject === 'all' ? ['korean', 'math', 'english'] : [rosterSubject]).forEach(subj => {
+                const takers = ADMIN_STUDENTS.filter(s => studentSubjectList(s).includes(subj) || studentClassFor(s, subj));
+                const classes = ADMIN_CLASSES.filter(cls => classSubj[cls.name] === subj);
+                if (!takers.length && !classes.length) return;
+                groups.push({ section: true, title: SUBJ[subj], count: takers.filter(gradeOk).length });
+                classes.forEach(cls => {
+                    const students = takers.filter(s => studentClassFor(s, subj) === cls.name && gradeOk(s)).sort(byGrade);
+                    if (rosterGrade !== 'all' && !students.length) return;   // 학년으로 고르면 그 학년이 없는 반은 숨긴다
+                    groups.push({ key: subj + ':' + cls.name, title: cls.name, sub: classScheduleLabel(cls), students: students });
+                });
+                const names = new Set(classes.map(c => c.name));
+                const rest = takers.filter(s => !names.has(studentClassFor(s, subj)) && gradeOk(s)).sort(byGrade);
+                if (rest.length) groups.push({ key: subj + ':__none__', title: SUBJ[subj] + ' 반 미배정', sub: '학생을 체크하고 위에서 반을 고른 뒤 [선택 학생 반 배정]', students: rest, none: true });
+            });
+            const left = ADMIN_WITHDRAWN.filter(gradeOk);
+            if (left.length) groups.push({ key:'__withdrawn__', title:'퇴원생', sub:'로그인할 수 없고 과제 · 알림이 가지 않습니다. 기록은 남아 있어요', students: left });
 
             if (!groups.length) { c.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">등록된 학생이 없습니다.</p>'; return; }
 
             c.innerHTML = groups.map(g => {
+                if (g.section) return `<div class="flex items-center gap-2 mt-4 mb-2 first:mt-0"><span class="text-sm font-black text-emerald-300">${escapeHtml(g.title)}</span><span class="text-[11px] text-gray-400">${g.count}명</span><span class="flex-grow border-t border-gray-700"></span></div>`;
                 const open = !collapsedClassGroups.has(g.key);
-                const isNone = g.key === '__none__';
+                const isNone = !!g.none;
                 const isLeft = g.key === '__withdrawn__';
                 const head = isLeft ? 'bg-gray-900 border-gray-700' : isNone ? 'bg-gray-700/40 border-gray-600' : 'bg-blue-900/30 border-blue-700';
 
@@ -10454,6 +10474,60 @@ let lavUid = 0;
                 </div>`;
             }).join('');
         }
+
+        // ── 반별 명단 나누기(과목 · 학년) ─────────────────────────
+        let rosterSubject = 'all', rosterGrade = 'all';
+        function studentSubjectList(s) { return (s.subjects && s.subjects.length) ? s.subjects : ['korean']; }
+        /** 그 과목의 반. 과목별 반이 없으면 국어는 예전 한 칸(class_name)을 본다. */
+        function studentClassFor(s, subj) {
+            const names = s.class_names || {};
+            if (names[subj]) return names[subj];
+            return subj === 'korean' ? (s.class_name || '') : '';
+        }
+        /** 반 이름 → 과목: 학생이 그 반을 어느 과목 칸에 두었는지로 보고, 없으면 이름('수학' · '영어')으로 짐작 */
+        function rosterClassSubjects() {
+            const out = {};
+            ADMIN_STUDENTS.forEach(s => ['korean', 'math', 'english'].forEach(k => {
+                const v = studentClassFor(s, k); if (v && !out[v]) out[v] = k;
+            }));
+            ADMIN_CLASSES.forEach(c => { if (!out[c.name]) out[c.name] = /수학/.test(c.name) ? 'math' : /영어/.test(c.name) ? 'english' : 'korean'; });
+            return out;
+        }
+        /** 학년 묶음: '미사고' + '2' → 고2, '미사강변중' + '3학년' → 중3, 재수 · N수 */
+        function rosterGradeKey(s) {
+            const g = String(s.grade || '').trim(), sc = String(s.school || '').trim();
+            if (/재수|반수|N수|n수|졸업|삼수/.test(g + ' ' + sc)) return '재수·N수';
+            const n = (g.match(/[1-6]/) || [])[0];
+            const lvl = /초/.test(g) ? '초' : /중/.test(g) ? '중' : /고/.test(g) ? '고'
+                : /초등|초$/.test(sc) ? '초' : /중학|중$/.test(sc) ? '중' : /고등|고$|고교/.test(sc) ? '고' : '';
+            return n ? lvl + n : (g || '학년 미입력');
+        }
+        function rosterGradeRank(k) {
+            const m = /^(초|중|고)?(\d)$/.exec(k);
+            if (m) return ({'초': 0, '': 10, '중': 20, '고': 30})[m[1] || ''] + (+m[2]);
+            return k === '재수·N수' ? 40 : 50;
+        }
+        function renderRosterFilters() {
+            const box = document.getElementById('roster-filters'); if (!box) return;
+            const all = ADMIN_STUDENTS.concat(ADMIN_WITHDRAWN);
+            const grades = Array.from(new Set(all.map(rosterGradeKey))).sort((a, b) => rosterGradeRank(a) - rosterGradeRank(b) || a.localeCompare(b, 'ko'));
+            if (rosterGrade !== 'all' && !grades.includes(rosterGrade)) rosterGrade = 'all';
+            const chip = (on, label, js) => `<button type="button" onclick="${js}" class="px-2.5 py-1 rounded-full font-bold border ${on ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-300 hover:border-emerald-500'}">${escapeHtml(label)}</button>`;
+            const subjRow = [['all', '전체 과목'], ['korean', '국어'], ['math', '수학'], ['english', '영어']]
+                .map(([k, l]) => chip(rosterSubject === k, l, `setRosterSubject('${k}')`)).join('');
+            const gradeRow = [chip(rosterGrade === 'all', '전체 학년', `setRosterGrade('all')`)]
+                .concat(grades.map(g => chip(rosterGrade === g, g, `setRosterGrade('${escAttr(g)}')`))).join('');
+            box.innerHTML = `<div class="flex flex-wrap items-center gap-1.5"><span class="text-gray-500 w-8">과목</span>${subjRow}</div>`
+                + `<div class="flex flex-wrap items-center gap-1.5"><span class="text-gray-500 w-8">학년</span>${gradeRow}</div>`;
+        }
+        function setRosterSubject(k) { rosterSubject = k; renderAdminStudents(); }
+        function setRosterGrade(k) { rosterGrade = k; renderAdminStudents(); }
+        // 한 학생이 국어 · 수학 반에 모두 보이므로, 한 곳에서 체크하면 다른 곳도 같이 체크한다
+        document.addEventListener('change', e => {
+            const t = e.target;
+            if (!t || !t.classList || !t.classList.contains('student-checkbox')) return;
+            document.querySelectorAll('.student-checkbox').forEach(cb => { if (cb !== t && cb.value === t.value) cb.checked = t.checked; });
+        });
 
         function checkedSubjects(cls) {
             const vals = Array.from(document.querySelectorAll('.' + cls + ':checked')).map(cb => cb.value);
