@@ -10420,12 +10420,17 @@ let lavUid = 0;
             const groups = [];
             (rosterSubject === 'all' ? ['korean', 'math', 'english'] : [rosterSubject]).forEach(subj => {
                 const takers = ADMIN_STUDENTS.filter(s => studentSubjectList(s).includes(subj) || studentClassFor(s, subj));
-                const classes = ADMIN_CLASSES.filter(cls => classSubj[cls.name] === subj);
+                // 반 순서: 학년 → 학교(가나다) → 요일 → 시작 시각. 학년이 바뀌는 곳에 작은 학년 표시.
+                const classes = ADMIN_CLASSES.filter(cls => classSubj[cls.name] === subj)
+                    .map(cls => ({ cls, info: rosterClassInfo(cls, takers.filter(s => studentClassFor(s, subj) === cls.name)) }))
+                    .sort((a, b) => rosterClassOrder(a.info, b.info) || String(a.cls.name).localeCompare(String(b.cls.name), 'ko'));
                 if (!takers.length && !classes.length) return;
                 groups.push({ section: true, title: SUBJ[subj], count: takers.filter(gradeOk).length });
-                classes.forEach(cls => {
+                let lastGrade = null;
+                classes.forEach(({ cls, info }) => {
                     const students = takers.filter(s => studentClassFor(s, subj) === cls.name && gradeOk(s)).sort(byGrade);
                     if (rosterGrade !== 'all' && !students.length) return;   // 학년으로 고르면 그 학년이 없는 반은 숨긴다
+                    if (info.grade !== lastGrade) { groups.push({ gradeHead: true, title: info.grade }); lastGrade = info.grade; }
                     groups.push({ key: subj + ':' + cls.name, title: cls.name, sub: classScheduleLabel(cls), students: students });
                 });
                 const names = new Set(classes.map(c => c.name));
@@ -10438,6 +10443,7 @@ let lavUid = 0;
             if (!groups.length) { c.innerHTML = '<p class="text-gray-500 text-sm text-center py-8">등록된 학생이 없습니다.</p>'; return; }
 
             c.innerHTML = groups.map(g => {
+                if (g.gradeHead) return `<div class="text-[11px] font-bold text-gray-400 mt-2 mb-1 pl-1">${escapeHtml(g.title)}</div>`;
                 if (g.section) return `<div class="flex items-center gap-2 mt-4 mb-2 first:mt-0"><span class="text-sm font-black text-emerald-300">${escapeHtml(g.title)}</span><span class="text-[11px] text-gray-400">${g.count}명</span><span class="flex-grow border-t border-gray-700"></span></div>`;
                 const open = !collapsedClassGroups.has(g.key);
                 const isNone = !!g.none;
@@ -10506,6 +10512,34 @@ let lavUid = 0;
             const m = /^(초|중|고)?(\d)$/.exec(k);
             if (m) return ({'초': 0, '': 10, '중': 20, '고': 30})[m[1] || ''] + (+m[2]);
             return k === '재수·N수' ? 40 : 50;
+        }
+        /**
+         * 반의 학년 · 학교 · 요일 — 명단에서 반을 줄 세울 때 쓴다.
+         *   학년: 반 이름('고2 하남고' → 고2), 없으면 그 반 학생들 학년 중 가장 많은 것
+         *   학교: 반 이름의 '…고' · '…중' · '…초', 없으면 그 반 학생들 학교 중 가장 많은 것
+         *   요일: 반 수업 요일 중 이른 요일(월→일), 없으면 반 이름의 요일
+         */
+        const ROSTER_DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+        function rosterMost(list) {
+            const n = {}; list.filter(Boolean).forEach(v => n[v] = (n[v] || 0) + 1);
+            return Object.keys(n).sort((a, b) => n[b] - n[a] || a.localeCompare(b, 'ko'))[0] || '';
+        }
+        function rosterClassInfo(cls, students) {
+            const name = String(cls.name || '');
+            const gm = /(초|중|고)\s*([1-6])/.exec(name);
+            const grade = gm ? gm[1] + gm[2] : (rosterMost(students.map(rosterGradeKey).filter(k => k !== '학년 미입력')) || '학년 미정');
+            const sm = name.split(/[\s·,/()]+/).find(w => /^[가-힣]{2,}(초|중|고|초등학교|중학교|고등학교)$/.test(w));
+            const school = sm || rosterMost(students.map(s => String(s.school || '').trim()));
+            const days = String(cls.days || '').split(',').map(d => d.trim()).filter(Boolean);
+            const dayIdx = days.map(d => ROSTER_DAYS.indexOf(d[0])).filter(i => i >= 0);
+            const nameDay = name.split(/[\s·,/()]+/).filter(w => w.length === 1).map(w => ROSTER_DAYS.indexOf(w)).filter(i => i >= 0);
+            const day = dayIdx.length ? Math.min(...dayIdx) : nameDay.length ? Math.min(...nameDay) : 9;
+            return { grade, school, day, time: String(cls.start_time || '') };
+        }
+        function rosterClassOrder(a, b) {
+            return rosterGradeRank(a.grade) - rosterGradeRank(b.grade) || a.grade.localeCompare(b.grade, 'ko')
+                || (!a.school - !b.school) || a.school.localeCompare(b.school, 'ko')   // 학교를 모르는 반은 그 학년 맨 뒤
+                || a.day - b.day || a.time.localeCompare(b.time);
         }
         function renderRosterFilters() {
             const box = document.getElementById('roster-filters'); if (!box) return;
