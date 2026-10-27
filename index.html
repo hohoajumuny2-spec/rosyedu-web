@@ -11214,10 +11214,25 @@ let lavUid = 0;
                 if(data.success) {
                     loadAdminBoardList();
                     if (isEdit) showToast("공지를 고쳤습니다.");
+                    else if (data.kakao) showBoardKakaoResult(data.kakao);
                     cancelEditBoard();
                 } else { alert((isEdit ? "수정 실패: " : "업로드 실패: ") + data.detail); }
             } catch(e){ alert("서버 통신 오류가 발생했습니다.\n상세원인: " + e.message + "\n(첨부파일 용량이 너무 크면 막힐 수 있습니다)"); }
             hideLoader();
+        }
+
+        // 공지를 올린 뒤 카톡이 몇 명에게 갔는지, 안 갔다면 왜인지 알려 준다
+        function showBoardKakaoResult(k) {
+            const lines = [];
+            if (k.error) {
+                lines.push('공지는 올렸지만 카톡은 보내지 못했습니다.', '', '이유: ' + k.error);
+            } else {
+                lines.push(`공지를 올렸고, 카톡을 ${k.sent || 0}명에게 보냈습니다.`);
+            }
+            if ((k.no_phone || []).length) lines.push('', `휴대폰 번호가 없어 못 보낸 학생: ${k.no_phone.join(', ')}`, '→ logyedu.com 관리자 학생 명단에 학생 번호를 넣어 주세요.');
+            if ((k.unknown || []).length) lines.push('', `logyedu.com 학생 명단에 없는 이름: ${k.unknown.join(', ')}`, '→ 두 사이트의 학생 이름이 한 글자도 다르지 않게 맞춰 주세요.');
+            if (!k.error && k.sent) lines.push('', '그래도 카톡이 안 오면 솔라피 → 발송 내역에서 실패 이유를 확인해 주세요.');
+            alert(lines.join('\n'));
         }
 
         async function createBoard() {
