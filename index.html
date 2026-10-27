@@ -2644,6 +2644,7 @@
                                         <button onclick="assignSelectedSubjects()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded font-bold transition">선택 학생 과목 배정</button>
                                     </span>
                                     <button onclick="openKakaoNotice()" title="체크한 학생에게 학원 안내 카톡" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 text-xs rounded font-black transition"><i class="fa-solid fa-comment mr-1"></i>선택 카톡</button>
+                                    <button onclick="openBoardForSelected()" title="체크한 학생에게만 보이는 공지를 씁니다. 올리면 그 학생들에게 앱 알림과 카톡이 갑니다" class="bg-amber-500 hover:bg-amber-400 text-gray-900 px-3 py-1.5 text-xs rounded font-black transition"><i class="fa-solid fa-bullhorn mr-1"></i>선택 공지</button>
                                     <button onclick="withdrawSelectedStudents(true)" title="기록은 남기고 로그인 · 과제 · 알림에서 뺍니다. 다시 다니면 되돌릴 수 있어요" class="bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 퇴원 처리</button>
                                     <button onclick="withdrawSelectedStudents(false)" title="퇴원생 칸에서 체크한 학생을 다시 다니는 학생으로 되돌립니다" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 복귀</button>
                                     <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 삭제</button>
@@ -3452,6 +3453,14 @@
                             <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">공지 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
                             <div id="bd-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
                             <p id="bd-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
+                            <label class="text-[11px] text-amber-300 font-bold block mb-1">학생 지정 (고른 학생에게만 보이고, 앱 알림·카톡도 그 학생에게만 갑니다)</label>
+                            <div class="flex gap-1 mb-1">
+                                <input id="bd-student-input" list="bd-student-options" placeholder="학생 이름 (여러 명은 쉼표로)" onfocus="fillBoardStudentOptions()" onkeydown="if(event.key==='Enter'){event.preventDefault();addBoardStudent();}" class="flex-1 min-w-0 p-1.5 bg-gray-800 text-white text-xs rounded border border-gray-600 outline-none focus:border-amber-400">
+                                <button onclick="addBoardStudent()" class="shrink-0 bg-amber-500 hover:bg-amber-400 text-gray-900 text-xs font-bold px-3 rounded">추가</button>
+                            </div>
+                            <datalist id="bd-student-options"></datalist>
+                            <div id="bd-student-chips" class="flex flex-wrap gap-1 mb-1"></div>
+                            <p id="bd-student-label" class="text-[11px] mb-2 px-0.5 text-gray-400"></p>
                             <input type="file" id="bd-file-admin" multiple class="mb-2 text-white" onchange="handleFileSelect(event, bdFilesAdmin, 'bd-file-admin-visual')">
                             <div id="bd-file-admin-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <!-- 고치는 중일 때: 지금 붙어 있는 첨부파일 -->
@@ -10214,6 +10223,8 @@ let lavUid = 0;
             el.innerHTML = picked.length
                 ? `<span class="text-sky-300 font-bold">${picked.length}개 반</span> <span class="text-gray-400">· ${escapeHtml(picked.join(', '))}</span>`
                 : `<span class="text-gray-400">전체 대상 (반을 고르지 않으면 모두에게 보입니다)</span>`;
+            // 공지에서 학생을 골랐으면 '전체 대상'이 아니다 — 학생 지정 안내와 함께 고쳐 쓴다
+            if (box.id === 'bd-target-class') { try { renderBoardStudents(); } catch (e) {} }
         }
 
         function getPickedClasses(box) {
@@ -11193,6 +11204,7 @@ let lavUid = 0;
             showLoader(isEdit ? "공지를 고치는 중입니다..." : "공지사항 및 첨부파일을 서버에 업로드 중입니다...");
             const fd=new FormData(); fd.append("title",t); fd.append("desc",d);
             fd.append("target_classes", getPickedClasses('bd-target-class').join(","));
+            fd.append("target_students", BD_STUDENTS.join(","));
             bdFilesAdmin.forEach(f => fd.append("files", f));
             // 고치는 중이면 체크된(남길) 기존 첨부만 보낸다
             if(isEdit) fd.append("keep_files", JSON.stringify(Array.from(document.querySelectorAll('.bd-keep-file:checked')).map(x => x.value)));
@@ -11300,6 +11312,68 @@ let lavUid = 0;
 
         let ADMIN_BOARD_POSTS = [];
         let EDITING_BOARD_ID = '';
+
+        // ── 공지 학생 지정 ─────────────────────────────
+        // 반 대신(또는 반과 함께) 학생을 골라 그 학생에게만 공지 · 앱 알림 · 카톡을 보낸다.
+        let BD_STUDENTS = [];
+        async function fillBoardStudentOptions() {
+            if (!ADMIN_STUDENTS.length && typeof loadAdminClassData === 'function') await loadAdminClassData();
+            const dl = document.getElementById('bd-student-options');
+            if (dl) dl.innerHTML = ADMIN_STUDENTS.map(s => `<option value="${escAttr(s.student_name || '')}">`).join('');
+        }
+        async function addBoardStudent() {
+            const input = document.getElementById('bd-student-input');
+            const wanted = String(input.value || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean);
+            if (!wanted.length) return;
+            if (!ADMIN_STUDENTS.length) await fillBoardStudentOptions();
+            const known = new Set(ADMIN_STUDENTS.map(s => s.student_name));
+            const missing = wanted.filter(n => known.size && !known.has(n));
+            wanted.filter(n => !missing.includes(n)).forEach(n => { if (!BD_STUDENTS.includes(n)) BD_STUDENTS.push(n); });
+            input.value = missing.join(', ');
+            renderBoardStudents();
+            if (missing.length) alert(`학생 명단에 없는 이름입니다: ${missing.join(', ')}\n이름을 다시 확인해 주세요.`);
+        }
+        function removeBoardStudent(name) {
+            BD_STUDENTS = BD_STUDENTS.filter(n => n !== name);
+            renderBoardStudents();
+        }
+        function setBoardStudents(names) {
+            BD_STUDENTS = Array.from(new Set((names || []).map(n => String(n).trim()).filter(Boolean)));
+            renderBoardStudents();
+        }
+        function renderBoardStudents() {
+            const box = document.getElementById('bd-student-chips');
+            if (!box) return;
+            box.innerHTML = BD_STUDENTS.map(n => `<span class="text-[12px] bg-amber-500/20 text-amber-200 border border-amber-500/40 px-2 py-0.5 rounded flex items-center gap-1">${escapeHtml(n)}<button onclick="removeBoardStudent('${escAttr(n)}')" title="빼기" class="text-amber-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button></span>`).join('');
+            const picked = getPickedClasses('bd-target-class');
+            const classLabel = document.getElementById('bd-target-class-label');
+            if (classLabel && !picked.length) classLabel.innerHTML = BD_STUDENTS.length
+                ? '<span class="text-gray-400">반 지정 없음 (아래에서 고른 학생에게만 보입니다)</span>'
+                : '<span class="text-gray-400">전체 대상 (반을 고르지 않으면 모두에게 보입니다)</span>';
+            const label = document.getElementById('bd-student-label');
+            if (label) label.innerHTML = BD_STUDENTS.length
+                ? `<span class="text-amber-300 font-bold">${BD_STUDENTS.length}명 지정</span>${picked.length ? ' · 고른 반 학생에게도 보입니다' : ' · 이 학생들에게만 보입니다'}`
+                : '학생을 고르지 않으면 위의 반 설정을 따릅니다.';
+        }
+        function boardTargetLabel(p) {
+            const parts = [];
+            if ((p.target_classes || []).length) parts.push(p.target_classes.join(', '));
+            const st = p.target_students || [];
+            if (st.length) parts.push(st.length <= 3 ? st.join(', ') : `${st.slice(0, 2).join(', ')} 외 ${st.length - 2}명`);
+            return parts.length ? parts.join(' · ') : '전체';
+        }
+        // 학생 명단에서 체크한 학생으로 공지 쓰기
+        function openBoardForSelected() {
+            const names = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+            if (!names.length) return alert('공지를 보낼 학생을 먼저 체크해 주세요.');
+            switchAdminTab('admin-hw');
+            cancelEditBoard();
+            setBoardStudents(names);
+            const t = document.getElementById('bd-title-admin');
+            t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => t.focus(), 300);
+            showToast(`${BD_STUDENTS.length}명을 공지 대상으로 골랐습니다. 제목과 내용을 써 주세요.`);
+        }
         async function loadAdminBoardList() {
             try {
                 const res = await fetch(`${API_URL}/api/board`); const data = await res.json();
@@ -11308,7 +11382,7 @@ let lavUid = 0;
                 ADMIN_BOARD_POSTS = data.posts || [];
                 ADMIN_BOARD_POSTS.forEach(p => c.innerHTML += `<div class="flex justify-between items-center gap-2 bg-gray-800 p-3 rounded mb-2 text-white ${p.id === EDITING_BOARD_ID ? 'ring-1 ring-blue-400' : ''}">
                     ${p.file_url ? `<a href="${API_URL}${encodeURI(p.file_url)}" target="_blank" class="hover:text-blue-400 font-bold underline truncate min-w-0 cursor-pointer"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</a>` : `<span class="font-bold truncate min-w-0"><i class="fa-solid fa-bullhorn mr-2"></i>${escapeHtml(p.title)}</span>`}
-                    <span class="shrink-0 text-[10px] text-gray-400 text-right">${boardFiles(p).length > 1 ? `<i class="fa-solid fa-paperclip"></i> ${boardFiles(p).length} · ` : ''}${(p.target_classes||[]).length ? escapeHtml(p.target_classes.join(', ')) : '전체'}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span>
+                    <span class="shrink-0 text-[10px] text-gray-400 text-right">${boardFiles(p).length > 1 ? `<i class="fa-solid fa-paperclip"></i> ${boardFiles(p).length} · ` : ''}${escapeHtml(boardTargetLabel(p))}${p.read_count != null ? ` · <span class="text-sky-300" title="공지 목록에서 이 공지를 본 학생 수">${p.read_count}명 읽음</span>` : ''}</span>
                     <span class="shrink-0 flex gap-1">
                         <button onclick="editBoardPost('${escAttr(p.id)}')" title="이 공지 고치기" class="text-emerald-300 text-[11px] bg-emerald-900/30 hover:bg-emerald-900/60 px-2 py-1 rounded transition font-bold"><i class="fa-solid fa-pen"></i> 수정</button>
                         <button onclick="deleteBoardPost('${escAttr(p.id)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
@@ -11325,6 +11399,7 @@ let lavUid = 0;
             document.getElementById('bd-title-admin').value = p.title || '';
             document.getElementById('bd-desc-admin').value = p.desc || '';
             setPickedClasses('bd-target-class', p.target_classes || []);
+            setBoardStudents(p.target_students || []);
             clearAllFiles('bd-file-admin-visual');
             const fileBox = document.getElementById('bd-edit-file-admin');
             const files = boardFiles(p);
@@ -11344,6 +11419,7 @@ let lavUid = 0;
             document.getElementById('bd-title-admin').value = '';
             document.getElementById('bd-desc-admin').value = '';
             clearClassPicker('bd-target-class');
+            setBoardStudents([]);
             clearAllFiles('bd-file-admin-visual');
             const fileBox = document.getElementById('bd-edit-file-admin');
             fileBox.innerHTML = ''; fileBox.classList.add('hidden');
