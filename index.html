@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="./tailwind.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- 수학 AI(수박) 답변의 수식($...$, $$...$$)을 실제 기호로 그려주기 위한 KaTeX -->
+    <!-- 수학 AI(수학쌤) 답변의 수식($...$, $$...$$)을 실제 기호로 그려주기 위한 KaTeX -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
@@ -501,7 +501,7 @@
             </div>
             <h2 class="text-lg font-black text-white">알림을 받아보시겠어요?</h2>
             <p class="text-[13px] text-gray-300 mt-2 leading-relaxed">
-                새 과제와 모의고사가 올라오거나<br>채점 결과가 나오면 휴대폰으로 바로 알려드려요.
+                새 과제와 퀴즈가 올라오거나<br>채점 결과가 나오면 휴대폰으로 바로 알려드려요.
             </p>
             <p class="text-[11px] text-gray-500 mt-3 leading-relaxed">
                 다음 화면에서 <b class="text-gray-400">'허용'</b>을 눌러주세요.<br>
@@ -523,7 +523,7 @@
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-3xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
             <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-start shrink-0">
                 <div class="min-w-0">
-                    <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-book-open mr-2 text-sky-400"></i>해설 넣기 — <span id="expl-title"></span></h2>
+                    <h2 class="text-base md:text-lg font-black text-white truncate"><i class="fa-solid fa-book-open mr-2 text-sky-400"></i>해설 · 유형 넣기 — <span id="expl-title"></span></h2>
                     <p id="expl-sub" class="text-[11px] text-gray-400 mt-0.5"></p>
                 </div>
                 <button onclick="closeModal('expl-modal')" class="shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -538,6 +538,9 @@
                 </button>
                 <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처를 붙여넣어도 됩니다.</span>
             </div>
+            <p class="px-4 pt-2 text-[11px] text-gray-400 shrink-0"><b class="text-violet-300">유형</b>을 적어 두면 그 문항을 틀린 학생에게 같은 유형 문제가 매일 나갑니다 ·
+                <b class="text-sky-300">요약 해설</b>은 학생이 결과에서 가장 먼저 보고, <b class="text-gray-200">자세한 해설</b>은 눌러서 펼칩니다 · <b class="text-red-300">해설 영상</b>은 유튜브 등 주소</p>
+            <datalist id="expl-tag-list"></datalist>
             <div id="expl-fields" class="flex-grow overflow-y-auto p-3 space-y-2"></div>
             <div class="px-4 pt-3 border-t border-gray-700 shrink-0" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
                 <div id="expl-status" class="text-[11px] text-gray-400 mb-2"></div>
@@ -1205,7 +1208,7 @@
                     <button onclick="goToDashboard()" class="nav-word hover:text-emerald-400">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="nav-word hover:text-orange-400">타임어택 퀴즈</button>
                     <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="nav-word hover:text-cyan-400">영어 단어 시험</button>
-                    <button onclick="openProgram('exam-list'); loadStudentExams();" class="nav-word hover:text-yellow-400">실시간 모의고사</button>
+                    <button onclick="openProgram('practice')" class="nav-word hover:text-violet-300">오늘의 유형 문제</button>
                     <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
                     <button onclick="openProgram('homework'); loadHomeworks();" class="nav-word hover:text-emerald-400">과제 제출</button>
                     <button onclick="openStudy()" class="nav-word hover:text-teal-400">스터디룸</button>
@@ -1252,7 +1255,7 @@
                 <button onclick="goToDashboard(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
                 <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
-                <button onclick="openProgram('exam-list'); loadStudentExams(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-yellow-400 w-full">실시간 모의고사</button>
+                <button onclick="openProgram('practice'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-violet-300 w-full">오늘의 유형 문제</button>
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
                 <button onclick="openStudy(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
@@ -1278,7 +1281,7 @@
                         그리고 그것이 <b class="text-[#17161a]">정답</b>이 되는 길을 만들었습니다.
                     </p>
                     <p class="hero-sub mt-3 text-[15px] md:text-base leading-relaxed word-break-keep-all opacity-90">
-                        24시간 답해주는 AI 선생님, 실전처럼 보는 모의고사,<br class="hidden md:block">
+                        24시간 답해주는 AI 국최, 틀린 유형만 골라 주는 매일 문제,<br class="hidden md:block">
                         그리고 내 성적으로 갈 수 있는 대학까지 — 한곳에서.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mt-8">
@@ -1384,7 +1387,7 @@
                     로그인한 뒤에 알려주면 이미 늦어서, 들어가기 전에 짚어준다. -->
             <div class="home-note mt-10 w-full max-w-2xl mx-auto bg-emerald-900/20 border border-emerald-700 rounded-2xl px-5 py-4 text-left">
                 <p class="text-sm md:text-base font-bold text-emerald-300 flex items-center gap-2">
-                    <i class="fa-solid fa-bell"></i>새 과제 · 모의고사 · 채점 결과를 휴대폰으로 바로 받아보세요
+                    <i class="fa-solid fa-bell"></i>새 과제 · 퀴즈 · 채점 결과를 휴대폰으로 바로 받아보세요
                 </p>
                 <p class="text-[12px] md:text-sm text-gray-300 mt-2 leading-relaxed">
                     로그인하면 <b class="text-white">"알림을 받아보시겠어요?"</b> 창이 뜹니다. <b class="text-white">[알림 받을래요]</b> → <b class="text-white">[허용]</b> 두 번만 누르면 끝이에요.
@@ -1564,8 +1567,8 @@
                     <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl md:text-4xl bg-blue-600 text-white shadow-lg">🤖</div>
                 </div>
                 <div class="flex-grow">
-                    <h3 class="text-xl md:text-2xl font-bold text-white mb-3">24시간 AI 국최 · AI 수박 · AI 재우T</h3>
-                    <p class="text-gray-300 leading-relaxed mb-4">국어는 '국최', 수학은 '수박', 영어는 '재우T' — 과목마다 전담 AI 선생님이 있어서, 학원에 있지 않은 시간에도 궁금한 걸 그때그때 바로 물어볼 수 있습니다. 문제를 스마트폰으로 찍거나 화면을 캡처해서 올리면(Ctrl+V로 바로 붙여넣기도 가능) 사진 속 문제를 읽고 단계별로 풀이해줍니다. 수학 문제의 분수·제곱근·지수 같은 수식도 실제 교과서처럼 또렷하게 표시되고, 풀이 과정은 짧은 소제목으로 단계가 나뉘어 있어 어디까지 이해했는지 스스로 확인하며 따라갈 수 있습니다.</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-3">24시간 AI 국최 <span class="text-base md:text-lg text-gray-400 font-bold">· AI 수학쌤 · AI 영어쌤</span></h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">원장님 캐릭터 '국최'가 국어를, '수학쌤'과 '영어쌤'이 수학 · 영어를 맡아 — 과목마다 전담 AI 선생님이 있어서, 학원에 있지 않은 시간에도 궁금한 걸 그때그때 바로 물어볼 수 있습니다. 문제를 스마트폰으로 찍거나 화면을 캡처해서 올리면(Ctrl+V로 바로 붙여넣기도 가능) 사진 속 문제를 읽고 단계별로 풀이해줍니다. 수학 문제의 분수·제곱근·지수 같은 수식도 실제 교과서처럼 또렷하게 표시되고, 풀이 과정은 짧은 소제목으로 단계가 나뉘어 있어 어디까지 이해했는지 스스로 확인하며 따라갈 수 있습니다.</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
                     <li>국어·수학·영어 중 내가 등록한 과목의 AI에게만 질문할 수 있어요 (다른 과목은 등록 안내가 함께 표시돼요)</li>
                     <li>텍스트 질문은 물론, 사진 첨부와 캡처 붙여넣기(Ctrl+V)도 바로 가능</li>
@@ -1587,17 +1590,17 @@
                     </ul>
                 </div>
             </div>
-            <div id="feature-exam" class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
+            <div id="feature-practice" class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
                 <div class="shrink-0 flex items-center gap-4 md:block">
-                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl md:text-4xl bg-yellow-500 text-white shadow-lg">📝</div>
+                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl md:text-4xl bg-violet-600 text-white shadow-lg">🎯</div>
                 </div>
                 <div class="flex-grow">
-                    <h3 class="text-xl md:text-2xl font-bold text-white mb-3">실시간 모의고사</h3>
-                    <p class="text-gray-300 leading-relaxed mb-4">실제 수능·내신 시험과 똑같은 타이머와 OMR 카드 방식으로 응시하는 실전 모의고사입니다. 정해진 시간 동안 실제 시험처럼 답안을 마킹하고, 시간이 다 되면 자동으로 제출되어 실전 감각을 기를 수 있습니다. 응시가 끝나면 점수와 함께 해설 자료를 바로 열람할 수 있고, 문항별 정답률로 내가 취약한 부분을 확인할 수 있습니다.</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-3">오답 원인 점검 · 오늘의 유형 문제</h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">틀린 문제마다 '몰라서 찍었는지, 둘 중에 고민했는지, 문제를 잘못 봤는지' 스스로 점검하면 이유에 맞는 처방이 바로 나옵니다. 그리고 틀린 문제의 유형(추론 · 어휘 · 함수 · 빈칸 추론 …)을 모아, 그 유형 문제만 하루 몇 개씩 매일 풀게 합니다. 한꺼번에 몰아 푸는 대신 매일 조금씩 약점을 메웁니다.</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
-                    <li>실제 시험과 동일한 타이머 + OMR 마킹 방식</li>
-                    <li>제출 후 즉시 채점 + 해설/해답 자료 열람</li>
-                    <li>문항별 정답률로 취약 문항 파악</li>
+                    <li>틀린 이유(찍음 · 고민 · 잘못 봄)별 맞춤 피드백</li>
+                    <li>요약 해설 → 자세한 해설 → 해설 영상까지 한 번에</li>
+                    <li>약한 유형만 골라 하루 몇 문제씩, 맞힐수록 덜 나오게</li>
                     </ul>
                 </div>
             </div>
@@ -1648,7 +1651,7 @@
                 </div>
                 <div class="flex-grow">
                     <h3 class="text-xl md:text-2xl font-bold text-white mb-3">나의 성장 아바타 (레벨업 & 룰렛)</h3>
-                    <p class="text-gray-300 leading-relaxed mb-4">로그인, 과제 제출, 퀴즈·모의고사 응시, 그리고 틀린 문제를 다시 풀어 다 고칠 때마다 성장 포인트가 쌓이고, 포인트가 일정 기준을 넘으면 레벨이 올라갑니다. 🌰씨앗부터 🏆황금 열매까지 총 10단계로 성장하며, 레벨이 오를 때마다 모자·펫·효과 같은 아바타 아이템이 잠금 해제되어 나만의 캐릭터를 꾸밀 수 있습니다. 특히 레벨업하는 순간에는 축하 화면과 함께 룰렛을 돌려 그 레벨에 맞는 특별한 상품에 도전할 수 있습니다.</p>
+                    <p class="text-gray-300 leading-relaxed mb-4">로그인, 과제 제출, 퀴즈 응시, 오늘의 유형 문제, 그리고 틀린 문제를 다시 풀어 다 고칠 때마다 성장 포인트가 쌓이고, 포인트가 일정 기준을 넘으면 레벨이 올라갑니다. 🌰씨앗부터 🏆황금 열매까지 총 10단계로 성장하며, 레벨이 오를 때마다 모자·펫·효과 같은 아바타 아이템이 잠금 해제되어 나만의 캐릭터를 꾸밀 수 있습니다. 특히 레벨업하는 순간에는 축하 화면과 함께 룰렛을 돌려 그 레벨에 맞는 특별한 상품에 도전할 수 있습니다.</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
                     <li>10단계 레벨(씨앗 → 황금 열매), 레벨마다 새로운 꾸미기 아이템 잠금 해제</li>
                     <li>레벨업 시 룰렛 이벤트로 상품 뽑기 도전</li>
@@ -1662,7 +1665,7 @@
                 </div>
                 <div class="flex-grow">
                     <h3 class="text-xl md:text-2xl font-bold text-white mb-3">마이페이지</h3>
-                    <p class="text-gray-300 leading-relaxed mb-4">내가 지금까지 쌓아온 학습 기록, 퀴즈·모의고사 점수, 과제 제출 이력을 한눈에 모아볼 수 있는 나만의 공간입니다. 성장 아바타의 현재 레벨과 다음 레벨까지 남은 포인트도 이곳에서 확인하고, 아바타를 자유롭게 꾸밀 수 있습니다.</p>
+                    <p class="text-gray-300 leading-relaxed mb-4">내가 지금까지 쌓아온 학습 기록, 퀴즈 점수, 과제 제출 이력을 한눈에 모아볼 수 있는 나만의 공간입니다. 성장 아바타의 현재 레벨과 다음 레벨까지 남은 포인트도 이곳에서 확인하고, 아바타를 자유롭게 꾸밀 수 있습니다.</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
                     <li>학습 이력·성적 통합 조회</li>
                     <li>아바타 커스터마이징 (얼굴 · 색상 · 모자 · 펫 · 효과)</li>
@@ -1732,7 +1735,7 @@
                 </div>
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold text-white mb-2">AI에게 질문하는 방법</h3>
-                    <p class="text-gray-300 leading-relaxed">로그인 후 첫 화면의 24시간 AI 국최 · 수박 · 재우T 중 내가 등록한 과목을 눌러 들어갑니다. 질문을 입력하거나, 문제 사진을 첨부(또는 Ctrl+V로 캡처 붙여넣기)해서 보내면 됩니다. 아직 등록하지 않은 과목의 AI를 누르면 등록이 필요하다는 안내가 표시되니, 원장님께 과목 등록을 문의해 주세요.</p>
+                    <p class="text-gray-300 leading-relaxed">로그인 후 첫 화면의 24시간 AI 국최 · 수학쌤 · 영어쌤 중 내가 등록한 과목을 눌러 들어갑니다. 질문을 입력하거나, 문제 사진을 첨부(또는 Ctrl+V로 캡처 붙여넣기)해서 보내면 됩니다. 아직 등록하지 않은 과목의 AI를 누르면 등록이 필요하다는 안내가 표시되니, 원장님께 과목 등록을 문의해 주세요.</p>
                 </div>
             </div>
             <div class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
@@ -1746,11 +1749,11 @@
             </div>
             <div class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
                 <div class="shrink-0">
-                    <div class="w-12 h-12 rounded-xl bg-yellow-500 text-white font-black text-xl flex items-center justify-center">4</div>
+                    <div class="w-12 h-12 rounded-xl bg-violet-600 text-white font-black text-xl flex items-center justify-center">4</div>
                 </div>
                 <div class="flex-grow">
-                    <h3 class="text-xl font-bold text-white mb-2">실시간 모의고사 응시 방법</h3>
-                    <p class="text-gray-300 leading-relaxed">상단 메뉴의 [실시간 모의고사]에서 응시 가능한 시험을 선택해 입장합니다. 실제 시험처럼 타이머가 작동하고 OMR 카드에 답을 마킹하며, 시간이 끝나면 자동 제출됩니다. 제출 직후 채점 결과와 해설 자료를 확인할 수 있습니다.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">오답 점검과 오늘의 유형 문제</h3>
+                    <p class="text-gray-300 leading-relaxed">퀴즈 · 과제를 채점받으면 틀린 문항마다 [왜 틀렸나요?]가 나옵니다. '몰라서 찍었어요 · 둘 중에 고민했어요 · 문제를 잘못 봤어요' 중 하나를 고르면 맞춤 처방이 나오고, 요약 해설 · 자세한 해설 · 해설 영상을 볼 수 있습니다. 틀린 유형의 문제는 학습실 맨 위 [🎯 오늘의 유형 문제]에 하루 몇 개씩 올라옵니다.</p>
                 </div>
             </div>
             <div class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
@@ -1777,7 +1780,7 @@
                 </div>
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold text-white mb-2">레벨업과 아바타 꾸미기</h3>
-                    <p class="text-gray-300 leading-relaxed">로그인, 과제 제출, 퀴즈·모의고사 응시, 그리고 틀린 문제를 다시 풀어 다 고치면 성장 포인트를 얻어 레벨이 올라갑니다 (🌰씨앗 → 🌱새싹 → 🌿떡잎 → 🪴줄기 → 🌸봉오리 → 🌼꽃 → 🍏열매 → 🍎잘 익은 열매 → 🍎빛나는 열매 → 🏆황금 열매). 레벨업 순간에는 축하 화면과 함께 룰렛을 돌려 상품에 도전할 수 있고, 마이페이지에서 레벨업으로 잠금 해제된 아이템으로 아바타를 자유롭게 꾸밀 수 있습니다. 정확한 포인트 획득 방법은 마이페이지의 "포인트 얻는 법" 버튼에서 확인할 수 있습니다.</p>
+                    <p class="text-gray-300 leading-relaxed">로그인, 과제 제출, 퀴즈 응시, 오늘의 유형 문제, 그리고 틀린 문제를 다시 풀어 다 고치면 성장 포인트를 얻어 레벨이 올라갑니다 (🌰씨앗 → 🌱새싹 → 🌿떡잎 → 🪴줄기 → 🌸봉오리 → 🌼꽃 → 🍏열매 → 🍎잘 익은 열매 → 🍎빛나는 열매 → 🏆황금 열매). 레벨업 순간에는 축하 화면과 함께 룰렛을 돌려 상품에 도전할 수 있고, 마이페이지에서 레벨업으로 잠금 해제된 아이템으로 아바타를 자유롭게 꾸밀 수 있습니다. 정확한 포인트 획득 방법은 마이페이지의 "포인트 얻는 법" 버튼에서 확인할 수 있습니다.</p>
                 </div>
             </div>
             <div class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
@@ -1822,7 +1825,7 @@
                 </div>
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-bell mr-2 text-emerald-400"></i>휴대폰 알림 받는 방법</h3>
-                    <p class="text-gray-300 leading-relaxed mb-5">새 과제나 모의고사가 올라왔을 때, 그리고 채점 결과가 나왔을 때 휴대폰으로 바로 알려드립니다. 프로그램을 켜두지 않아도 오고, 카카오톡이나 문자처럼 잠금화면에 뜹니다. <b class="text-white">기기마다 켜는 방법이 조금 다릅니다.</b></p>
+                    <p class="text-gray-300 leading-relaxed mb-5">새 과제나 퀴즈가 올라왔을 때, 그리고 채점 결과가 나왔을 때 휴대폰으로 바로 알려드립니다. 프로그램을 켜두지 않아도 오고, 카카오톡이나 문자처럼 잠금화면에 뜹니다. <b class="text-white">기기마다 켜는 방법이 조금 다릅니다.</b></p>
 
                     <div class="grid md:grid-cols-2 gap-4">
                         <div class="bg-[#0f131b] border border-gray-700 rounded-xl p-4">
@@ -1929,22 +1932,40 @@
                  내 클리닉이 언제인지. 들어오자마자 맨 위에서 보이게 둔다. -->
             <div id="schedule-banner" class="hidden mb-8"></div>
 
+            <!-- 🎯 오늘의 유형 문제: 틀린 유형에서 하루 몇 문제 -->
+            <div id="practice-card" class="hidden mb-8"></div>
+
             <h2 class="text-2xl font-bold mb-4">24시간 AI 도우미</h2>
-            <div id="ai-subject-tiles" class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-8">
-                <div data-subject="korean" onclick="openProgram('chat'); openChatSubject('korean');" class="bg-[#1e2430] border-2 border-blue-600/60 p-8 md:p-10 rounded-2xl cursor-pointer app-card shadow-lg shadow-blue-900/20">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-blue-600 text-white rounded-xl flex items-center justify-center text-2xl md:text-4xl mb-4 md:mb-6">🤖</div>
-                    <h3 class="text-xl md:text-2xl font-bold mb-2 text-white">24시간 AI 국최</h3>
-                    <p class="text-blue-200/70 text-xs md:text-sm">국어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+            <div id="ai-subject-tiles" class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-8">
+                <!-- ⭐ 국최: 원장님 캐릭터 — 가장 크게, 맨 앞에 -->
+                <div data-subject="korean" onclick="openProgram('chat'); openChatSubject('korean');" class="sm:col-span-2 relative overflow-hidden rounded-3xl cursor-pointer app-card border-2 border-sky-300/70 bg-gradient-to-br from-blue-600 via-blue-800 to-indigo-950 p-6 md:p-9 shadow-xl shadow-blue-900/40">
+                    <div class="absolute -right-4 -bottom-12 text-[9rem] md:text-[13rem] leading-none opacity-15 select-none pointer-events-none">📖</div>
+                    <div class="relative flex flex-col sm:flex-row sm:items-center gap-4 md:gap-7">
+                        <div class="shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-white text-blue-700 flex flex-col items-center justify-center shadow-lg ring-4 ring-amber-300/80">
+                            <span class="text-3xl md:text-5xl leading-none">🧑‍🏫</span>
+                            <span class="text-[11px] md:text-sm font-black mt-1">국최</span>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="inline-block text-[11px] md:text-xs font-black bg-amber-300 text-gray-900 rounded-full px-2.5 py-0.5 mb-2">⭐ 원장님 캐릭터 · 로지에듀 대표 AI</span>
+                            <h3 class="text-2xl md:text-4xl font-black text-white tracking-tight">24시간 AI 국최</h3>
+                            <p class="text-blue-100 text-sm md:text-base mt-1.5 word-break-keep-all">원장님의 국어 수업을 그대로 담았어요. 지문 · 문학 · 문법, 막히는 순간 언제든 국최에게 물어보세요!</p>
+                            <span class="inline-flex items-center gap-1 mt-3 bg-white text-blue-700 font-black text-sm px-4 py-2 rounded-xl shadow">국최에게 질문하기 <i class="fa-solid fa-arrow-right"></i></span>
+                        </div>
+                    </div>
                 </div>
-                <div data-subject="math" onclick="openProgram('chat'); openChatSubject('math');" class="bg-[#1e2430] border-2 border-indigo-600/60 p-8 md:p-10 rounded-2xl cursor-pointer app-card shadow-lg shadow-indigo-900/20">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl md:text-4xl mb-4 md:mb-6">🤖</div>
-                    <h3 class="text-xl md:text-2xl font-bold mb-2 text-white">24시간 AI 수박</h3>
-                    <p class="text-indigo-200/70 text-xs md:text-sm">수학과 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+                <div data-subject="math" onclick="openProgram('chat'); openChatSubject('math');" class="bg-[#1e2430] border-2 border-indigo-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card shadow-lg shadow-indigo-900/20 flex items-center gap-4">
+                    <div class="shrink-0 w-14 h-14 md:w-16 md:h-16 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl md:text-3xl">📐</div>
+                    <div class="min-w-0">
+                        <h3 class="text-lg md:text-xl font-bold text-white">24시간 AI 수학쌤</h3>
+                        <p class="text-indigo-200/70 text-xs md:text-sm word-break-keep-all">수학 문제 사진을 올리면 단계별로 풀어 줘요.</p>
+                    </div>
                 </div>
-                <div data-subject="english" onclick="openProgram('chat'); openChatSubject('english');" class="bg-[#1e2430] border-2 border-cyan-600/60 p-8 md:p-10 rounded-2xl cursor-pointer app-card shadow-lg shadow-cyan-900/20">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-2xl md:text-4xl mb-4 md:mb-6">🤖</div>
-                    <h3 class="text-xl md:text-2xl font-bold mb-2 text-white">24시간 AI 재우T</h3>
-                    <p class="text-cyan-200/70 text-xs md:text-sm">영어와 관련된 어떤 질문이든 자유롭게 물어보세요.</p>
+                <div data-subject="english" onclick="openProgram('chat'); openChatSubject('english');" class="bg-[#1e2430] border-2 border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card shadow-lg shadow-cyan-900/20 flex items-center gap-4">
+                    <div class="shrink-0 w-14 h-14 md:w-16 md:h-16 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-2xl md:text-3xl">🔤</div>
+                    <div class="min-w-0">
+                        <h3 class="text-lg md:text-xl font-bold text-white">24시간 AI 영어쌤</h3>
+                        <p class="text-cyan-200/70 text-xs md:text-sm word-break-keep-all">영어 문장 · 문법 · 어휘를 언제든 물어봐요.</p>
+                    </div>
                 </div>
             </div>
 
@@ -1965,10 +1986,10 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">타임어택 퀴즈</h3>
                         <p class="text-orange-200/70 text-[11px] md:text-sm word-break-keep-all">제한 시간 안에 풀고 바로 채점받아요.</p>
                     </div>
-                    <div onclick="openProgram('exam-list'); loadStudentExams();" class="bg-[#1e2430] border border-yellow-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
-                        <div class="w-12 h-12 md:w-14 md:h-14 bg-yellow-500 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📝</div>
-                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">실시간 모의고사</h3>
-                        <p class="text-yellow-200/70 text-[11px] md:text-sm word-break-keep-all">실제 시험처럼 OMR로 응시해요.</p>
+                    <div onclick="openProgram('practice')" class="bg-[#1e2430] border border-violet-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-violet-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎯</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">오늘의 유형 문제</h3>
+                        <p class="text-violet-200/70 text-[11px] md:text-sm word-break-keep-all">틀린 유형만 하루 몇 문제씩.</p>
                     </div>
                     <div onclick="openProgram('homework'); loadHomeworks();" class="bg-[#1e2430] border border-emerald-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📚</div>
@@ -2081,7 +2102,7 @@
                             <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">🔑</div>매일 접속<div class="text-emerald-400 font-bold">+20</div></div>
                                                         <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">📝</div>과제 제출<div class="text-emerald-400 font-bold">+60</div></div>
                             <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">⏱️</div>타임어택 퀴즈<div class="text-emerald-400 font-bold">+30 + 점수</div></div>
-                            <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">⏳</div>실시간 모의고사<div class="text-emerald-400 font-bold">+50 + 점수</div></div>
+                            <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">🎯</div>오늘의 유형 문제<div class="text-emerald-400 font-bold">+30</div></div>
                             <div class="bg-emerald-900/30 border border-emerald-700 rounded-lg p-2"><div class="text-lg mb-0.5">🎯</div>틀린 문제 다시 풀어 <b class="text-white">다 고치기</b><span class="block text-[9px] text-gray-500">(시험 하나당 한 번)</span><div class="text-emerald-400 font-bold">+100</div></div>
                         </div>
                     </div>
@@ -2104,12 +2125,12 @@
                 <!-- 내 시험 D-day와 클리닉 일정 — 바탕화면과 같은 내용을 여기서도 본다 -->
                 <div id="mypage-schedule" class="hidden mb-4"></div>
 
-                <!-- 💡 새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 받을 수 있게 -->
+                <!-- 💡 새 과제·퀴즈·채점 결과를 휴대폰으로 바로 받을 수 있게 -->
                 <div id="push-card" class="hidden mb-4 rounded-xl p-4 border">
                     <div class="flex items-center justify-between gap-3">
                         <div class="min-w-0">
                             <p id="push-card-title" class="text-sm font-bold text-white"><i class="fa-solid fa-bell mr-1"></i>알림 받기</p>
-                            <p id="push-card-desc" class="text-[11px] text-gray-400 mt-0.5">새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 알려드려요.</p>
+                            <p id="push-card-desc" class="text-[11px] text-gray-400 mt-0.5">새 과제·퀴즈·채점 결과를 휴대폰으로 바로 알려드려요.</p>
                         </div>
                         <button id="push-card-btn" onclick="enablePushNotifications()" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition">켜기</button>
                     </div>
@@ -2122,7 +2143,7 @@
                         <h3 class="text-lg font-bold text-red-300"><i class="fa-solid fa-circle-xmark mr-2"></i>내가 틀린 문제</h3>
                         <span id="mypage-wrong-count" class="text-xs text-gray-500"></span>
                     </div>
-                    <p class="text-[11px] text-gray-500 mb-2">퀴즈 · 모의고사 · 과제에서 틀린 문항을 모았습니다. 제목을 누르면 문항이 펼쳐집니다.</p>
+                    <p class="text-[11px] text-gray-500 mb-2">퀴즈 · 과제에서 틀린 문항을 모았습니다. 제목을 누르면 문항이 펼쳐집니다.</p>
                     <div id="mypage-wrong-list" class="space-y-2 bg-[#151922] p-4 rounded-xl max-h-[420px] overflow-y-auto text-gray-300"></div>
                 </div>
             </div>
@@ -2310,6 +2331,15 @@
                 <div id="vocab-result-view" class="hidden text-white"></div>
             </div>
 
+            <!-- 🎯 오늘의 유형 문제 -->
+            <div id="prog-practice" class="prog-content w-full max-w-3xl mx-auto bg-[#1e2430] p-4 md:p-6 rounded-xl">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-2xl font-black text-violet-300">🎯 오늘의 유형 문제</h2>
+                    <button onclick="closeProgram()" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-arrow-left mr-1"></i>학습실</button>
+                </div>
+                <div id="practice-body"></div>
+            </div>
+
             <!-- 모의고사 목록 -->
             <div id="prog-exam-list" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl"><h2 class="text-2xl font-bold text-yellow-500 mb-4">모의고사 목록</h2><div id="student-exam-list" class="grid grid-cols-2 gap-4"></div></div>
 
@@ -2406,7 +2436,7 @@
                                 <button onclick="switchAdminTab('admin-whatif')" id="btn-admin-whatif" class="admin-nav-btn">어땠을까</button>
                                 <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="admin-nav-btn">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
                                 <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="admin-nav-btn">상담</button>
-                                <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="admin-nav-btn">모른다고 한 문항</button>
+                                <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="admin-nav-btn">오답 분석 · 유형 문제</button>
                             </div>
                         </div>
                         <div class="admin-nav-group">
@@ -2423,7 +2453,7 @@
                             <div class="flex flex-wrap gap-1.5">
                                 <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="admin-nav-btn">출제</button>
                                 <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="admin-nav-btn">퀴즈 출제</button>
-                                <button onclick="switchAdminTab('admin-exam')" id="btn-admin-exam" class="admin-nav-btn">모의고사 개설</button>
+                                
                                 <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="admin-nav-btn">영어 단어 시험</button>
                                 <a href="https://korean-ai-tutor.onrender.com/qm/" target="_blank" rel="noopener" class="admin-nav-btn admin-nav-link" title="지문을 쌓아 두면 매일 정한 시각에 문제를 만들어 두는 문제 공장 (관리자 비밀번호로 로그인)">문제 공장 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a>
                             </div>
@@ -2454,7 +2484,6 @@
                                 <label class="text-[11px] text-gray-400 block mb-1">종류</label>
                                 <select id="gf-kind" onchange="loadGradeTargets()" class="w-full p-2 bg-gray-800 text-white rounded text-sm border border-gray-600 outline-none">
                                     <option value="homework">과제 (수업·클리닉)</option>
-                                    <option value="exam">모의고사</option>
                                     <option value="quiz">타임어택 퀴즈</option>
                                     <option value="vocab">영어 단어 시험</option>
                                     <option value="bank">출제한 문제</option>
@@ -2505,6 +2534,26 @@
                         </div>
                     </div>
                     <div id="admin-unsure" class="admin-tab-content grid grid-cols-1 lg:grid-cols-3 gap-4" style="display:none">
+                        <!-- 🎯 매일 유형 문제 설정 · 오답 원인 -->
+                        <div class="lg:col-span-3 bg-[#151922] p-4 rounded-xl border border-violet-800/70">
+                            <div class="flex flex-wrap items-center gap-3 mb-2">
+                                <h3 class="text-sm font-black text-violet-300"><i class="fa-solid fa-bullseye mr-1"></i>오늘의 유형 문제</h3>
+                                <label class="text-xs text-gray-300 flex items-center gap-1"><input type="checkbox" id="pr-on" onchange="savePracticeSettings()"> 학생에게 내기</label>
+                                <label class="text-xs text-gray-300 flex items-center gap-1">하루 <select id="pr-count" onchange="savePracticeSettings()" class="bg-gray-800 border border-gray-600 rounded px-1 py-0.5 text-white">
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select> 문제</label>
+                                <span id="pr-status" class="text-[11px] text-gray-500"></span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mb-2">학생이 틀린 문항의 <b class="text-violet-300">유형</b>(해설 · 유형 넣기 또는 퀴즈 문항 칸)을 보고, 그 유형 문제를 하루 몇 개씩 냅니다.
+                                문제는 <b class="text-gray-300">'유형 연습 문제로만 쓰기'</b>로 만든 퀴즈와 마감이 지난 퀴즈에서 고릅니다. '몰라서 찍음'은 많이, '문제를 잘못 봄'은 적게 나옵니다.</p>
+                            <div id="pr-pool" class="text-[11px] text-gray-400 mb-3"></div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                <div>
+                                    <p class="text-xs font-bold text-orange-300 mb-1">🧐 학생들이 고른 '왜 틀렸나요?' <span class="text-gray-500 font-normal">(이름을 누르면 약한 유형)</span></p>
+                                    <div id="pr-reasons" class="max-h-64 overflow-y-auto"></div>
+                                </div>
+                                <div id="pr-student" class="bg-[#1e2430] border border-gray-700 rounded-lg p-3 text-xs text-gray-500">학생 이름을 누르면 약한 유형과 최근 매일 문제 기록이 보입니다.</div>
+                            </div>
+                        </div>
                         <div class="lg:col-span-1 bg-[#151922] p-4 rounded-xl border border-gray-700 flex flex-col">
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="text-sm font-black text-amber-300"><i class="fa-solid fa-circle-question mr-1"></i>학생별 모름 개수</h3>
@@ -2942,7 +2991,7 @@
                             <div class="flex gap-2 mb-2">
                                 <div class="w-1/2">
                                     <label class="text-xs text-gray-400 mb-1 block">과목</label>
-                                    <select id="qz-subject" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
+                                    <select id="qz-subject" onchange="refreshQuizTagList()" class="w-full p-3 bg-gray-800 text-white rounded border border-gray-600">
                                         <option value="korean">국어</option>
                                         <option value="math">수학</option>
                                         <option value="english">영어</option>
@@ -2973,6 +3022,13 @@
                                     <i class="fa-solid fa-clock mr-1 text-orange-400"></i>오픈 일시를 정하면 미리 올려 둘 수 있어요. 그 전에는 학생 화면에 🔒 '언제 열리는지'만 보이고 문제는 보이지 않아요.
                                 </p>
                             </div>
+                            <!-- 🎯 유형 연습 문제 묶음: 퀴즈 목록에는 안 보이고 '오늘의 유형 문제'로만 나간다 -->
+                            <label class="flex items-start gap-2 mb-3 bg-violet-950/30 border border-violet-800/60 rounded p-2.5 cursor-pointer">
+                                <input type="checkbox" id="qz-practice" class="mt-0.5" onchange="onQuizPracticeToggle()">
+                                <span class="text-xs text-violet-200 leading-snug"><b>🎯 유형 연습 문제로만 쓰기</b><br>
+                                    <span class="text-gray-400">퀴즈 목록에 보이지 않고, 문항마다 적은 <b>유형</b>을 틀린 학생에게 '오늘의 유형 문제'로 하루 몇 개씩 나갑니다. 마감 · 제한 시간은 비워도 됩니다.</span></span>
+                            </label>
+                            <datalist id="qz-tag-list"></datalist>
                             <!-- 📸 문제지를 파일이나 캡처로 올리면 AI가 읽어 문항을 채워준다 -->
                             <div id="qz-capture-drop" onclick="document.getElementById('qz-capture-input').click()"
                                  class="mt-4 border-2 border-dashed border-orange-700/60 hover:border-orange-500 rounded-lg p-4 text-center cursor-pointer transition">
@@ -3010,8 +3066,8 @@
                             <span class="text-white font-bold text-sm shrink-0"><i class="fa-solid fa-graduation-cap mr-1 text-emerald-400"></i>과목</span>
                             <select id="kb-subject-select" onchange="switchKbSubject()" class="p-2 bg-gray-800 text-white rounded text-sm border border-gray-600">
                                 <option value="korean">국어 (국최)</option>
-                                <option value="math">수학 (수박)</option>
-                                <option value="english">영어 (재우T)</option>
+                                <option value="math">수학 (수학쌤)</option>
+                                <option value="english">영어 (영어쌤)</option>
                             </select>
                             <p class="text-[11px] text-gray-500">과목마다 자료학습과 AI 답변 원칙이 완전히 분리되어 있습니다.</p>
                         </div>
@@ -3126,7 +3182,7 @@
                                 <textarea id="gen-result-text" class="flex-grow min-h-[420px] resize-y bg-[#1e2430] text-white p-3 mb-2 rounded border border-gray-600 outline-none text-xs font-mono leading-relaxed"></textarea>
                                 <div class="flex gap-2">
                                     <button id="btn-save-gen" onclick="saveGeneratedQuestion()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-2 text-white font-bold rounded text-xs transition">보관함 저장</button>
-                                    <button onclick="deployFromGenerator()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 py-2 text-white font-bold rounded text-xs transition">방 개설하기</button>
+                                    
                                     <button onclick="openGenFullscreen()" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 text-white font-bold rounded text-xs transition"><i class="fa-solid fa-up-right-and-down-left-from-center mr-1"></i>크게 보기</button>
                                     <button onclick="printGeneratedPDF()" class="bg-gray-200 hover:bg-white py-2 px-4 text-black font-bold rounded text-xs transition">인쇄</button>
                                 </div>
@@ -3495,7 +3551,7 @@
                 .replace(/>/g, '&gt;');
         }
 
-        // 💡 수학 AI(수박) 답변에 섞인 LaTeX 수식($...$, $$...$$)을 KaTeX으로 실제
+        // 💡 수학 AI(수학쌤) 답변에 섞인 LaTeX 수식($...$, $$...$$)을 KaTeX으로 실제
         // 기호(분수, 제곱근, 지수 등)로 그려준다. 라이브러리가 아직 로드 전이거나
         // AI가 LaTeX 문법을 살짝 틀리게 써도, 채팅 자체가 멈추면 안 되니 조용히 넘어간다.
         function renderMathIn(el) {
@@ -5254,11 +5310,10 @@ let lavUid = 0;
                             <div class="min-w-0 text-xs flex-grow">
                                 ${q.text ? `<div class="text-gray-200 leading-relaxed">${escapeHtml(q.text)}</div>` : '<div class="text-gray-500">문제 내용은 시험지를 확인해주세요.</div>'}
                                 ${ansText ? `<div class="text-emerald-400 mt-1">정답 ${ansText}</div>` : ''}
-                                ${q.explanation ? `
-                                    <button onclick="toggleMyExplain(${ti}, ${q.no})" class="mt-1 text-sky-300 hover:text-sky-200 text-[11px] font-bold">
-                                        <i class="fa-solid fa-book-open mr-1"></i>해설 보기
-                                    </button>
-                                    <div id="myexpl-${ti}-${q.no}" class="hidden mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(q.explanation)}</div>` : ''}
+                                ${(q.explanation || q.summary || q.video || q.tag || (q.is_wrong !== false)) ? explainBlockHtml({
+                                    kind: t.type, title: t.title, no: q.no, tag: q.tag, summary: q.summary, explanation: q.explanation,
+                                    video: q.video, isWrong: q.is_wrong !== false, reason: q.reason,
+                                    canPick: ['타임어택 퀴즈', '과제 제출', '출제 문제'].includes(t.type) }) : ''}
                             </div>
                         </div>
                     </div>`;
@@ -5407,7 +5462,7 @@ let lavUid = 0;
             // 상태. 이제 모든 화면 전환 시 확실히 숨겼다가 필요한 곳에서만 다시 켠다.
             document.querySelectorAll('#home-view, #dashboard-screen, #dashboard-home, #program-view, .prog-content').forEach(el=>el.style.display='none');
             if(!h||h==='home') { document.getElementById('home-view').style.display='flex'; window.scrollTo(0,0); }
-            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); loadHomeAvatarWidget(); loadTodo(false); }
+            else if(h==='dashboard') { if(!currentUser) { window.location.hash='home'; return showModal('auth'); } document.getElementById('dashboard-screen').style.display='block'; document.getElementById('dashboard-home').style.display='block'; closeExamRoomStrict(); clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); loadHomeAvatarWidget(); loadTodo(false); loadPracticeCard(); }
             else {
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); }
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
@@ -5419,6 +5474,7 @@ let lavUid = 0;
                 if(h==='prog-study') loadStudyRoom();
                 if(h==='prog-whatif') { const fr=document.getElementById('whatif-frame'); if(!fr.getAttribute('src')) fr.setAttribute('src','eottae/'); }
                 if(h==='prog-qna') loadQna();
+                if(h==='prog-practice') loadPracticeToday();
                 renderStudyMe();
             }
         });
@@ -5998,17 +6054,17 @@ let lavUid = 0;
                        '과목별 공부법과 시간, 학평을 어떻게 볼지 고르면 성적과 입시 결과가 달라져요',
                        '끝나면 "그때 다른 걸 골랐다면 어땠을까"를 같은 운으로 다시 돌려 보여 줘요'] },
             'mypage': { 색: 'teal', 무엇: '지금까지 공부한 기록이 모두 모이는 곳이에요.',
-                할일: ['푼 퀴즈·모의고사·과제와 점수를 한눈에 봐요',
+                할일: ['푼 퀴즈·과제와 점수를 한눈에 봐요',
                        '틀린 문제만 모아 다시 풀 수 있어요',
                        '레벨과 아바타를 꾸미고, 휴대폰 알림도 여기서 켜요'] },
             'quiz-list': { 색: 'orange', 무엇: '정해진 기간 안에, 제한 시간을 재며 푸는 퀴즈예요.',
                 할일: ['시작하면 타이머가 돌아가고, 0이 되면 자동으로 제출돼요',
                        '내면 바로 채점되고 친구들 정답률도 같이 보여요',
                        '모르면 찍지 말고 \'모름\'을 고르세요 — 나중에 그것만 복습할 수 있어요'] },
-            'exam-list': { 색: 'yellow', 무엇: '실제 시험처럼 OMR에 답을 마킹하는 모의고사예요.',
-                할일: ['시험지를 보며 답안지에 마킹해요. 시간이 끝나면 자동 제출돼요',
-                       '끝나면 점수와 해설을 바로 볼 수 있어요',
-                       '한 번 시작하면 중간에 멈출 수 없으니 시간을 확보하고 들어오세요'] },
+            'practice': { 색: 'purple', 무엇: '내가 틀린 유형만 골라 하루 몇 문제씩 내 주는 곳이에요.',
+                할일: ['퀴즈 · 과제에서 틀린 문제의 유형이 모여 매일 새 문제가 나와요',
+                       "틀린 문제에서 '왜 틀렸나요?'를 고르면 더 잘 맞춰서 나와요",
+                       '맞힐수록 그 유형은 덜 나오고, 다 풀면 +30점이에요'] },
             'homework': { 색: 'emerald', 무엇: '선생님이 내주신 과제를 확인하고 제출하는 곳이에요.',
                 할일: ['과제를 고르고, 답을 적거나 사진을 찍어 올려요',
                        '정답표가 있는 과제는 내자마자 채점돼요',
@@ -6091,7 +6147,7 @@ let lavUid = 0;
             if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
             if(id==='admin-grade'){initGradeForTab();}
-            if(id==='admin-unsure'){loadUnsureReport();}
+            if(id==='admin-unsure'){loadUnsureReport(); loadPracticeAdmin();}
             if(id==='admin-generator'){loadGeneratedQuestions(); document.getElementById('video-gen-trigger-wrap').classList.toggle('hidden', !currentUser.is_owner); document.getElementById('ai-status-wrap').classList.toggle('hidden', !currentUser.is_owner);}
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-whatif'){const fr=document.getElementById('admin-whatif-frame'); if(!fr.getAttribute('src')) fr.setAttribute('src','eottae/');}
@@ -6357,14 +6413,14 @@ let lavUid = 0;
                 if (existing) {
                     card.className = 'mb-4 rounded-xl p-4 border border-emerald-700 bg-emerald-900/20';
                     title.innerHTML = '<i class="fa-solid fa-bell mr-1"></i>알림이 켜져 있어요';
-                    desc.innerText = '새 과제·모의고사·퀴즈·채점 결과를 바로 알려드려요.';
+                    desc.innerText = '새 과제·퀴즈·채점 결과를 바로 알려드려요.';
                     btn.innerText = '끄기';
                     btn.onclick = disablePushNotifications;
                     btn.className = 'shrink-0 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm font-bold text-white transition';
                 } else {
                     card.className = 'mb-4 rounded-xl p-4 border border-gray-700 bg-[#151922]';
                     title.innerHTML = '<i class="fa-solid fa-bell mr-1"></i>알림 받기';
-                    desc.innerText = '새 과제·모의고사·퀴즈·채점 결과를 휴대폰으로 바로 알려드려요.';
+                    desc.innerText = '새 과제·퀴즈·채점 결과를 휴대폰으로 바로 알려드려요.';
                     btn.innerText = '켜기';
                     btn.onclick = enablePushNotifications;
                     btn.className = 'shrink-0 bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-bold text-white transition';
@@ -7071,7 +7127,6 @@ let lavUid = 0;
             { key: 'homeworks', label: '아직 안 낸 과제', short: '과제', icon: 'fa-pen-to-square', tone: 'text-emerald-300', go: "openProgram('homework'); loadHomeworks();" },
             { key: 'notices',   label: '확인 안 한 공지', short: '공지', icon: 'fa-bullhorn',      tone: 'text-blue-300',    go: "openProgram('board'); loadBoard();" },
             { key: 'quizzes',   label: '안 푼 타임어택 퀴즈', short: '퀴즈', icon: 'fa-stopwatch', tone: 'text-orange-300',  go: "openProgram('quiz-list'); loadStudentQuizzes();" },
-            { key: 'exams',     label: '안 본 모의고사', short: '모의고사',  icon: 'fa-file-signature', tone: 'text-yellow-300', go: "openProgram('exam-list'); loadStudentExams();" },
         ];
 
         function todoCount(d) {
@@ -9710,7 +9765,7 @@ let lavUid = 0;
         // 학습 성향 약점 → 로지에듀에 실제로 있는 프로그램. (없는 프로그램은 적지 않는다)
         const LOGY_PROGRAMS = {
             quiz:     ['타임어택 퀴즈', '제한 시간 안에 풀고 바로 채점 — 문항별 정답률로 내 위치를 확인합니다'],
-            exam:     ['실시간 모의고사', '실제 시험과 같은 타이머 · OMR로 실전 감각과 시간 배분을 익힙니다'],
+            exam:     ['오늘의 유형 문제', '틀린 유형만 골라 하루 몇 문제씩 — 맞힐 때까지 매일 조금씩 다시 풉니다'],
             homework: ['과제 제출', '제출하자마자 정답 · 해설로 스스로 맞춰 보며 복습합니다'],
             lecture:  ['해설 강의실', '놓친 개념과 틀린 문제의 해설 강의를 몇 번이든 다시 봅니다'],
             wrong:    ['오답 다시 풀기', '마이페이지에 모인 틀린 문제를 다시 풀어 끝까지 고칩니다'],
@@ -9723,8 +9778,8 @@ let lavUid = 0;
             counsel:  ['나의 진학 상담', '목표 대학까지 남은 거리를 숫자로 확인하며 목표를 붙잡습니다'],
         };
         const LOGY_AI = { korean: ['24시간 AI 국최', '국어 질문을 언제든 묻고 근거까지 풀어서 듣습니다'],
-                          math:   ['24시간 AI 수박', '막힌 수학 문제를 사진으로 올리면 단계별로 풀어 줍니다'],
-                          english:['24시간 AI 재우T', '영어 문장 · 문법 질문을 언제든 묻고 바로 확인합니다'] };
+                          math:   ['24시간 AI 수학쌤', '막힌 수학 문제를 사진으로 올리면 단계별로 풀어 줍니다'],
+                          english:['24시간 AI 영어쌤', '영어 문장 · 문법 질문을 언제든 묻고 바로 확인합니다'] };
         // 영역(축) key → 프로그램. 과목마다 달라지는 것은 함수로.
         const LOGY_AXIS_PROGRAMS = {
             nonfiction: ['lecture', 'quiz', 'ai'],   literature: ['lecture', 'ai', 'quiz'],
@@ -10921,16 +10976,16 @@ let lavUid = 0;
             }
         }
 
-        // 국어(국최)뿐 아니라 수학(수박)·영어(재우T) 등 과목별 AI 튜터.
+        // 국어(국최)뿐 아니라 수학(수학쌤)·영어(영어쌤) 등 과목별 AI 튜터.
         // 과목마다 자료학습/AI 답변 원칙이 완전히 분리되어 있어, 국어 지문이
         // 수학·영어 질문에 섞여 들어가지 않는다.
         const CHAT_SUBJECTS = {
             korean:  { label: '국어', persona: '스마트 국최', title: '24시간 AI 국최', color: 'text-blue-400',
                        greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 국최입니다. 국어에 대한 질문을 해주세요!' },
-            math:    { label: '수학', persona: '스마트 수박', title: '24시간 AI 수박', color: 'text-indigo-400',
-                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 수박입니다. 수학에 대한 질문을 해주세요!' },
-            english: { label: '영어', persona: '스마트 재우T', title: '24시간 AI 재우T', color: 'text-cyan-400',
-                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 재우T입니다. 영어에 대한 질문을 해주세요!' },
+            math:    { label: '수학', persona: '스마트 수학쌤', title: '24시간 AI 수학쌤', color: 'text-indigo-400',
+                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 수학쌤이에요. 수학에 대한 질문을 해주세요!' },
+            english: { label: '영어', persona: '스마트 영어쌤', title: '24시간 AI 영어쌤', color: 'text-cyan-400',
+                       greet: '안녕하세요. 로지에듀 여러분! 저는 스마트 영어쌤이에요. 영어에 대한 질문을 해주세요!' },
         };
         let currentChatSubject = 'korean';
 
@@ -12387,6 +12442,7 @@ let lavUid = 0;
 
         function showOmrResult(d) {
             OMR_RESULT = d;
+            d.reasons = d.reasons || {};
             const wrongs = new Set((d.wrongs || []).map(Number));
             const unsure = new Set((d.unsure || []).map(Number));
             const expl = d.explanations || {};
@@ -12431,6 +12487,7 @@ let lavUid = 0;
             const isUnsure = (d.unsure || []).map(Number).includes(no);
             const isWrong = (d.wrongs || []).map(Number).includes(no);
             const text = (d.explanations || {})[String(no)] || '';
+            const m = (d.meta || {})[String(no)] || {};
             const isShort = ((d.omr_kinds || HW_OMR.kinds || [])[no - 1]) === 'short';
             const mineLabel = isUnsure ? '모르겠다고 표시' : (mine ? (isShort ? mine : mine + '번') : '표시 안 함');
             const verdict = isUnsure ? '<span class="text-amber-300">모름</span>'
@@ -12440,9 +12497,10 @@ let lavUid = 0;
                     <p class="text-sm font-bold text-white">${no}번 ${verdict}</p>
                     <button onclick="document.getElementById('hw-omr-explain').classList.add('hidden')" class="text-gray-500 hover:text-white text-xs">닫기</button>
                 </div>
-                <p class="text-[11px] text-gray-400 mb-2">내 답: ${escapeHtml(String(mineLabel))}</p>
-                ${text ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(text)}</p>`
-                       : '<p class="text-xs text-gray-500">이 문항은 해설이 등록되어 있지 않습니다.</p>'}`;
+                <p class="text-[11px] text-gray-400 mb-1">내 답: ${escapeHtml(String(mineLabel))}</p>
+                ${explainBlockHtml({ kind: '과제 제출', title: HW_OMR.title, no, tag: m.tag, summary: m.summary, explanation: text,
+                    video: m.video, isWrong, reason: (d.reasons || {})[String(no)], canPick: !!HW_OMR.title,
+                    lockedNote: d.expl_locked ? '해설은 마감 뒤에 열려요. 그때 다시 확인해 주세요.' : '' })}`;
             box.classList.remove('hidden');
         }
 
@@ -13890,7 +13948,42 @@ let lavUid = 0;
         }
 
         // 퀴즈 관련 추가 함수 복구
+        // 유형 칸에 띄울 보기: 과목별 기본 + 원장님이 이미 붙인 유형
+        const TAG_SUGGESTIONS = {
+            korean: ['사실적 이해', '중심 내용·주제', '구조·전개', '추론', '비판', '적용([보기])', '개념 비교', '어휘·문맥',
+                     '화자·서술자', '시어·소재', '표현상 특징', '정서·태도', '인물·서사', '외적 준거', '작품 비교',
+                     '문법-음운', '문법-형태', '문법-통사', '문법-의미·담화', '화법', '작문'],
+            math: ['계산', '식의 변형', '방정식·부등식', '함수와 그래프', '도형', '경우의 수·확률', '통계', '수열',
+                   '지수·로그', '삼각함수', '극한·연속', '미분', '적분', '개념 이해', '서술형 풀이'],
+            english: ['어휘', '어법', '주제·요지', '제목', '빈칸 추론', '순서 배열', '문장 삽입', '무관한 문장',
+                      '내용 일치', '요약문', '지칭 추론', '심경·분위기', '장문 독해'],
+        };
+        let KNOWN_TAGS = null;     // {subject: [tag...]} — 관리자 설정에서 한 번 받아 둔다
+        function fillTagDatalist(listEl, subject, extra) {
+            if (!listEl) return;
+            const subj = TAG_SUGGESTIONS[subject] ? subject : 'korean';
+            const tags = Array.from(new Set([...(extra || []), ...((KNOWN_TAGS || {})[subj] || []), ...TAG_SUGGESTIONS[subj]]));
+            listEl.innerHTML = tags.map(t => `<option value="${escAttr(t)}"></option>`).join('');
+        }
+        async function refreshQuizTagList() {
+            const subj = (document.getElementById('qz-subject') || {}).value || 'korean';
+            fillTagDatalist(document.getElementById('qz-tag-list'), subj);
+            if (KNOWN_TAGS === null) {
+                KNOWN_TAGS = {};
+                const r = await adminGet('/api/admin/practice/settings');
+                if (r.ok && r.data.pool_by_subject) {
+                    Object.entries(r.data.pool_by_subject).forEach(([k, v]) => { KNOWN_TAGS[k] = Object.keys(v || {}); });
+                    fillTagDatalist(document.getElementById('qz-tag-list'), subj);
+                }
+            }
+        }
+        function onQuizPracticeToggle() {
+            const on = !!(document.getElementById('qz-practice') || {}).checked;
+            if (on) showToast("유형 연습용: 문항마다 '유형'을 꼭 적어 주세요.");
+        }
+
         function addQuizQuestionUI() {
+            if (!document.querySelector('#qz-questions-board .quiz-q-item')) refreshQuizTagList();
             const container = document.getElementById('qz-questions-board');
             const qIdx = container.children.length;
             const div = document.createElement('div');
@@ -13937,9 +14030,12 @@ let lavUid = 0;
                     <textarea rows="2" placeholder="예: 기온 상승과 광합성을 언급했는지" class="w-full p-2 bg-gray-800 text-gray-300 rounded quiz-q-rubric text-sm resize-y border border-gray-600 outline-none"></textarea>
                 </div>
                 <div class="flex gap-2 mb-2">
-                    <input type="number" placeholder="배점" value="10" class="w-1/2 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score outline-none">
+                    <input type="number" placeholder="배점" value="10" class="w-24 p-2 bg-gray-800 text-emerald-400 font-bold rounded quiz-q-score outline-none" title="배점">
+                    <input type="text" list="qz-tag-list" maxlength="30" placeholder="유형 (예: 추론, 어휘) — 틀린 학생에게 같은 유형 문제가 나가요" class="flex-1 min-w-0 p-2 bg-gray-800 text-violet-200 rounded quiz-q-tag text-sm border border-violet-800/60 outline-none focus:border-violet-400">
                 </div>
-                <textarea rows="2" placeholder="해설 (적어두면 학생이 채점 뒤 바로 읽을 수 있습니다. 비워두셔도 됩니다)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-2 quiz-q-expl text-sm resize-y border border-gray-700 outline-none focus:border-sky-500"></textarea>
+                <textarea rows="2" maxlength="400" placeholder="요약 해설 (한두 줄 — 학생이 결과에서 가장 먼저 봅니다)" class="w-full p-2 bg-gray-800 text-sky-100 rounded mb-2 quiz-q-summary text-sm resize-y border border-sky-900 outline-none focus:border-sky-500"></textarea>
+                <textarea rows="3" placeholder="자세한 해설 ('자세한 해설 보기'를 누르면 펼쳐집니다. 비워두셔도 됩니다)" class="w-full p-2 bg-gray-800 text-gray-300 rounded mb-2 quiz-q-expl text-sm resize-y border border-gray-700 outline-none focus:border-sky-500"></textarea>
+                <input type="url" placeholder="🎬 해설 영상 주소 (유튜브 · 동영상 링크, 선택)" class="w-full p-2 bg-gray-800 text-red-200 rounded mb-2 quiz-q-video text-sm border border-gray-700 outline-none focus:border-red-400">
                 <div class="border-t border-gray-700 pt-2">
                     <input type="hidden" class="quiz-q-img">
                     <div class="flex items-center gap-2">
@@ -14200,6 +14296,9 @@ let lavUid = 0;
             if (bogiEl) bogiEl.value = q.bogi || '';
             const explEl = item.querySelector('.quiz-q-expl');
             if (explEl) explEl.value = q.explanation || '';
+            [['.quiz-q-tag', q.tag], ['.quiz-q-summary', q.summary], ['.quiz-q-video', q.video]].forEach(([sel, v]) => {
+                const el = item.querySelector(sel); if (el) el.value = v || '';
+            });
             const opts = item.querySelectorAll('.quiz-q-opt');
             (q.options || []).forEach((o, i) => { if (opts[i]) opts[i].value = o || ''; });
             const scoreEl = item.querySelector('.quiz-q-score');
@@ -14280,7 +14379,9 @@ let lavUid = 0;
             const deadline = document.getElementById('qz-deadline').value;
             const openAt = document.getElementById('qz-open').value;   // 비우면 바로 열림
             const limit = parseInt(document.getElementById('qz-limit').value);
-            if(!title || !deadline || !limit) return alert("제목, 마감일, 제한 시간을 모두 입력하세요.");
+            const practiceOnly = !!(document.getElementById('qz-practice') || {}).checked;
+            if (practiceOnly) { if (!title) return alert("제목을 입력하세요."); }
+            else if(!title || !deadline || !limit) return alert("제목, 마감일, 제한 시간을 모두 입력하세요.");
             if(openAt && openAt >= deadline) return alert("오픈 일시가 마감 일시보다 앞서야 합니다.");
             const qItems = document.querySelectorAll('.quiz-q-item');
             if(qItems.length === 0) return alert("문제를 최소 1개 이상 추가하세요.");
@@ -14293,25 +14394,31 @@ let lavUid = 0;
                 const bogi = ((item.querySelector('.quiz-q-bogi') || {}).value || '').trim();
                 const expl = ((item.querySelector('.quiz-q-expl') || {}).value || '').trim();
                 const qtype = item.querySelector('.quiz-q-type').value;
+                // 유형 · 요약 해설 · 해설 영상 (비우면 안 보낸다)
+                const extra = {};
+                [['tag', '.quiz-q-tag'], ['summary', '.quiz-q-summary'], ['video', '.quiz-q-video']].forEach(([k, sel]) => {
+                    const v = ((item.querySelector(sel) || {}).value || '').trim(); if (v) extra[k] = v;
+                });
+                if (practiceOnly && qtype !== 'essay' && !extra.tag) return alert("유형 연습 문제는 문항마다 '유형'을 적어 주세요.");
 
                 if (qtype === 'essay') {
                     const rubric = item.querySelector('.quiz-q-rubric').value.trim();
                     if (!text || !score) return alert("문제 내용과 배점을 정확히 채워주세요.");
                     questions.push({ q_text: text, bogi: bogi, qtype: 'essay', rubric: rubric,
-                                     options: [], answer: '', score: score, image: img, explanation: expl });
+                                     options: [], answer: '', score: score, image: img, explanation: expl, ...extra });
                     continue;
                 }
                 if (qtype === 'short') {
                     const ans = item.querySelector('.quiz-q-short').value.trim();
                     if (!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.");
                     questions.push({ q_text: text, bogi: bogi, qtype: 'short', options: [],
-                                     answer: ans, score: score, image: img, explanation: expl });
+                                     answer: ans, score: score, image: img, explanation: expl, ...extra });
                     continue;
                 }
                 const opts = Array.from(item.querySelectorAll('.quiz-q-opt')).map(inp => inp.value);
                 const ans = readQuizAnsBoxes(item);
                 if(!text || !ans || !score) return alert("문제 내용, 정답, 배점을 정확히 채워주세요.\n(정답은 보기 번호를 하나 이상 눌러 골라주세요)");
-                questions.push({ q_text: text, bogi: bogi, qtype: 'choice', options: opts, answer: ans, score: score, image: img, explanation: expl });
+                questions.push({ q_text: text, bogi: bogi, qtype: 'choice', options: opts, answer: ans, score: score, image: img, explanation: expl, ...extra });
             }
 
             showLoader("퀴즈 배포 중...");
@@ -14319,12 +14426,13 @@ let lavUid = 0;
                 const res = await fetch(`${API_URL}/api/admin/quiz`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: title, open_at: openAt, deadline: deadline, time_limit: limit, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_classes: getPickedClasses('qz-target-class') })
+                    body: JSON.stringify({ title: title, open_at: openAt, deadline: deadline, time_limit: limit || 0, questions: questions, old_title: EDITING_QUIZ_TITLE, subject: document.getElementById('qz-subject').value, target_classes: getPickedClasses('qz-target-class'), practice_only: practiceOnly })
                 });
                 const data = await res.json();
                 if(data.success) {
                     const later = openAt && quizNotOpenYet(openAt);
-                    alert((EDITING_QUIZ_TITLE ? "수정한 내용을 저장했습니다." : (later ? "퀴즈를 올려 두었습니다." : "퀴즈가 성공적으로 배포되었습니다!"))
+                    alert(practiceOnly ? "유형 연습 문제를 저장했습니다. 이 유형을 틀린 학생에게 '오늘의 유형 문제'로 나갑니다." :
+                          (EDITING_QUIZ_TITLE ? "수정한 내용을 저장했습니다." : (later ? "퀴즈를 올려 두었습니다." : "퀴즈가 성공적으로 배포되었습니다!"))
                           + (later ? `\n${quizWhenLabel(openAt)}에 학생들에게 열립니다.` : ''));
                     EDITING_QUIZ_TITLE = '';
                     updateQuizEditState();
@@ -14348,7 +14456,7 @@ let lavUid = 0;
                         c.innerHTML += `<div class="bg-gray-800 p-4 rounded mb-2 border ${on ? 'border-orange-500' : 'border-gray-700'} flex justify-between items-center gap-2">
                             <div class="min-w-0">
                                 <div class="font-bold text-orange-400 mb-1 truncate">${escapeHtml(q.title)}${on ? ' <span class="text-[10px] text-orange-300">· 편집 중</span>' : ''}</div>
-                                <div class="text-xs text-gray-400">${quizStatusBadge(q)}${q.open_at ? '오픈 ' + escapeHtml(quizWhenLabel(q.open_at)) + ' · ' : ''}마감 ${escapeHtml(q.deadline ? quizWhenLabel(q.deadline) : '')} · ${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
+                                <div class="text-xs text-gray-400">${quizStatusBadge(q)}${q.practice_only ? '퀴즈 목록에는 안 보임 · ' + escapeHtml(Array.from(new Set((q.questions || []).map(x => x.tag).filter(Boolean))).map(t => '#' + t).join(' ')) + ' · ' : (q.open_at ? '오픈 ' + escapeHtml(quizWhenLabel(q.open_at)) + ' · ' : '') + '마감 ' + escapeHtml(q.deadline ? quizWhenLabel(q.deadline) : '') + ' · '}${(q.questions || []).length}문항${q.updated_at ? ' · 수정 ' + escapeHtml(String(q.updated_at).slice(0, 16)) : ''}</div>
                             </div>
                             <div class="shrink-0 flex gap-1">
                                 <button onclick="openExplEditor('${escAttr(q.title)}', '타임어택 퀴즈')" title="문항별 해설 넣기" class="text-sky-300 text-xs bg-sky-900/30 hover:bg-sky-900/60 px-3 py-2 rounded transition font-bold"><i class="fa-solid fa-book-open"></i></button>
@@ -14379,10 +14487,11 @@ let lavUid = 0;
             setPickedClasses('qz-target-class', q.target_classes || q.target_class || []);
             const board = document.getElementById('qz-questions-board');
             board.innerHTML = '';
-            (q.questions || []).forEach(x => fillQuizQuestion({
-                q_text: x.q_text, bogi: x.bogi, options: x.options,
-                answer: x.answer, score: x.score, image: x.image
-            }));
+            // 💡 문항을 통째로 넘긴다(예전에는 유형 · 해설 · 서술형 기준이 빠져 고치면 사라졌다)
+            (q.questions || []).forEach(x => fillQuizQuestion({ ...x }));
+            const pr = document.getElementById('qz-practice');
+            if (pr) { pr.checked = !!q.practice_only; }
+            refreshQuizTagList();
             document.getElementById('qz-capture-preview').innerHTML = '';
             updateQuizEditState();
             loadAdminQuizzes();
@@ -14404,6 +14513,7 @@ let lavUid = 0;
 
         function newQuizDraft() {
             EDITING_QUIZ_TITLE = '';
+            const pr = document.getElementById('qz-practice'); if (pr) pr.checked = false;
             document.getElementById('qz-title').value = '';
             document.getElementById('qz-questions-board').innerHTML = '';
             document.getElementById('qz-capture-preview').innerHTML = '';
@@ -14734,6 +14844,7 @@ let lavUid = 0;
         }
         // 원장님 목록의 상태 표시: 예약 · 진행 중 · 마감
         function quizStatusBadge(q) {
+            if (q.practice_only) return '<span class="text-violet-300 font-bold mr-1">🎯 유형 연습용</span>';
             if (quizNotOpenYet(q.open_at)) return '<span class="text-sky-300 font-bold mr-1">⏰ 예약</span>';
             const end = quizTimeMs(q.deadline);
             if (end && Date.now() > end) return '<span class="text-gray-500 font-bold mr-1">마감됨</span>';
@@ -14870,7 +14981,11 @@ let lavUid = 0;
             if (!r.ok) return alert(r.message);
             const d = r.data;
             EXPL = { title: title, kind: kind, count: d.question_count || 0,
-                     answers: d.answers || [], values: Object.assign({}, d.explanations || {}) };
+                     answers: d.answers || [], values: Object.assign({}, d.explanations || {}),
+                     meta: JSON.parse(JSON.stringify(d.meta || {})) };
+            const tl = document.getElementById('expl-tag-list');
+            if (tl) tl.innerHTML = Array.from(new Set([...(d.known_tags || []), ...(d.tag_suggestions || [])]))
+                .map(t => `<option value="${escAttr(t)}"></option>`).join('');
             document.getElementById('expl-title').innerText = title;
             document.getElementById('expl-status').innerText = '';
             renderExplFields();
@@ -14881,8 +14996,9 @@ let lavUid = 0;
             const box = document.getElementById('expl-fields');
             const n = EXPL.count;
             const have = Object.keys(EXPL.values).filter(k => (EXPL.values[k] || '').trim()).length;
+            const tagged = Object.values(EXPL.meta || {}).filter(m => m && m.tag).length;
             document.getElementById('expl-sub').innerText =
-                n ? `${EXPL.kind} · ${n}문항 · 지금 해설 ${have}개`
+                n ? `${EXPL.kind} · ${n}문항 · 지금 해설 ${have}개 · 유형 ${tagged}개`
                   : `${EXPL.kind} · 문항 수를 알 수 없습니다 (정답표가 없는 자료)`;
             if (!n) {
                 box.innerHTML = '<p class="text-sm text-gray-500 text-center py-10">정답표가 등록되어 있지 않아 문항 칸을 만들 수 없습니다.<br>먼저 정답표를 넣어주세요.</p>';
@@ -14891,15 +15007,26 @@ let lavUid = 0;
             box.innerHTML = Array.from({ length: n }, (_, i) => {
                 const no = i + 1;
                 const ans = EXPL.answers[i] || '';
+                const m = (EXPL.meta || {})[String(no)] || {};
                 return `
-                <div class="flex gap-2 items-start">
+                <div class="flex gap-2 items-start border-b border-gray-800 pb-2">
                     <span class="shrink-0 w-14 text-right pt-2">
                         <span class="text-white text-sm font-bold tabular-nums">${no}번</span>
                         ${ans ? `<span class="block text-[10px] text-emerald-400">정답 ${escapeHtml(String(ans))}</span>` : ''}
                     </span>
-                    <textarea id="expl-in-${no}" rows="2" oninput="EXPL.values['${no}']=this.value"
-                        placeholder="${no}번 해설 (비워두면 해설 없음)"
-                        class="flex-grow p-2 bg-[#151922] border border-gray-600 rounded text-white text-xs leading-relaxed outline-none focus:border-sky-500 resize-y">${escapeHtml(EXPL.values[String(no)] || '')}</textarea>
+                    <div class="flex-grow min-w-0 space-y-1">
+                        <div class="flex gap-1">
+                            <input list="expl-tag-list" maxlength="30" value="${escAttr(m.tag || '')}" oninput="setExplMeta(${no}, 'tag', this.value)"
+                                placeholder="유형 (예: 추론)" class="w-2/5 min-w-0 p-1.5 bg-[#151922] border border-violet-800/70 rounded text-violet-200 text-xs outline-none focus:border-violet-400">
+                            <input type="url" value="${escAttr(m.video || '')}" oninput="setExplMeta(${no}, 'video', this.value)"
+                                placeholder="🎬 해설 영상 주소 (선택)" class="flex-grow min-w-0 p-1.5 bg-[#151922] border border-gray-700 rounded text-red-200 text-xs outline-none focus:border-red-400">
+                        </div>
+                        <textarea rows="1" maxlength="400" oninput="setExplMeta(${no}, 'summary', this.value)"
+                            placeholder="요약 해설 (한두 줄)" class="w-full p-1.5 bg-[#151922] border border-sky-900 rounded text-sky-100 text-xs leading-relaxed outline-none focus:border-sky-500 resize-y">${escapeHtml(m.summary || '')}</textarea>
+                        <textarea id="expl-in-${no}" rows="2" oninput="EXPL.values['${no}']=this.value"
+                            placeholder="${no}번 자세한 해설 (비워두면 해설 없음)"
+                            class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-xs leading-relaxed outline-none focus:border-sky-500 resize-y">${escapeHtml(EXPL.values[String(no)] || '')}</textarea>
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -14954,9 +15081,21 @@ let lavUid = 0;
                 `<span class="text-sky-300">출제본에서 해설 ${Object.keys(got).length}개를 가져왔습니다.</span>`;
         }
 
+        function setExplMeta(no, field, value) {
+            EXPL.meta = EXPL.meta || {};
+            const m = EXPL.meta[String(no)] = EXPL.meta[String(no)] || {};
+            m[field] = value;
+        }
+
         async function saveExplanations() {
+            // 모든 문항의 세 칸을 보낸다(빈 칸은 지워진다)
+            const meta = {};
+            for (let no = 1; no <= (EXPL.count || 0); no++) {
+                const m = (EXPL.meta || {})[String(no)] || {};
+                meta[String(no)] = { tag: (m.tag || '').trim(), summary: (m.summary || '').trim(), video: (m.video || '').trim() };
+            }
             const res = await adminPost('/api/admin/explanations', {
-                title: EXPL.title, kind: EXPL.kind, explanations: EXPL.values, replace: true,
+                title: EXPL.title, kind: EXPL.kind, explanations: EXPL.values, replace: true, meta,
             });
             const d = res && (res.data || res);
             if (!d || !d.success) {
@@ -14965,6 +15104,8 @@ let lavUid = 0;
                 return;
             }
             EXPL.values = d.explanations || {};
+            EXPL.meta = d.meta || {};
+            KNOWN_TAGS = null;     // 새로 붙인 유형이 퀴즈 칸 보기에도 뜨게
             renderExplFields();
             document.getElementById('expl-status').innerHTML =
                 `<span class="text-emerald-400">해설 ${d.count}개를 저장했습니다. 학생이 바로 볼 수 있습니다.</span>`;
@@ -15084,9 +15225,10 @@ let lavUid = 0;
                     </div>
                     ${textHtml}${imgHtml}${bogiHtml}${optsHtml}
                     ${answerLineHtml}
-                    ${it.explanation
-                        ? `<p class="text-xs text-gray-200 leading-relaxed whitespace-pre-line border-t border-gray-700 pt-2">${escapeHtml(it.explanation)}</p>`
-                        : '<p class="text-xs text-gray-500 border-t border-gray-700 pt-2">이 문항은 해설이 등록되어 있지 않습니다.</p>'}
+                    <div class="border-t border-gray-700 pt-1">${explainBlockHtml({ kind: VR.kind, title: VR.title, no: it.no, tag: it.tag,
+                        summary: it.summary, explanation: it.explanation, video: it.video, isWrong: it.is_wrong, reason: it.reason,
+                        canPick: !VR.viewing_student && ['타임어택 퀴즈', '과제 제출', '출제 문제'].includes(VR.kind),
+                        lockedNote: VR.expl_locked ? '해설은 마감 뒤에 열려요.' : '' })}</div>
                 </div>`;
         }
 
@@ -15686,6 +15828,52 @@ let lavUid = 0;
                 : '<p class="text-xs text-gray-600 py-6 text-center">두 명 이상이 함께 모른 문항은 아직 없습니다.</p>';
         }
 
+        // ── 관리자: 오늘의 유형 문제 설정 · 오답 원인 ─────────────────
+        async function loadPracticeAdmin() {
+            const st = await adminGet('/api/admin/practice/settings');
+            if (st.ok) {
+                document.getElementById('pr-on').checked = !!st.data.on;
+                document.getElementById('pr-count').value = String(st.data.count || 3);
+                const subjLabel = { korean: '국어', math: '수학', english: '영어' };
+                const pools = Object.entries(st.data.pool_by_subject || {});
+                document.getElementById('pr-pool').innerHTML = pools.length
+                    ? '낼 수 있는 연습 문항: ' + pools.map(([k, tags]) => `<b class="text-gray-200">${subjLabel[k] || k}</b> ` +
+                        Object.entries(tags).map(([t, n]) => `<span class="inline-block bg-violet-900/40 text-violet-200 rounded-full px-2 py-0.5 mr-1 mb-1">#${escapeHtml(t)} ${n}</span>`).join('')).join(' · ')
+                    : '<span class="text-amber-300">아직 낼 수 있는 연습 문항이 없습니다. 퀴즈 문항에 유형을 적고 \'유형 연습 문제로만 쓰기\'로 저장해 주세요.</span>';
+            }
+            const r = await adminGet('/api/admin/practice/reasons');
+            const box = document.getElementById('pr-reasons');
+            if (!r.ok) { box.innerHTML = `<p class="text-gray-600">${escapeHtml(r.message)}</p>`; return; }
+            const rows = r.data.students || [];
+            box.innerHTML = rows.length ? `<table class="w-full text-xs"><thead><tr class="text-gray-500"><th class="text-left py-1">학생</th><th>🎲 찍음</th><th>⚖️ 고민</th><th>👀 잘못 봄</th></tr></thead><tbody>` +
+                rows.map(x => `<tr class="border-t border-gray-800"><td class="py-1"><button onclick="loadPracticeForStudent('${escAttr(x.student)}')" class="text-white hover:text-violet-300 font-bold">${escapeHtml(x.student)}</button></td>
+                    <td class="text-center text-red-300">${x.guess || ''}</td><td class="text-center text-amber-300">${x.two || ''}</td><td class="text-center text-sky-300">${x.misread || ''}</td></tr>`).join('') + '</tbody></table>'
+                : '<p class="text-gray-600 py-2">아직 학생들이 고른 이유가 없습니다.</p>';
+        }
+
+        async function savePracticeSettings() {
+            const r = await adminPost('/api/admin/practice/settings', {
+                on: document.getElementById('pr-on').checked, count: Number(document.getElementById('pr-count').value || 3) });
+            const d = r && (r.data || r);
+            document.getElementById('pr-status').innerHTML = d && d.success
+                ? `<span class="text-emerald-400">저장했습니다 (내일 문제부터 적용)</span>` : `<span class="text-red-400">저장하지 못했습니다</span>`;
+        }
+
+        async function loadPracticeForStudent(name) {
+            const box = document.getElementById('pr-student');
+            box.innerHTML = '불러오는 중...';
+            const r = await adminGet('/api/admin/practice/student?student_name=' + encodeURIComponent(name));
+            if (!r.ok) { box.innerHTML = escapeHtml(r.message); return; }
+            const d = r.data;
+            const rs = d.reasons || {};
+            box.innerHTML = `<p class="text-sm font-black text-white mb-1">${escapeHtml(name)} ${d.streak ? `<span class="text-orange-300 text-xs">🔥 ${d.streak}일 연속</span>` : ''}</p>
+                <p class="mb-2">🎲 찍음 ${rs.guess || 0} · ⚖️ 고민 ${rs.two || 0} · 👀 잘못 봄 ${rs.misread || 0}${d.untagged_wrongs ? ` · <span class="text-amber-300">유형 없는 오답 ${d.untagged_wrongs}개</span>` : ''}</p>
+                <p class="font-bold text-violet-300 mb-1">약한 유형</p>
+                ${(d.weak || []).length ? d.weak.map(w => `<div class="flex justify-between border-t border-gray-800 py-0.5"><span class="text-gray-200"># ${escapeHtml(w.tag)}</span><span>오답 ${w.count} · 점수 ${w.score}</span></div>`).join('') : '<p>아직 없습니다.</p>'}
+                <p class="font-bold text-violet-300 mt-2 mb-1">최근 2주 매일 문제</p>
+                ${(d.days || []).length ? d.days.map(x => `<span class="inline-block mr-1 mb-1 px-2 py-0.5 rounded ${x.done ? 'bg-emerald-900/50 text-emerald-200' : 'bg-gray-800 text-gray-400'}">${x.date.slice(5)} ${x.done ? x.correct + '/' + x.total : '안 풂'}</span>`).join('') : '<p>기록이 없습니다.</p>'}`;
+        }
+
         async function loadUnsureForStudent(name) {
             const detail = document.getElementById('unsure-detail');
             detail.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
@@ -15744,6 +15932,237 @@ let lavUid = 0;
             quizAnswers[qIdx] = '?';
             const btn = document.getElementById(`qz-unsure-${qIdx}`);
             if (btn) { btn.classList.add('bg-amber-600', 'text-white'); }
+        }
+
+        // ═════════════════════════════════════════════
+        // 문항 해설 묶음: 유형 · 요약 해설 · 자세한 해설 · 해설 영상 · '왜 틀렸나요?'
+        //   퀴즈 결과 · 결과 다시보기 · 과제 OMR 결과가 같이 쓴다.
+        // ═════════════════════════════════════════════
+        const WRONG_REASONS = [
+            { key: 'guess',   icon: '🎲', label: '몰라서 찍었어요' },
+            { key: 'two',     icon: '⚖️', label: '둘 중에 고민했어요' },
+            { key: 'misread', icon: '👀', label: '문제를 잘못 봤어요' },
+        ];
+        const WRONG_REASON_LABEL = Object.fromEntries(WRONG_REASONS.map(r => [r.key, r.icon + ' ' + r.label]));
+        let XB_SEQ = 0;
+
+        function youtubeIdOf(url) {
+            const m = String(url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([A-Za-z0-9_-]{11})/);
+            return m ? m[1] : '';
+        }
+        // 해설 영상: 유튜브면 화면 안에서 바로, 동영상 파일(mp4 등)이면 플레이어로, 그 밖의 주소는 새 창
+        function openExplainVideo(url) {
+            const u = String(url || '').trim();
+            if (!/^https?:\/\//i.test(u)) return;
+            const yt = youtubeIdOf(u);
+            const isFile = /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u);
+            if (!yt && !isFile) { window.open(u, '_blank', 'noopener'); return; }
+            const wrap = document.createElement('div');
+            wrap.className = 'fixed inset-0 z-[400] bg-black/85 flex items-center justify-center p-3';
+            wrap.innerHTML = `<div class="w-full max-w-3xl">
+                <div class="flex justify-between items-center mb-2"><span class="text-white font-bold"><i class="fa-solid fa-circle-play text-red-400 mr-2"></i>해설 영상</span>
+                <button class="xv-close text-gray-300 hover:text-white text-2xl px-2" aria-label="닫기">&times;</button></div>
+                <div class="relative w-full rounded-xl overflow-hidden bg-black" style="aspect-ratio:16/9">${yt
+                    ? `<iframe class="absolute inset-0 w-full h-full" src="https://www.youtube.com/embed/${yt}?autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`
+                    : `<video class="absolute inset-0 w-full h-full" src="${escAttr(u)}" controls autoplay playsinline></video>`}</div></div>`;
+            const close = () => wrap.remove();
+            wrap.addEventListener('click', e => { if (e.target === wrap || e.target.closest('.xv-close')) close(); });
+            document.body.appendChild(wrap);
+        }
+
+        // opt: {kind, title, no, tag, summary, explanation, video, isWrong, reason, canPick, lockedNote}
+        function explainBlockHtml(opt) {
+            const id = 'xb' + (++XB_SEQ);
+            const o = opt || {};
+            let h = '';
+            if (o.tag) h += `<span class="inline-block text-[11px] font-bold bg-violet-900/50 text-violet-200 border border-violet-700/60 rounded-full px-2 py-0.5 mr-1"># ${escapeHtml(o.tag)}</span>`;
+            if (o.video) h += `<button onclick="openExplainVideo('${escAttr(o.video)}')" class="inline-flex items-center gap-1 text-[11px] font-bold bg-red-600/90 hover:bg-red-500 text-white rounded-full px-2.5 py-0.5"><i class="fa-solid fa-circle-play"></i>해설 영상</button>`;
+            if (h) h = `<div class="mt-2 flex flex-wrap items-center gap-1">${h}</div>`;
+            if (o.summary) h += `<div class="mt-2 bg-sky-950/40 border border-sky-800/60 rounded-lg p-2.5 text-xs text-sky-100 leading-relaxed whitespace-pre-line"><b class="text-sky-300 mr-1">요약 해설</b>${escapeHtml(o.summary)}</div>`;
+            if (o.explanation) {
+                h += o.summary
+                    ? `<button onclick="document.getElementById('${id}-d').classList.toggle('hidden')" class="mt-2 text-sky-300 hover:text-sky-200 text-xs font-bold"><i class="fa-solid fa-book-open mr-1"></i>자세한 해설 보기</button>
+                       <div id="${id}-d" class="hidden mt-1 bg-[#151922] border border-gray-700 rounded p-2.5 text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(o.explanation)}</div>`
+                    : `<div class="mt-2 bg-[#151922] border border-gray-700 rounded p-2.5 text-xs text-gray-200 leading-relaxed whitespace-pre-line"><b class="text-gray-400 mr-1">해설</b>${escapeHtml(o.explanation)}</div>`;
+            }
+            if (!o.summary && !o.explanation && !o.video) {
+                h += `<p class="mt-2 text-xs text-gray-500">${escapeHtml(o.lockedNote || '이 문항은 해설이 등록되어 있지 않습니다.')}</p>`;
+            }
+            if (o.isWrong && o.kind && o.title) {
+                if (o.canPick) {
+                    const btns = WRONG_REASONS.map(r => `<button data-r="${r.key}" onclick="pickWrongReason('${id}', '${escAttr(o.kind)}', '${escAttr(o.title)}', ${Number(o.no)}, '${r.key}')"
+                        class="xr-btn px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition ${o.reason === r.key ? 'bg-orange-600 border-orange-500 text-white' : 'bg-[#151922] border-gray-600 text-gray-200 hover:border-orange-400'}">${r.icon} ${r.label}</button>`).join('');
+                    h += `<div id="${id}" class="mt-3 border-t border-gray-700 pt-2">
+                        <p class="text-[11px] text-orange-300 font-bold mb-1.5">🧐 왜 틀렸나요? <span class="text-gray-500 font-normal">골라 주면 맞춤 처방과 오늘의 유형 문제에 반영돼요</span></p>
+                        <div class="flex flex-wrap gap-1.5">${btns}</div><div class="xr-fb"></div></div>`;
+                } else if (o.reason) {
+                    h += `<p class="mt-2 text-[11px] text-orange-300">학생이 고른 이유: <b>${escapeHtml(WRONG_REASON_LABEL[o.reason] || o.reason)}</b></p>`;
+                }
+            }
+            return h;
+        }
+
+        async function pickWrongReason(id, kind, title, no, reason) {
+            const box = document.getElementById(id);
+            if (!box || !currentUser) return;
+            box.querySelectorAll('.xr-btn').forEach(b => {
+                const on = b.dataset.r === reason;
+                b.className = `xr-btn px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition ${on ? 'bg-orange-600 border-orange-500 text-white' : 'bg-[#151922] border-gray-600 text-gray-200 hover:border-orange-400'}`;
+            });
+            const fb = box.querySelector('.xr-fb');
+            fb.innerHTML = '<p class="text-[11px] text-gray-500 mt-2">저장 중...</p>';
+            const r = await adminPostPublic('/api/student/wrong_reason', { student_name: currentUser.name, kind, title, no, reason });
+            if (!r.ok || !r.data.success) { fb.innerHTML = `<p class="text-[11px] text-red-300 mt-2">${escapeHtml((r.data && r.data.detail) || '저장하지 못했어요.')}</p>`; return; }
+            // 다시 열었을 때도 고른 이유가 보이게 화면 데이터에도 적어 둔다
+            if (kind !== '과제 제출') ((VR && VR.title === title && VR.items) || []).forEach(x => { if (x.no === no) x.reason = reason; });
+            if (kind === '과제 제출' && OMR_RESULT) (OMR_RESULT.reasons = OMR_RESULT.reasons || {})[String(no)] = reason;
+            if (window.QUIZ_LAST_DETAILS) (window.QUIZ_LAST_DETAILS.find(x => x.no === no) || {}).reason = reason;
+            (typeof MY_TASKS !== 'undefined' ? MY_TASKS : []).forEach(t => {
+                if (t.title === title && t.type === kind) [t.items, t.all_items].forEach(l => (l || []).forEach(x => { if (x.no === no) x.reason = reason; }));
+            });
+            const f = r.data.feedback || {};
+            fb.innerHTML = `<div class="mt-2 rounded-lg border border-orange-700/60 bg-orange-950/30 p-2.5">
+                <p class="text-xs font-black text-orange-200 mb-1">${escapeHtml(f.title || '')}</p>
+                <ul class="text-[11px] text-gray-200 leading-relaxed list-disc pl-4 space-y-0.5">${(f.tips || []).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul></div>`;
+        }
+
+        // ═════════════════════════════════════════════
+        // 🎯 오늘의 유형 문제 — 틀린 유형에서 하루 몇 문제씩
+        // ═════════════════════════════════════════════
+        let PRACTICE = { items: [], answers: {}, data: null };
+
+        function practiceWeakChips(weak) {
+            return (weak || []).slice(0, 5).map(w => `<span class="inline-block text-[11px] font-bold bg-violet-900/50 text-violet-200 border border-violet-700/60 rounded-full px-2 py-0.5"># ${escapeHtml(w.tag)}</span>`).join(' ');
+        }
+
+        async function loadPracticeCard() {
+            const box = document.getElementById('practice-card');
+            if (!box || !currentUser || currentUser.isAdmin) { if (box) box.classList.add('hidden'); return; }
+            let d;
+            try { d = await (await fetch(`${API_URL}/api/practice/today?student_name=${encodeURIComponent(currentUser.name)}`)).json(); }
+            catch (e) { return; }
+            if (!d || !d.success) return;
+            PRACTICE.data = d;
+            const streak = d.streak ? `<span class="text-orange-300 font-bold ml-1">🔥 ${d.streak}일 연속</span>` : '';
+            let body = '', btn = '';
+            if (d.done) {
+                body = `<p class="text-sm text-gray-200">오늘 문제를 다 풀었어요! <b class="text-emerald-300">${d.correct}/${d.total}</b> 맞힘 ${streak}</p>`;
+                btn = '결과 보기';
+            } else if ((d.items || []).length) {
+                body = `<p class="text-sm text-gray-200">약한 유형에서 <b class="text-white">${d.items.length}문제</b>가 준비됐어요. 몇 분이면 끝나요! ${streak}</p>`;
+                btn = '오늘 문제 풀기';
+            } else if (d.empty === 'no_pool' && (d.weak || []).length) {
+                body = `<p class="text-sm text-gray-400">선생님이 내 약한 유형의 연습 문제를 준비하고 있어요.</p>`;
+            } else { box.classList.add('hidden'); return; }
+            box.innerHTML = `<div class="rounded-2xl border-2 border-violet-600/60 bg-gradient-to-r from-violet-950/60 to-[#1e2430] p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-3">
+                <div class="flex-grow min-w-0">
+                    <h3 class="text-lg font-black text-white mb-1">🎯 오늘의 유형 문제</h3>
+                    ${body}
+                    ${(d.weak || []).length ? `<div class="mt-2 flex flex-wrap gap-1"><span class="text-[11px] text-gray-400 mr-1">내 약한 유형</span>${practiceWeakChips(d.weak)}</div>` : ''}
+                </div>
+                ${btn ? `<button onclick="openProgram('practice')" class="shrink-0 bg-violet-600 hover:bg-violet-500 text-white font-black px-5 py-3 rounded-xl">${btn}</button>` : ''}
+            </div>`;
+            box.classList.remove('hidden');
+        }
+
+        async function loadPracticeToday() {
+            const box = document.getElementById('practice-body');
+            if (!box || !currentUser) return;
+            box.innerHTML = '<p class="text-gray-500 text-center py-10">불러오는 중...</p>';
+            let d;
+            try { d = await (await fetch(`${API_URL}/api/practice/today?student_name=${encodeURIComponent(currentUser.name)}`)).json(); }
+            catch (e) { box.innerHTML = '<p class="text-red-300 text-center py-10">서버에 연결하지 못했어요. 잠시 뒤 다시 열어 주세요.</p>'; return; }
+            if (!d || !d.success) { box.innerHTML = `<p class="text-red-300 text-center py-10">${escapeHtml((d && d.detail) || '불러오지 못했어요.')}</p>`; return; }
+            PRACTICE = { items: d.items || [], answers: {}, data: d };
+            const head = `<div class="flex flex-wrap items-center gap-2 mb-3 text-xs text-gray-400">
+                <span>${escapeHtml(d.date)}</span>${d.streak ? `<span class="text-orange-300 font-bold">🔥 ${d.streak}일 연속</span>` : ''}
+                ${(d.weak || []).length ? `<span class="ml-auto flex flex-wrap gap-1 items-center"><span>내 약한 유형</span>${practiceWeakChips(d.weak)}</span>` : ''}</div>`;
+            if (d.done) { box.innerHTML = head + practiceResultHtml(d.details || [], d.correct, d.total, true); return; }
+            if (!PRACTICE.items.length) {
+                const msg = {
+                    off: '지금은 오늘의 유형 문제를 쉬고 있어요.',
+                    no_wrong: "아직 틀린 유형이 없어요! 퀴즈 · 과제를 풀고 틀린 문제에서 '왜 틀렸나요?'를 골라 주면, 그 유형 문제가 매일 조금씩 나와요.",
+                    no_tag: '틀린 문제는 있지만 아직 문항에 유형이 붙지 않았어요. 선생님이 유형을 정리하면 매일 문제가 나와요.',
+                    no_pool: '내 약한 유형의 연습 문제를 선생님이 준비하고 있어요. 조금만 기다려 주세요!',
+                }[d.empty] || '오늘은 풀 문제가 없어요.';
+                box.innerHTML = head + `<div class="text-center py-10"><div class="text-5xl mb-3">🌱</div><p class="text-gray-300 text-sm leading-relaxed max-w-md mx-auto">${escapeHtml(msg)}</p></div>`;
+                return;
+            }
+            box.innerHTML = head + `<p class="text-sm text-gray-300 mb-4">틀렸던 유형에서 고른 <b class="text-white">${PRACTICE.items.length}문제</b>예요. 다 풀고 맨 아래 <b>채점하기</b>를 눌러 주세요.</p>` +
+                PRACTICE.items.map((it, i) => practiceQuestionHtml(it, i)).join('') +
+                `<button onclick="submitPractice()" class="w-full bg-violet-600 hover:bg-violet-500 py-4 rounded-xl text-white font-black text-lg shadow-lg mt-2">채점하기</button>`;
+        }
+
+        function practiceQuestionHtml(it, i) {
+            const opts = (it.options || []);
+            const input = it.qtype === 'choice'
+                ? `<div class="space-y-1.5">${opts.map((o, k) => o ? `<button id="pr-opt-${i}-${k + 1}" onclick="pickPractice(${i}, ${k + 1})"
+                        class="pr-opt w-full text-left px-3 py-2 rounded-lg border border-gray-600 bg-[#151922] text-sm text-gray-200 hover:border-violet-400"><b class="mr-1">${k + 1}.</b>${escapeKeepUnderline(o)}</button>` : '').join('')}
+                    ${it.pick > 1 ? `<p class="text-[11px] text-violet-300">답을 ${it.pick}개 고르세요.</p>` : ''}</div>`
+                : `<input id="pr-short-${i}" oninput="PRACTICE.answers['${escAttr(it.qid)}']=this.value" placeholder="답을 적어 주세요"
+                        class="w-full p-3 bg-[#151922] border border-gray-600 rounded-lg text-white outline-none focus:border-violet-400">`;
+            return `<div class="bg-[#1e2430] border border-gray-700 rounded-xl p-4 mb-3">
+                <div class="flex items-center gap-2 mb-2"><span class="text-violet-300 font-black">${i + 1}.</span>
+                    <span class="text-[11px] font-bold bg-violet-900/50 text-violet-200 border border-violet-700/60 rounded-full px-2 py-0.5"># ${escapeHtml(it.tag)}</span>
+                    <span class="text-[11px] text-gray-500">${escapeHtml(it.subject_label || '')}</span>
+                    <button onclick="pickPractice(${i}, '?')" id="pr-unsure-${i}" class="ml-auto text-[11px] px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-amber-300">모름</button></div>
+                <p class="text-white text-sm font-bold leading-relaxed whitespace-pre-line mb-2">${escapeKeepUnderline(it.q_text || '')}</p>
+                ${it.image ? `<img src="${API_URL}${encodeURI(it.image)}" class="max-w-full rounded border border-gray-700 mb-2" alt="문항 그림">` : ''}
+                ${(it.bogi || '').trim() ? `<div class="border border-gray-600 rounded p-3 bg-[#151922] mb-2"><div class="text-[10px] text-orange-400 font-bold mb-1">&lt;보기&gt;</div><p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${escapeKeepUnderline(it.bogi)}</p></div>` : ''}
+                ${input}</div>`;
+        }
+
+        function pickPractice(i, val) {
+            const it = PRACTICE.items[i]; if (!it) return;
+            const key = it.qid;
+            if (val === '?') {
+                PRACTICE.answers[key] = '?';
+                const sh = document.getElementById(`pr-short-${i}`); if (sh) sh.value = '';
+            } else if ((it.pick || 1) > 1) {
+                PRACTICE.answers[key] = toggleOmrPick(PRACTICE.answers[key], val, it.pick);
+            } else {
+                PRACTICE.answers[key] = String(val);
+            }
+            const chosen = answerPicksOf(PRACTICE.answers[key] || '');
+            for (let n = 1; n <= 5; n++) {
+                const el = document.getElementById(`pr-opt-${i}-${n}`);
+                if (el) el.className = `pr-opt w-full text-left px-3 py-2 rounded-lg border text-sm ${chosen.includes(String(n)) ? 'border-violet-400 bg-violet-900/50 text-white' : 'border-gray-600 bg-[#151922] text-gray-200 hover:border-violet-400'}`;
+            }
+            const u = document.getElementById(`pr-unsure-${i}`);
+            if (u) u.className = `ml-auto text-[11px] px-2 py-1 rounded border ${PRACTICE.answers[key] === '?' ? 'border-amber-500 bg-amber-700 text-white' : 'border-gray-600 text-gray-400 hover:text-amber-300'}`;
+        }
+
+        async function submitPractice() {
+            const blank = PRACTICE.items.filter(it => !String(PRACTICE.answers[it.qid] || '').trim()).length;
+            if (blank && !confirm(`아직 안 푼 문제가 ${blank}개 있어요. 그대로 채점할까요?`)) return;
+            showLoader("채점 중...");
+            const r = await adminPostPublic('/api/practice/submit', {
+                student_name: currentUser.name, answers: PRACTICE.answers, qids: PRACTICE.items.map(it => it.qid),
+            });
+            hideLoader();
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || '채점하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+            const d = r.data;
+            document.getElementById('practice-body').innerHTML = practiceResultHtml(d.details || [], d.correct, d.total, false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (d.xp_gain) { showToast(`오늘의 유형 문제 완료! +${d.xp_gain}점`); onXpGained(d.level_up); }
+            loadPracticeCard();
+        }
+
+        function practiceResultHtml(details, correct, total, again) {
+            const all = total && correct === total;
+            return `<div class="bg-[#151922] border border-violet-700 rounded-xl p-5 mb-4 text-center">
+                    <div class="text-4xl mb-1">${all ? '🎉' : '💪'}</div>
+                    <div class="text-white font-black text-2xl">${correct} / ${total} 맞힘</div>
+                    <p class="text-xs text-gray-400 mt-2">${again ? '오늘 문제는 다 풀었어요. 내일 또 새 문제가 나와요!' : (all ? '완벽해요! 이 유형은 점점 덜 나오게 돼요.' : '틀린 유형은 내일도 조금 더 나와요. 해설을 꼭 보고 가요!')}</p></div>` +
+                details.map((x, i) => `<div class="rounded-xl p-4 border mb-3 ${x.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60'}">
+                    <div class="flex items-start gap-2 mb-2"><span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white ${x.ok ? 'bg-emerald-600' : 'bg-red-600'}">${x.ok ? 'O' : 'X'}</span>
+                        <p class="text-white text-sm font-bold leading-relaxed whitespace-pre-line">${i + 1}. ${escapeKeepUnderline(x.q_text || '')}</p></div>
+                    <div class="pl-8 text-sm space-y-1">
+                        <div class="${x.ok ? 'text-emerald-300' : 'text-red-300'}"><span class="text-gray-500 text-xs mr-1">내 답</span>${x.unsure ? '<b>모름</b>' : (x.mine ? escapeHtml(x.my_text || x.mine) : '<b>안 풂</b>')}</div>
+                        ${x.ok ? '' : `<div class="text-emerald-300"><span class="text-gray-500 text-xs mr-1">정답</span>${escapeHtml(x.answer_text || x.answer || '')}</div>`}
+                        ${explainBlockHtml({ tag: x.tag, summary: x.summary, explanation: x.explanation, video: x.video })}
+                    </div></div>`).join('') +
+                `<button onclick="closeProgram()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl text-white font-bold text-lg shadow-lg">학습실로 나가기</button>`;
         }
 
         function toggleQuizExplain(no) {
@@ -15839,6 +16258,9 @@ let lavUid = 0;
         }
 
         function renderQuizResult(data) {
+            // '왜 틀렸나요?'를 저장하려면 어느 퀴즈인지 알아야 한다
+            const quizTitle = (typeof currentActiveQuiz !== 'undefined' && currentActiveQuiz && currentActiveQuiz.title) || data.title || '';
+            window.QUIZ_LAST_DETAILS = data.details || [];
             const circles = ['①', '②', '③', '④', '⑤'];
             const mark = n => circles[Number(n) - 1] || n;
 
@@ -15928,11 +16350,8 @@ let lavUid = 0;
                                     ${d.qtype === 'choice' ? `<b>${mark(d.ans)}</b> ${escapeHtml(d.ans_text || '')}` : `<b>${escapeHtml(d.ans)}</b>`}
                                 </div>`)}
                             <div class="text-gray-500 text-xs">배점 ${d.score}점</div>
-                            ${d.explanation ? `
-                                <button onclick="toggleQuizExplain(${d.no})" class="mt-1 text-sky-300 hover:text-sky-200 text-xs font-bold">
-                                    <i class="fa-solid fa-book-open mr-1"></i>해설 보기
-                                </button>
-                                <div id="quizexpl-${d.no}" class="hidden mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-xs text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(d.explanation)}</div>` : ''}
+                            ${explainBlockHtml({ kind: '타임어택 퀴즈', title: quizTitle, no: d.no, tag: d.tag, summary: d.summary,
+                                explanation: d.explanation, video: d.video, isWrong: !d.ok, reason: d.reason, canPick: !!quizTitle })}
                         </div>
                     </div>`).join('') + '</div>';
             }
