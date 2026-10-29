@@ -2442,7 +2442,8 @@
                                 <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="admin-nav-btn">퀴즈 출제</button>
                                 
                                 <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="admin-nav-btn">영어 단어 시험</button>
-                                <a href="https://korean-ai-tutor.onrender.com/qm/" target="_blank" rel="noopener" class="admin-nav-btn admin-nav-link" title="지문을 쌓아 두면 매일 정한 시각에 문제를 만들어 두는 문제 공장 (관리자 비밀번호로 로그인)">문제 공장 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a>
+                                <button type="button" onclick="openAdminTool('qm')" class="admin-nav-btn admin-nav-link" title="지문을 쌓아 두면 매일 정한 시각에 문제를 만들어 두는 문제 공장">문제 공장 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></button>
+                                <button type="button" onclick="openAdminTool('sns')" class="admin-nav-btn admin-nav-link" title="인스타그램 글 · 카드뉴스 · 블로그 글을 만들어 주는 홍보글 공장">홍보글 공장 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></button>
                             </div>
                         </div>
                         <div class="admin-nav-group">
@@ -3496,6 +3497,16 @@
 
     <script>
         const API_URL = "https://korean-ai-tutor.onrender.com";
+
+        // 문제 공장(/qm/) · 홍보글 공장(/sns/): 이미 로그인한 관리자 토큰을 넘겨 비밀번호 없이 연다.
+        //    토큰이 주소에 남지 않게 POST로 보낸다.
+        function openAdminTool(path) {
+            const f = document.createElement('form');
+            f.method = 'POST'; f.action = `${API_URL}/${path}/login`; f.target = '_blank';
+            const t = document.createElement('input');
+            t.type = 'hidden'; t.name = 'token'; t.value = (currentUser && currentUser.admin_token) || '';
+            f.appendChild(t); document.body.appendChild(f); f.submit(); f.remove();
+        }
         let currentUser = null; let wsLive = null;
 
         let chatFiles = []; let kbFiles = []; let genFiles = []; let bdFiles = []; let bdFilesAdmin = []; let hwFilesAdmin = [];
