@@ -536,6 +536,9 @@
                 <button onclick="fillExplFromBank()" class="px-3 py-2 rounded-lg bg-sky-900/40 border border-sky-700 text-sky-200 text-xs font-bold hover:bg-sky-900/70">
                     <i class="fa-solid fa-wand-sparkles mr-1"></i>보관함 출제본에서 가져오기
                 </button>
+                <button onclick="autoFillTags()" title="문제 글 · 해설 · 해설지 파일을 AI가 읽고 유형 칸을 채웁니다. 확인한 뒤 저장하세요." class="px-3 py-2 rounded-lg bg-violet-900/50 border border-violet-600 text-violet-200 text-xs font-bold hover:bg-violet-900">
+                    <i class="fa-solid fa-robot mr-1"></i>유형 자동 채우기
+                </button>
                 <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처를 붙여넣어도 됩니다.</span>
             </div>
             <p class="px-4 pt-2 text-[11px] text-gray-400 shrink-0"><b class="text-violet-300">유형</b>을 적어 두면 그 문항을 틀린 학생에게 같은 유형 문제가 매일 나갑니다 ·
@@ -15068,7 +15071,7 @@ let lavUid = 0;
             const d = r.data;
             EXPL = { title: title, kind: kind, count: d.question_count || 0,
                      answers: d.answers || [], values: Object.assign({}, d.explanations || {}),
-                     meta: JSON.parse(JSON.stringify(d.meta || {})) };
+                     meta: JSON.parse(JSON.stringify(d.meta || {})), autoTags: {} };
             const tl = document.getElementById('expl-tag-list');
             if (tl) tl.innerHTML = Array.from(new Set([...(d.known_tags || []), ...(d.tag_suggestions || [])]))
                 .map(t => `<option value="${escAttr(t)}"></option>`).join('');
@@ -15102,8 +15105,9 @@ let lavUid = 0;
                     </span>
                     <div class="flex-grow min-w-0 space-y-1">
                         <div class="flex gap-1">
-                            <input list="expl-tag-list" maxlength="30" value="${escAttr(m.tag || '')}" oninput="setExplMeta(${no}, 'tag', this.value)"
-                                placeholder="유형 (예: 추론)" class="w-2/5 min-w-0 p-1.5 bg-[#151922] border border-violet-800/70 rounded text-violet-200 text-xs outline-none focus:border-violet-400">
+                            <input list="expl-tag-list" maxlength="30" value="${escAttr(m.tag || '')}" oninput="setExplMeta(${no}, 'tag', this.value); this.classList.remove('ring-2','ring-amber-400'); this.title='';"
+                                placeholder="유형 (예: 추론)" ${(EXPL.autoTags || {})[String(no)] ? 'title="AI가 채운 유형입니다. 맞는지 확인해 주세요."' : ''}
+                                class="w-2/5 min-w-0 p-1.5 bg-[#151922] border border-violet-800/70 rounded text-violet-200 text-xs outline-none focus:border-violet-400 ${(EXPL.autoTags || {})[String(no)] ? 'ring-2 ring-amber-400' : ''}">
                             <input type="url" value="${escAttr(m.video || '')}" oninput="setExplMeta(${no}, 'video', this.value)"
                                 placeholder="🎬 해설 영상 주소 (선택)" class="flex-grow min-w-0 p-1.5 bg-[#151922] border border-gray-700 rounded text-red-200 text-xs outline-none focus:border-red-400">
                         </div>
@@ -15138,6 +15142,37 @@ let lavUid = 0;
             renderExplFields();
             document.getElementById('expl-status').innerHTML =
                 `<span class="text-emerald-400">사진에서 해설 ${n}개를 읽어 채웠습니다. 확인하고 저장해주세요.</span>`;
+        }
+
+        // 🤖 유형 자동 채우기 — AI가 고른 유형을 칸에 채워 두기만 한다(저장은 원장님이 확인 후)
+        async function autoFillTags() {
+            if (!EXPL || !EXPL.count) return alert("문항 수를 알 수 없어 유형을 채울 수 없습니다.");
+            const empty = [];
+            for (let no = 1; no <= EXPL.count; no++) if (!(((EXPL.meta || {})[String(no)] || {}).tag || '').trim()) empty.push(String(no));
+            let overwrite = false;
+            if (!empty.length) {
+                if (!confirm("모든 문항에 이미 유형이 있습니다.\nAI가 고른 유형으로 다시 채울까요?")) return;
+                overwrite = true;
+            }
+            showLoader("AI가 문항을 읽고 유형을 고르는 중입니다...");
+            const r = await adminPost('/api/admin/auto_tags', { title: EXPL.title, kind: EXPL.kind, explanations: EXPL.values });
+            hideLoader();
+            if (!r.ok) return alert(r.message);
+            const tags = r.data.tags || {};
+            EXPL.autoTags = {};
+            let filled = 0;
+            Object.keys(tags).forEach(no => {
+                if (!overwrite && !empty.includes(no)) return;     // 원장님이 이미 적은 유형은 그대로
+                setExplMeta(no, 'tag', tags[no]);
+                EXPL.autoTags[no] = true;
+                filled++;
+            });
+            renderExplFields();
+            const left = (overwrite ? EXPL.count : empty.length) - filled;
+            const used = (r.data.used || []).join(' · ');
+            document.getElementById('expl-status').innerHTML = filled
+                ? `<span class="text-amber-300">🤖 유형 ${filled}개를 채웠습니다(${escapeHtml(used)}을 읽음). 노란 테두리 칸이 맞는지 확인하고 [해설 저장하기]를 눌러 주세요.${left > 0 ? ` 근거가 부족한 ${left}문항은 비워 두었습니다.` : ''}</span>`
+                : `<span class="text-gray-400">AI가 고를 만한 근거를 찾지 못했습니다. 해설을 더 넣거나 해설지 사진으로 채운 뒤 다시 눌러 주세요.</span>`;
         }
 
         async function fillExplFromBank() {
@@ -15191,6 +15226,7 @@ let lavUid = 0;
             }
             EXPL.values = d.explanations || {};
             EXPL.meta = d.meta || {};
+            EXPL.autoTags = {};
             KNOWN_TAGS = null;     // 새로 붙인 유형이 퀴즈 칸 보기에도 뜨게
             renderExplFields();
             document.getElementById('expl-status').innerHTML =
