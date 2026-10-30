@@ -530,7 +530,10 @@
             </div>
             <div class="px-4 py-2 border-b border-gray-700 shrink-0 flex flex-wrap gap-2">
                 <button onclick="document.getElementById('expl-capture').click()" class="px-3 py-2 rounded-lg bg-emerald-800/50 border border-emerald-700 text-emerald-200 text-xs font-bold hover:bg-emerald-800">
-                    <i class="fa-solid fa-camera mr-1"></i>해설지 사진·캡처로 채우기
+                    <i class="fa-solid fa-camera mr-1"></i>해설지 사진·캡처·PDF로 채우기
+                </button>
+                <button onclick="toggleExplText()" class="px-3 py-2 rounded-lg bg-amber-900/40 border border-amber-700 text-amber-200 text-xs font-bold hover:bg-amber-900/70">
+                    <i class="fa-solid fa-paste mr-1"></i>해설지 글 붙여넣기
                 </button>
                 <input type="file" id="expl-capture" accept="image/*,.pdf" multiple class="hidden" onchange="fillExplFromImage(this.files); this.value='';">
                 <button onclick="fillExplFromBank()" class="px-3 py-2 rounded-lg bg-sky-900/40 border border-sky-700 text-sky-200 text-xs font-bold hover:bg-sky-900/70">
@@ -539,7 +542,15 @@
                 <button onclick="autoFillTags()" title="문제 글 · 해설 · 해설지 파일을 AI가 읽고 유형 칸을 채웁니다. 확인한 뒤 저장하세요." class="px-3 py-2 rounded-lg bg-violet-900/50 border border-violet-600 text-violet-200 text-xs font-bold hover:bg-violet-900">
                     <i class="fa-solid fa-robot mr-1"></i>유형 자동 채우기
                 </button>
-                <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처를 붙여넣어도 됩니다.</span>
+                <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처(여러 장)를 붙여넣으면 자세한 해설 · 요약 · 유형이 한 번에 채워집니다.</span>
+            </div>
+            <div id="expl-text-box" class="px-4 py-2 border-b border-gray-700 shrink-0" style="display:none">
+                <textarea id="expl-text-in" rows="5" placeholder="해설지(한글 · PDF · 웹페이지)의 글을 통째로 복사해 여기에 붙여넣으세요. 1번, 2번 … 문항별로 알아서 나눠 자세한 해설 · 요약 해설 · 유형을 채웁니다."
+                    class="w-full p-2 bg-[#151922] border border-amber-800 rounded text-white text-xs leading-relaxed outline-none focus:border-amber-500 resize-y"></textarea>
+                <div class="flex gap-2 mt-1">
+                    <button onclick="fillExplFromText()" class="px-3 py-1.5 rounded bg-amber-700 text-white text-xs font-bold hover:bg-amber-600">이 글로 채우기</button>
+                    <button onclick="toggleExplText(false)" class="px-3 py-1.5 rounded bg-gray-700 text-gray-200 text-xs">닫기</button>
+                </div>
             </div>
             <p class="px-4 pt-2 text-[11px] text-gray-400 shrink-0"><b class="text-violet-300">유형</b>을 적어 두면 그 문항을 틀린 학생에게 같은 유형 문제가 매일 나갑니다 ·
                 <b class="text-sky-300">요약 해설</b>은 학생이 결과에서 가장 먼저 보고, <b class="text-gray-200">자세한 해설</b>은 눌러서 펼칩니다 · <b class="text-red-300">해설 영상</b>은 유튜브 등 주소</p>
@@ -2420,6 +2431,7 @@
                         <div class="admin-nav-group">
                             <p class="admin-nav-title"><i class="fa-solid fa-user-group mr-1.5"></i>학생 관리</p>
                             <div class="flex flex-wrap gap-1.5">
+                                <button onclick="switchAdminTab('admin-overview')" id="btn-admin-overview" class="admin-nav-btn" title="키오스크 출결과 성적을 학생마다 한 줄로">한눈에 보기</button>
                                 <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="admin-nav-btn">학생 명단</button>
                                 <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="admin-nav-btn">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
                                 <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="admin-nav-btn">상담</button>
@@ -2597,6 +2609,30 @@
                     </div>
                     </div>
 
+                    <div id="admin-overview" class="admin-tab-content" style="display:none">
+                        <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="text-white font-black text-lg mr-2"><i class="fa-solid fa-table-list mr-2 text-emerald-400"></i>학생 한눈에 보기</h3>
+                                <input type="month" id="ov-month" onchange="loadOverview()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                                <select id="ov-class" onchange="renderOverview()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm"><option value="">모든 반</option></select>
+                                <input id="ov-search" oninput="renderOverview()" placeholder="이름 찾기" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm w-32">
+                                <select id="ov-sort" onchange="renderOverview()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                                    <option value="class">반 순</option><option value="absent">결석 많은 순</option><option value="late">지각 많은 순</option><option value="low">평균 낮은 순</option><option value="high">평균 높은 순</option>
+                                </select>
+                                <button onclick="loadOverview()" class="px-3 py-2 rounded bg-gray-700 text-gray-200 text-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mb-2">출결은 홈페이지 키오스크(logyedu.com)에서, 성적은 이 프로그램의 모의고사 · 퀴즈 · 과제 · 단어시험에서 가져옵니다. 이름을 누르면 그 학생 기록이 열립니다.</p>
+                            <div id="ov-summary" class="flex flex-wrap gap-2 mb-2 text-xs"></div>
+                            <div id="ov-warn" class="hidden text-xs text-amber-300 bg-amber-900/30 border border-amber-800 rounded p-2 mb-2"></div>
+                            <div class="overflow-x-auto"><table class="w-full text-sm text-left">
+                                <thead class="text-[11px] text-gray-400 border-b border-gray-700"><tr>
+                                    <th class="p-2">학생</th><th class="p-2">반</th><th class="p-2">오늘</th>
+                                    <th class="p-2 text-center">출석</th><th class="p-2 text-center">지각</th><th class="p-2 text-center">결석</th><th class="p-2 text-center">클리닉</th>
+                                    <th class="p-2 text-center">시험 수</th><th class="p-2 text-center">평균</th><th class="p-2">최근 성적</th></tr></thead>
+                                <tbody id="ov-body"><tr><td colspan="10" class="p-6 text-center text-gray-500">불러오는 중…</td></tr></tbody>
+                            </table></div>
+                        </div>
+                    </div>
                     <div id="admin-users" class="admin-tab-content grid grid-cols-1 lg:grid-cols-4 gap-4">
                         <div class="col-span-1 lg:col-span-1 space-y-4">
                             <!-- 학생 추가 -->
@@ -6113,6 +6149,81 @@ let lavUid = 0;
         function closeExamRoomStrict() { clearInterval(examTimerInterval); isDrawing=false; document.getElementById('pdf-inner-container').innerHTML=''; document.getElementById('exam-prep-overlay').style.display='none'; if(wsLive) wsLive.close(); }
         function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); }
 
+        // ── 학생 한눈에 보기: 키오스크 출결 + 성적 ──
+        let OV = { rows: [] };
+        async function loadOverview() {
+            const mEl = document.getElementById('ov-month');
+            if (!mEl.value) { const d = new Date(); mEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+            document.getElementById('ov-body').innerHTML = '<tr><td colspan="10" class="p-6 text-center text-gray-500">불러오는 중… (홈페이지 출결까지 10초쯤)</td></tr>';
+            const r = await adminGet(`/api/admin/overview?month=${encodeURIComponent(mEl.value)}`);
+            if (!r.ok) { document.getElementById('ov-body').innerHTML = `<tr><td colspan="10" class="p-6 text-center text-red-400">${escapeHtml(r.message || '불러오지 못했습니다.')}</td></tr>`; return; }
+            OV = r.data;
+            const classes = Array.from(new Set((OV.rows || []).map(x => x.class_name).filter(Boolean))).sort();
+            const sel = document.getElementById('ov-class'), keep = sel.value;
+            sel.innerHTML = '<option value="">모든 반</option>' + classes.map(c => `<option value="${escAttr(c)}">${escapeHtml(c)}</option>`).join('');
+            if (classes.includes(keep)) sel.value = keep;
+            const warn = document.getElementById('ov-warn');
+            const msgs = [];
+            if (!OV.attendance_ok) msgs.push('키오스크 출결을 가져오지 못했습니다: ' + (OV.attendance_error || ''));
+            if ((OV.kiosk_only || []).length) msgs.push(`키오스크에만 있는 이름(이 프로그램 학생 명단과 이름이 다름): ${OV.kiosk_only.join(', ')}`);
+            warn.innerHTML = msgs.map(escapeHtml).join('<br>'); warn.classList.toggle('hidden', !msgs.length);
+            renderOverview();
+        }
+
+        function renderOverview() {
+            const cls = document.getElementById('ov-class').value;
+            const q = (document.getElementById('ov-search').value || '').trim();
+            const sort = document.getElementById('ov-sort').value;
+            let rows = (OV.rows || []).filter(x => (!cls || x.class_name === cls) && (!q || x.name.includes(q)));
+            const A = x => x.attendance || {};
+            const cmp = {
+                absent: (a, b) => (A(b).absent || 0) - (A(a).absent || 0),
+                late: (a, b) => (A(b).late || 0) - (A(a).late || 0),
+                low: (a, b) => (a.avg ?? 999) - (b.avg ?? 999),
+                high: (a, b) => (b.avg ?? -1) - (a.avg ?? -1),
+            }[sort];
+            if (cmp) rows = rows.slice().sort(cmp);
+            const sum = (k) => rows.reduce((t, x) => t + (A(x)[k] || 0), 0);
+            const avgs = rows.map(x => x.avg).filter(v => v !== null && v !== undefined);
+            const todayIn = rows.filter(x => ['등원', '지각', '하원', '클리닉'].includes(A(x).status)).length;
+            const todayMissing = rows.filter(x => ['미등원', '결석'].includes(A(x).status)).length;
+            const chip = (label, v, c) => `<span class="px-2 py-1 rounded-full bg-[#151922] border border-gray-700 ${c || 'text-gray-200'}">${label} <b>${v}</b></span>`;
+            document.getElementById('ov-summary').innerHTML = chip('학생', rows.length) + chip('오늘 온 학생', todayIn, 'text-emerald-300') +
+                chip('오늘 안 온 학생', todayMissing, 'text-red-300') + chip('이 달 지각', sum('late'), 'text-amber-300') +
+                chip('이 달 결석', sum('absent'), 'text-red-300') + chip('평균 점수', avgs.length ? (avgs.reduce((a, b) => a + b, 0) / avgs.length).toFixed(1) : '-', 'text-sky-300');
+            const badge = s => {
+                const c = { '등원': 'bg-orange-900/60 text-orange-200', '지각': 'bg-red-900/60 text-red-200', '하원': 'bg-emerald-900/60 text-emerald-200',
+                            '결석': 'bg-red-700 text-white', '미등원': 'bg-amber-900/60 text-amber-200', '클리닉': 'bg-violet-900/60 text-violet-200',
+                            '등원 전': 'bg-gray-700 text-gray-300' }[s] || '';
+                return s ? `<span class="px-2 py-0.5 rounded-full text-[11px] ${c}">${escapeHtml(s)}</span>` : '<span class="text-gray-600">-</span>';
+            };
+            const pctColor = p => p === null || p === undefined ? 'text-gray-400' : p >= 80 ? 'text-emerald-300' : p >= 60 ? 'text-sky-300' : 'text-red-300';
+            document.getElementById('ov-body').innerHTML = rows.length ? rows.map(x => {
+                const a = A(x);
+                const times = [a.checkIn && `등원 ${a.checkIn}`, a.checkOut && `하원 ${a.checkOut}`, a.lateToday && `지각 ${a.lateToday}분`, a.clinic && `클리닉 ${a.clinic}`].filter(Boolean).join(' · ');
+                const absentTitle = (a.absentDays || []).length ? `결석한 날: ${a.absentDays.join(', ')}` : '';
+                const recent = (x.recent || []).map(t => `<span class="inline-block mr-2 whitespace-nowrap" title="${escAttr(t.type + ' · ' + t.date)}"><span class="text-gray-400">${escapeHtml((t.title || '').slice(0, 14))}</span> <b class="${pctColor(t.pct)}">${escapeHtml(t.score)}</b></span>`).join('');
+                return `<tr class="border-b border-gray-800 hover:bg-[#151922]">
+                    <td class="p-2 whitespace-nowrap"><button class="text-white font-bold hover:text-emerald-300 underline-offset-2 hover:underline" onclick="openOverviewStudent('${escAttr(x.name)}')">${escapeHtml(x.name)}</button>
+                        <span class="block text-[10px] text-gray-500">${escapeHtml([x.school, x.grade].filter(Boolean).join(' '))}</span></td>
+                    <td class="p-2 text-xs text-gray-300 whitespace-nowrap">${escapeHtml(x.class_name || '-')}</td>
+                    <td class="p-2 whitespace-nowrap">${x.attendance ? badge(a.status) : '<span class="text-gray-600 text-xs">키오스크 기록 없음</span>'}<span class="block text-[10px] text-gray-500">${escapeHtml(times)}</span></td>
+                    <td class="p-2 text-center text-gray-200">${x.attendance ? (a.present || 0) : '-'}</td>
+                    <td class="p-2 text-center ${(a.late || 0) ? 'text-amber-300 font-bold' : 'text-gray-500'}">${x.attendance ? (a.late || 0) : '-'}</td>
+                    <td class="p-2 text-center ${(a.absent || 0) ? 'text-red-300 font-bold' : 'text-gray-500'}" title="${escAttr(absentTitle)}">${x.attendance ? (a.absent || 0) : '-'}</td>
+                    <td class="p-2 text-center text-violet-200">${x.attendance ? (a.clinicDays || 0) : '-'}</td>
+                    <td class="p-2 text-center text-gray-200">${x.tests || 0}</td>
+                    <td class="p-2 text-center font-bold ${pctColor(x.avg)}">${x.avg === null || x.avg === undefined ? '-' : x.avg + '점'}</td>
+                    <td class="p-2 text-xs">${recent || '<span class="text-gray-600">이 달 시험 없음</span>'}</td></tr>`;
+            }).join('') : '<tr><td colspan="10" class="p-6 text-center text-gray-500">조건에 맞는 학생이 없습니다.</td></tr>';
+        }
+
+        // 이름을 누르면 '학생 명단'의 그 학생 기록으로 간다
+        function openOverviewStudent(name) {
+            switchAdminTab('admin-users');
+            fetchReports(name);
+        }
+
         function lastAdminTab() {
             let id = '';
             try { id = localStorage.getItem('logyedu_admin_tab') || ''; } catch (e) {}
@@ -6135,6 +6246,7 @@ let lavUid = 0;
             //    반 고르기 칸이 텅 빈 채로 남아서, 반 고르기 칸이 있는 메뉴는 아직이면 여기서 불러온다.
             else if (!CLASS_DATA_LOADED && tabEl.querySelector('.class-picker, .class-select')) loadAdminClassData();
             if(id==='admin-counsel'){initCounselTab();}
+            if(id==='admin-overview'){loadOverview();}
             if(id==='admin-schedule'){initScheduleTab();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
@@ -15132,27 +15244,66 @@ let lavUid = 0;
             }).join('');
         }
 
-        // 해설지 사진에서 채우기 — 정답을 읽는 그 호출에서 해설도 함께 온다
+        // 해설지 사진 · 캡처 · PDF · 글에서 채우기 — 자세한 해설 · 요약 해설 · 유형을 한 번에.
+        // 💡 예전에는 정답표 읽기를 빌려 써서, 읽은 해설이 돌아오지 않거나 정답표가 없으면 실패했다.
         async function fillExplFromImage(fileList) {
             const files = Array.from(fileList || []);
             if (!files.length) return;
-            showLoader("해설지를 읽는 중입니다...");
             const fd = new FormData();
-            files.forEach(f => fd.append('files', f, f.name || 'capture.png'));
+            files.forEach((f, i) => fd.append('files', f, f.name || `capture-${i + 1}.png`));
+            await readExplanations(fd, `해설지 ${files.length}장을 읽는 중입니다... (한 장에 10~20초)`);
+        }
+
+        function toggleExplText(show) {
+            const box = document.getElementById('expl-text-box');
+            const on = show === undefined ? box.style.display === 'none' : show;
+            box.style.display = on ? '' : 'none';
+            if (on) document.getElementById('expl-text-in').focus();
+        }
+
+        async function fillExplFromText(text) {
+            const body = (text !== undefined ? text : document.getElementById('expl-text-in').value || '').trim();
+            if (body.length < 10) return alert("해설지 글을 붙여넣어 주세요.");
+            const fd = new FormData();
+            fd.append('text', body);
+            const ok = await readExplanations(fd, "해설지 글을 문항별로 나누는 중입니다...");
+            if (ok) { document.getElementById('expl-text-in').value = ''; toggleExplText(false); }
+        }
+
+        async function readExplanations(fd, loading) {
+            const tags = Array.from(document.querySelectorAll('#expl-tag-list option')).map(o => o.value).filter(Boolean);
+            fd.append('known_tags', tags.join(','));
+            showLoader(loading);
             let data;
             try {
-                const res = await uploadFormData(`${API_URL}/api/admin/extract_answers_image`, fd);
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_explanations`, fd);
                 data = typeof res === 'string' ? JSON.parse(res) : res;
-            } catch (e) { hideLoader(); return alert("보내지 못했습니다: " + e.message); }
+            } catch (e) { hideLoader(); alert("보내지 못했습니다: " + e.message); return false; }
             hideLoader();
-            if (!data || !data.success) return alert((data && data.detail) || "읽지 못했습니다.");
-            const got = data.explanations || {};
-            const n = Object.keys(got).length;
-            if (!n) return alert("사진에서 해설을 찾지 못했습니다.\n해설 문장이 또렷하게 보이는 사진인지 확인해주세요.");
-            Object.keys(got).forEach(k => { EXPL.values[k] = got[k]; });
+            if (!data || !data.success) { alert((data && data.detail) || "해설을 읽지 못했습니다."); return false; }
+            const items = data.items || {};
+            const nos = Object.keys(items).filter(no => !EXPL.count || Number(no) <= EXPL.count);
+            if (!nos.length) { alert("이 시험 문항 번호에 맞는 해설을 찾지 못했습니다."); return false; }
+            // 이미 적어 둔 칸이 있으면 덮어쓸지 한 번 묻는다
+            const filledBefore = nos.filter(no => (EXPL.values[no] || '').trim() || (((EXPL.meta || {})[no] || {}).summary || '').trim());
+            const overwrite = filledBefore.length
+                ? confirm(`${filledBefore.length}문항은 이미 해설이 있습니다.\n읽어 온 해설로 바꿀까요?\n(취소를 누르면 빈 칸만 채웁니다)`)
+                : true;
+            EXPL.autoTags = EXPL.autoTags || {};
+            let nDetail = 0, nSummary = 0, nTag = 0;
+            nos.forEach(no => {
+                const it = items[no] || {};
+                const m = (EXPL.meta || {})[no] || {};
+                if (it.detail && (overwrite || !(EXPL.values[no] || '').trim())) { EXPL.values[no] = it.detail; nDetail++; }
+                if (it.summary && (overwrite || !(m.summary || '').trim())) { setExplMeta(no, 'summary', it.summary); nSummary++; }
+                if (it.tag && !(m.tag || '').trim()) { setExplMeta(no, 'tag', it.tag); EXPL.autoTags[no] = true; nTag++; }
+            });
             renderExplFields();
+            const missing = EXPL.count ? EXPL.count - nos.length : 0;
             document.getElementById('expl-status').innerHTML =
-                `<span class="text-emerald-400">사진에서 해설 ${n}개를 읽어 채웠습니다. 확인하고 저장해주세요.</span>`;
+                `<span class="text-emerald-400">${nos.length}문항을 읽었습니다 — 자세한 해설 ${nDetail} · 요약 ${nSummary} · 유형 ${nTag}개를 채웠습니다.` +
+                `${missing > 0 ? ` 해설이 없던 ${missing}문항은 비워 두었습니다(다음 장을 이어서 붙여넣어도 됩니다).` : ''} 확인하고 [해설 저장하기]를 눌러 주세요.</span>`;
+            return true;
         }
 
         // 🤖 유형 자동 채우기 — AI가 고른 유형을 칸에 채워 두기만 한다(저장은 원장님이 확인 후)
@@ -15257,7 +15408,13 @@ let lavUid = 0;
                     if (f) imgs.push(f);
                 }
             }
-            if (!imgs.length) return;
+            if (!imgs.length) {
+                // 칸 밖에서 해설지 글을 통째로 붙여넣으면 그 글로 채운다(칸 안에서는 평소처럼 붙여넣기)
+                const t = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
+                const tag = (document.activeElement && document.activeElement.tagName) || '';
+                if (t.trim().length >= 80 && tag !== 'TEXTAREA' && tag !== 'INPUT') { e.preventDefault(); fillExplFromText(t); }
+                return;
+            }
             e.preventDefault();
             fillExplFromImage(imgs);
         });
