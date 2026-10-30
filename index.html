@@ -530,7 +530,10 @@
             </div>
             <div class="px-4 py-2 border-b border-gray-700 shrink-0 flex flex-wrap gap-2">
                 <button onclick="document.getElementById('expl-capture').click()" class="px-3 py-2 rounded-lg bg-emerald-800/50 border border-emerald-700 text-emerald-200 text-xs font-bold hover:bg-emerald-800">
-                    <i class="fa-solid fa-camera mr-1"></i>해설지 사진·캡처로 채우기
+                    <i class="fa-solid fa-camera mr-1"></i>해설지 사진·캡처·PDF로 채우기
+                </button>
+                <button onclick="toggleExplText()" class="px-3 py-2 rounded-lg bg-amber-900/40 border border-amber-700 text-amber-200 text-xs font-bold hover:bg-amber-900/70">
+                    <i class="fa-solid fa-paste mr-1"></i>해설지 글 붙여넣기
                 </button>
                 <input type="file" id="expl-capture" accept="image/*,.pdf" multiple class="hidden" onchange="fillExplFromImage(this.files); this.value='';">
                 <button onclick="fillExplFromBank()" class="px-3 py-2 rounded-lg bg-sky-900/40 border border-sky-700 text-sky-200 text-xs font-bold hover:bg-sky-900/70">
@@ -539,7 +542,15 @@
                 <button onclick="autoFillTags()" title="문제 글 · 해설 · 해설지 파일을 AI가 읽고 유형 칸을 채웁니다. 확인한 뒤 저장하세요." class="px-3 py-2 rounded-lg bg-violet-900/50 border border-violet-600 text-violet-200 text-xs font-bold hover:bg-violet-900">
                     <i class="fa-solid fa-robot mr-1"></i>유형 자동 채우기
                 </button>
-                <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처를 붙여넣어도 됩니다.</span>
+                <span class="text-[11px] text-gray-500 self-center">이 창에서 <b class="text-gray-400">Ctrl+V</b>로 캡처(여러 장)를 붙여넣으면 자세한 해설 · 요약 · 유형이 한 번에 채워집니다.</span>
+            </div>
+            <div id="expl-text-box" class="px-4 py-2 border-b border-gray-700 shrink-0" style="display:none">
+                <textarea id="expl-text-in" rows="5" placeholder="해설지(한글 · PDF · 웹페이지)의 글을 통째로 복사해 여기에 붙여넣으세요. 1번, 2번 … 문항별로 알아서 나눠 자세한 해설 · 요약 해설 · 유형을 채웁니다."
+                    class="w-full p-2 bg-[#151922] border border-amber-800 rounded text-white text-xs leading-relaxed outline-none focus:border-amber-500 resize-y"></textarea>
+                <div class="flex gap-2 mt-1">
+                    <button onclick="fillExplFromText()" class="px-3 py-1.5 rounded bg-amber-700 text-white text-xs font-bold hover:bg-amber-600">이 글로 채우기</button>
+                    <button onclick="toggleExplText(false)" class="px-3 py-1.5 rounded bg-gray-700 text-gray-200 text-xs">닫기</button>
+                </div>
             </div>
             <p class="px-4 pt-2 text-[11px] text-gray-400 shrink-0"><b class="text-violet-300">유형</b>을 적어 두면 그 문항을 틀린 학생에게 같은 유형 문제가 매일 나갑니다 ·
                 <b class="text-sky-300">요약 해설</b>은 학생이 결과에서 가장 먼저 보고, <b class="text-gray-200">자세한 해설</b>은 눌러서 펼칩니다 · <b class="text-red-300">해설 영상</b>은 유튜브 등 주소</p>
@@ -15132,27 +15143,66 @@ let lavUid = 0;
             }).join('');
         }
 
-        // 해설지 사진에서 채우기 — 정답을 읽는 그 호출에서 해설도 함께 온다
+        // 해설지 사진 · 캡처 · PDF · 글에서 채우기 — 자세한 해설 · 요약 해설 · 유형을 한 번에.
+        // 💡 예전에는 정답표 읽기를 빌려 써서, 읽은 해설이 돌아오지 않거나 정답표가 없으면 실패했다.
         async function fillExplFromImage(fileList) {
             const files = Array.from(fileList || []);
             if (!files.length) return;
-            showLoader("해설지를 읽는 중입니다...");
             const fd = new FormData();
-            files.forEach(f => fd.append('files', f, f.name || 'capture.png'));
+            files.forEach((f, i) => fd.append('files', f, f.name || `capture-${i + 1}.png`));
+            await readExplanations(fd, `해설지 ${files.length}장을 읽는 중입니다... (한 장에 10~20초)`);
+        }
+
+        function toggleExplText(show) {
+            const box = document.getElementById('expl-text-box');
+            const on = show === undefined ? box.style.display === 'none' : show;
+            box.style.display = on ? '' : 'none';
+            if (on) document.getElementById('expl-text-in').focus();
+        }
+
+        async function fillExplFromText(text) {
+            const body = (text !== undefined ? text : document.getElementById('expl-text-in').value || '').trim();
+            if (body.length < 10) return alert("해설지 글을 붙여넣어 주세요.");
+            const fd = new FormData();
+            fd.append('text', body);
+            const ok = await readExplanations(fd, "해설지 글을 문항별로 나누는 중입니다...");
+            if (ok) { document.getElementById('expl-text-in').value = ''; toggleExplText(false); }
+        }
+
+        async function readExplanations(fd, loading) {
+            const tags = Array.from(document.querySelectorAll('#expl-tag-list option')).map(o => o.value).filter(Boolean);
+            fd.append('known_tags', tags.join(','));
+            showLoader(loading);
             let data;
             try {
-                const res = await uploadFormData(`${API_URL}/api/admin/extract_answers_image`, fd);
+                const res = await uploadFormData(`${API_URL}/api/admin/extract_explanations`, fd);
                 data = typeof res === 'string' ? JSON.parse(res) : res;
-            } catch (e) { hideLoader(); return alert("보내지 못했습니다: " + e.message); }
+            } catch (e) { hideLoader(); alert("보내지 못했습니다: " + e.message); return false; }
             hideLoader();
-            if (!data || !data.success) return alert((data && data.detail) || "읽지 못했습니다.");
-            const got = data.explanations || {};
-            const n = Object.keys(got).length;
-            if (!n) return alert("사진에서 해설을 찾지 못했습니다.\n해설 문장이 또렷하게 보이는 사진인지 확인해주세요.");
-            Object.keys(got).forEach(k => { EXPL.values[k] = got[k]; });
+            if (!data || !data.success) { alert((data && data.detail) || "해설을 읽지 못했습니다."); return false; }
+            const items = data.items || {};
+            const nos = Object.keys(items).filter(no => !EXPL.count || Number(no) <= EXPL.count);
+            if (!nos.length) { alert("이 시험 문항 번호에 맞는 해설을 찾지 못했습니다."); return false; }
+            // 이미 적어 둔 칸이 있으면 덮어쓸지 한 번 묻는다
+            const filledBefore = nos.filter(no => (EXPL.values[no] || '').trim() || (((EXPL.meta || {})[no] || {}).summary || '').trim());
+            const overwrite = filledBefore.length
+                ? confirm(`${filledBefore.length}문항은 이미 해설이 있습니다.\n읽어 온 해설로 바꿀까요?\n(취소를 누르면 빈 칸만 채웁니다)`)
+                : true;
+            EXPL.autoTags = EXPL.autoTags || {};
+            let nDetail = 0, nSummary = 0, nTag = 0;
+            nos.forEach(no => {
+                const it = items[no] || {};
+                const m = (EXPL.meta || {})[no] || {};
+                if (it.detail && (overwrite || !(EXPL.values[no] || '').trim())) { EXPL.values[no] = it.detail; nDetail++; }
+                if (it.summary && (overwrite || !(m.summary || '').trim())) { setExplMeta(no, 'summary', it.summary); nSummary++; }
+                if (it.tag && !(m.tag || '').trim()) { setExplMeta(no, 'tag', it.tag); EXPL.autoTags[no] = true; nTag++; }
+            });
             renderExplFields();
+            const missing = EXPL.count ? EXPL.count - nos.length : 0;
             document.getElementById('expl-status').innerHTML =
-                `<span class="text-emerald-400">사진에서 해설 ${n}개를 읽어 채웠습니다. 확인하고 저장해주세요.</span>`;
+                `<span class="text-emerald-400">${nos.length}문항을 읽었습니다 — 자세한 해설 ${nDetail} · 요약 ${nSummary} · 유형 ${nTag}개를 채웠습니다.` +
+                `${missing > 0 ? ` 해설이 없던 ${missing}문항은 비워 두었습니다(다음 장을 이어서 붙여넣어도 됩니다).` : ''} 확인하고 [해설 저장하기]를 눌러 주세요.</span>`;
+            return true;
         }
 
         // 🤖 유형 자동 채우기 — AI가 고른 유형을 칸에 채워 두기만 한다(저장은 원장님이 확인 후)
@@ -15257,7 +15307,13 @@ let lavUid = 0;
                     if (f) imgs.push(f);
                 }
             }
-            if (!imgs.length) return;
+            if (!imgs.length) {
+                // 칸 밖에서 해설지 글을 통째로 붙여넣으면 그 글로 채운다(칸 안에서는 평소처럼 붙여넣기)
+                const t = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
+                const tag = (document.activeElement && document.activeElement.tagName) || '';
+                if (t.trim().length >= 80 && tag !== 'TEXTAREA' && tag !== 'INPUT') { e.preventDefault(); fillExplFromText(t); }
+                return;
+            }
             e.preventDefault();
             fillExplFromImage(imgs);
         });
