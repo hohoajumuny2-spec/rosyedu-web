@@ -1942,6 +1942,7 @@
 
             <!-- 💡 학생이 가장 자주 궁금해하는 두 가지 — 시험이 며칠 남았는지,
                  내 클리닉이 언제인지. 들어오자마자 맨 위에서 보이게 둔다. -->
+            <div id="clinic-poll-banner" class="hidden mb-5"></div>
             <div id="schedule-banner" class="hidden mb-8"></div>
 
             <!-- 🎯 오늘의 유형 문제: 틀린 유형에서 하루 몇 문제 -->
@@ -2604,6 +2605,36 @@
                                 <p class="text-[11px] text-gray-500 mb-3">날짜를 정해 한 번만 하는 보강입니다.</p>
                                 <button onclick="openClinicPick({kind:'once'})" class="w-full bg-sky-600 hover:bg-sky-700 py-2.5 text-white font-bold rounded transition text-sm mb-3">+ 보강 잡기</button>
                                 <div id="cl-once-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                            </div>
+                        </div>
+
+                        <!-- 클리닉 시간 신청 — 원장님이 매주 시간들을 열면 학생이 가능한 시간을 모두 체크하고,
+                             원장님이 학생마다 하나를 확정한다. 확정하면 위 '클리닉 일정' 격자에 들어간다. -->
+                        <div class="bg-[#151922] p-5 rounded-xl border border-gray-700 lg:col-span-2">
+                            <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                <h3 class="text-lg font-bold text-violet-300"><i class="fa-solid fa-list-check mr-2"></i>클리닉 시간 신청 받기</h3>
+                                <button onclick="refreshClinicPolls()" class="text-[11px] text-gray-400 hover:text-white"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mb-3">가능한 클리닉 시간들을 열어 두면, 학생 화면 맨 위에 '클리닉 시간을 골라 주세요'가 뜹니다. 학생은 되는 시간을 모두 체크하고, 원장님이 학생마다 하나를 확정하면 매주 클리닉으로 들어갑니다.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <input id="cp-title" value="클리닉 시간 신청" placeholder="제목" class="w-full p-2 mb-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                    <input id="cp-note" placeholder="학생에게 보일 안내 (선택) — 예: 되는 시간을 모두 골라 주세요" class="w-full p-2 mb-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                    <p class="text-[11px] text-gray-400 mb-1">열어 둘 시간 (요일을 누르고 시각을 고르세요)</p>
+                                    <div id="cp-days" class="flex gap-1 mb-2"></div>
+                                    <div class="flex gap-2 mb-2">
+                                        <input id="cp-time" type="time" value="17:00" class="flex-1 p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                        <button onclick="addPollSlots()" class="px-3 bg-violet-700 hover:bg-violet-600 text-white rounded text-xs font-bold">+ 시간 넣기</button>
+                                    </div>
+                                    <div id="cp-slots" class="flex flex-wrap gap-1.5 mb-3 min-h-[28px]"></div>
+                                    <p class="text-[11px] text-gray-400 mb-1">대상 반</p>
+                                    <div class="w-full mb-2"><div id="cp-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="cp-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
+                                    <label class="text-[11px] text-gray-400">신청 마감 (선택)</label>
+                                    <input id="cp-deadline" type="datetime-local" class="w-full p-2 mb-3 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                    <button onclick="saveClinicPoll()" class="w-full bg-violet-600 hover:bg-violet-700 py-2.5 text-white font-bold rounded transition text-sm">신청 열기 (학생에게 알림)</button>
+                                    <div id="cp-list" class="mt-4 space-y-2 max-h-72 overflow-y-auto"></div>
+                                </div>
+                                <div id="cp-detail" class="text-sm text-gray-400"><p class="text-[12px] text-gray-500 p-3 border border-dashed border-gray-700 rounded">왼쪽 아래 목록에서 신청을 누르면 학생들이 고른 시간이 여기에 나옵니다.</p></div>
                             </div>
                         </div>
                     </div>
@@ -3401,6 +3432,7 @@
 
                     <!-- 과제/공지 탭 -->
                     <div id="admin-hw" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <details id="hwg-box" class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) openHomeworkGrid()"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-emerald-300"><i class="fa-solid fa-table-cells mr-1"></i>반별 과제 제출표 <span class="text-[11px] font-normal text-gray-500 ml-1">반을 고르면 학생 × 과제로 냈는지 한눈에</span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2 flex-wrap"><select id="hwg-class" onchange="loadHomeworkGrid()" class="p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs"><option value="">반을 고르세요</option></select><span class="text-[11px] text-gray-400"><b class="text-emerald-300">✔</b> 냄 · <b class="text-amber-300">늦게</b> 기한 뒤 냄 · <b class="text-red-400">✕</b> 안 냄 · <b class="text-gray-500">–</b> 마감 전</span><button onclick="loadHomeworkGrid()" class="text-[11px] text-gray-400 hover:text-white ml-auto"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="hwg-body" class="overflow-x-auto text-xs text-gray-500">반을 고르면 최근 과제 10개까지 보여 줍니다.</div></div></details>
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
@@ -5687,7 +5719,7 @@ let lavUid = 0;
         // ── 원장님: 시험 일정 · 클리닉 관리 ─────────────────────
 
         async function initScheduleTab() {
-            await Promise.all([refreshExamDates(), refreshClinics(), fillClinicStudents()]);
+            await Promise.all([refreshExamDates(), refreshClinics(), fillClinicStudents(), refreshClinicPolls()]);
         }
 
 
@@ -6021,8 +6053,228 @@ let lavUid = 0;
             host.innerHTML = `<div class="flex flex-col md:flex-row gap-3">${오늘칸}${시험칸}</div>`;
         }
 
+        // ─────────────────────────────────────────────
+        // 반별 과제 제출표 — 반을 고르면 학생(줄) × 최근 과제(열)
+        // ─────────────────────────────────────────────
+        async function openHomeworkGrid() {
+            if (!CLASS_DATA_LOADED) { try { await loadAdminClassData(); } catch (e) {} }
+            const sel = document.getElementById('hwg-class');
+            const keep = sel.value;
+            sel.innerHTML = '<option value="">반을 고르세요</option>' +
+                ADMIN_CLASSES.map(c => `<option value="${escAttr(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+            sel.value = keep;
+            if (sel.value) loadHomeworkGrid();
+        }
+
+        async function loadHomeworkGrid() {
+            const cls = document.getElementById('hwg-class').value;
+            const box = document.getElementById('hwg-body');
+            if (!cls) { box.innerHTML = '반을 고르면 최근 과제 10개까지 보여 줍니다.'; return; }
+            box.innerHTML = '불러오는 중…';
+            const r = await adminGet(`/api/admin/homework_grid?class_name=${encodeURIComponent(cls)}`);
+            if (!r.ok) { box.innerHTML = `<p class="text-red-400">${escapeHtml(r.message)}</p>`; return; }
+            const d = r.data;
+            if (!d.rows.length) { box.innerHTML = '이 반에 학생이 없습니다. 학생 명단에서 반을 배정해 주세요.'; return; }
+            if (!d.homeworks.length) { box.innerHTML = '최근 45일 안에 이 반에 낸 과제가 없습니다.'; return; }
+            const cell = (c) => {
+                const pct = c.percent != null ? `<span class="block text-[10px] text-gray-400">${c.percent}%</span>` : '';
+                if (c.status === 'submitted') return `<td class="p-1.5 text-center bg-emerald-900/25"><b class="text-emerald-300">✔</b>${pct}</td>`;
+                if (c.status === 'late') return `<td class="p-1.5 text-center bg-amber-900/25"><b class="text-amber-300 text-[11px]">늦게</b>${pct}</td>`;
+                if (c.status === 'missing') return `<td class="p-1.5 text-center bg-red-900/30"><b class="text-red-400">✕</b></td>`;
+                return `<td class="p-1.5 text-center text-gray-600">–</td>`;
+            };
+            const head = d.homeworks.map(h => `<th class="p-1.5 text-center align-bottom min-w-[76px]">
+                <div class="text-gray-200 font-bold text-[11px] leading-tight word-break-keep-all">${escapeHtml(h.title)}</div>
+                <div class="text-[10px] text-gray-500">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5)) : '마감 없음'}</div>
+                <div class="text-[10px]"><span class="text-emerald-300">${h.counts.submitted + h.counts.late}</span><span class="text-gray-500">/${d.rows.length}</span>${h.counts.missing ? ` <span class="text-red-400">✕${h.counts.missing}</span>` : ''}</div></th>`).join('');
+            const body = d.rows.map(row => `<tr class="border-t border-gray-800">
+                <td class="p-1.5 sticky left-0 bg-[#151922] whitespace-nowrap"><b class="text-white">${escapeHtml(row.name)}</b>${row.missing ? ` <span class="text-[10px] text-red-400">안 낸 것 ${row.missing}</span>` : ''}</td>
+                ${row.cells.map(cell).join('')}</tr>`).join('');
+            box.innerHTML = `<table class="border-collapse text-xs"><thead class="border-b border-gray-700"><tr><th class="p-1.5 text-left text-gray-400 sticky left-0 bg-[#151922]">학생 (${d.rows.length}명)</th>${head}</tr></thead><tbody>${body}</tbody></table>`;
+        }
+
+        // ─────────────────────────────────────────────
+        // 클리닉 시간 신청 (원장님) — 시간 열기 · 결과 보기 · 학생마다 확정
+        // ─────────────────────────────────────────────
+        let POLL_SLOTS = [];            // 새 신청에 넣을 [{weekday, time}]
+        let POLL_OPEN_ID = '';
+
+        function renderPollDays() {
+            const box = document.getElementById('cp-days');
+            if (!box || box.dataset.ready) return;
+            box.innerHTML = CLINIC_DAYS.map((d, i) => `<label class="flex-1 text-center cursor-pointer"><input type="checkbox" class="cp-day peer sr-only" value="${i}"><span class="block py-1.5 rounded text-xs font-bold bg-gray-800 text-gray-400 peer-checked:bg-violet-600 peer-checked:text-white transition">${d}</span></label>`).join('');
+            box.dataset.ready = '1';
+        }
+
+        function addPollSlots() {
+            const time = document.getElementById('cp-time').value;
+            const days = [...document.querySelectorAll('.cp-day:checked')].map(i => Number(i.value));
+            if (!time) { alert('시각을 골라 주세요.'); return; }
+            if (!days.length) { alert('요일을 하나 이상 눌러 주세요.'); return; }
+            days.forEach(wd => { if (!POLL_SLOTS.some(s => s.weekday === wd && s.time === time)) POLL_SLOTS.push({ weekday: wd, time }); });
+            POLL_SLOTS.sort((a, b) => a.weekday - b.weekday || a.time.localeCompare(b.time));
+            renderPollSlots();
+        }
+
+        function removePollSlot(i) { POLL_SLOTS.splice(i, 1); renderPollSlots(); }
+
+        function renderPollSlots() {
+            const box = document.getElementById('cp-slots');
+            box.innerHTML = POLL_SLOTS.length ? POLL_SLOTS.map((s, i) => `<span class="inline-flex items-center gap-1 bg-violet-900/40 border border-violet-700 rounded-lg px-2 py-1 text-[12px] text-white">${CLINIC_DAYS[s.weekday]} ${escapeHtml(s.time)}<button onclick="removePollSlot(${i})" class="text-violet-300 hover:text-white ml-0.5">×</button></span>`).join('')
+                : '<span class="text-[11px] text-gray-500">아직 넣은 시간이 없습니다.</span>';
+        }
+
+        async function saveClinicPoll() {
+            if (!POLL_SLOTS.length) { alert('열어 둘 시간을 하나 이상 넣어 주세요.'); return; }
+            const body = { title: document.getElementById('cp-title').value.trim(), note: document.getElementById('cp-note').value.trim(),
+                slots: POLL_SLOTS, target_classes: getPickedClasses('cp-target-class'),
+                deadline: document.getElementById('cp-deadline').value, open: true, push: true };
+            const who = body.target_classes.length ? body.target_classes.join(', ') + ' 학생' : '전체 학생';
+            if (!confirm(`${who}에게 클리닉 시간 신청을 엽니다. (${POLL_SLOTS.length}개 시간)`)) return;
+            const r = await adminPost('/api/admin/clinic_poll', body);
+            if (!r.ok) { alert(r.message); return; }
+            alert(`신청을 열었습니다.${r.data.pushed ? ` 앱 알림 ${r.data.pushed}건을 보냈어요.` : ''}`);
+            POLL_SLOTS = []; renderPollSlots();
+            await refreshClinicPolls();
+            openClinicPoll(r.data.id);
+        }
+
+        async function refreshClinicPolls() {
+            renderPollDays(); renderPollSlots();
+            const box = document.getElementById('cp-list');
+            if (!box) return;
+            const r = await adminGet('/api/admin/clinic_polls');
+            if (!r.ok) { box.innerHTML = `<p class="text-[11px] text-red-400">${escapeHtml(r.message)}</p>`; return; }
+            const rows = r.data.rows || [];
+            box.innerHTML = rows.length ? rows.map(p => `<button onclick="openClinicPoll('${escAttr(p.id)}')" class="w-full text-left rounded-lg border ${p.id === POLL_OPEN_ID ? 'border-violet-500' : 'border-gray-700'} bg-[#1e2430] hover:border-violet-600 px-3 py-2">
+                    <div class="flex items-center gap-2"><b class="text-white text-[13px] truncate">${escapeHtml(p.title)}</b>
+                    <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded ${p.open ? 'bg-emerald-800 text-emerald-200' : 'bg-gray-700 text-gray-300'}">${p.open ? '받는 중' : '마감'}</span></div>
+                    <div class="text-[11px] text-gray-400 mt-0.5">${escapeHtml((p.target_classes || []).join(', ') || '전체')} · 시간 ${p.slot_count}개 · 응답 ${p.answered}명${p.deadline ? ' · 마감 ' + escapeHtml(p.deadline.replace('T', ' ')) : ''}</div>
+                </button>`).join('') : '<p class="text-[11px] text-gray-500">아직 연 신청이 없습니다.</p>';
+        }
+
+        async function openClinicPoll(id) {
+            POLL_OPEN_ID = id;
+            const box = document.getElementById('cp-detail');
+            box.innerHTML = '불러오는 중…';
+            const r = await adminGet(`/api/admin/clinic_poll?id=${encodeURIComponent(id)}`);
+            if (!r.ok) { box.innerHTML = `<p class="text-red-400">${escapeHtml(r.message)}</p>`; return; }
+            const d = r.data, poll = d.poll;
+            const label = {}; (d.slots || []).forEach(s => label[s.id] = s.label);
+            const slotRows = d.slots.map(s => `<tr class="border-t border-gray-800">
+                <td class="p-1.5 whitespace-nowrap text-violet-200 font-bold">${escapeHtml(s.label)}</td>
+                <td class="p-1.5 text-center text-white">${s.available.length}</td>
+                <td class="p-1.5 text-[11px] text-gray-300 word-break-keep-all">${s.available.map(n => s.confirmed.includes(n) ? `<b class="text-emerald-300">${escapeHtml(n)}✔</b>` : escapeHtml(n)).join(', ') || '<span class="text-gray-600">없음</span>'}</td></tr>`).join('');
+            const stRows = d.students.map(st => `<tr class="border-t border-gray-800">
+                <td class="p-1.5 whitespace-nowrap"><b class="text-white">${escapeHtml(st.name)}</b>${st.memo ? `<div class="text-[10.5px] text-gray-400 max-w-[160px] word-break-keep-all">💬 ${escapeHtml(st.memo)}</div>` : ''}</td>
+                <td class="p-1.5 text-[11px] text-gray-300">${st.slot_ids.map(x => escapeHtml(label[x] || x)).join(', ')}</td>
+                <td class="p-1.5"><select onchange="confirmPollSlot('${escAttr(poll.id)}', '${escAttr(st.name)}', this.value)" class="p-1 bg-gray-800 border ${st.confirmed ? 'border-emerald-600 text-emerald-200' : 'border-gray-600 text-white'} rounded text-[11px]">
+                    <option value="">${st.confirmed ? '확정 취소' : '확정하기'}</option>
+                    ${st.slot_ids.map(x => `<option value="${escAttr(x)}" ${x === st.confirmed ? 'selected' : ''}>${escapeHtml(label[x] || x)}</option>`).join('')}
+                </select></td></tr>`).join('');
+            const done = d.students.filter(s => s.confirmed).length;
+            box.innerHTML = `
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                    <b class="text-white text-[14px]">${escapeHtml(poll.title)}</b>
+                    <span class="text-[11px] ${poll.is_open ? 'text-emerald-300' : 'text-gray-400'}">${poll.is_open ? '받는 중' : '마감'}</span>
+                    <span class="text-[11px] text-gray-400">응답 ${d.students.length}명 · 확정 ${done}명</span>
+                    <span class="ml-auto flex gap-2">
+                        <button onclick="toggleClinicPoll('${escAttr(poll.id)}', ${poll.open ? 'false' : 'true'})" class="text-[11px] text-gray-300 hover:text-white">${poll.open ? '신청 닫기' : '다시 열기'}</button>
+                        <button onclick="deleteClinicPoll('${escAttr(poll.id)}')" class="text-[11px] text-red-400 hover:text-red-300">지우기</button>
+                    </span>
+                </div>
+                <p class="text-[11px] text-gray-500 mb-1">시간별 가능한 학생 (✔ = 그 시간으로 확정)</p>
+                <div class="overflow-x-auto mb-3"><table class="w-full text-xs border-collapse"><thead class="text-[10.5px] text-gray-500"><tr><th class="p-1.5 text-left">시간</th><th class="p-1.5">인원</th><th class="p-1.5 text-left">학생</th></tr></thead><tbody>${slotRows}</tbody></table></div>
+                <p class="text-[11px] text-gray-500 mb-1">학생마다 시간 확정 — 고르면 바로 '매주 클리닉'에 들어가고 학생에게 알림이 갑니다.</p>
+                ${d.students.length ? `<div class="overflow-x-auto mb-3"><table class="w-full text-xs border-collapse"><thead class="text-[10.5px] text-gray-500"><tr><th class="p-1.5 text-left">학생</th><th class="p-1.5 text-left">가능한 시간</th><th class="p-1.5 text-left">확정</th></tr></thead><tbody>${stRows}</tbody></table></div>` : '<p class="text-[12px] text-gray-500 mb-3">아직 고른 학생이 없습니다.</p>'}
+                ${d.missing.length ? `<details><summary class="text-[11px] text-amber-300 cursor-pointer">아직 안 고른 학생 ${d.missing.length}명</summary><p class="text-[11px] text-gray-300 mt-1 word-break-keep-all">${d.missing.map(escapeHtml).join(', ')}</p></details>` : '<p class="text-[11px] text-emerald-300">대상 학생이 모두 골랐습니다.</p>'}`;
+            refreshClinicPolls();
+        }
+
+        async function confirmPollSlot(pollId, name, slotId) {
+            const r = await adminPost('/api/admin/clinic_poll/confirm', { poll_id: pollId, student_name: name, slot_id: slotId });
+            if (!r.ok) { alert(r.message); }
+            await Promise.all([openClinicPoll(pollId), refreshClinics()]);
+        }
+
+        async function toggleClinicPoll(id, open) {
+            const r0 = await adminGet(`/api/admin/clinic_poll?id=${encodeURIComponent(id)}`);
+            if (!r0.ok) { alert(r0.message); return; }
+            const p = r0.data.poll;
+            const r = await adminPost('/api/admin/clinic_poll', { id, title: p.title, note: p.note || '', slots: p.slots,
+                target_classes: p.target_classes || [], deadline: p.deadline || '', subject: p.subject || '', open, push: false });
+            if (!r.ok) { alert(r.message); return; }
+            openClinicPoll(id);
+        }
+
+        async function deleteClinicPoll(id) {
+            if (!confirm('이 신청을 지울까요? 이미 확정해서 넣은 매주 클리닉은 그대로 남습니다.')) return;
+            const r = await adminPost('/api/admin/clinic_poll/delete', { id });
+            if (!r.ok) { alert(r.message); return; }
+            POLL_OPEN_ID = '';
+            document.getElementById('cp-detail').innerHTML = '<p class="text-[12px] text-gray-500 p-3">지웠습니다.</p>';
+            refreshClinicPolls();
+        }
+
+        // ─────────────────────────────────────────────
+        // 클리닉 시간 신청 (학생) — 바탕화면 맨 위에 '클리닉 시간을 골라 주세요'
+        // ─────────────────────────────────────────────
+        let MY_CLINIC_POLLS = [];
+
+        async function loadMyClinicPolls() {
+            const host = document.getElementById('clinic-poll-banner');
+            if (!host || !currentUser || currentUser.isAdmin) return;
+            try {
+                const res = await fetch(`${API_URL}/api/student/clinic_polls?student_name=${encodeURIComponent(currentUser.name)}`);
+                const d = await res.json();
+                if (!d.success) return;
+                MY_CLINIC_POLLS = d.polls || [];
+            } catch (e) { return; }
+            renderMyClinicPolls();
+        }
+
+        function renderMyClinicPolls() {
+            const host = document.getElementById('clinic-poll-banner');
+            const polls = MY_CLINIC_POLLS.filter(p => p.open || p.confirmed);
+            if (!polls.length) { host.classList.add('hidden'); host.innerHTML = ''; return; }
+            host.classList.remove('hidden');
+            host.innerHTML = polls.map(p => {
+                if (!p.open) return `<div class="rounded-xl border border-emerald-700/60 bg-emerald-900/20 px-4 py-3 mb-3">
+                    <p class="text-[13px] text-emerald-200"><i class="fa-solid fa-circle-check mr-1"></i>${escapeHtml(p.title)} — <b class="text-white">매주 ${escapeHtml(p.confirmed)}</b>로 정해졌어요.</p></div>`;
+                const mine = new Set(p.my_slot_ids || []);
+                return `<div class="rounded-xl border border-violet-600/70 bg-violet-900/25 px-4 py-3 mb-3">
+                    <p class="text-[15px] font-black text-violet-200"><i class="fa-solid fa-calendar-check mr-1"></i>${escapeHtml(p.title)}</p>
+                    <p class="text-[12px] text-gray-300 mt-0.5 word-break-keep-all">${escapeHtml(p.note || '클리닉에 올 수 있는 시간을 모두 골라 주세요. 원장님이 보고 하나로 정해 드려요.')}</p>
+                    ${p.deadline ? `<p class="text-[11px] text-amber-300 mt-0.5">마감 ${escapeHtml(p.deadline)}</p>` : ''}
+                    ${p.confirmed ? `<p class="text-[12px] text-emerald-300 mt-1"><i class="fa-solid fa-circle-check mr-1"></i>매주 <b>${escapeHtml(p.confirmed)}</b>로 정해졌어요.</p>` : ''}
+                    <div class="flex flex-wrap gap-1.5 mt-2" data-poll="${escAttr(p.id)}">
+                        ${p.slots.map(s => `<label class="cursor-pointer"><input type="checkbox" value="${escAttr(s.id)}" ${mine.has(s.id) ? 'checked' : ''} class="peer sr-only"><span class="block px-3 py-2 rounded-lg text-[13px] font-bold border border-gray-600 bg-[#1e2430] text-gray-300 peer-checked:bg-violet-600 peer-checked:border-violet-400 peer-checked:text-white transition">${escapeHtml(s.label)}</span></label>`).join('')}
+                    </div>
+                    <input id="cpm-${escAttr(p.id)}" value="${escAttr(p.my_memo || '')}" maxlength="200" placeholder="하고 싶은 말 (선택) — 예: 화요일은 5시 반부터 돼요" class="w-full mt-2 p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-[12px] outline-none">
+                    <button onclick="submitClinicPoll('${escAttr(p.id)}')" class="mt-2 w-full md:w-auto px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-lg text-[13px]">${p.answered ? '고친 시간 다시 보내기' : '이 시간들로 보내기'}</button>
+                    ${p.answered ? '<span class="text-[11px] text-gray-400 ml-2">보냈어요 · 마감 전까지 고칠 수 있어요</span>' : ''}
+                </div>`;
+            }).join('');
+        }
+
+        async function submitClinicPoll(pollId) {
+            const box = document.querySelector(`#clinic-poll-banner [data-poll="${CSS.escape(pollId)}"]`);
+            const ids = [...box.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value);
+            if (!ids.length) { alert('올 수 있는 시간을 하나 이상 골라 주세요.'); return; }
+            const memo = (document.getElementById('cpm-' + pollId) || {}).value || '';
+            try {
+                const res = await fetch(`${API_URL}/api/student/clinic_poll/answer`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ poll_id: pollId, student_name: currentUser.name, slot_ids: ids, memo }) });
+                const d = await res.json();
+                if (!d.success) { alert(d.detail || '보내지 못했어요.'); return; }
+                alert(`보냈어요! (${d.count}개 시간) 원장님이 보고 정해 주시면 알림이 와요.`);
+            } catch (e) { alert('서버에 연결하지 못했어요. 인터넷을 확인해 주세요.'); return; }
+            loadMyClinicPolls();
+        }
+
         async function loadMySchedule() {
             if (!currentUser || currentUser.isAdmin) return;
+            loadMyClinicPolls();
             try {
                 const res = await fetch(`${API_URL}/api/student/schedule?student_name=${encodeURIComponent(currentUser.name)}`);
                 const d = await res.json();
