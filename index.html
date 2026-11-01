@@ -2644,22 +2644,23 @@
                         <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
                             <div class="flex flex-wrap items-center gap-2 mb-2">
                                 <h3 class="text-white font-black text-lg mr-2"><i class="fa-solid fa-table-list mr-2 text-emerald-400"></i>학생 한눈에 보기</h3>
-                                <input type="month" id="ov-month" onchange="loadOverview()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                                <select id="ov-weeks" onchange="loadOverview()" title="학생 줄을 누르면 펼쳐지는 지난 기록의 길이" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm"><option value="4">지난 4주까지</option><option value="8" selected>지난 8주까지</option><option value="12">지난 12주까지</option></select>
                                 <select id="ov-class" onchange="renderOverview()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm"><option value="">모든 반</option></select>
                                 <input id="ov-search" oninput="renderOverview()" placeholder="이름 찾기" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm w-32">
                                 <select id="ov-sort" onchange="renderOverview()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
-                                    <option value="class">반 순</option><option value="absent">결석 많은 순</option><option value="late">지각 많은 순</option><option value="low">평균 낮은 순</option><option value="high">평균 높은 순</option>
+                                    <option value="class">반 순</option><option value="absent">이번 주 결석 많은 순</option><option value="late">이번 주 지각 많은 순</option><option value="hw">이번 주 안 낸 숙제 많은 순</option><option value="low">평균 낮은 순</option><option value="high">평균 높은 순</option>
                                 </select>
                                 <button onclick="loadOverview()" class="px-3 py-2 rounded bg-gray-700 text-gray-200 text-sm"><i class="fa-solid fa-rotate-right"></i></button>
                             </div>
-                            <p class="text-[11px] text-gray-400 mb-2">출결은 홈페이지 키오스크(logyedu.com)에서, 성적은 이 프로그램의 모의고사 · 퀴즈 · 과제 · 단어시험에서 가져옵니다. 이름을 누르면 그 학생 기록이 열립니다.</p>
+                            <p class="text-[11px] text-gray-400 mb-2">출석 · 지각 · 결석 · 클리닉 · 숙제는 <b class="text-gray-200">이번 주(월~일)</b> 것입니다. <b class="text-gray-200">학생 줄을 누르면</b> 지난 주들이 펼쳐집니다. 출결은 홈페이지 키오스크(logyedu.com), 숙제 · 성적은 이 프로그램 기록입니다. 이름을 누르면 그 학생 기록으로 갑니다.</p>
                             <div id="ov-summary" class="flex flex-wrap gap-2 mb-2 text-xs"></div>
                             <div id="ov-warn" class="hidden text-xs text-amber-300 bg-amber-900/30 border border-amber-800 rounded p-2 mb-2"></div>
                             <div class="overflow-x-auto"><table class="w-full text-sm text-left">
                                 <thead class="text-[11px] text-gray-400 border-b border-gray-700"><tr>
                                     <th class="p-2">학생</th><th class="p-2">반</th><th class="p-2">오늘</th>
                                     <th class="p-2 text-center">출석</th><th class="p-2 text-center">지각</th><th class="p-2 text-center">결석</th><th class="p-2 text-center">클리닉</th>
-                                    <th class="p-2 text-center">시험 수</th><th class="p-2 text-center">평균</th><th class="p-2">최근 성적</th></tr></thead>
+                                    <th class="p-2">숙제 <span class="font-normal text-gray-500">(이번 주)</span></th>
+                                    <th class="p-2 text-center">평균</th><th class="p-2">최근 성적</th></tr></thead>
                                 <tbody id="ov-body"><tr><td colspan="10" class="p-6 text-center text-gray-500">불러오는 중…</td></tr></tbody>
                             </table></div>
                         </div>
@@ -6401,13 +6402,13 @@ let lavUid = 0;
         function closeExamRoomStrict() { clearInterval(examTimerInterval); isDrawing=false; document.getElementById('pdf-inner-container').innerHTML=''; document.getElementById('exam-prep-overlay').style.display='none'; if(wsLive) wsLive.close(); }
         function closeProgram() { window.location.hash='dashboard'; clearInterval(activeQuizTimer); clearInterval(activeVocabTimer); }
 
-        // ── 학생 한눈에 보기: 키오스크 출결 + 성적 ──
+        // ── 학생 한눈에 보기: 이번 주 출결 · 숙제 + 성적, 줄을 누르면 지난 주들 ──
         let OV = { rows: [] };
+        const OV_OPEN = new Set();          // 펼쳐 둔 학생
         async function loadOverview() {
-            const mEl = document.getElementById('ov-month');
-            if (!mEl.value) { const d = new Date(); mEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+            const weeks = document.getElementById('ov-weeks').value || '8';
             document.getElementById('ov-body').innerHTML = '<tr><td colspan="10" class="p-6 text-center text-gray-500">불러오는 중… (홈페이지 출결까지 10초쯤)</td></tr>';
-            const r = await adminGet(`/api/admin/overview?month=${encodeURIComponent(mEl.value)}`);
+            const r = await adminGet(`/api/admin/overview?weeks=${encodeURIComponent(weeks)}`);
             if (!r.ok) { document.getElementById('ov-body').innerHTML = `<tr><td colspan="10" class="p-6 text-center text-red-400">${escapeHtml(r.message || '불러오지 못했습니다.')}</td></tr>`; return; }
             OV = r.data;
             const classes = Array.from(new Set((OV.rows || []).map(x => x.class_name).filter(Boolean))).sort();
@@ -6417,9 +6418,30 @@ let lavUid = 0;
             const warn = document.getElementById('ov-warn');
             const msgs = [];
             if (!OV.attendance_ok) msgs.push('키오스크 출결을 가져오지 못했습니다: ' + (OV.attendance_error || ''));
+            else if (!OV.attendance_by_day) msgs.push('홈페이지 서버가 아직 날짜별 출결을 보내지 않아 출석 · 지각 · 클리닉은 비어 있습니다(홈페이지 배포 후 채워집니다). 결석은 보입니다.');
             if ((OV.kiosk_only || []).length) msgs.push(`키오스크에만 있는 이름(이 프로그램 학생 명단과 이름이 다름): ${OV.kiosk_only.join(', ')}`);
             warn.innerHTML = msgs.map(escapeHtml).join('<br>'); warn.classList.toggle('hidden', !msgs.length);
             renderOverview();
+        }
+
+        function toggleOverviewRow(name) {
+            if (OV_OPEN.has(name)) OV_OPEN.delete(name); else OV_OPEN.add(name);
+            renderOverview();
+        }
+
+        // 숙제 한 개 → 작은 표시
+        function ovHwChip(h) {
+            const st = { submitted: ['✔', 'text-emerald-300', '냄'], late: ['늦게', 'text-amber-300', '기한 뒤 냄'],
+                         missing: ['✕', 'text-red-400', '안 냄'], pending: ['–', 'text-gray-500', '마감 전'] }[h.status] || ['?', 'text-gray-400', ''];
+            const tip = `${h.title} · ${st[2]}${h.deadline ? ' · 마감 ' + h.deadline : ''}${h.percent != null ? ' · ' + h.percent + '%' : ''}`;
+            return `<span class="inline-block mr-1.5 whitespace-nowrap" title="${escAttr(tip)}"><b class="${st[1]}">${st[0]}</b> <span class="text-gray-400">${escapeHtml((h.title || '').slice(0, 12))}</span></span>`;
+        }
+        function ovHwSummary(hw) {
+            if (!hw || !hw.total) return '<span class="text-gray-600 text-xs">숙제 없음</span>';
+            const done = hw.submitted + hw.late, due = hw.total - hw.pending;   // 마감 지난(또는 마감 없는) 숙제 중 낸 것
+            return (due ? `<b class="${hw.missing ? 'text-red-300' : 'text-emerald-300'}" title="마감 지난 숙제 ${due}개 중 낸 것">${done}/${due}</b>` : '')
+                + (hw.missing ? ` <span class="text-red-400 text-[11px]">안 냄 ${hw.missing}</span>` : '')
+                + (hw.pending ? ` <span class="text-gray-500 text-[11px]">마감 전 ${hw.pending}</span>` : '');
         }
 
         function renderOverview() {
@@ -6428,21 +6450,27 @@ let lavUid = 0;
             const sort = document.getElementById('ov-sort').value;
             let rows = (OV.rows || []).filter(x => (!cls || x.class_name === cls) && (!q || x.name.includes(q)));
             const A = x => x.attendance || {};
+            const W = x => (x.weeks || [])[0] || { homework: {} };     // 이번 주
             const cmp = {
-                absent: (a, b) => (A(b).absent || 0) - (A(a).absent || 0),
-                late: (a, b) => (A(b).late || 0) - (A(a).late || 0),
+                absent: (a, b) => (W(b).absent || 0) - (W(a).absent || 0),
+                late: (a, b) => (W(b).late || 0) - (W(a).late || 0),
+                hw: (a, b) => (W(b).homework.missing || 0) - (W(a).homework.missing || 0),
                 low: (a, b) => (a.avg ?? 999) - (b.avg ?? 999),
                 high: (a, b) => (b.avg ?? -1) - (a.avg ?? -1),
             }[sort];
             if (cmp) rows = rows.slice().sort(cmp);
-            const sum = (k) => rows.reduce((t, x) => t + (A(x)[k] || 0), 0);
+            const sumW = (k) => rows.reduce((t, x) => t + (W(x)[k] || 0), 0);
+            const hwMissing = rows.reduce((t, x) => t + (W(x).homework.missing || 0), 0);
             const avgs = rows.map(x => x.avg).filter(v => v !== null && v !== undefined);
             const todayIn = rows.filter(x => ['등원', '지각', '하원', '클리닉'].includes(A(x).status)).length;
             const todayMissing = rows.filter(x => ['미등원', '결석'].includes(A(x).status)).length;
+            const thisWeek = ((OV.rows || [])[0] && OV.rows[0].weeks && OV.rows[0].weeks[0]) ? OV.rows[0].weeks[0].label : '';
             const chip = (label, v, c) => `<span class="px-2 py-1 rounded-full bg-[#151922] border border-gray-700 ${c || 'text-gray-200'}">${label} <b>${v}</b></span>`;
-            document.getElementById('ov-summary').innerHTML = chip('학생', rows.length) + chip('오늘 온 학생', todayIn, 'text-emerald-300') +
-                chip('오늘 안 온 학생', todayMissing, 'text-red-300') + chip('이 달 지각', sum('late'), 'text-amber-300') +
-                chip('이 달 결석', sum('absent'), 'text-red-300') + chip('평균 점수', avgs.length ? (avgs.reduce((a, b) => a + b, 0) / avgs.length).toFixed(1) : '-', 'text-sky-300');
+            document.getElementById('ov-summary').innerHTML = (thisWeek ? chip('이번 주', thisWeek, 'text-gray-300') : '') + chip('학생', rows.length) +
+                chip('오늘 온 학생', todayIn, 'text-emerald-300') + chip('오늘 안 온 학생', todayMissing, 'text-red-300') +
+                chip('이번 주 지각', sumW('late'), 'text-amber-300') + chip('이번 주 결석', sumW('absent'), 'text-red-300') +
+                chip('이번 주 안 낸 숙제', hwMissing, 'text-red-300') +
+                chip('평균 점수', avgs.length ? (avgs.reduce((a, b) => a + b, 0) / avgs.length).toFixed(1) : '-', 'text-sky-300');
             const badge = s => {
                 const c = { '등원': 'bg-orange-900/60 text-orange-200', '지각': 'bg-red-900/60 text-red-200', '하원': 'bg-emerald-900/60 text-emerald-200',
                             '결석': 'bg-red-700 text-white', '미등원': 'bg-amber-900/60 text-amber-200', '클리닉': 'bg-violet-900/60 text-violet-200',
@@ -6450,23 +6478,43 @@ let lavUid = 0;
                 return s ? `<span class="px-2 py-0.5 rounded-full text-[11px] ${c}">${escapeHtml(s)}</span>` : '<span class="text-gray-600">-</span>';
             };
             const pctColor = p => p === null || p === undefined ? 'text-gray-400' : p >= 80 ? 'text-emerald-300' : p >= 60 ? 'text-sky-300' : 'text-red-300';
+            const num = (v, on, color) => v === undefined || v === null ? '<span class="text-gray-600">-</span>'
+                : `<span class="${v ? color : 'text-gray-500'}">${v}</span>`;
+            const short = d => String(d || '').slice(5).replace('-', '/');
+
             document.getElementById('ov-body').innerHTML = rows.length ? rows.map(x => {
-                const a = A(x);
+                const a = A(x), w = W(x), open = OV_OPEN.has(x.name);
                 const times = [a.checkIn && `등원 ${a.checkIn}`, a.checkOut && `하원 ${a.checkOut}`, a.lateToday && `지각 ${a.lateToday}분`, a.clinic && `클리닉 ${a.clinic}`].filter(Boolean).join(' · ');
-                const absentTitle = (a.absentDays || []).length ? `결석한 날: ${a.absentDays.join(', ')}` : '';
                 const recent = (x.recent || []).map(t => `<span class="inline-block mr-2 whitespace-nowrap" title="${escAttr(t.type + ' · ' + t.date)}"><span class="text-gray-400">${escapeHtml((t.title || '').slice(0, 14))}</span> <b class="${pctColor(t.pct)}">${escapeHtml(t.score)}</b></span>`).join('');
-                return `<tr class="border-b border-gray-800 hover:bg-[#151922]">
-                    <td class="p-2 whitespace-nowrap"><button class="text-white font-bold hover:text-emerald-300 underline-offset-2 hover:underline" onclick="openOverviewStudent('${escAttr(x.name)}')">${escapeHtml(x.name)}</button>
-                        <span class="block text-[10px] text-gray-500">${escapeHtml([x.school, x.grade].filter(Boolean).join(' '))}</span></td>
+                const hwItems = (w.homework.items || []);
+                const main = `<tr class="border-b border-gray-800 hover:bg-[#151922] cursor-pointer ${open ? 'bg-[#151922]' : ''}" onclick="toggleOverviewRow('${escAttr(x.name)}')" title="눌러서 지난 주 기록 ${open ? '접기' : '펼치기'}">
+                    <td class="p-2 whitespace-nowrap"><span class="text-gray-500 text-[10px] mr-1">${open ? '▼' : '▶'}</span><button class="text-white font-bold hover:text-emerald-300 underline-offset-2 hover:underline" onclick="event.stopPropagation(); openOverviewStudent('${escAttr(x.name)}')">${escapeHtml(x.name)}</button>
+                        <span class="block text-[10px] text-gray-500 ml-3">${escapeHtml([x.school, x.grade].filter(Boolean).join(' '))}</span></td>
                     <td class="p-2 text-xs text-gray-300 whitespace-nowrap">${escapeHtml(x.class_name || '-')}</td>
                     <td class="p-2 whitespace-nowrap">${x.attendance ? badge(a.status) : '<span class="text-gray-600 text-xs">키오스크 기록 없음</span>'}<span class="block text-[10px] text-gray-500">${escapeHtml(times)}</span></td>
-                    <td class="p-2 text-center text-gray-200">${x.attendance ? (a.present || 0) : '-'}</td>
-                    <td class="p-2 text-center ${(a.late || 0) ? 'text-amber-300 font-bold' : 'text-gray-500'}">${x.attendance ? (a.late || 0) : '-'}</td>
-                    <td class="p-2 text-center ${(a.absent || 0) ? 'text-red-300 font-bold' : 'text-gray-500'}" title="${escAttr(absentTitle)}">${x.attendance ? (a.absent || 0) : '-'}</td>
-                    <td class="p-2 text-center text-violet-200">${x.attendance ? (a.clinicDays || 0) : '-'}</td>
-                    <td class="p-2 text-center text-gray-200">${x.tests || 0}</td>
+                    <td class="p-2 text-center">${num(w.present, 1, 'text-gray-200')}</td>
+                    <td class="p-2 text-center font-bold">${num(w.late, 1, 'text-amber-300')}</td>
+                    <td class="p-2 text-center font-bold" title="${escAttr((w.absent_days || []).length ? '결석한 날: ' + w.absent_days.join(', ') : '')}">${num(w.absent, 1, 'text-red-300')}</td>
+                    <td class="p-2 text-center">${num(w.clinic, 1, 'text-violet-200')}</td>
+                    <td class="p-2 text-xs">${ovHwSummary(w.homework)}${hwItems.length ? `<div class="mt-0.5">${hwItems.slice(0, 3).map(ovHwChip).join('')}${hwItems.length > 3 ? `<span class="text-gray-500">외 ${hwItems.length - 3}</span>` : ''}</div>` : ''}</td>
                     <td class="p-2 text-center font-bold ${pctColor(x.avg)}">${x.avg === null || x.avg === undefined ? '-' : x.avg + '점'}</td>
-                    <td class="p-2 text-xs">${recent || '<span class="text-gray-600">이 달 시험 없음</span>'}</td></tr>`;
+                    <td class="p-2 text-xs">${recent || '<span class="text-gray-600">최근 시험 없음</span>'}</td></tr>`;
+                if (!open) return main;
+                const weeks = x.weeks || [];
+                const tot = k => weeks.reduce((t, v) => t + (v[k] || 0), 0);
+                const hwTot = k => weeks.reduce((t, v) => t + ((v.homework || {})[k] || 0), 0);
+                const weekRows = weeks.map(v => `<tr class="border-t border-gray-800 align-top">
+                        <td class="p-1.5 whitespace-nowrap ${v.this_week ? 'text-emerald-300 font-bold' : 'text-gray-300'}">${escapeHtml(v.label)}${v.this_week ? ' <span class="text-[10px]">이번 주</span>' : ''}</td>
+                        <td class="p-1.5 text-center">${num(v.present, 1, 'text-gray-200')}</td>
+                        <td class="p-1.5 text-center">${num(v.late, 1, 'text-amber-300')}${(v.late_days || []).length ? `<span class="block text-[10px] text-gray-500">${v.late_days.map(short).join(', ')}</span>` : ''}</td>
+                        <td class="p-1.5 text-center">${num(v.absent, 1, 'text-red-300')}${(v.absent_days || []).length ? `<span class="block text-[10px] text-gray-500">${v.absent_days.map(short).join(', ')}</span>` : ''}</td>
+                        <td class="p-1.5 text-center">${num(v.clinic, 1, 'text-violet-200')}</td>
+                        <td class="p-1.5">${ovHwSummary(v.homework)}${(v.homework.items || []).length ? `<div class="mt-0.5">${v.homework.items.map(ovHwChip).join('')}</div>` : ''}</td></tr>`).join('');
+                return main + `<tr class="border-b border-gray-700 bg-[#0f1219]"><td colspan="10" class="px-4 py-3">
+                    <p class="text-[11px] text-gray-400 mb-1.5"><b class="text-white">${escapeHtml(x.name)}</b> 주별 기록 (최근 ${weeks.length}주) — 합계: 출석 ${tot('present')} · 지각 ${tot('late')} · 결석 ${tot('absent')} · 클리닉 ${tot('clinic')} · 숙제 낸 것 ${hwTot('submitted') + hwTot('late')} / 안 낸 것 ${hwTot('missing')}</p>
+                    <div class="overflow-x-auto"><table class="w-full text-xs border-collapse"><thead class="text-[10.5px] text-gray-500"><tr>
+                        <th class="p-1.5 text-left">주</th><th class="p-1.5">출석</th><th class="p-1.5">지각</th><th class="p-1.5">결석</th><th class="p-1.5">클리닉</th><th class="p-1.5 text-left">숙제</th></tr></thead>
+                        <tbody>${weekRows}</tbody></table></div></td></tr>`;
             }).join('') : '<tr><td colspan="10" class="p-6 text-center text-gray-500">조건에 맞는 학생이 없습니다.</td></tr>';
         }
 
