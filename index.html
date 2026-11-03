@@ -3476,8 +3476,12 @@
                                 (한 줄로 죽 적으면 쉼표에서 칸이 나뉩니다).<br>
                                 <b class="text-violet-300">복수 정답</b> — <b class="text-white">3/5</b> = 3번 · 5번 <b>둘 중 아무거나</b> 맞음(이의 제기로 정답 2개 인정) ·
                                 <b class="text-white">3+5</b> = 3번과 5번을 <b>둘 다</b> 골라야 맞음('두 개 고르시오' 문항).
-                                번호를 붙인 줄에 <b class="text-white">2번 ③⑤</b> 처럼 적어도 '둘 중 아무거나'로 읽습니다.</p>
-                            <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4&#10;단답형 · 복수 정답은 한 줄에 하나씩&#10;1번 3&#10;2번 3/5   (둘 중 아무거나)&#10;3번 2+4   (둘 다 골라야)&#10;4번 훈민정음" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
+                                번호를 붙인 줄에 <b class="text-white">2번 ③⑤</b> 처럼 적어도 '둘 중 아무거나'로 읽습니다.<br>
+                                <b class="text-sky-300">분수 · 수식</b> — <b class="text-white">7/8</b> · <b class="text-white">1 1/2</b>(대분수) · <b class="text-white">0.75</b> · <b class="text-white">-2</b> · <b class="text-white">2x+1</b> · <b class="text-white">x^2</b> · <b class="text-white">√3</b>(또는 루트3) · <b class="text-white">2√3</b> · <b class="text-white">3π</b> 처럼 적고, <b class="text-amber-300">한 줄에 하나씩</b>.
+                                <b class="text-white">1/2 · 3/4</b> 처럼 1~5 숫자로만 된 분수는 '3번 또는 4번'과 구별이 안 되니 아래 <b class="text-sky-300">수학 과제</b>를 켜거나 앞에 <b class="text-white">=</b> 를 붙여(<b class="text-white">=3/4</b>) 주세요.
+                                학생이 <b class="text-white">0.75</b> · <b class="text-white">6/8</b> · <b class="text-white">루트3</b> 처럼 다르게 써도 같은 값이면 맞게 채점됩니다.</p>
+                            <label class="flex items-center gap-2 text-[12px] text-sky-200 mb-1 cursor-pointer"><input type="checkbox" id="hw-math" onchange="updateHomeworkAnswerCount()" class="w-4 h-4 accent-sky-500"> <b>수학 과제</b> <span class="text-gray-400">— '/'와 '+'를 복수 정답이 아니라 분수 · 식으로 읽습니다 (1/2, 3/4, 2+√3 …)</span></label>
+                            <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4&#10;단답형 · 분수 · 복수 정답은 한 줄에 하나씩&#10;1번 3&#10;2번 3/5   (둘 중 아무거나)&#10;3번 2+4   (둘 다 골라야)&#10;4번 3/4   (분수)&#10;5번 2x+1&#10;6번 훈민정음" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span id="hw-answers-count" class="text-[11px] text-gray-500">정답표를 넣으면 OMR 자동 채점이 켜집니다.</span>
                                 <button onclick="pullFromQuestionBank()" class="ml-2 text-[11px] font-bold text-sky-300 hover:text-sky-200">
@@ -12112,7 +12116,7 @@ let lavUid = 0;
         function hwExtraRows() {
             return [...document.querySelectorAll('#hw-extra-list > div')].map(r => ({
                 title: r.querySelector('.hw-extra-title').value.trim(),
-                answers: r.querySelector('.hw-extra-answers').value.trim(),
+                answers: mathifyAnswers(r.querySelector('.hw-extra-answers').value.trim()),
             })).filter(r => r.title || r.answers);
         }
         function clearHwExtras() {
@@ -12122,7 +12126,7 @@ let lavUid = 0;
 
         async function createHomework() {
             const t = document.getElementById('hw-title').value.trim();
-            const answers = document.getElementById('hw-answers').value.trim();
+            const answers = mathifyAnswers(document.getElementById('hw-answers').value.trim());
             if (!t) return alert("과제명을 입력해주세요.");
             if (!answers && hwFilesAdmin.length === 0)
                 return alert("정답표를 넣거나 해답지 파일을 올려주세요.\n(정답표를 넣으면 학생이 OMR로 답만 마킹해도 자동 채점됩니다)");
@@ -12218,24 +12222,37 @@ let lavUid = 0;
             document.getElementById('hw-group').value = `${d.getMonth() + 1}월 ${d.getDate()}일 과제`;
         }
 
+        // 수학 과제: 보기 번호처럼 보이는 '3/4' · '2+3' 을 분수 · 식 그대로 쓰게 '=' 를 붙인다(서버 is_choice_combo 와 같은 규칙)
+        function isChoiceComboJS(a) {
+            a = String(a || '').trim();
+            if (!a || a.startsWith('=') || !/[\/+]/.test(a)) return false;
+            return a.split(/[\/+]/).every(x => /^[1-5]$/.test(x.trim()));
+        }
+        function mathifyAnswers(text) {
+            const math = document.getElementById('hw-math') && document.getElementById('hw-math').checked;
+            if (!math) return text;
+            const list = parseAnswerListJS(text).map(a => isChoiceComboJS(a) ? '=' + a : a);
+            const needsLines = list.some(a => /[,\s]/.test(a) || !/^[1-5]$|^-$/.test(a));
+            return needsLines ? list.map((a, i) => `${i + 1}번 ${a}`).join('\n') : list.join(', ');
+        }
         function updateHomeworkAnswerCount() {
             const el = document.getElementById('hw-answers');
             const out = document.getElementById('hw-answers-count');
             if (!el || !out) return;
-            const list = parseAnswerListJS(el.value);
+            const list = parseAnswerListJS(mathifyAnswers(el.value));
             const n = list.length;
             if (!n) { out.innerText = '정답표를 넣으면 OMR 자동 채점이 켜집니다.'; return; }
             // 💡 어떻게 읽었는지 번호마다 보여 준다 — 복수 정답이 한 칸으로 들어갔는지 바로 확인할 수 있게
             const circ = d => '①②③④⑤'[Number(d) - 1] || d;
             const label = a => {
                 if (a === '-') return '<span class="text-gray-500">안 냄</span>';
+                if (!isCombo(a)) return escapeHtml(String(a).replace(/^=/, ''));   // '=3/4'(분수) · '2x+1'(식) 은 글자 그대로
                 const ors = String(a).split('/').filter(Boolean);
-                const choice = ors.every(o => o.split('+').every(x => /^[1-5]$/.test(x.trim())));
-                if (!choice) return escapeHtml(a);
                 const txt = ors.map(o => o.split('+').map(x => circ(x.trim())).join('와 ')).join(' 또는 ');
                 return (ors.length > 1 || a.includes('+')) ? `<b class="text-violet-300">${txt}</b>` : txt;
             };
-            const multi = list.filter(a => /[\/+]/.test(a)).length;
+            const isCombo = isChoiceComboJS;
+            const multi = list.filter(isCombo).length;
             out.innerHTML = `정답 <b class="text-emerald-300">${n}문항</b>이 인식되었습니다${multi ? ` · 복수 정답 <b class="text-violet-300">${multi}문항</b>` : ''}.
                 <span class="block mt-1 leading-relaxed text-gray-400">${list.map((a, i) => `<span class="mr-2 whitespace-nowrap">${i + 1})${label(a)}</span>`).join('')}</span>`;
         }
@@ -12304,9 +12321,18 @@ let lavUid = 0;
             } catch (e) { hideLoader(); return alert("정답표를 보내지 못했습니다: " + e.message); }
             hideLoader();
             if (!data || !data.success) return alert((data && data.detail) || "정답표를 읽지 못했습니다.");
-            const list = data.answers || [];
-            if (!list.length) return alert("사진에서 정답을 찾지 못했습니다.");
-            document.getElementById('hw-answers').value = list.join(', ');
+            // 💡 서버는 {"1": 3, "2": "3/4"} 처럼 번호별로 준다. 번호 순서대로 줄을 세우고, 빠진 번호는 '-'로 둔다.
+            //    (예전에는 이것을 목록으로 알고 읽어 늘 '정답을 찾지 못했습니다'가 떴다)
+            const got = data.answers || {};
+            const nums = Object.keys(got).map(Number).filter(n => n >= 1);
+            if (!nums.length) return alert("사진에서 정답을 찾지 못했습니다.\n번호와 정답이 또렷하게 보이는 사진인지 확인해 주세요.");
+            const maxNo = Math.max(...nums);
+            const list = [], missing = [];
+            for (let i = 1; i <= maxNo; i++) { if (got[i] === undefined || got[i] === '') { list.push('-'); missing.push(i); } else list.push(String(got[i])); }
+            // 분수 · 식 · 쉼표가 든 답이 있으면 한 줄에 하나씩(번호 붙여) 적어야 칸이 안 밀린다
+            const needsLines = list.some(a => /[,\s]/.test(a) || !/^[1-5]$|^-$/.test(a));
+            document.getElementById('hw-answers').value = needsLines ? list.map((a, i) => `${i + 1}번 ${a}`).join('\n') : list.join(', ');
+            if (missing.length) showToast(`${missing.join(', ')}번은 사진에서 못 읽어 '-'(안 냄)로 두었습니다. 직접 채워 주세요.`);
             // 💡 해설은 정답을 읽은 '그 한 번의 호출'에서 같이 왔다 — 추가 비용 없음
             HW_EXPLANATIONS = data.explanations || {};
             updateHomeworkAnswerCount();
