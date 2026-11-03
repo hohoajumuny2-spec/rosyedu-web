@@ -2446,6 +2446,7 @@
                                 <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="admin-nav-btn">강의</button>
                                 <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="admin-nav-btn">대신 채점</button>
                                 <button onclick="switchAdminTab('admin-schedule')" id="btn-admin-schedule" class="admin-nav-btn">시험일정 · 클리닉</button>
+                                <button onclick="switchAdminTab('admin-clinic')" id="btn-admin-clinic" class="admin-nav-btn">클리닉 운영 🩺</button>
                             </div>
                         </div>
                         <div class="admin-nav-group">
@@ -3328,6 +3329,26 @@
                     </div>
 
                     <!-- 영어 단어 시험 탭 -->
+                    <!-- 키오스크 클리닉 관리자 탭 시작 -->
+                    <!-- 클리닉 운영 — 키오스크 클리닉 (clinic.py · clinic-kiosk.html) -->
+                    <div id="admin-clinic" class="admin-tab-content" style="display:none">
+                        <div class="flex flex-wrap gap-1.5 mb-4" id="clinic-admin-subtabs">
+                            <button onclick="clinicAdminTab('today')" data-tab="today" class="clinic-subtab px-3 py-1.5 rounded-lg text-xs font-bold bg-lime-600 text-white">오늘 현황</button>
+                            <button onclick="clinicAdminTab('programs')" data-tab="programs" class="clinic-subtab px-3 py-1.5 rounded-lg text-xs font-bold bg-[#151922] border border-gray-700 text-gray-300">📄 클리닉 프로그램 (문제 올리기)</button>
+                            <button onclick="clinicAdminTab('setup')" data-tab="setup" class="clinic-subtab px-3 py-1.5 rounded-lg text-xs font-bold bg-[#151922] border border-gray-700 text-gray-300">키오스크 · 출력 설정</button>
+                            <button onclick="clinicAdminTab('parent')" data-tab="parent" class="clinic-subtab px-3 py-1.5 rounded-lg text-xs font-bold bg-[#151922] border border-gray-700 text-gray-300">학부모 문구</button>
+                        </div>
+                        <div class="bg-[#151922] border border-gray-700 rounded-xl p-3 mb-4 text-[12px] text-gray-400 leading-relaxed word-break-keep-all">
+                            <b class="text-lime-300">이렇게 돌아갑니다.</b> 학생이 키오스크에서 이름 → <b>클리닉 등원</b> → 오늘의 안내 → <b>1단계 문제 출력</b>(복사기) → 종이로 풀기 →
+                            교실 태블릿에서 이름 → 답 입력 → 점수·틀린 문제 → <b>왜 틀렸는지 고르기</b> → 문제별 <b>주목할 점</b> + <b>해설지 출력</b> → 다시 풀어 답 입력 →
+                            그래도 틀린 문제는 <b>국최 선생님께 질문</b>(질문 게시판) → 1단계 점수가 기준 이상이면 <b>높은 레벨</b>, 미만이면 <b>기초 레벨</b> 문제 출력 → 기초 레벨을 통과하면 높은 레벨로.
+                        </div>
+                        <div id="clinic-admin-today" class="clinic-admin-pane"></div>
+                        <div id="clinic-admin-programs" class="clinic-admin-pane hidden"></div>
+                        <div id="clinic-admin-setup" class="clinic-admin-pane hidden"></div>
+                        <div id="clinic-admin-parent" class="clinic-admin-pane hidden"></div>
+                    </div>
+                    <!-- 키오스크 클리닉 관리자 탭 끝 -->
                     <div id="admin-vocab" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4" style="display:none">
                         <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('vocab')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>단어 시험 응시 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-vocab" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-vocab" oninput="renderActivity('vocab')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('vocab')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-vocab" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
@@ -6563,6 +6584,7 @@ let lavUid = 0;
             if(id==='admin-quiz'){loadAdminQuizzes();}
             if(id==='admin-dm'){refreshAdminDmThreads();}
             if(id==='admin-vocab'){loadVocabAdmin();}
+            if(id==='admin-clinic'){loadClinicAdmin();}
 
             // 💡 드물게(느린 네트워크·브라우저 확장 프로그램 간섭 등으로 추정) 이 탭이
             // 방금 켜졌는데도 잠시 뒤 다시 보면 숨겨진 채로 남아있는 사례가 보고됐다.
@@ -17534,6 +17556,268 @@ let lavUid = 0;
         }
 
         async function deleteLecture(id) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/lecture/${id}`,{method:'DELETE'}); loadAdminLectures(); hideLoader(); } }
-    </script>
+    
+        // ── 키오스크 클리닉 관리자 스크립트 시작 ──
+        // ═══════════════════════════════════════════════════════════
+        // 클리닉 운영 (관리자) — 키오스크 클리닉
+        //   오늘 현황 / 클리닉 프로그램(문제지 올리기) / 키오스크·출력 설정 / 학부모 문구
+        // ═══════════════════════════════════════════════════════════
+        let CLA = { tab: 'today', programs: [], editing: null };
+        const CLA_SETS = [['main', '1단계 문제', '학생이 등원하면 먼저 출력되는 문제지 (필수)'],
+                          ['low', '2단계 · 기초 레벨', '1단계 점수가 기준 점수보다 낮은 학생이 푸는 문제지'],
+                          ['high', '2단계 · 높은 레벨', '1단계 점수가 기준 이상이거나, 기초 레벨을 통과한 학생이 푸는 문제지']];
+        const CLA_STEP = {solve: '문제 푸는 중', reason: '틀린 이유 고르는 중', hint: '해설 보고 다시 푸는 중', ask: '질문 보낼 차례', next: '다음 문제지 차례', done: '완료'};
+        const CLA_C = ['①', '②', '③', '④', '⑤'];
+
+        function clinicAdminTab(tab) {
+            CLA.tab = tab;
+            document.querySelectorAll('#clinic-admin-subtabs .clinic-subtab').forEach(b => {
+                const on = b.dataset.tab === tab;
+                b.className = 'clinic-subtab px-3 py-1.5 rounded-lg text-xs font-bold ' + (on ? 'bg-lime-600 text-white' : 'bg-[#151922] border border-gray-700 text-gray-300');
+            });
+            document.querySelectorAll('.clinic-admin-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'clinic-admin-' + tab));
+            if (tab === 'today') loadClinicToday();
+            if (tab === 'programs') loadClinicPrograms();
+            if (tab === 'setup') loadClinicSetup();
+            if (tab === 'parent') loadClinicParent();
+        }
+        function loadClinicAdmin() { clinicAdminTab(CLA.tab || 'today'); }
+
+        function clinicModal(title, html) {
+            let m = document.getElementById('clinic-modal');
+            if (!m) { m = document.createElement('div'); m.id = 'clinic-modal'; m.className = 'fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4'; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); }
+            m.innerHTML = `<div class="bg-[#1e2430] border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[88vh] overflow-y-auto p-5 text-white"><div class="flex justify-between items-center mb-3"><b class="text-lime-300">${escapeHtml(title)}</b><button onclick="document.getElementById('clinic-modal').remove()" class="text-gray-400 hover:text-white text-lg">✕</button></div>${html}</div>`;
+        }
+
+        // ── 오늘 현황 ──
+        async function loadClinicToday(date) {
+            const el = document.getElementById('clinic-admin-today');
+            el.innerHTML = '<p class="text-xs text-gray-500">불러오는 중...</p>';
+            const r = await adminGet(`/api/admin/clinic/runs${date ? '?date=' + encodeURIComponent(date) : ''}`);
+            if (!r.ok) { el.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(r.message)}</p>`; return; }
+            const rows = r.data.rows;
+            el.innerHTML = `
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <input type="date" value="${escAttr(r.data.date)}" onchange="loadClinicToday(this.value)" class="bg-[#151922] border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                    <button onclick="loadClinicToday()" class="text-xs px-3 py-1.5 rounded-lg bg-[#151922] border border-gray-700 text-gray-300">↻ 새로고침</button>
+                    <button onclick="openClinicKiosk()" class="text-xs px-3 py-1.5 rounded-lg bg-lime-600 text-white font-bold">📱 키오스크 화면 열기</button>
+                    <span class="text-[11px] text-gray-500">${rows.length}명</span>
+                </div>
+                ${rows.length ? rows.map(x => `
+                    <div class="bg-[#151922] border ${x.finished_at ? 'border-gray-700' : 'border-amber-800/60'} rounded-xl p-3 mb-2">
+                        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                            <b class="text-white text-sm">${escapeHtml(x.student_name)}</b><span class="text-[11px] text-gray-500">${escapeHtml(x.class_name || '')}</span>
+                            <span class="text-[11px] text-sky-300">📄 ${escapeHtml(x.program_title)}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${x.finished_at ? 'bg-lime-900/50 text-lime-300' : 'bg-amber-900/50 text-amber-300'}">${x.finished_at ? '완료' : escapeHtml(x.cur_label + ' · ' + (CLA_STEP[x.step] || x.step))}</span>
+                            <span class="ml-auto text-[11px] text-gray-500">${escapeHtml((x.started_at || '').slice(5, 16))}${x.finished_at ? ' ~ ' + escapeHtml(x.finished_at.slice(11, 16)) : ''}</span>
+                        </div>
+                        ${x.sets.map(s => `<div class="text-[12px] text-gray-300 bg-[#0f1218] rounded-lg px-3 py-2 mb-1">
+                            <b class="text-gray-100">${escapeHtml(s.label)}</b> ${s.score != null ? `<b class="${s.score >= 80 ? 'text-lime-300' : s.score >= 50 ? 'text-amber-300' : 'text-rose-300'}">${s.score}점</b>` : '<span class="text-gray-500">푸는 중</span>'}
+                            ${s.printed ? '<span class="text-gray-500"> · 🖨문제지</span>' : ''}${s.hint_printed ? '<span class="text-gray-500"> · 🖨해설지</span>' : ''}
+                            ${s.wrong.length ? `<div class="mt-1">틀림: ${s.wrong.map(n => `<span class="${s.still.includes(n) ? 'text-rose-300 font-bold' : (s.fixed.includes(n) ? 'text-lime-300' : 'text-amber-200')}">${escapeHtml(n)}번${s.reasons[n] ? `(${escapeHtml(s.reasons[n])})` : ''}${s.fixed.includes(n) ? '→해결' : ''}${s.asked.includes(n) ? '→질문' : ''}</span>`).join(' · ')}</div>` : ''}
+                        </div>`).join('')}
+                        ${x.summary ? `<div class="text-[11.5px] text-gray-400 mt-1">${escapeHtml(x.summary)}</div>` : ''}
+                        ${!x.finished_at ? `<button onclick="clinicResetRun('${escAttr(x.id)}','${escAttr(x.student_name)}')" class="mt-2 text-[11px] px-2.5 py-1 rounded bg-rose-900/30 border border-rose-900 text-rose-300">처음부터 다시 하게 하기</button>` : ''}
+                    </div>`).join('') : '<p class="text-xs text-gray-500">이 날짜에 클리닉을 한 학생이 없습니다.</p>'}`;
+        }
+
+        async function clinicResetRun(id, name) {
+            if (!confirm(`${name} 학생의 진행 중인 클리닉을 지우고 처음(등원)부터 다시 하게 할까요?`)) return;
+            const r = await adminPost('/api/admin/clinic/runs/reset', {id, delete: true});
+            if (!r.ok) return alert(r.message);
+            showToast('지웠습니다. 키오스크에서 다시 등원하면 됩니다.'); loadClinicToday();
+        }
+
+        async function openClinicKiosk() {
+            const r = await adminGet('/api/admin/clinic/config');
+            const code = r.ok ? r.data.config.kiosk_code : '';
+            if (!code) { alert("먼저 '키오스크 · 출력 설정'에서 키오스크 코드를 정해 주세요."); return clinicAdminTab('setup'); }
+            window.open(`./clinic-kiosk.html?code=${encodeURIComponent(code)}`, '_blank');
+        }
+
+        // ── 클리닉 프로그램 ──
+        async function loadClinicPrograms() {
+            const el = document.getElementById('clinic-admin-programs');
+            el.innerHTML = '<p class="text-xs text-gray-500">불러오는 중...</p>';
+            if (!CLASS_DATA_LOADED) await loadAdminClassData();
+            const r = await adminGet('/api/admin/clinic/programs');
+            if (!r.ok) { el.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(r.message)}</p>`; return; }
+            CLA.programs = r.data.rows;
+            const today = r.data.today;
+            const e = CLA.editing ? CLA.programs.find(p => p.id === CLA.editing) : null;
+            const names = (typeof ADMIN_STUDENTS !== 'undefined' ? ADMIN_STUDENTS : []).map(x => x.student_name || x.name || x.id).filter(Boolean);
+            el.innerHTML = `
+                <div id="cp-form" class="bg-[#151922] border ${e ? 'border-sky-700' : 'border-lime-800/60'} rounded-xl p-4 mb-5">
+                    <div class="flex items-center gap-2 mb-1"><div class="text-sm font-bold ${e ? 'text-sky-300' : 'text-lime-300'}">${e ? `✎ '${escapeHtml(e.title)}' 고치기` : '📄 새 클리닉 프로그램 만들기'}</div>
+                        ${e ? `<button onclick="CLA.editing=null; loadClinicPrograms()" class="ml-auto text-[11px] px-2 py-1 rounded bg-[#1e2430] border border-gray-700 text-gray-300">새로 만들기로</button>` : ''}</div>
+                    <p class="text-[11.5px] text-gray-400 mb-3 word-break-keep-all">문제지마다 '문제지 만들기'에서 <b class="text-gray-200">[PDF로 저장]</b>한 PDF(복사기로 나갈 것)와 <b class="text-gray-200">[파일로 내보내기]</b>한 .json(정답·해설을 읽음)을 올리세요. ${e ? '<b class="text-sky-300">고칠 때는 바꿀 문제지만 다시 고르면 됩니다.</b>' : ''}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="text-[11.5px] text-gray-300">제목 <span class="text-gray-500">(비우면 1단계 문제지 제목)</span><input id="cp-title" value="${escAttr(e ? e.title : '')}" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white" placeholder="예) 11월 1주 고1A 클리닉"></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="text-[11.5px] text-gray-300">기준 점수 <span class="text-gray-500">(1단계)</span><input id="cp-pass" type="number" min="0" max="100" value="${e ? e.pass_score : 70}" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white"></label>
+                            <label class="text-[11.5px] text-gray-300">기초 레벨 통과 점수<input id="cp-lowpass" type="number" min="0" max="100" value="${e ? e.low_pass_score : 70}" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white"></label>
+                        </div>
+                        <label class="md:col-span-2 text-[11.5px] text-gray-300">오늘의 클리닉 안내 <span class="text-gray-500">(학생이 등원을 누르면 맨 위에 보여요)</span>
+                            <textarea id="cp-intro" rows="3" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white" placeholder="예) 이번 주는 독서 '추론' 문제를 집중해서 연습해요. 지문의 접속어에 동그라미 치면서 읽어 보세요.">${escapeHtml(e ? e.intro || '' : '')}</textarea></label>
+                        <div class="md:col-span-2 text-[11.5px] text-gray-300">누구에게 — 반 <span class="text-gray-500">(반도 학생도 비우면 국어 수강생 전체)</span>
+                            <div class="flex flex-wrap gap-1.5 mt-1">${ADMIN_CLASSES.map(c => `<label class="text-[11.5px] px-2.5 py-1 rounded-full border border-gray-700 cursor-pointer has-[:checked]:bg-lime-600 has-[:checked]:text-white has-[:checked]:border-lime-500"><input type="checkbox" class="hidden cp-cls" value="${escAttr(c.name)}" ${e && (e.class_names || []).includes(c.name) ? 'checked' : ''}>${escapeHtml(c.name)}</label>`).join('') || '<span class="text-gray-500">반이 없습니다</span>'}</div></div>
+                        <label class="md:col-span-2 text-[11.5px] text-gray-300">또는 특정 학생 <span class="text-gray-500">(쉼표로 구분 — 반 전체용보다 먼저 나가요)</span><input id="cp-studs" list="cp-names" value="${escAttr(e ? (e.student_names || []).join(', ') : '')}" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white" placeholder="예) 김민준, 이서연"><datalist id="cp-names">${names.map(n => `<option value="${escAttr(n)}">`).join('')}</datalist></label>
+                        <label class="text-[11.5px] text-gray-300">언제부터<input id="cp-start" type="date" value="${escAttr(e ? e.start_date : today)}" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white"></label>
+                        <label class="text-[11.5px] text-gray-300">언제까지 <span class="text-gray-500">(비우면 계속)</span><input id="cp-end" type="date" value="${escAttr(e ? e.end_date || '' : '')}" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white"></label>
+                        <label class="md:col-span-2 text-[11.5px] text-gray-300">틀린 문제에 보여 줄 내용
+                            <select id="cp-hint" class="w-full mt-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white">
+                                <option value="focus" ${!e || e.hint_mode !== 'explain' ? 'selected' : ''}>주목할 점 — 정답은 알려 주지 않고 어디를 봐야 하는지만 (AI가 문제지 올릴 때 한 번 만들어요, 나중에 고칠 수 있어요)</option>
+                                <option value="explain" ${e && e.hint_mode === 'explain' ? 'selected' : ''}>내 해설 그대로 — 문제지에 적은 '해설:'을 그대로 보여 줘요 (AI 안 씀)</option></select></label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">${CLA_SETS.map(([k, label, desc]) => {
+                        const cur = e && e.sets[k];
+                        return `<div class="bg-[#0f1218] border border-gray-700 rounded-xl p-3">
+                            <div class="text-[12.5px] font-bold ${k === 'main' ? 'text-lime-300' : k === 'low' ? 'text-amber-300' : 'text-sky-300'}">${label}${k === 'main' ? ' <span class="text-rose-300">*</span>' : ''}</div>
+                            <div class="text-[10.5px] text-gray-500 mb-2 word-break-keep-all">${desc}</div>
+                            ${cur ? `<div class="text-[10.5px] text-gray-400 mb-1">지금: ${escapeHtml(cur.pdf_name || 'PDF')} · 채점 ${cur.graded}문제</div>` : ''}
+                            <label class="block text-[11px] text-gray-300 mb-1.5">PDF<input id="cp-${k}-pdf" type="file" accept="application/pdf,.pdf" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-lime-700 file:text-white"></label>
+                            <label class="block text-[11px] text-gray-300 mb-1.5">.json<input id="cp-${k}-json" type="file" accept=".json,application/json" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-sky-800 file:text-white"></label>
+                            <details><summary class="text-[10.5px] text-gray-500 cursor-pointer">.json 대신 글 붙여 넣기</summary><textarea id="cp-${k}-text" rows="4" class="w-full mt-1 bg-[#151922] border border-gray-700 rounded p-1.5 text-[11px] text-white font-mono" placeholder="문제지 만들기 입력칸 글 전체"></textarea></details>
+                        </div>`; }).join('')}</div>
+                    <button onclick="clinicSaveProgram()" class="w-full mt-3 ${e ? 'bg-sky-600 hover:bg-sky-500' : 'bg-lime-600 hover:bg-lime-500'} text-white py-2.5 rounded-lg text-sm font-bold">${e ? '고친 내용 저장' : '올리기'}</button>
+                    <p class="text-[11px] text-gray-500 mt-2 word-break-keep-all">한 학생에게는 아직 끝내지 않은 프로그램 중 먼저 올린 것부터 하나씩 나갑니다. 기초·높은 레벨 문제지가 없으면 1단계만 하고 끝나요.</p>
+                </div>
+                <b class="text-sm text-white">올린 클리닉 프로그램 <span class="text-gray-500 font-normal text-xs">${CLA.programs.length}개</span></b>
+                <div class="space-y-2 mt-2">${CLA.programs.map(p => {
+                    const live = p.active && (!p.start_date || p.start_date <= today) && (!p.end_date || p.end_date >= today);
+                    const who = [...(p.class_names || []), ...(p.student_names || [])].join(', ') || '국어 전체';
+                    return `<div class="bg-[#151922] border ${live ? 'border-gray-700' : 'border-gray-800 opacity-60'} rounded-xl p-3">
+                        <div class="flex flex-wrap items-center gap-2 mb-1"><b class="text-white text-sm">📄 ${escapeHtml(p.title)}</b>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full ${live ? 'bg-lime-900/50 text-lime-300' : 'bg-gray-800 text-gray-400'}">${!p.active ? '꺼짐' : live ? '나가는 중' : (p.start_date > today ? '예정' : '기간 끝')}</span>
+                            <span class="text-[11px] text-gray-400">대상: ${escapeHtml(who)}</span><span class="text-[11px] text-gray-500">${escapeHtml(p.start_date || '')} ~ ${escapeHtml(p.end_date || '')}</span>
+                            <span class="text-[11px] text-gray-400">기준 ${p.pass_score}점 · 기초 통과 ${p.low_pass_score}점</span></div>
+                        <div class="flex flex-wrap gap-1.5 text-[11px] mb-1">${CLA_SETS.map(([k, label]) => { const s = p.sets[k]; return s
+                            ? `<a href="${API_URL}${escAttr(s.pdf_url)}" target="_blank" class="cp-pdf px-2 py-1 rounded bg-[#0f1218] border border-gray-700 text-gray-300">${label}: 채점 ${s.graded}/${s.total}문제${s.written.length ? ` · 서술형 ${s.written.join(',')}번` : ''}${s.no_answer.length ? ` · <span class="text-amber-300">정답 없음 ${s.no_answer.join(',')}번</span>` : ''} ↗</a>`
+                            : `<span class="px-2 py-1 rounded bg-[#0f1218] border border-gray-800 text-gray-600">${label}: 없음</span>`; }).join('')}</div>
+                        <div class="text-[11px] text-gray-500">시작한 학생 ${p.started.length} · 마친 학생 ${p.done.length}${p.started.length ? ` — ${p.started.map(n => escapeHtml(n) + (p.done.includes(n) ? ' ✔' : '')).join(', ')}` : ''}</div>
+                        <div class="mt-2 flex flex-wrap gap-1.5 items-center">
+                            <button onclick="clinicEditHints('${escAttr(p.id)}')" class="text-[11px] px-2.5 py-1 rounded bg-sky-900/40 border border-sky-800 text-sky-300">정답 · 주목할 점 보기/고치기</button>
+                            <button onclick="CLA.editing='${escAttr(p.id)}'; loadClinicPrograms().then(() => document.getElementById('cp-form').scrollIntoView({behavior:'smooth'}))" class="text-[11px] px-2.5 py-1 rounded bg-[#1e2430] border border-gray-700 text-gray-300">안내·대상·문제지 고치기</button>
+                            <button onclick="clinicProgUpdate('${escAttr(p.id)}', {active: ${!p.active}})" class="text-[11px] px-2.5 py-1 rounded bg-[#1e2430] border border-gray-700 text-gray-300">${p.active ? '끄기' : '켜기'}</button>
+                            <button onclick="if(confirm('이 클리닉 프로그램을 지울까요? (이미 한 학생 기록은 남습니다)')) clinicProgUpdate('${escAttr(p.id)}', {delete: true})" class="ml-auto text-[11px] px-2.5 py-1 rounded bg-rose-900/40 border border-rose-800 text-rose-300">삭제</button>
+                        </div></div>`; }).join('') || '<p class="text-xs text-gray-500">아직 올린 클리닉 프로그램이 없습니다.</p>'}</div>`;
+        }
+
+        async function clinicSaveProgram() {
+            const e = CLA.editing ? CLA.programs.find(p => p.id === CLA.editing) : null;
+            const fd = new FormData();
+            let any = false;
+            for (const [k, label] of CLA_SETS) {
+                const pdf = document.getElementById(`cp-${k}-pdf`).files[0], js = document.getElementById(`cp-${k}-json`).files[0], text = document.getElementById(`cp-${k}-text`).value;
+                if ((js || text.trim()) && !pdf && !(e && e.sets[k])) return alert(`${label}의 PDF도 골라 주세요. (복사기로 나갈 문제지)`);
+                if (pdf && !js && !text.trim() && !confirm(`${label}: .json(또는 글) 없이 PDF만 올리면 정답을 몰라서 태블릿 채점을 못 해요. 그대로 올릴까요?`)) return;
+                if (pdf) { fd.append(`${k}_pdf`, pdf); any = true; }
+                if (js) { fd.append(`${k}_json`, js); any = true; }
+                if (text.trim()) { fd.append(`${k}_text`, text); any = true; }
+            }
+            if (!e && !document.getElementById('cp-main-pdf').files[0]) return alert('1단계 문제지 PDF는 꼭 골라 주세요.');
+            if (e) fd.append('id', e.id);
+            fd.append('title', document.getElementById('cp-title').value.trim());
+            fd.append('intro', document.getElementById('cp-intro').value.trim());
+            fd.append('pass_score', document.getElementById('cp-pass').value || 70);
+            fd.append('low_pass_score', document.getElementById('cp-lowpass').value || 70);
+            fd.append('hint_mode', document.getElementById('cp-hint').value);
+            fd.append('class_names', JSON.stringify([...document.querySelectorAll('.cp-cls:checked')].map(c => c.value)));
+            fd.append('student_names', JSON.stringify(document.getElementById('cp-studs').value.split(/[,，\s]+/).map(x => x.trim()).filter(Boolean)));
+            fd.append('start_date', document.getElementById('cp-start').value); fd.append('end_date', document.getElementById('cp-end').value);
+            showLoader(any ? '문제지를 올리고 정답·주목할 점을 만드는 중... (30초쯤)' : '저장하는 중...');
+            let d;
+            try { d = await (await fetch(`${API_URL}/api/admin/clinic/programs`, {method: 'POST', body: fd})).json(); } catch (err) { d = {success: false, detail: '서버에 연결하지 못했습니다.'}; }
+            hideLoader();
+            if (!d.success) return alert(d.detail || '올리지 못했습니다.');
+            const rep = Object.entries(d.report || {}).map(([k, v]) => `${CLA_SETS.find(s => s[0] === k)[1]}: 채점 ${v.graded}문제` + (v.written.length ? ` (서술형 ${v.written.join(',')}번 제외)` : '') + (v.no_answer.length ? ` ⚠ 정답 없음 ${v.no_answer.join(',')}번` : '')).join('\n');
+            alert(`'${d.title}' 저장했습니다.` + (rep ? '\n\n' + rep : '') + '\n\n[정답 · 주목할 점 보기/고치기]에서 학생에게 보일 내용을 확인해 보세요.');
+            CLA.editing = null; loadClinicPrograms();
+        }
+
+        async function clinicProgUpdate(id, patch) {
+            const r = await adminPost('/api/admin/clinic/programs/update', {id, ...patch});
+            if (!r.ok) return alert(r.message);
+            showToast(patch.delete ? '지웠습니다' : '바꿨습니다'); loadClinicPrograms();
+        }
+
+        async function clinicEditHints(id) {
+            const r = await adminGet(`/api/admin/clinic/program/${encodeURIComponent(id)}`);
+            if (!r.ok) return alert(r.message);
+            const p = r.data.program;
+            const html = CLA_SETS.filter(([k]) => p.sets[k]).map(([k, label]) => {
+                const qs = p.sets[k].questions || [];
+                return `<div class="mb-4"><div class="text-sm font-bold text-lime-300 mb-2">${label} <span class="text-[11px] text-gray-500 font-normal">${qs.length}문제</span></div>
+                    ${qs.map(q => `<div class="bg-[#0f1218] border border-gray-800 rounded-lg p-2.5 mb-1.5">
+                        <div class="text-[12px] text-gray-200 mb-1"><b class="text-amber-300">${escapeHtml(q.no)}번</b> ${escapeHtml((q.q_text || '').replace(/<\/?u>/g, '').slice(0, 90))}</div>
+                        <div class="flex items-center gap-2 mb-1"><span class="text-[11px] text-gray-400">정답</span><select data-set="${k}" data-no="${escAttr(q.no)}" class="ch-ans bg-[#151922] border border-gray-700 rounded px-1.5 py-0.5 text-[12px] text-white">${[1,2,3,4,5].map(n => `<option value="${n}" ${String(q.answer) === String(n) ? 'selected' : ''}>${CLA_C[n-1]}</option>`).join('')}</select>
+                            ${q.explanation ? `<details class="text-[11px] text-gray-500"><summary class="cursor-pointer">원래 해설</summary>${escapeHtml(q.explanation)}</details>` : ''}</div>
+                        <textarea data-set="${k}" data-no="${escAttr(q.no)}" rows="2" class="ch-hint w-full bg-[#151922] border border-gray-700 rounded p-1.5 text-[12px] text-sky-200" placeholder="주목할 점">${escapeHtml(q.hint || '')}</textarea></div>`).join('') || '<p class="text-[11px] text-gray-500">채점할 문항이 없습니다 (.json을 안 올렸거나 정답이 없음)</p>'}</div>`; }).join('');
+            clinicModal(`${p.title} — 정답 · 주목할 점`, `<p class="text-[11.5px] text-gray-400 mb-3">학생이 틀린 문제의 '왜 틀렸는지'를 고르면 아래 <b class="text-sky-300">주목할 점</b>이 화면과 해설지에 나옵니다. 정답은 학생에게 보이지 않아요.</p>${html}
+                <button onclick="clinicSaveHints('${escAttr(id)}')" class="w-full bg-lime-600 text-white py-2.5 rounded-lg text-sm font-bold">저장</button>`);
+        }
+
+        async function clinicSaveHints(id) {
+            const q = {};
+            document.querySelectorAll('#clinic-modal .ch-hint').forEach(t => {
+                const k = t.dataset.set, no = t.dataset.no;
+                const a = document.querySelector(`#clinic-modal .ch-ans[data-set="${k}"][data-no="${CSS.escape(no)}"]`);
+                (q[k] = q[k] || []).push({no, hint: t.value.trim(), answer: a ? a.value : ''});
+            });
+            const r = await adminPost('/api/admin/clinic/programs/update', {id, questions: q});
+            if (!r.ok) return alert(r.message);
+            document.getElementById('clinic-modal')?.remove(); showToast('저장했습니다');
+        }
+
+        // ── 키오스크 · 출력 설정 ──
+        async function loadClinicSetup() {
+            const el = document.getElementById('clinic-admin-setup');
+            const r = await adminGet('/api/admin/clinic/config');
+            if (!r.ok) { el.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(r.message)}</p>`; return; }
+            const code = r.data.config.kiosk_code || '';
+            const url = code ? `${location.origin}${location.pathname.replace(/[^/]*$/, '')}clinic-kiosk.html?code=${encodeURIComponent(code)}` : '';
+            el.innerHTML = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="bg-[#151922] border border-gray-700 rounded-xl p-4">
+                    <div class="text-sm font-bold text-white mb-2">키오스크 코드</div>
+                    <p class="text-[11.5px] text-gray-400 mb-2">키오스크·태블릿 화면과 자동출력 프로그램이 이 코드로 서버에 들어옵니다. 숫자·영문 4자 이상으로 정해 주세요.</p>
+                    <div class="flex gap-2"><input id="cc-kiosk" value="${escAttr(code)}" class="flex-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-sm text-white"><button onclick="clinicSaveCode()" class="px-4 bg-lime-600 text-white rounded-lg text-xs font-bold">저장</button></div>
+                    ${url ? `<div class="mt-3 text-[11.5px] text-gray-400">키오스크·태블릿에 띄울 주소 <span class="text-gray-500">(두 기기 모두 같은 주소)</span></div>
+                        <div class="flex gap-2 mt-1"><input readonly value="${escAttr(url)}" class="flex-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-[11px] text-sky-300"><button onclick="navigator.clipboard.writeText('${escAttr(url)}').then(()=>showToast('주소를 복사했습니다'))" class="px-3 bg-[#1e2430] border border-gray-700 text-gray-300 rounded-lg text-xs">복사</button><button onclick="openClinicKiosk()" class="px-3 bg-[#1e2430] border border-gray-700 text-gray-300 rounded-lg text-xs">열기</button></div>` : ''}
+                    <div class="mt-4 text-[11.5px] text-gray-400">학생 확인 — 이 학생이 지금 오면?</div>
+                    <div class="flex gap-2 mt-1"><input id="cc-check" placeholder="학생 이름" class="flex-1 bg-[#0f1218] border border-gray-700 rounded-lg p-2 text-xs text-white"><button onclick="clinicCheckFor()" class="px-3 bg-[#1e2430] border border-gray-700 text-gray-300 rounded-lg text-xs">확인</button></div>
+                </div>
+                <div class="bg-[#151922] border border-gray-700 rounded-xl p-4 text-[12px] text-gray-300 leading-relaxed word-break-keep-all">
+                    <div class="text-sm font-bold text-white mb-2">처음 한 번 준비</div>
+                    <b class="text-lime-300">① 키오스크와 교실 태블릿</b><br>왼쪽의 주소를 두 기기의 크롬(또는 사파리)으로 열어 두세요. 홈 화면에 추가해 두면 앱처럼 쓸 수 있어요.<br><br>
+                    <b class="text-lime-300">② 복사기 자동 출력</b><br>복사기가 연결된 학원 PC에서 <b>클리닉_업데이트</b> 폴더의 <code>클리닉_자동출력.py</code>를 메모장으로 열어 <code>KIOSK_CODE</code>에 위 코드를 적고, <code>클리닉_자동출력.cmd</code>를 더블클릭해 켜 두세요. 학생이 [문제 출력]·[해설지 출력]을 누르면 10초 안에 복사기로 나갑니다.<br>
+                    <span class="text-gray-500">무료 프로그램 SumatraPDF를 깔아 두면 창 없이 바로 인쇄돼요. 복사기가 기본 프린터가 아니면 파일 안 <code>PRINTER</code>에 복사기 이름을 적어 주세요.</span><br><br>
+                    <b class="text-lime-300">③ 매주</b><br>📄 클리닉 프로그램에서 1단계·기초·높은 레벨 문제지를 올리면 끝이에요.
+                </div></div>`;
+        }
+        async function clinicSaveCode() {
+            const v = document.getElementById('cc-kiosk').value.trim();
+            if (v.length < 4) return alert('4자 이상으로 정해 주세요.');
+            const r = await adminPost('/api/admin/clinic/config', {kiosk_code: v});
+            if (!r.ok) return alert(r.message);
+            showToast('저장했습니다'); loadClinicSetup();
+        }
+        async function clinicCheckFor() {
+            const n = document.getElementById('cc-check').value.trim(); if (!n) return;
+            const r = await adminGet(`/api/admin/clinic/preview_for?student_name=${encodeURIComponent(n)}`);
+            alert(r.ok ? `${n}: ${r.data.text}` : r.message);
+        }
+
+        // ── 학부모 문구 ──
+        async function loadClinicParent(date) {
+            const el = document.getElementById('clinic-admin-parent');
+            el.innerHTML = '<p class="text-xs text-gray-500">불러오는 중...</p>';
+            const r = await adminGet(`/api/admin/clinic/parent_lines${date ? '?date=' + encodeURIComponent(date) : ''}`);
+            if (!r.ok) { el.innerHTML = `<p class="text-xs text-red-300">${escapeHtml(r.message)}</p>`; return; }
+            el.innerHTML = `<p class="text-[11px] text-gray-500 mb-2">클리닉을 마친 학생마다 한 줄 요약입니다. 하원 알림(카카오톡)에 붙여 보내세요.</p>
+                <div class="flex items-center gap-2 mb-3"><input type="date" value="${escAttr(r.data.date)}" onchange="loadClinicParent(this.value)" class="bg-[#151922] border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white"><button onclick="navigator.clipboard.writeText([...document.querySelectorAll('.cp-line')].map(e=>e.textContent).join('\\n')).then(()=>showToast('전체 복사'))" class="text-xs px-3 py-1.5 rounded-lg bg-[#151922] border border-gray-700 text-gray-300">전체 복사</button></div>
+                ${r.data.lines.length ? r.data.lines.map(l => `<div class="bg-[#151922] border border-gray-700 rounded-lg px-3 py-2 mb-1.5 flex items-start gap-2"><div class="cp-line flex-1 text-[12px] text-gray-200 word-break-keep-all">${escapeHtml(l.text)}</div><button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>showToast('복사'))" class="text-[11px] text-gray-400 hover:text-white shrink-0">복사</button></div>`).join('') : '<p class="text-xs text-gray-500">이 날짜에 클리닉을 마친 학생이 없습니다.</p>'}`;
+        }
+        // ── 키오스크 클리닉 관리자 스크립트 끝 ──
+        </script>
 </body>
 </html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>로지에듀 클리닉</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<!--
+  로지에듀 클리닉 키오스크 — 입구 키오스크와 교실 태블릿에 같은 주소로 띄운다.
+  주소: https://logyedu.co.kr/clinic-kiosk.html?code=키오스크코드
+  학생은 이름만 누르면, 지금 해야 할 단계가 나온다.
+-->
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root { --bg:#14171f; --card:#1e2430; --line:#2f3747; --ink:#f3f4f6; --sub:#9aa4b2; --lime:#a3e635; --amber:#fbbf24; --rose:#fb7185; --sky:#7dd3fc; }
+  body { margin:0; font-family: Pretendard, -apple-system, 'Malgun Gothic', sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; user-select:none; }
+  header { display:flex; align-items:center; gap:12px; padding:14px 22px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5; }
+  header h1 { font-size:21px; margin:0; } header h1 b { color:var(--lime); }
+  header .sp { flex:1 } header .date { color:var(--sub); font-size:14px; }
+  .home-btn { background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:10px 16px; font-size:15px; font-weight:700; }
+  main { max-width:960px; margin:0 auto; padding:22px 20px 80px; }
+  h2 { font-size:26px; margin:6px 0 6px; } .lead { color:#cbd5e1; font-size:17px; line-height:1.6; margin:0 0 18px; word-break:keep-all; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+  .name { background:var(--card); border:2px solid var(--line); border-radius:18px; padding:20px 10px; text-align:center; cursor:pointer; }
+  .name:active { transform:scale(.97) } .name .n { font-size:23px; font-weight:800 } .name .s { font-size:12.5px; color:var(--sub); margin-top:5px; min-height:16px }
+  .name.go { border-color:#a16207 } .name.go .s { color:var(--amber) } .name.ok { border-color:#3f6212; background:#18240f } .name.ok .s { color:var(--lime) }
+  .sec { color:var(--sub); font-size:14px; margin:26px 0 10px; }
+  input.search { width:100%; font-size:19px; padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:#0f1218; color:var(--ink); margin-bottom:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:20px; margin-bottom:14px; }
+  .btn { display:block; width:100%; border:0; border-radius:18px; padding:20px; font-size:21px; font-weight:900; cursor:pointer; margin-top:12px; font-family:inherit; }
+  .btn.lime { background:var(--lime); color:#111 } .btn.gray { background:#2b3342; color:var(--ink) } .btn.sky { background:#0ea5e9; color:#fff } .btn.amber { background:var(--amber); color:#111 }
+  .btn:disabled { opacity:.45 } .btn:active { transform:scale(.99) }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px } .row2 .btn { margin-top:12px }
+  .steps { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 14px } .steps span { font-size:13px; padding:6px 11px; border-radius:999px; background:#0f1218; border:1px solid var(--line); color:var(--sub) }
+  .steps span.on { background:var(--lime); color:#111; border-color:var(--lime); font-weight:800 } .steps span.done { color:var(--lime); border-color:#3f6212 }
+  .flow { list-style:none; padding:0; margin:0; counter-reset:f } .flow li { counter-increment:f; display:flex; gap:12px; padding:9px 0; font-size:16.5px; line-height:1.5; color:#dbe2ea; word-break:keep-all }
+  .flow li::before { content:counter(f); flex:0 0 28px; height:28px; border-radius:50%; background:#2b3342; color:var(--lime); font-weight:900; display:flex; align-items:center; justify-content:center; font-size:14px }
+  .intro { background:#18240f; border:1px solid #3f6212; border-radius:16px; padding:16px 18px; font-size:17px; line-height:1.65; white-space:pre-wrap; word-break:keep-all; margin-bottom:14px }
+  .omr { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line) } .omr:last-child { border-bottom:0 }
+  .omr .no { width:52px; text-align:right; font-size:22px; font-weight:900 }
+  .bub { width:54px; height:54px; border-radius:50%; border:2px solid #4b5563; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; background:#0f1218 }
+  .bub.on { background:var(--lime); color:#111; border-color:var(--lime); font-weight:900 }
+  .score { display:flex; align-items:flex-end; gap:16px; } .score .big { font-size:64px; font-weight:900; line-height:1 } .score .of { color:var(--sub); font-size:18px; padding-bottom:8px }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px } .chip { padding:8px 14px; border-radius:999px; font-weight:800; font-size:16px }
+  .chip.x { background:#3b1420; color:var(--rose) } .chip.o { background:#18240f; color:var(--lime) }
+  .q { font-size:17px; font-weight:800; line-height:1.5; margin-bottom:6px; word-break:keep-all } .q .no { color:var(--amber); margin-right:6px }
+  .opts { font-size:15px; color:#cbd5e1; line-height:1.6; margin:4px 0 10px 4px } .bogi { font-size:14.5px; color:#cbd5e1; background:#0f1218; border-radius:10px; padding:8px 12px; margin:6px 0; white-space:pre-wrap }
+  .reasons { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px } .rz { padding:13px 16px; border-radius:14px; border:2px solid var(--line); background:#0f1218; font-size:16px; cursor:pointer; font-weight:700 }
+  .rz.on { background:var(--amber); color:#111; border-color:var(--amber) }
+  .hint { background:#0c2234; border:1px solid #0369a1; color:#bae6fd; border-radius:14px; padding:12px 14px; font-size:16.5px; line-height:1.55; margin-top:6px; word-break:keep-all }
+  .hint b { color:#fff } .myr { font-size:13.5px; color:var(--sub); margin-bottom:4px }
+  .big-msg { text-align:center; padding:26px 10px } .big-msg .e { font-size:72px } .big-msg h2 { font-size:30px }
+  .note { font-size:14px; color:var(--sub); margin-top:8px; word-break:keep-all }
+  .ask { background:#2a1d08; border:1px solid #a16207; border-radius:18px; padding:18px; font-size:18px; line-height:1.6; word-break:keep-all }
+  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#111827; border:1px solid var(--lime); color:#ecfccb; padding:12px 18px; border-radius:12px; font-size:16px; z-index:50 }
+  .err { color:var(--rose); font-size:16px }
+  .loading { text-align:center; color:var(--sub); padding:40px; font-size:18px }
+</style>
+</head>
+<body>
+<header><h1><b>로지에듀</b> 클리닉</h1><span class="date" id="date"></span><span class="sp"></span><button class="home-btn" id="homeBtn" onclick="goHome()" style="display:none">처음으로</button></header>
+<main id="app"><div class="loading">불러오는 중...</div></main>
+<script>
+  const API_URL = "https://korean-ai-tutor.onrender.com";
+  const CODE = new URLSearchParams(location.search).get('code') || '';
+  const C = ['①','②','③','④','⑤'];
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const escU = s => esc(s).replace(/&lt;u&gt;/g, '<u>').replace(/&lt;\/u&gt;/g, '</u>');
+  const $app = document.getElementById('app');
+  let ME = '', RUN = null, PICK = {}, REASON = {}, MODE = '', TODAY = null, idleT = null;
+  document.getElementById('date').textContent = new Date().toLocaleDateString('ko-KR', {month:'long', day:'numeric', weekday:'long'});
+
+  function toast(m) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 3200); }
+  async function api(path, body) {
+    try {
+      const r = await fetch(API_URL + path, body === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({code: CODE, student_name: ME, ...body})});
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 404) return {success:false, detail:'서버에 새 기능이 아직 반영되지 않았어요. 잠시 뒤 다시 해 주세요.'};
+      if (!r.ok && !d.success) return {success:false, detail: d.detail || `서버 오류 (${r.status})`};
+      return d;
+    } catch (e) { return {success:false, detail:'서버에 연결하지 못했어요. 인터넷을 확인해 주세요.'}; }
+  }
+  // 아무도 안 만지면 첫 화면으로 (다음 학생이 이전 학생 화면을 보지 않게)
+  function poke() { clearTimeout(idleT); if (ME) idleT = setTimeout(goHome, 120000); }
+  ['click','touchstart','keydown'].forEach(e => document.addEventListener(e, poke, true));
+
+  // ── 첫 화면: 이름 고르기 ──
+  async function goHome() {
+    ME = ''; RUN = null; PICK = {}; REASON = {}; MODE = '';
+    document.getElementById('homeBtn').style.display = 'none';
+    if (!CODE) { $app.innerHTML = '<p class="err">주소 끝에 ?code=키오스크코드 를 붙여 주세요. (원장님 화면 → 클리닉 운영 → 설정)</p>'; return; }
+    const d = await api(`/api/clinic/kiosk/today?code=${encodeURIComponent(CODE)}`);
+    if (!d.success) { $app.innerHTML = `<p class="err">${esc(d.detail || '불러오지 못했어요.')}</p>`; return; }
+    TODAY = d; renderHome();
+  }
+  function renderHome() {
+    const d = TODAY, q = (document.getElementById('q') || {}).value || '';
+    const card = (n, s, cls) => `<div class="name ${cls}" onclick="pickName('${esc(n).replace(/'/g, "\\'")}')"><div class="n">${esc(n)}</div><div class="s">${esc(s)}</div></div>`;
+    const listed = new Set(d.rows.map(r => r.student_name));
+    const others = d.everyone.filter(n => !listed.has(n) && (!q || n.includes(q)));
+    $app.innerHTML = `<h2>내 이름을 눌러요</h2><p class="lead">처음 왔으면 <b>클리닉 등원</b>, 문제를 다 풀었으면 <b>답 입력</b> — 이름만 누르면 지금 할 일이 나와요.</p>
+      ${d.rows.length ? `<div class="sec">오늘 클리닉</div><div class="grid">${d.rows.map(r => card(r.student_name, r.status === 'done' ? '✅ 오늘 완료' : (r.status || (r.time ? r.time + ' 클리닉' : '')), r.status === 'done' ? 'ok' : (r.status ? 'go' : ''))).join('')}</div>` : ''}
+      <div class="sec">다른 이름 찾기</div><input class="search" id="q" placeholder="이름을 입력하세요" value="${esc(q)}" oninput="renderHome(); const e=document.getElementById('q'); e.focus(); e.setSelectionRange(e.value.length, e.value.length)">
+      <div class="grid">${(q ? others : others.slice(0, 12)).map(n => card(n, '', '')).join('')}</div>`;
+  }
+  async function pickName(n) {
+    ME = n; document.getElementById('homeBtn').style.display = '';
+    $app.innerHTML = '<div class="loading">불러오는 중...</div>';
+    const d = await api('/api/clinic/kiosk/state', {});
+    if (!d.success) { $app.innerHTML = `<div class="big-msg"><div class="e">😥</div><h2>${esc(d.detail)}</h2><button class="btn gray" onclick="goHome()">처음으로</button></div>`; return; }
+    if (d.run) { RUN = d.run; PICK = {}; REASON = {}; MODE = ''; return render(); }
+    if (!d.program) { $app.innerHTML = `<div class="big-msg"><div class="e">🙋</div><h2>${esc(n)}, 어서 와요!</h2><p class="lead">오늘 준비된 클리닉이 아직 없어요.<br>원장님께 말씀해 주세요.</p><button class="btn gray" onclick="goHome()">확인</button></div>`; return; }
+    renderIntro(d.program);
+  }
+
+  // ── 등원: 오늘의 클리닉 안내 ──
+  function renderIntro(p) {
+    const lv = p.sets.low && p.sets.high ? `1단계 점수가 <b>${p.pass_score}점 이상</b>이면 <b>높은 레벨</b>, 아니면 <b>기초 레벨</b> 문제를 풀어요. 기초 레벨을 ${p.low_pass_score}점 넘기면 높은 레벨로 올라가요.` : '1단계를 마치면 점수에 맞는 다음 문제가 나와요.';
+    $app.innerHTML = `<h2>${esc(ME)}, 클리닉 등원! 👋</h2><p class="lead">오늘의 클리닉: <b>${esc(p.title)}</b></p>
+      ${p.intro ? `<div class="intro">${esc(p.intro)}</div>` : ''}
+      <div class="card"><div style="font-weight:900;font-size:18px;margin-bottom:6px">오늘은 이렇게 해요</div><ol class="flow">
+        <li><span><b>1단계 문제</b>를 출력해서 풀어요. (${p.sets.main.count}문제)</span></li>
+        <li><span>다 풀면 <b>교실 태블릿</b>에서 내 이름을 누르고 답을 입력해요. 바로 점수가 나와요.</span></li>
+        <li><span>틀린 문제는 <b>왜 틀렸는지</b> 골라요. 그러면 문제마다 <b>주목할 점</b>이 나오고, 해설지로 출력할 수 있어요.</span></li>
+        <li><span>해설지를 보고 틀린 문제를 <b>다시 풀어서</b> 답을 입력해요.</span></li>
+        <li><span>그래도 틀린 문제는 <b>국최 선생님께 질문</b>을 보내요.</span></li>
+        <li><span>${lv}</span></li></ol></div>
+      <button class="btn lime" id="startBtn" onclick="startClinic()">🖨 1단계 문제 출력</button>`;
+  }
+  async function startClinic() {
+    document.getElementById('startBtn').disabled = true;
+    const d = await api('/api/clinic/kiosk/start', {});
+    if (!d.success) { toast(d.detail); document.getElementById('startBtn').disabled = false; return; }
+    RUN = d.run; printedMsg('1단계 문제지', '다 풀면 교실 태블릿에서 내 이름을 누르고 답을 입력해요.');
+  }
+  function printedMsg(what, next) {
+    $app.innerHTML = `<div class="big-msg"><div class="e">🖨</div><h2>${esc(what)}가 복사기로 나가요!</h2><p class="lead">복사기에서 가져가세요.<br>${esc(next)}</p>
+      <button class="btn lime" onclick="goHome()">확인</button><p class="note">복사기에서 안 나오면 원장님께 말씀해 주세요.</p></div>`;
+  }
+
+  // ── 진행 중: 단계별 화면 ──
+  function stepsBar() {
+    const lab = {main:'1단계', low:'기초 레벨', high:'높은 레벨'};
+    return `<div class="steps">${RUN.path.map(k => `<span class="${k === RUN.cur ? 'on' : 'done'}">${lab[k]}</span>`).join('')}</div>`;
+  }
+  function render() {
+    const r = RUN;
+    if (r.finished) return renderDone();
+    if (r.step === 'solve') return renderOmr(r.numbers, '처음 풀이');
+    if (r.step === 'reason') return renderReason();
+    if (r.step === 'hint') return MODE === 'reanswer' ? renderOmr(r.wrong_items.map(x => x.no), '다시 풀이') : renderHint();
+    if (r.step === 'ask') return renderAsk();
+    if (r.step === 'next') return renderNext();
+    if (r.step === 'done') return renderDone();
+  }
+
+  function renderOmr(nums, kind) {
+    const again = kind === '다시 풀이';
+    $app.innerHTML = `${stepsBar()}<h2>${esc(ME)} · ${esc(RUN.cur_label)} ${again ? '다시 푼 답 입력' : '답 입력'}</h2>
+      <p class="lead">${again ? '해설지를 보고 다시 푼 답을 골라요. 틀렸던 문제만 나와요.' : '종이에 푼 답을 그대로 골라요.'}${RUN.written.length && !again ? ` (서술형 ${RUN.written.join(', ')}번은 원장님이 채점해요)` : ''}</p>
+      <div class="card">${nums.map(n => `<div class="omr"><div class="no">${esc(n)}</div>${[1,2,3,4,5].map(v => `<div class="bub ${PICK[n] === String(v) ? 'on' : ''}" onclick="bub('${esc(n)}','${v}')">${C[v-1]}</div>`).join('')}</div>`).join('')}</div>
+      <button class="btn lime" onclick="submitAnswers(${again})">${again ? '다시 채점하기' : '채점하기'}</button>
+      ${!again ? `<button class="btn gray" style="font-size:16px;padding:14px" onclick="reprint('set')">🖨 문제지를 잃어버렸어요 (다시 출력)</button>` : `<button class="btn gray" style="font-size:16px;padding:14px" onclick="MODE='';render()">← 주목할 점 다시 보기</button>`}`;
+    window.scrollTo(0, 0);
+  }
+  function bub(n, v) { PICK[n] = PICK[n] === v ? '' : v; const keep = window.scrollY; render(); window.scrollTo(0, keep); }
+  async function submitAnswers(again) {
+    const nums = again ? RUN.wrong_items.map(x => x.no) : RUN.numbers;
+    const blank = nums.filter(n => !PICK[n]);
+    if (blank.length && !confirm(`${blank.join(', ')}번을 아직 안 골랐어요. 이대로 채점할까요? (빈 칸은 틀린 것으로 채점돼요)`)) return;
+    const answers = {}; nums.forEach(n => answers[n] = PICK[n] || '');
+    const d = await api('/api/clinic/kiosk/answer', {answers});
+    if (!d.success) return toast(d.detail);
+    RUN = d.run; PICK = {}; MODE = ''; render(); window.scrollTo(0, 0);
+  }
+
+  function scoreBox() {
+    const f = RUN.first;
+    const right = RUN.numbers.filter(n => !f.wrong.includes(n));
+    return `<div class="card"><div class="score"><div class="big" style="color:${f.score >= 80 ? 'var(--lime)' : f.score >= 50 ? 'var(--amber)' : 'var(--rose)'}">${f.score}<span style="font-size:26px">점</span></div><div class="of">${f.total}문제 중 ${f.correct}문제 맞았어요</div></div>
+      <div class="chips">${right.map(n => `<span class="chip o">${esc(n)} ○</span>`).join('')}${f.wrong.map(n => `<span class="chip x">${esc(n)} ✕</span>`).join('')}</div></div>`;
+  }
+  function qBlock(it, withOpts = true) {
+    return `<div class="q"><span class="no">${esc(it.no)}번</span>${escU(it.q_text)}</div>${it.bogi ? `<div class="bogi">&lt;보기&gt; ${escU(it.bogi)}</div>` : ''}${withOpts ? `<div class="opts">${(it.options || []).map((o, i) => o ? `${C[i]} ${escU(o)}` : '').filter(Boolean).join('<br>')}</div>` : ''}`;
+  }
+
+  function renderReason() {
+    $app.innerHTML = `${stepsBar()}<h2>${esc(ME)} · ${esc(RUN.cur_label)} 채점 결과</h2>${scoreBox()}
+      <p class="lead">틀린 문제 <b>${RUN.first.wrong.length}개</b>! 괜찮아요. 하나씩 <b>왜 틀렸는지</b> 골라 볼까요? 고르면 문제마다 <b>주목할 점</b>을 알려 줄게요.</p>
+      ${RUN.wrong_items.map(it => `<div class="card">${qBlock(it, false)}<div class="reasons">${RUN.reasons_list.map(z => `<div class="rz ${REASON[it.no] === z ? 'on' : ''}" onclick="pickReason('${esc(it.no)}','${esc(z)}')">${esc(z)}</div>`).join('')}</div></div>`).join('')}
+      <button class="btn lime" onclick="submitReasons()">주목할 점 보기 →</button>`;
+  }
+  function pickReason(n, z) { REASON[n] = z; const keep = window.scrollY; renderReason(); window.scrollTo(0, keep); }
+  async function submitReasons() {
+    const miss = RUN.wrong_items.filter(it => !REASON[it.no]).map(it => it.no);
+    if (miss.length) return toast(`${miss.join(', ')}번 이유도 골라 주세요`);
+    const d = await api('/api/clinic/kiosk/reasons', {reasons: REASON});
+    if (!d.success) return toast(d.detail);
+    RUN = d.run; render(); window.scrollTo(0, 0);
+  }
+
+  function renderHint() {
+    $app.innerHTML = `${stepsBar()}<h2>${esc(ME)} · 이 점에 주목해서 다시 풀어 봐요</h2>
+      <p class="lead">해설지를 출력해서 가져가면 편해요. 다 다시 풀었으면 <b>다시 푼 답 입력</b>을 눌러요.</p>
+      ${RUN.wrong_items.map(it => `<div class="card"><div class="myr">내가 고른 이유: ${esc(it.reason)}</div>${qBlock(it)}<div class="hint"><b>▶ 주목할 점</b><br>${escU(it.hint)}</div></div>`).join('')}
+      <div class="row2"><button class="btn sky" onclick="reprint('hint')">🖨 해설지 출력${RUN.hint_printed ? ' (한 번 더)' : ''}</button>
+      <button class="btn lime" onclick="MODE='reanswer'; render()">다시 푼 답 입력 →</button></div>
+      <p class="note">해설지를 출력했으면 일단 [처음으로]를 눌러도 돼요. 다 풀고 와서 이름을 누르면 여기로 돌아와요.</p>`;
+  }
+  async function reprint(which) {
+    const d = await api('/api/clinic/kiosk/print', {which});
+    if (!d.success) return toast(d.detail);
+    RUN = d.run; toast(which === 'hint' ? '🖨 해설지가 복사기로 나가요!' : '🖨 문제지를 다시 출력해요!'); render();
+  }
+
+  function renderAsk() {
+    const s = RUN.second;
+    $app.innerHTML = `${stepsBar()}<h2>${esc(ME)} · 다시 푼 결과</h2>
+      <div class="card">${s.fixed.length ? `<div style="font-size:18px;margin-bottom:6px">다시 풀어서 맞힌 문제 👍</div><div class="chips">${s.fixed.map(n => `<span class="chip o">${esc(n)} ○</span>`).join('')}</div>` : ''}
+        <div style="font-size:18px;margin:14px 0 6px">아직 틀린 문제</div><div class="chips">${s.still.map(n => `<span class="chip x">${esc(n)} ✕</span>`).join('')}</div></div>
+      <div class="ask">🤔 <b>이 문제는 아직 잘 모르는구나!</b><br>괜찮아요. 이런 문제가 바로 실력이 느는 문제예요.<br>
+        <b>국최 선생님께 질문</b>을 보내 두면, 선생님이 이 문제를 콕 집어서 설명해 줄 거예요.</div>
+      ${RUN.still_items.map(it => `<div class="card">${qBlock(it, false)}</div>`).join('')}
+      <button class="btn amber" onclick="sendAsk()">🙋 국최 선생님께 질문 보내기</button>`;
+  }
+  async function sendAsk() {
+    const d = await api('/api/clinic/kiosk/ask', {});
+    if (!d.success) return toast(d.detail);
+    RUN = d.run; toast('질문을 보냈어요! 선생님 답은 앱 질문 게시판에서 볼 수 있어요.'); render(); window.scrollTo(0, 0);
+  }
+
+  function renderNext() {
+    const f = RUN.first || {};
+    const hist = RUN.history.filter(h => h.score != null).map(h => `<span class="chip o" style="background:#1f2937;color:#e5e7eb">${esc(h.label)} ${h.score}점</span>`).join('');
+    const perfect = f.wrong && !f.wrong.length;
+    $app.innerHTML = `${stepsBar()}<h2>${esc(ME)} · ${esc(RUN.cur_label)} 끝!</h2>
+      ${perfect ? `<div class="big-msg" style="padding:6px"><div class="e">🎉</div><h2>${f.score}점! 다 맞았어요!</h2></div>` : ''}
+      <div class="card"><div class="chips">${hist}</div><p class="lead" style="margin:14px 0 0;font-size:19px">${esc(RUN.next_why)}</p></div>
+      ${RUN.next_set ? `<button class="btn lime" id="nextBtn" onclick="goNext()">🖨 ${esc(RUN.next_label)} 문제 출력</button>`
+                     : `<button class="btn lime" id="nextBtn" onclick="goNext()">오늘 클리닉 마치기</button>`}`;
+  }
+  async function goNext() {
+    document.getElementById('nextBtn').disabled = true;
+    const label = RUN.next_label;
+    const d = await api('/api/clinic/kiosk/next', {});
+    if (!d.success) { toast(d.detail); document.getElementById('nextBtn').disabled = false; return; }
+    RUN = d.run;
+    if (d.finished || RUN.finished) return renderDone();
+    printedMsg(label + ' 문제지', '다 풀면 교실 태블릿에서 내 이름을 누르고 답을 입력해요.');
+  }
+  function renderDone() {
+    $app.innerHTML = `<div class="big-msg"><div class="e">🏆</div><h2>${esc(ME)}, 오늘 클리닉 완료!</h2>
+      <div class="card" style="text-align:left;font-size:17px;line-height:1.7">${esc(RUN.summary)}</div>
+      <p class="lead">수고했어요! 질문 보낸 문제는 국최 선생님이 답해 줄 거예요.</p><button class="btn lime" onclick="goHome()">처음으로</button></div>`;
+  }
+
+  goHome(); setInterval(() => { if (!ME) goHome(); }, 60000);
+</script>
+</body>
+</html>
