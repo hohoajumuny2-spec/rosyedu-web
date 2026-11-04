@@ -62,7 +62,15 @@
 <main id="app"><div class="loading">불러오는 중...</div></main>
 <script>
   const API_URL = "https://korean-ai-tutor.onrender.com";
-  const CODE = new URLSearchParams(location.search).get('code') || '';
+  // 키오스크 코드: 주소의 ?code= 를 한 번 열면 이 기기에 기억해 둔다(logyedu.com 키오스크에서 넘어올 때는 주소에 코드가 없다)
+  const QS = new URLSearchParams(location.search);
+  const CODE = (() => { const c = QS.get('code') || ''; try { if (c) localStorage.setItem('clinicKioskCode', c); return c || localStorage.getItem('clinicKioskCode') || ''; } catch (e) { return c; } })();
+  // logyedu.com 키오스크의 '클리닉 출석'에서 넘어오면 ?name=학생&back=돌아갈주소 가 붙는다
+  const NAME_IN = (QS.get('name') || '').trim();
+  const BACK = (() => { const b = QS.get('back') || ''; return /^https:\/\/(www\.)?logyedu\.(com|co\.kr)(\/|$)/.test(b) ? b : ''; })();
+  let backT = null;
+  function goBack() { if (BACK) location.href = BACK; }
+  function backSoon(ms) { clearTimeout(backT); if (BACK) backT = setTimeout(goBack, ms); }
   const C = ['①','②','③','④','⑤'];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const escU = s => esc(s).replace(/&lt;u&gt;/g, '<u>').replace(/&lt;\/u&gt;/g, '</u>');
@@ -81,14 +89,16 @@
     } catch (e) { return {success:false, detail:'서버에 연결하지 못했어요. 인터넷을 확인해 주세요.'}; }
   }
   // 아무도 안 만지면 첫 화면으로 (다음 학생이 이전 학생 화면을 보지 않게)
-  function poke() { clearTimeout(idleT); if (ME) idleT = setTimeout(goHome, 120000); }
+  function poke() { clearTimeout(idleT); clearTimeout(backT); if (ME) idleT = setTimeout(goHome, BACK ? 60000 : 120000); }
   ['click','touchstart','keydown'].forEach(e => document.addEventListener(e, poke, true));
 
   // ── 첫 화면: 이름 고르기 ──
   async function goHome() {
+    // 출석 키오스크에서 넘어온 경우: 끝나면 출석 키오스크 첫 화면으로 돌아간다
+    if (BACK && ME) { $app.innerHTML = '<div class="loading">처음 화면으로 돌아가는 중...</div>'; return goBack(); }
     ME = ''; RUN = null; PICK = {}; REASON = {}; MODE = '';
     document.getElementById('homeBtn').style.display = 'none';
-    if (!CODE) { $app.innerHTML = '<p class="err">주소 끝에 ?code=키오스크코드 를 붙여 주세요. (원장님 화면 → 클리닉 운영 → 설정)</p>'; return; }
+    if (!CODE) { $app.innerHTML = '<p class="err">이 기기에 클리닉 키오스크 코드가 없어요.<br>원장님: 이 기기에서 한 번만 <b>logyedu.co.kr/clinic-kiosk.html?code=키오스크코드</b> 를 열어 주세요. (원장님 화면 → 클리닉 운영 → 설정)</p>'; backSoon(10000); return; }
     const d = await api(`/api/clinic/kiosk/today?code=${encodeURIComponent(CODE)}`);
     if (!d.success) { $app.innerHTML = `<p class="err">${esc(d.detail || '불러오지 못했어요.')}</p>`; return; }
     TODAY = d; renderHome();
@@ -107,9 +117,9 @@
     ME = n; document.getElementById('homeBtn').style.display = '';
     $app.innerHTML = '<div class="loading">불러오는 중...</div>';
     const d = await api('/api/clinic/kiosk/state', {});
-    if (!d.success) { $app.innerHTML = `<div class="big-msg"><div class="e">😥</div><h2>${esc(d.detail)}</h2><button class="btn gray" onclick="goHome()">처음으로</button></div>`; return; }
+    if (!d.success) { $app.innerHTML = `<div class="big-msg"><div class="e">😥</div><h2>${esc(d.detail)}</h2><button class="btn gray" onclick="goHome()">처음으로</button></div>`; backSoon(8000); return; }
     if (d.run) { RUN = d.run; PICK = {}; REASON = {}; MODE = ''; return render(); }
-    if (!d.program) { $app.innerHTML = `<div class="big-msg"><div class="e">🙋</div><h2>${esc(n)}, 어서 와요!</h2><p class="lead">오늘 준비된 클리닉이 아직 없어요.<br>원장님께 말씀해 주세요.</p><button class="btn gray" onclick="goHome()">확인</button></div>`; return; }
+    if (!d.program) { $app.innerHTML = `<div class="big-msg"><div class="e">🙋</div><h2>${esc(n)}, 어서 와요!</h2><p class="lead">오늘 준비된 클리닉이 아직 없어요.<br>원장님께 말씀해 주세요.</p><button class="btn gray" onclick="goHome()">확인</button></div>`; backSoon(6000); return; }
     renderIntro(d.program);
   }
 
@@ -136,6 +146,7 @@
   function printedMsg(what, next) {
     $app.innerHTML = `<div class="big-msg"><div class="e">🖨</div><h2>${esc(what)}가 복사기로 나가요!</h2><p class="lead">복사기에서 가져가세요.<br>${esc(next)}</p>
       <button class="btn lime" onclick="goHome()">확인</button><p class="note">복사기에서 안 나오면 원장님께 말씀해 주세요.</p></div>`;
+    backSoon(15000);
   }
 
   // ── 진행 중: 단계별 화면 ──
@@ -254,7 +265,8 @@
       <p class="lead">수고했어요! 질문 보낸 문제는 국최 선생님이 답해 줄 거예요.</p><button class="btn lime" onclick="goHome()">처음으로</button></div>`;
   }
 
-  goHome(); setInterval(() => { if (!ME) goHome(); }, 60000);
+  if (NAME_IN && CODE) pickName(NAME_IN); else goHome();
+  setInterval(() => { if (!ME && !BACK) goHome(); }, 60000);
 </script>
 </body>
 </html>
