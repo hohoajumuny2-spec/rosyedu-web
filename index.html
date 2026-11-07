@@ -340,6 +340,8 @@
             </div>
 
             <button onclick="submitEditStudent()" class="w-full bg-blue-600 hover:bg-blue-700 transition py-3 text-white font-bold rounded text-lg shadow-lg">수정 완료</button>
+            <button id="edit-withdraw-btn" onclick="withdrawFromEdit()" class="w-full mt-2 py-2.5 rounded font-bold text-sm transition border bg-transparent hover:bg-amber-900/40 border-amber-700 text-amber-300">퇴원 처리</button>
+            <p class="text-[11px] text-gray-500 mt-1 leading-relaxed">퇴원 처리하면 로그인 · 과제 · 알림에서 빠지고, 성적 · 상담 기록은 남습니다. 명단 맨 아래 '퇴원생'에서 언제든 되돌릴 수 있어요.</p>
         </div>
     </div>
 
@@ -7914,9 +7916,11 @@ let lavUid = 0;
             if (!list.length) { box.innerHTML = '<p class="text-gray-600 text-xs text-center py-6">학생이 없습니다.</p>'; return; }
 
             // 반별로 묶어서 보여준다 (명단 화면과 같은 순서)
-            const groups = ADMIN_CLASSES.map(c => ({ name: c.name, students: list.filter(s => (s.class_name || '') === c.name) }));
+            // 💡 예전엔 옛 한 칸(class_name)만 봐서 수학반 · 영어반에 넣은 학생이 '반 미배정'으로 나왔다. 과목별 반까지 본다.
+            const byGrade = (a, b) => rosterGradeRank(rosterGradeKey(a)) - rosterGradeRank(rosterGradeKey(b)) || String(a.student_name).localeCompare(String(b.student_name), 'ko');
+            const groups = ADMIN_CLASSES.map(c => ({ name: c.name, students: list.filter(s => studentClassList(s).includes(c.name)).sort(byGrade) }));
             const assigned = new Set(ADMIN_CLASSES.map(c => c.name));
-            const rest = list.filter(s => !assigned.has(s.class_name || ''));
+            const rest = list.filter(s => !studentClassList(s).some(n => assigned.has(n))).sort(byGrade);
             if (rest.length) groups.push({ name: '반 미배정', students: rest });
 
             box.innerHTML = groups.filter(g => g.students.length).map(g => `
@@ -7960,7 +7964,7 @@ let lavUid = 0;
             const stu = ADMIN_STUDENTS.find(s => s.student_name === COUNSEL_TARGET) || {};
             document.getElementById('counsel-title').innerText = COUNSEL_TARGET;
             document.getElementById('counsel-sub').innerText =
-                `${stu.school || ''} ${stu.grade || ''} ${stu.class_name ? '· ' + stu.class_name : ''}  ${c.updated_at ? '· 최근 수정 ' + c.updated_at : ''}`;
+                `${stu.school || ''} ${stu.grade || ''} ${studentClassLabel(stu) ? '· ' + studentClassLabel(stu) : ''}  ${c.updated_at ? '· 최근 수정 ' + c.updated_at : ''}`;
 
             const scaleSel = document.getElementById('naesin-scale');
             if (scaleSel) scaleSel.value = c.naesin_scale || '9';
@@ -8033,7 +8037,7 @@ let lavUid = 0;
                             <input type="text" id="pf-school" value="${escAttr(stu.school || '')}" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
                         <div><label class="text-[11px] text-gray-400 mb-1 block">학년</label>
                             <input type="text" id="pf-grade" value="${escAttr(stu.grade || '')}" class="w-full p-2 bg-gray-800 text-white rounded text-sm"></div>
-                        <div><label class="text-[11px] text-gray-400 mb-1 block">반</label>
+                        <div><label class="text-[11px] text-gray-400 mb-1 block">국어반 <span class="text-gray-600">(수학 · 영어반은 학생 명단의 [수정]에서)</span></label>
                             <select id="pf-class" class="w-full p-2 bg-gray-800 text-white rounded text-sm class-select"><option value="">반 미배정</option></select></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${PROFILE_FIELDS.map(field).join('')}</div>
@@ -8053,7 +8057,7 @@ let lavUid = 0;
 
             refreshClassSelects();
             const sel = document.getElementById('pf-class');
-            if (sel) { sel.value = stu.class_name || ''; if (sel.value !== (stu.class_name || '')) sel.value = ''; }
+            if (sel) { const v = studentClassFor(stu, 'korean'); sel.value = v; if (sel.value !== v) sel.value = ''; }
         }
 
         function renderMemos() {
@@ -10352,7 +10356,7 @@ let lavUid = 0;
                 .foot { margin-top:24px; text-align:center; font-size:9pt; color:#1a3a8f; border-top:1px solid #ccc; padding-top:10px; }
             </style></head><body>
                 <div class="head"><h1>${escapeHtml(title)}</h1>
-                <p>${escapeHtml(stu.school || '')} ${escapeHtml(stu.grade || '')} ${escapeHtml(COUNSEL_TARGET)}${stu.class_name ? ' · ' + escapeHtml(stu.class_name) : ''} &nbsp;|&nbsp; ${new Date().toLocaleDateString('ko-KR')}</p></div>
+                <p>${escapeHtml(stu.school || '')} ${escapeHtml(stu.grade || '')} ${escapeHtml(COUNSEL_TARGET)}${studentClassLabel(stu) ? ' · ' + escapeHtml(studentClassLabel(stu)) : ''} &nbsp;|&nbsp; ${new Date().toLocaleDateString('ko-KR')}</p></div>
                 ${body}
                 <div class="foot">로지에듀 AI 스마트 프로그램</div>
             </body></html>`;
@@ -10703,7 +10707,7 @@ let lavUid = 0;
             if (CLASSES_UNAVAILABLE) { box.innerHTML = '<p class="text-[11px] text-yellow-500 text-center py-2 leading-relaxed">반 기능을 서버에서 불러오지 못했습니다.<br>잠시 뒤 새로고침해주세요.</p>'; return; }
             if (!ADMIN_CLASSES.length) { box.innerHTML = '<p class="text-[11px] text-gray-600 text-center py-2">아직 만든 반이 없습니다.</p>'; return; }
             box.innerHTML = ADMIN_CLASSES.map(c=>{
-                const n = ADMIN_STUDENTS.filter(s=>(s.class_name||'')===c.name).length;
+                const n = ADMIN_STUDENTS.filter(s => studentClassList(s).includes(c.name)).length;
                 return `<div class="flex items-center justify-between bg-gray-800 px-2 py-1.5 rounded">
                     <div class="min-w-0 mr-2">
                         <div class="text-white text-xs font-bold truncate">${escapeHtml(c.name)} <span class="text-gray-500 font-normal">${n}명</span></div>
@@ -10922,8 +10926,17 @@ let lavUid = 0;
                     if (info.grade !== lastGrade) { groups.push({ gradeHead: true, title: info.grade }); lastGrade = info.grade; }
                     groups.push({ key: subj + ':' + cls.name, title: cls.name, sub: classScheduleLabel(cls), students: students });
                 });
-                const names = new Set(classes.map(c => c.name));
-                const rest = takers.filter(s => !names.has(studentClassFor(s, subj)) && gradeOk(s)).sort(byGrade);
+                const names = new Set(classes.map(c => c.cls.name));
+                const leftover = takers.filter(s => !names.has(studentClassFor(s, subj)) && gradeOk(s)).sort(byGrade);
+                // 💡 반 이름은 들어 있는데 반 관리 목록에 없는 반(이름을 바꿨거나 지운 반) — 예전엔 '미배정'에 섞여서
+                //    "반이 있는데 왜 미배정이지?"가 됐다. 그 이름 그대로 따로 묶고, 어떻게 고치는지 적어 준다.
+                const orphan = {};
+                leftover.forEach(s => { const n = studentClassFor(s, subj); if (n) (orphan[n] = orphan[n] || []).push(s); });
+                Object.keys(orphan).sort((a, b) => a.localeCompare(b, 'ko')).forEach(n => groups.push({
+                    key: subj + ':orphan:' + n, title: n, orphan: true,
+                    sub: '반 관리 목록에 없는 반 이름이에요. 학생을 체크하고 위에서 반을 고른 뒤 [선택 학생 반 배정]을 누르면 정리됩니다',
+                    students: orphan[n] }));
+                const rest = leftover.filter(s => !studentClassFor(s, subj));
                 if (rest.length) groups.push({ key: subj + ':__none__', title: SUBJ[subj] + ' 반 미배정', sub: '학생을 체크하고 위에서 반을 고른 뒤 [선택 학생 반 배정]', students: rest, none: true });
             });
             const left = ADMIN_WITHDRAWN.filter(gradeOk);
@@ -10937,23 +10950,28 @@ let lavUid = 0;
                 const open = !collapsedClassGroups.has(g.key);
                 const isNone = !!g.none;
                 const isLeft = g.key === '__withdrawn__';
-                const head = isLeft ? 'bg-gray-900 border-gray-700' : isNone ? 'bg-gray-700/40 border-gray-600' : 'bg-blue-900/30 border-blue-700';
+                const head = isLeft ? 'bg-gray-900 border-gray-700' : isNone ? 'bg-gray-700/40 border-gray-600' : g.orphan ? 'bg-amber-900/30 border-amber-700' : 'bg-blue-900/30 border-blue-700';
 
                 const subjectLabels = { korean: '국어', math: '수학', english: '영어' };
                 const subjectColors = { korean: 'bg-blue-900/50 text-blue-300', math: 'bg-indigo-900/50 text-indigo-300', english: 'bg-cyan-900/50 text-cyan-300' };
+                const multiGrade = new Set(g.students.map(rosterGradeKey)).size > 1;
+                let prevGrade = null;
                 const rows = g.students.length ? g.students.map(s => {
+                    const gk = rosterGradeKey(s);
+                    const gradeLine = (multiGrade && gk !== prevGrade) ? `<div class="text-[10px] font-bold text-amber-300/90 pt-1 pl-1">${escapeHtml(gk)}</div>` : '';
+                    prevGrade = gk;
                     const lv = computeLevelFromXp(s.xp);
                     const subs = (s.subjects && s.subjects.length) ? s.subjects : ['korean'];
                     const subjBadges = subs.map(sub => `<span class="text-[10px] ${subjectColors[sub]||'bg-gray-700 text-gray-300'} px-1.5 py-0.5 rounded-full ml-1">${subjectLabels[sub]||sub}</span>`).join('');
                     const leftBadge = s.withdrawn ? `<span class="text-[10px] bg-gray-600 text-gray-200 px-1.5 py-0.5 rounded-full ml-1">퇴원${s.withdrawn_at ? ' ' + escapeHtml(s.withdrawn_at.slice(2)) : ''}</span>` : '';
-                    return `<div class="flex items-center gap-2 bg-gray-800 p-2 rounded ${s.withdrawn ? 'opacity-60' : ''}">
+                    return `${gradeLine}<div class="flex items-center gap-2 bg-gray-800 p-2 rounded ${s.withdrawn ? 'opacity-60' : ''}">
                         <input type="checkbox" class="student-checkbox shrink-0" value="${escAttr(s.id)}">
                         <span class="flex-grow min-w-0 truncate text-sm text-white">${escapeHtml(s.school||'')} ${escapeHtml(s.grade||'')} <b>${escapeHtml(s.student_name)}</b>
                             <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-1.5 py-0.5 rounded-full ml-1" title="누적 ${s.xp||0} 포인트">${lv.icon} Lv.${lv.level} ${escapeHtml(lv.name)}</span>${subjBadges}${leftBadge}${pushBadgeHtml(s.student_name)}
                         </span>
                         ${(ADMIN_PUSH_STATUS && ADMIN_PUSH_STATUS[s.student_name]) ? `<button onclick="sendTestPush('${escAttr(s.student_name)}')" class="shrink-0 bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs text-emerald-300 font-bold transition" title="이 학생 휴대폰으로 테스트 알림을 한 번 보냅니다"><i class="fa-solid fa-bell"></i> 테스트</button>` : ''}
                         <button onclick="fetchReports('${escAttr(s.student_name)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded text-xs text-white font-bold transition">이력</button>
-                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}','${escAttr(subs.join(','))}','${escAttr(JSON.stringify(s.class_names||{}))}')" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
+                        <button onclick="openEditStudent('${escAttr(s.id)}','${escAttr(s.student_name)}','${escAttr(s.school||'')}','${escAttr(s.grade||'')}','${escAttr(s.class_name||'')}','${escAttr(subs.join(','))}','${escAttr(JSON.stringify(s.class_names||{}))}',${s.withdrawn ? 'true' : 'false'})" class="shrink-0 bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs text-white font-bold transition">수정</button>
                     </div>`;
                 }).join('') : '<p class="text-gray-600 text-xs text-center py-3">이 반에 배정된 학생이 없습니다.</p>';
 
@@ -10976,9 +10994,17 @@ let lavUid = 0;
         /** 그 과목의 반. 과목별 반이 없으면 국어는 예전 한 칸(class_name)을 본다. */
         function studentClassFor(s, subj) {
             const names = s.class_names || {};
-            if (names[subj]) return names[subj];
-            return subj === 'korean' ? (s.class_name || '') : '';
+            const v = String(names[subj] || '').trim();
+            if (v) return v;
+            return subj === 'korean' ? String(s.class_name || '').trim() : '';
         }
+        /** 학생이 든 모든 반(국어 · 수학 · 영어 순, 겹치면 하나) — 상담 탭 · 반 관리 인원수처럼 '어느 반이든'을 볼 때 */
+        function studentClassList(s) {
+            const out = [];
+            ['korean', 'math', 'english'].forEach(k => { const v = studentClassFor(s, k); if (v && !out.includes(v)) out.push(v); });
+            return out;
+        }
+        function studentClassLabel(s) { return studentClassList(s).join(' · '); }
         /** 반 이름 → 과목: 학생이 그 반을 어느 과목 칸에 두었는지로 보고, 없으면 이름('수학' · '영어')으로 짐작 */
         function rosterClassSubjects() {
             const out = {};
@@ -11115,8 +11141,15 @@ let lavUid = 0;
         }
 
         // 💡 팝업 모달을 띄우고 기존 정보를 채워넣는 함수
-        function openEditStudent(id,n,s,g,cls,subs,classNamesJson) {
+        function openEditStudent(id,n,s,g,cls,subs,classNamesJson,withdrawn) {
             document.getElementById('edit-old-id').value=id;
+            // 퇴원 처리 / 복귀 버튼 — 다니는 학생이면 '퇴원 처리', 퇴원생이면 '다시 다니기'
+            const wb = document.getElementById('edit-withdraw-btn');
+            if (wb) {
+                wb.dataset.withdrawn = withdrawn ? '1' : '';
+                wb.innerHTML = withdrawn ? '<i class="fa-solid fa-rotate-left mr-1"></i>다시 다니기(복귀)' : '<i class="fa-solid fa-person-walking-arrow-right mr-1"></i>퇴원 처리';
+                wb.className = 'w-full mt-2 py-2.5 rounded font-bold text-sm transition border ' + (withdrawn ? 'bg-gray-700 hover:bg-gray-600 border-gray-500 text-white' : 'bg-transparent hover:bg-amber-900/40 border-amber-700 text-amber-300');
+            }
             document.getElementById('edit-name').value=n;
             document.getElementById('edit-school').value=s;
             document.getElementById('edit-grade').value=g;
@@ -11136,6 +11169,25 @@ let lavUid = 0;
                 if (cb) cb.checked = subjSet.has(k);
             });
             showModal('edit-student');
+        }
+
+        // 수정 창의 [퇴원 처리] / [다시 다니기] — 체크 없이 이 학생 한 명만
+        async function withdrawFromEdit() {
+            const id = document.getElementById('edit-old-id').value;
+            const name = document.getElementById('edit-name').value || id;
+            const wb = document.getElementById('edit-withdraw-btn');
+            const on = !(wb && wb.dataset.withdrawn);
+            const msg = on
+                ? `${name} 학생을 퇴원 처리할까요?\n\n· 로그인할 수 없고 과제 · 시험 · 알림이 가지 않습니다.\n· 성적 · 과제 · 상담 기록은 그대로 남습니다.\n· 다시 다니면 되돌릴 수 있어요.`
+                : `${name} 학생을 다시 다니는 학생으로 되돌릴까요?\n\n(휴대폰 알림은 학생이 다시 켜야 합니다)`;
+            if (!confirm(msg)) return;
+            showLoader(on ? '퇴원 처리 중...' : '복귀 처리 중...');
+            const r = await adminPost('/api/admin/student/withdraw', { ids: [id], withdrawn: on });
+            hideLoader();
+            if (!r.ok) return alert((on ? '퇴원 처리하지 못했습니다.\n' : '되돌리지 못했습니다.\n') + r.message);
+            closeModal('edit-student-modal');
+            showToast(on ? `${name} 학생을 퇴원 처리했습니다.` : `${name} 학생이 다시 다니는 학생이 됐습니다.`);
+            loadAdminStudents();
         }
 
         async function submitEditStudent() {
