@@ -2720,6 +2720,7 @@
                                     </span>
                                     <button onclick="openKakaoNotice()" title="체크한 학생에게 학원 안내 카톡" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-3 py-1.5 text-xs rounded font-black transition"><i class="fa-solid fa-comment mr-1"></i>선택 카톡</button>
                                     <button onclick="openBoardForSelected()" title="체크한 학생에게만 보이는 공지를 씁니다. 올리면 그 학생들에게 앱 알림과 카톡이 갑니다" class="bg-amber-500 hover:bg-amber-400 text-gray-900 px-3 py-1.5 text-xs rounded font-black transition"><i class="fa-solid fa-bullhorn mr-1"></i>선택 공지</button>
+                                    <button onclick="openHomeworkForSelected()" title="체크한 학생에게만 보이는 과제를 냅니다. 올리면 그 학생들에게만 앱 알림과 카톡이 갑니다" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 text-xs rounded font-black transition"><i class="fa-solid fa-file-pen mr-1"></i>선택 과제</button>
                                     <button onclick="withdrawSelectedStudents(true)" title="기록은 남기고 로그인 · 과제 · 알림에서 뺍니다. 다시 다니면 되돌릴 수 있어요" class="bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 퇴원 처리</button>
                                     <button onclick="withdrawSelectedStudents(false)" title="퇴원생 칸에서 체크한 학생을 다시 다니는 학생으로 되돌립니다" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 복귀</button>
                                     <button onclick="deleteSelectedStudents()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs rounded font-bold transition">선택 삭제</button>
@@ -3491,20 +3492,29 @@
                             <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">과제 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
                             <div id="hw-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
                             <p id="hw-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
+                            <!-- 💡 2026-11-08: 특정 학생에게만 내는 과제 — 공지의 학생 지정과 같은 규칙 -->
+                            <label class="text-[11px] text-amber-300 font-bold block mb-1">학생 지정 (고른 학생에게만 보이고, 앱 알림·카톡도 그 학생에게만 갑니다)</label>
+                            <div class="flex gap-1 mb-1">
+                                <input id="hw-student-input" list="hw-student-options" placeholder="학생 이름 (여러 명은 쉼표로)" onfocus="fillHwStudentOptions()" onkeydown="if(event.key==='Enter'){event.preventDefault();addHwStudent();}" class="flex-1 min-w-0 p-1.5 bg-gray-800 text-white text-xs rounded border border-gray-600 outline-none focus:border-amber-400">
+                                <button type="button" onclick="addHwStudent()" class="shrink-0 bg-amber-500 hover:bg-amber-400 text-gray-900 text-xs font-bold px-3 rounded">추가</button>
+                            </div>
+                            <datalist id="hw-student-options"></datalist>
+                            <div id="hw-student-chips" class="flex flex-wrap gap-1 mb-1"></div>
+                            <p id="hw-student-label" class="text-[11px] mb-2 px-0.5 text-gray-400"></p>
                             <label class="text-[11px] text-emerald-300 font-bold block mb-1">정답표 (넣어두면 학생이 OMR로 답만 마킹해도 자동 채점됩니다)</label>
                             <p class="text-[11px] text-gray-500 mb-1">객관식은 숫자로, 단답형은 글자로 적으면 됩니다.
                                 답을 내지 않아도 되는 문항은 <b class="text-sky-300">-</b> 를 적어주세요 — 채점에서 빠지고,
                                 학생 화면에도 '안 내도 되는 문항'으로 보입니다.<br>
                                 <b class="text-amber-300">단답형 정답에 쉼표가 들어가면 반드시 한 줄에 하나씩</b> 적어주세요
                                 (한 줄로 죽 적으면 쉼표에서 칸이 나뉩니다).<br>
-                                <b class="text-violet-300">복수 정답</b> — <b class="text-white">3/5</b> = 3번 · 5번 <b>둘 중 아무거나</b> 맞음(이의 제기로 정답 2개 인정) ·
-                                <b class="text-white">3+5</b> = 3번과 5번을 <b>둘 다</b> 골라야 맞음('두 개 고르시오' 문항).
-                                번호를 붙인 줄에 <b class="text-white">2번 ③⑤</b> 처럼 적어도 '둘 중 아무거나'로 읽습니다.<br>
+                                <b class="text-violet-300">복수 정답</b> — <b class="text-white">3/5</b> 또는 <b class="text-white">3+5</b> = 3번과 5번을 <b>둘 다</b> 골라야 맞음('두 개 고르시오' 문항).
+                                번호를 붙인 줄에 <b class="text-white">2번 ③⑤</b> 처럼 적어도 '둘 다'로 읽습니다.<br>
+                                <b class="text-amber-300">둘 중 아무거나 인정</b>(이의 제기로 정답 2개 인정)은 <b class="text-white">3|5</b> 처럼 세로줄(|)로 적으세요.<br>
                                 <b class="text-sky-300">분수 · 수식</b> — <b class="text-white">7/8</b> · <b class="text-white">1 1/2</b>(대분수) · <b class="text-white">0.75</b> · <b class="text-white">-2</b> · <b class="text-white">2x+1</b> · <b class="text-white">x^2</b> · <b class="text-white">√3</b>(또는 루트3) · <b class="text-white">2√3</b> · <b class="text-white">3π</b> 처럼 적고, <b class="text-amber-300">한 줄에 하나씩</b>.
                                 <b class="text-white">1/2 · 3/4</b> 처럼 1~5 숫자로만 된 분수는 '3번 또는 4번'과 구별이 안 되니 아래 <b class="text-sky-300">수학 과제</b>를 켜거나 앞에 <b class="text-white">=</b> 를 붙여(<b class="text-white">=3/4</b>) 주세요.
                                 학생이 <b class="text-white">0.75</b> · <b class="text-white">6/8</b> · <b class="text-white">루트3</b> 처럼 다르게 써도 같은 값이면 맞게 채점됩니다.</p>
-                            <label class="flex items-center gap-2 text-[12px] text-sky-200 mb-1 cursor-pointer"><input type="checkbox" id="hw-math" onchange="updateHomeworkAnswerCount()" class="w-4 h-4 accent-sky-500"> <b>수학 과제</b> <span class="text-gray-400">— '/'와 '+'를 복수 정답이 아니라 분수 · 식으로 읽습니다 (1/2, 3/4, 2+√3 …)</span></label>
-                            <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4&#10;단답형 · 분수 · 복수 정답은 한 줄에 하나씩&#10;1번 3&#10;2번 3/5   (둘 중 아무거나)&#10;3번 2+4   (둘 다 골라야)&#10;4번 3/4   (분수)&#10;5번 2x+1&#10;6번 훈민정음" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
+                            <label class="flex items-center gap-2 text-[12px] text-sky-200 mb-1 cursor-pointer"><input type="checkbox" id="hw-math" onchange="updateHomeworkAnswerCount()" class="w-4 h-4 accent-sky-500"> <b>수학 과제</b> <span class="text-gray-400">— '/'와 '+'를 복수 정답(둘 다 고르기)이 아니라 분수 · 식으로 읽습니다 (1/2, 3/4, 2+√3 …)</span></label>
+                            <textarea id="hw-answers" rows="3" oninput="updateHomeworkAnswerCount()" placeholder="예) 1,3,5,2,4&#10;단답형 · 분수 · 복수 정답은 한 줄에 하나씩&#10;1번 3&#10;2번 3/5   (둘 다 골라야)&#10;3번 3|5   (둘 중 아무거나 인정)&#10;4번 3/4   (분수)&#10;5번 2x+1&#10;6번 훈민정음" class="w-full p-2 mb-1 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-emerald-500 text-sm resize-y"></textarea>
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span id="hw-answers-count" class="text-[11px] text-gray-500">정답표를 넣으면 OMR 자동 채점이 켜집니다.</span>
                                 <button onclick="pullFromQuestionBank()" class="ml-2 text-[11px] font-bold text-sky-300 hover:text-sky-200">
@@ -10681,6 +10691,7 @@ let lavUid = 0;
                 : `<span class="text-gray-400">전체 대상 (반을 고르지 않으면 모두에게 보입니다)</span>`;
             // 공지에서 학생을 골랐으면 '전체 대상'이 아니다 — 학생 지정 안내와 함께 고쳐 쓴다
             if (box.id === 'bd-target-class') { try { renderBoardStudents(); } catch (e) {} }
+            if (box.id === 'hw-target-class') { try { renderHwStudents(); } catch (e) {} }
         }
 
         function getPickedClasses(box) {
@@ -11874,6 +11885,56 @@ let lavUid = 0;
                 ? `<span class="text-amber-300 font-bold">${BD_STUDENTS.length}명 지정</span>${picked.length ? ' · 고른 반 학생에게도 보입니다' : ' · 이 학생들에게만 보입니다'}`
                 : '학생을 고르지 않으면 위의 반 설정을 따릅니다.';
         }
+        // ── 과제의 학생 지정 (공지의 학생 지정과 같은 규칙) ──
+        let HW_STUDENTS = [];
+        async function fillHwStudentOptions() {
+            if (!ADMIN_STUDENTS.length && typeof loadAdminClassData === 'function') await loadAdminClassData();
+            const dl = document.getElementById('hw-student-options');
+            if (dl) dl.innerHTML = ADMIN_STUDENTS.map(s => `<option value="${escAttr(s.student_name || '')}">`).join('');
+        }
+        async function addHwStudent() {
+            const input = document.getElementById('hw-student-input');
+            const wanted = String(input.value || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean);
+            if (!wanted.length) return;
+            if (!ADMIN_STUDENTS.length) await fillHwStudentOptions();
+            const known = new Set(ADMIN_STUDENTS.map(s => s.student_name));
+            const missing = wanted.filter(n => known.size && !known.has(n));
+            wanted.filter(n => !missing.includes(n)).forEach(n => { if (!HW_STUDENTS.includes(n)) HW_STUDENTS.push(n); });
+            input.value = missing.join(', ');
+            renderHwStudents();
+            if (missing.length) alert(`학생 명단에 없는 이름입니다: ${missing.join(', ')}\n이름을 다시 확인해 주세요.`);
+        }
+        function removeHwStudent(name) { HW_STUDENTS = HW_STUDENTS.filter(n => n !== name); renderHwStudents(); }
+        function setHwStudents(names) {
+            HW_STUDENTS = Array.from(new Set((names || []).map(n => String(n).trim()).filter(Boolean)));
+            renderHwStudents();
+        }
+        function renderHwStudents() {
+            const box = document.getElementById('hw-student-chips');
+            if (!box) return;
+            box.innerHTML = HW_STUDENTS.map(n => `<span class="text-[12px] bg-amber-500/20 text-amber-200 border border-amber-500/40 px-2 py-0.5 rounded flex items-center gap-1">${escapeHtml(n)}<button type="button" onclick="removeHwStudent('${escAttr(n)}')" title="빼기" class="text-amber-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button></span>`).join('');
+            const picked = getPickedClasses('hw-target-class');
+            const classLabel = document.getElementById('hw-target-class-label');
+            if (classLabel && !picked.length) classLabel.innerHTML = HW_STUDENTS.length
+                ? '<span class="text-gray-400">반 지정 없음 (아래에서 고른 학생에게만 보입니다)</span>'
+                : '<span class="text-gray-400">전체 대상 (반을 고르지 않으면 모두에게 보입니다)</span>';
+            const label = document.getElementById('hw-student-label');
+            if (label) label.innerHTML = HW_STUDENTS.length
+                ? `<span class="text-amber-300 font-bold">${HW_STUDENTS.length}명 지정</span>${picked.length ? ' · 고른 반 학생에게도 보입니다' : ' · 이 학생들에게만 보입니다'}`
+                : '학생을 고르지 않으면 위의 반 설정을 따릅니다.';
+        }
+        // 학생 명단에서 체크한 학생에게 과제 내기
+        function openHomeworkForSelected() {
+            const names = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+            if (!names.length) return alert('과제를 낼 학생을 먼저 체크해 주세요.');
+            switchAdminTab('admin-hw');
+            cancelEditHomework(false);
+            setHwStudents(names);
+            const t = document.getElementById('hw-title');
+            t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => t.focus(), 300);
+            showToast(`${HW_STUDENTS.length}명을 과제 대상으로 골랐습니다. 과제명과 정답표를 넣어 주세요.`);
+        }
         function boardTargetLabel(p) {
             const parts = [];
             if ((p.target_classes || []).length) parts.push(p.target_classes.join(', '));
@@ -12119,6 +12180,7 @@ let lavUid = 0;
             document.getElementById('hw-deadline').value = String(h.deadline || '').slice(0, 16);
             document.getElementById('hw-group').value = h.group || '';
             setPickedClasses('hw-target-class', h.target_classes || []);
+            setHwStudents(h.target_students || []);
             HW_EXPLANATIONS = Object.assign({}, h.explanations || {});
             updateHomeworkAnswerCount();
             updateHwExplCount();
@@ -12138,6 +12200,7 @@ let lavUid = 0;
                 document.getElementById('hw-deadline').value = '';
                 document.getElementById('hw-group').value = '';
                 clearClassPicker('hw-target-class');
+                setHwStudents([]);
             }
             HW_EXPLANATIONS = {};
             updateHomeworkAnswerCount();
@@ -12225,6 +12288,7 @@ let lavUid = 0;
             fd.append("explanations", JSON.stringify(HW_EXPLANATIONS || {}));
             fd.append("old_title", isEdit ? EDITING_HW_TITLE : "");
             fd.append("target_classes", getPickedClasses('hw-target-class').join(","));
+            fd.append("target_students", HW_STUDENTS.join(","));
             fd.append("deadline", document.getElementById('hw-deadline').value || "");
             const group = document.getElementById('hw-group').value.trim();
             fd.append("group", group);
@@ -12251,6 +12315,7 @@ let lavUid = 0;
             const common = {
                 kind: document.getElementById('hw-kind').value,
                 target_classes: getPickedClasses('hw-target-class').join(","),
+                target_students: HW_STUDENTS.join(","),
                 deadline: document.getElementById('hw-deadline').value || "",
                 group,
             };
@@ -12299,8 +12364,8 @@ let lavUid = 0;
         // 수학 과제: 보기 번호처럼 보이는 '3/4' · '2+3' 을 분수 · 식 그대로 쓰게 '=' 를 붙인다(서버 is_choice_combo 와 같은 규칙)
         function isChoiceComboJS(a) {
             a = String(a || '').trim();
-            if (!a || a.startsWith('=') || !/[\/+]/.test(a)) return false;
-            return a.split(/[\/+]/).every(x => /^[1-5]$/.test(x.trim()));
+            if (!a || a.startsWith('=') || !/[\/+|]/.test(a)) return false;
+            return a.split(/[\/+|]/).every(x => /^[1-5]$/.test(x.trim()));
         }
         function mathifyAnswers(text) {
             const math = document.getElementById('hw-math') && document.getElementById('hw-math').checked;
@@ -12321,9 +12386,9 @@ let lavUid = 0;
             const label = a => {
                 if (a === '-') return '<span class="text-gray-500">안 냄</span>';
                 if (!isCombo(a)) return escapeHtml(String(a).replace(/^=/, ''));   // '=3/4'(분수) · '2x+1'(식) 은 글자 그대로
-                const ors = String(a).split('/').filter(Boolean);
-                const txt = ors.map(o => o.split('+').map(x => circ(x.trim())).join('와 ')).join(' 또는 ');
-                return (ors.length > 1 || a.includes('+')) ? `<b class="text-violet-300">${txt}</b>` : txt;
+                const ors = String(a).split('|').filter(Boolean);
+                const txt = ors.map(o => o.split(/[\/+]/).map(x => circ(x.trim())).join('와 ')).join(' 또는 ');
+                return (ors.length > 1 || /[\/+]/.test(a)) ? `<b class="text-violet-300">${txt}</b>` : txt;
             };
             const isCombo = isChoiceComboJS;
             const multi = list.filter(isCombo).length;
@@ -12342,9 +12407,9 @@ let lavUid = 0;
                 if (!it) return;
                 const m = it.match(/^\s*\d{1,3}\s*(?:번|[.)])\s*(.+)$/);
                 if (m) {
-                    // 번호를 붙인 줄의 '③⑤' · '3, 5' → 그 문항의 복수 정답 '3/5' (서버 multi_choice_slot 과 같은 규칙)
+                    // 번호를 붙인 줄의 '③⑤' · '3, 5' → 그 문항의 복수 정답 '3/5'(둘 다 골라야) (서버 multi_choice_slot 과 같은 규칙)
                     it = m[1].trim();
-                    if (!/[\/+]/.test(it)) {
+                    if (!/[\/+|]/.test(it)) {
                         let t = it; [...circled].forEach((c, i) => { t = t.split(c).join(' ' + (i + 1) + ' '); });
                         const ps = t.split(/[\s,·]+/).filter(Boolean);
                         if (ps.length > 1 && ps.every(p => /^[1-5]$/.test(p))) { out.push(Array.from(new Set(ps)).join('/')); return; }
@@ -12722,7 +12787,8 @@ let lavUid = 0;
                                 <div class="text-[10px] text-gray-400 mt-0.5">
                                     ${h.deadline ? `<span class="${isHomeworkPast(h) ? 'text-gray-500' : 'text-rose-300'}">마감 ${escapeHtml(hwDeadlineLabel(h.deadline))}${isHomeworkPast(h) ? ' (지남)' : ''}</span> · ` : ''}
                                     ${h.question_count ? `정답 ${h.question_count}문항 · OMR 자동 채점` : '정답표 없음 · 파일 제출 방식'}
-                                    ${h.answer_file ? ' · 해답 파일 있음' : ''}</div>
+                                    ${h.answer_file ? ' · 해답 파일 있음' : ''}
+                                    ${((h.target_classes || []).length || (h.target_students || []).length) ? ` · <span class="text-amber-200" title="이 과제가 보이는 대상">대상 ${escapeHtml(boardTargetLabel(h))}</span>` : ''}</div>
                             </div>
                             <div class="flex gap-1 shrink-0">
                                 <button onclick="setHomeworkHidden('${escAttr(h.title)}', ${!h.hidden})" title="${h.hidden ? '학생 화면에 다시 보이게 합니다' : '학생 화면에서 숨깁니다 (제출 기록은 남습니다)'}" class="text-gray-300 text-[11px] bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition font-bold"><i class="fa-solid ${h.hidden ? 'fa-eye' : 'fa-eye-slash'}"></i> ${h.hidden ? '보이기' : '숨기기'}</button>
@@ -13667,8 +13733,8 @@ let lavUid = 0;
         }
 
         // ── 답이 둘 이상인 문항 ────────────────────────────
-        //   정답표에 '3+5' 라고 적으면 둘 다 골라야 맞다. 학생 답도 '3+5' 로 담는다.
-        //   '3/5'(둘 중 아무거나 인정)와는 다른 것이다.
+        //   정답표에 '3+5'(또는 '3/5') 라고 적으면 둘 다 골라야 맞다. 학생 답도 '3+5' 로 담는다.
+        //   '3|5'(둘 중 아무거나 인정)와는 다른 것이다.
         function omrPickCount(q) {
             if (q && q.pick) return Number(q.pick) || 1;
             const t = String((q && q.qtype) || '');
