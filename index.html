@@ -7459,6 +7459,44 @@ let lavUid = 0;
             loadQna();
         }
 
+        // ── 원장님: 선생님께만 질문을 고른 학생에게 공유 ──
+        const QNA_SHARE = {};      // 질문 id → 공유할 학생 이름(화면에서 고치는 중)
+        async function fillQnaShareOptions() {
+            if (!ADMIN_STUDENTS.length && typeof loadAdminClassData === 'function') await loadAdminClassData();
+            let dl = document.getElementById('qna-share-options');
+            if (!dl) { dl = document.createElement('datalist'); dl.id = 'qna-share-options'; document.body.appendChild(dl); }
+            dl.innerHTML = ADMIN_STUDENTS.map(s => `<option value="${escAttr(s.student_name || '')}">`).join('');
+        }
+        async function addQnaShare(id) {
+            const input = document.getElementById(`qna-share-input-${id}`);
+            const wanted = String(input.value || '').split(/[,\n]/).map(x => x.trim()).filter(Boolean);
+            if (!wanted.length) return;
+            if (!ADMIN_STUDENTS.length) await fillQnaShareOptions();
+            const known = new Set(ADMIN_STUDENTS.map(s => s.student_name));
+            const missing = wanted.filter(n => known.size && !known.has(n));
+            const list = QNA_SHARE[id] || (QNA_SHARE[id] = []);
+            wanted.filter(n => !missing.includes(n)).forEach(n => { if (!list.includes(n)) list.push(n); });
+            input.value = missing.join(', ');
+            renderQnaShare(id);
+            if (missing.length) alert(`학생 명단에 없는 이름입니다: ${missing.join(', ')}`);
+        }
+        function removeQnaShare(id, name) { QNA_SHARE[id] = (QNA_SHARE[id] || []).filter(n => n !== name); renderQnaShare(id); }
+        function renderQnaShare(id) {
+            const box = document.getElementById(`qna-share-chips-${id}`);
+            if (!box) return;
+            box.innerHTML = (QNA_SHARE[id] || []).map(n => `<span class="text-[12px] bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 px-2 py-0.5 rounded flex items-center gap-1">${escapeHtml(n)}<button type="button" onclick="removeQnaShare('${escAttr(id)}','${escAttr(n)}')" title="빼기" class="text-emerald-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button></span>`).join('');
+        }
+        async function saveQnaShare(id, quiet) {
+            const all = !!(document.getElementById(`qna-share-all-${id}`) || {}).checked;
+            const task = !!(document.getElementById(`qna-share-task-${id}`) || {}).checked;
+            let d;
+            try { d = await qnaJson(`${API_URL}/api/qna/${encodeURIComponent(id)}/share`, { students: QNA_SHARE[id] || [], all, task_audience: task }); } catch (e) {}
+            if (!d || !d.success) return alert('공유하지 못했습니다. ' + ((d && d.detail) || '관리자 로그인을 확인해 주세요.'));
+            QNA_SHARE[id] = d.shared_with || [];
+            if (!quiet) showToast(d.shared_all ? '모두에게 공개했어요.' : `${(d.shared_with || []).length}명에게 공유했어요${d.notified ? ` (새로 ${d.notified}명에게 알림)` : ''}.`);
+            loadQna();
+        }
+
         // ── 과제 · 클리닉 질문 ──
         async function fillQnaTasks(topic, pick) {
             const sel = document.getElementById('qna-task');
@@ -7563,6 +7601,25 @@ let lavUid = 0;
                 const about = p.topic ? `<span class="text-[11px] bg-violet-900/60 text-violet-200 px-2 py-0.5 rounded-full">${p.topic === 'clinic' ? '클리닉' : '과제'}${p.task_title ? ' · ' + escapeHtml(p.task_title) : ''}${p.qnum ? ' · ' + escapeHtml(String(p.qnum)) + '번' : ''}</span>` : '';
                 const lock = p.private ? '<span class="text-[11px] bg-amber-900/60 text-amber-200 px-2 py-0.5 rounded-full"><i class="fa-solid fa-lock mr-0.5"></i>선생님께만</span>' : '';
                 const teacherOk = p.teacher_answered ? '<span class="text-[11px] font-bold bg-sky-900/60 text-sky-200 px-2 py-0.5 rounded-full">선생님 답변</span>' : '';
+                const sharedN = (p.shared_with || []).length;
+                const shareBadge = p.private ? (p.shared_all ? '<span class="text-[11px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded-full">모두에게 공개</span>'
+                    : sharedN ? (isAdm ? `<span class="text-[11px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded-full" title="${escAttr((p.shared_with || []).join(', '))}">공유 ${sharedN}명</span>`
+                        : (p.author !== me ? '<span class="text-[11px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded-full">선생님이 공유한 해설</span>' : '')) : '') : '';
+                const shareBox = (isAdm && p.private) ? `
+                            <div class="mt-3 border-t border-gray-700 pt-2">
+                                <p class="text-[11px] text-emerald-300 font-bold mb-1"><i class="fa-solid fa-share-nodes mr-1"></i>이 질문과 해설을 함께 볼 학생</p>
+                                <div class="flex gap-1 mb-1">
+                                    <input id="qna-share-input-${escAttr(p.id)}" list="qna-share-options" placeholder="학생 이름 (여러 명은 쉼표로)" onfocus="fillQnaShareOptions()" onkeydown="if(event.key==='Enter'){event.preventDefault();addQnaShare('${escAttr(p.id)}');}" class="flex-1 min-w-0 p-1.5 bg-gray-800 text-white text-xs rounded border border-gray-600 outline-none focus:border-emerald-400">
+                                    <button type="button" onclick="addQnaShare('${escAttr(p.id)}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 rounded">추가</button>
+                                </div>
+                                <div id="qna-share-chips-${escAttr(p.id)}" class="flex flex-wrap gap-1 mb-1"></div>
+                                <div class="flex flex-wrap items-center gap-3 text-[11px]">
+                                    ${p.task_title ? `<label class="flex items-center gap-1 text-gray-300 cursor-pointer"><input type="checkbox" id="qna-share-task-${escAttr(p.id)}" class="accent-emerald-500"> '${escapeHtml(p.task_title)}' 과제를 받은 학생 모두</label>` : ''}
+                                    <label class="flex items-center gap-1 text-gray-300 cursor-pointer"><input type="checkbox" id="qna-share-all-${escAttr(p.id)}" ${p.shared_all ? 'checked' : ''} class="accent-emerald-500"> 모두에게 공개</label>
+                                    <button type="button" onclick="saveQnaShare('${escAttr(p.id)}')" class="ml-auto bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3 py-1 rounded">공유 저장</button>
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-1">공유한 학생에게는 앱 알림이 가고, 질문 게시판에서 이 질문과 선생님 해설 · 영상을 볼 수 있어요.</p>
+                            </div>` : '';
                 const admExtra = isAdm ? `
                             <div class="flex flex-wrap items-center gap-2 mt-2">
                                 <input id="qna-answer-video-${escAttr(p.id)}" type="url" placeholder="해설 영상 링크 (유튜브 등, 선택)" class="flex-1 min-w-[12rem] p-1.5 bg-gray-800 text-white text-[12px] rounded border border-gray-600 outline-none focus:border-red-400">
@@ -7572,7 +7629,7 @@ let lavUid = 0;
                     <div class="flex items-center justify-between gap-2">
                         <span class="min-w-0 truncate text-sm">${qnaAuthorHtml(p)}</span>
                         <span class="shrink-0 flex flex-wrap justify-end items-center gap-1.5">
-                            ${lock}${about}${teacherOk}
+                            ${lock}${about}${teacherOk}${shareBadge}
                             ${p.subject ? `<span class="text-[11px] bg-gray-700 text-gray-200 px-2 py-0.5 rounded-full">${escapeHtml(p.subject)}</span>` : ''}
                             ${p.solved ? '<span class="text-[11px] font-bold bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded-full">해결됨</span>' : ''}
                         </span>
@@ -7588,7 +7645,7 @@ let lavUid = 0;
                         <div class="bg-[#151922] rounded-lg p-3 border border-dashed border-gray-600">
                             <label for="qna-answer-text-${escAttr(p.id)}" class="sr-only">답 쓰기</label>
                             <textarea id="qna-answer-text-${escAttr(p.id)}" rows="2" placeholder="아는 만큼 답해 주세요. 풀이를 찍어 올리거나 Ctrl+V 로 붙여넣을 수 있어요." class="w-full p-2 bg-transparent text-white text-sm outline-none resize-y"></textarea>
-                            <div id="qna-thumbs-${escAttr(p.id)}" class="flex flex-wrap gap-2"></div>${admExtra}
+                            <div id="qna-thumbs-${escAttr(p.id)}" class="flex flex-wrap gap-2"></div>${admExtra}${shareBox}
                             <div class="flex items-center gap-2 mt-2">
                                 <input type="file" id="qna-answer-file-${escAttr(p.id)}" accept="image/*" multiple class="hidden" onchange="addQnaImages('${escAttr(p.id)}', Array.from(this.files)); this.value='';">
                                 <button type="button" onclick="document.getElementById('qna-answer-file-${escAttr(p.id)}').click()" class="text-[12px] bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-lg"><i class="fa-solid fa-camera mr-1"></i>사진</button>
@@ -7598,6 +7655,8 @@ let lavUid = 0;
                 </article>`;
             }).join('');
             QNA_OPEN.forEach(id => {
+                if (!(id in QNA_SHARE)) { const pp = QNA_POSTS.find(x => x.id === id); QNA_SHARE[id] = pp ? [...(pp.shared_with || [])] : []; }
+                renderQnaShare(id);
                 renderQnaThumbs(id);
                 const t = document.getElementById(`qna-answer-text-${id}`);
                 if (t && drafts[id]) t.value = drafts[id];
@@ -7631,7 +7690,13 @@ let lavUid = 0;
             hideLoader();
             if (!d || !d.success) return alert('답을 올리지 못했습니다. ' + ((d && d.detail) || ''));
             QNA_IMAGES[id] = [];
-            showToast(d.saved_to ? `답을 올리고 '${d.saved_to}' 해설에도 넣었어요.` : '답을 올렸어요. 고마워요!');
+            const pp = QNA_POSTS.find(x => x.id === id) || {};
+            const shareChanged = currentUser.isAdmin && pp.private && (
+                JSON.stringify(QNA_SHARE[id] || []) !== JSON.stringify(pp.shared_with || [])
+                || !!(document.getElementById(`qna-share-all-${id}`) || {}).checked !== !!pp.shared_all
+                || !!(document.getElementById(`qna-share-task-${id}`) || {}).checked);
+            if (shareChanged) await saveQnaShare(id, true);
+            showToast((d.saved_to ? `답을 올리고 '${d.saved_to}' 해설에도 넣었어요.` : '답을 올렸어요. 고마워요!') + (shareChanged ? ' 고른 학생에게도 공유했어요.' : ''));
             loadQna();
         }
 
