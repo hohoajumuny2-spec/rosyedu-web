@@ -206,6 +206,49 @@
         #pdf-render-wrapper { position: relative; overflow: auto; width: 100%; height: 100%; touch-action: pan-x pan-y pinch-zoom; background: #525659; }
         #pdf-inner-container { position: relative; margin: 0 auto; background: transparent; }
     </style>
+    <!-- 🎨 도구 모드(logyedu.com 관리자 화면 안) 밝은 테마 — 2026-11-09. 그 사이트 관리자 화면과 같은 밝은 색으로 맞춘다 -->
+    <style id="nav-fit">
+      #main-nav > div { gap:16px; }
+      #main-nav > div > .nav-logo, #main-nav > div > div:last-child { flex-shrink:0; }
+      #main-nav > div > div:nth-child(2) { min-width:0; flex:1 1 auto; justify-content:safe center; overflow-x:auto; scrollbar-width:none; }
+      #main-nav > div > div:nth-child(2)::-webkit-scrollbar { display:none; }
+      #main-nav .nav-word { white-space:nowrap; }
+      #main-nav:has(#user-nav.flex) .nav-marketing { display:none; }
+      #dashboard-screen #program-view { padding-top:0 !important; }   /* 바깥 칸과 겹쳐 위가 두 배로 비던 것 */
+      @media (max-width:1535px) { #main-nav > div > div:nth-child(2), #nav-student-menu { gap:1.1rem !important; } }
+    </style>
+    <style id="tool-light">
+      html.tool-mode, html.tool-mode body { background:#f4f6fb !important; color:#111827; }
+      html.tool-mode .bg-\[\#151922\], html.tool-mode .bg-\[\#1e2430\] { background:#ffffff !important; box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06); }
+      html.tool-mode .bg-\[\#1a1e29\], html.tool-mode .bg-gray-800, html.tool-mode .bg-gray-900 { background:#f8fafc !important; }
+      html.tool-mode .bg-gray-700 { background:#eef1f6 !important; }
+      html.tool-mode .border-gray-600 { border-color:#d5dae4 !important; }
+      html.tool-mode .border-gray-700, html.tool-mode .border-gray-800 { border-color:#e6e9f0 !important; }
+      html.tool-mode .text-white:not([class*="bg-"]), html.tool-mode .bg-gray-800.text-white, html.tool-mode .bg-gray-700.text-white,
+      html.tool-mode .bg-\[\#151922\].text-white, html.tool-mode .bg-\[\#1e2430\].text-white, html.tool-mode h1, html.tool-mode h2, html.tool-mode h3 { color:#111827 !important; }
+      html.tool-mode .text-gray-200, html.tool-mode .text-gray-300 { color:#374151 !important; }
+      html.tool-mode .text-gray-400, html.tool-mode .text-gray-500 { color:#6b7280 !important; }
+      html.tool-mode .text-gray-600 { color:#9ca3af !important; }
+      html.tool-mode input:not([type=checkbox]):not([type=radio]):not([type=file]), html.tool-mode textarea, html.tool-mode select {
+        background:#ffffff !important; color:#111827 !important; border-color:#d5dae4 !important; }
+      html.tool-mode input::placeholder, html.tool-mode textarea::placeholder { color:#9ca3af !important; }
+      html.tool-mode .text-emerald-200, html.tool-mode .text-emerald-300, html.tool-mode .text-emerald-400 { color:#047857 !important; }
+      html.tool-mode .text-green-300, html.tool-mode .text-green-400 { color:#15803d !important; }
+      html.tool-mode .text-lime-300 { color:#4d7c0f !important; }
+      html.tool-mode .text-sky-200, html.tool-mode .text-sky-300, html.tool-mode .text-sky-400 { color:#0369a1 !important; }
+      html.tool-mode .text-cyan-300, html.tool-mode .text-cyan-400 { color:#0e7490 !important; }
+      html.tool-mode .text-blue-200, html.tool-mode .text-blue-300, html.tool-mode .text-blue-400 { color:#1d4ed8 !important; }
+      html.tool-mode .text-indigo-300, html.tool-mode .text-indigo-400 { color:#4338ca !important; }
+      html.tool-mode .text-violet-200, html.tool-mode .text-violet-300 { color:#6d28d9 !important; }
+      html.tool-mode .text-purple-300, html.tool-mode .text-purple-400 { color:#7e22ce !important; }
+      html.tool-mode .text-pink-300, html.tool-mode .text-pink-400 { color:#be185d !important; }
+      html.tool-mode .text-rose-200, html.tool-mode .text-rose-300 { color:#be123c !important; }
+      html.tool-mode .text-red-300, html.tool-mode .text-red-400 { color:#b91c1c !important; }
+      html.tool-mode .text-orange-300, html.tool-mode .text-orange-400 { color:#c2410c !important; }
+      html.tool-mode .text-amber-200, html.tool-mode .text-amber-300, html.tool-mode .text-yellow-300, html.tool-mode .text-yellow-400 { color:#b45309 !important; }
+      html.tool-mode .text-teal-300 { color:#0f766e !important; }
+      html.tool-mode .bg-gray-600 { background:#64748b !important; }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
@@ -1191,7 +1234,7 @@
             <div id="level-up-name" class="text-white font-black text-4xl mb-2"></div>
             <div id="level-up-sub" class="text-gray-300 text-sm mb-4"></div>
             <div id="level-up-unlocked" class="mb-6"></div>
-            <button id="level-up-roulette-btn" class="hidden w-full mb-2 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 transition text-white font-black px-8 py-3 rounded-xl shadow-lg text-lg animate-pulse"><i class="fa-solid fa-dice mr-1"></i>🎰 룰렛 돌리러 가기!</button>
+            <button id="level-up-roulette-btn" class="retired hidden w-full mb-2 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 transition text-white font-black px-8 py-3 rounded-xl shadow-lg text-lg animate-pulse"><i class="fa-solid fa-dice mr-1"></i>🎰 룰렛 돌리러 가기!</button>
             <button onclick="closeLevelUpOverlay()" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 transition text-white font-bold px-8 py-3 rounded-xl shadow-lg text-lg">신난다!</button>
         </div>
     </div>
@@ -1215,8 +1258,8 @@
         <div class="flex justify-between items-center px-4 md:px-8 py-4">
             <div class="nav-logo text-xl md:text-2xl font-black text-white cursor-pointer" onclick="goHome()">로지에듀<span class="text-blue-500">*</span></div>
             <div class="hidden lg:flex gap-6 items-center text-sm font-bold text-gray-300">
-                <button onclick="scrollToSection('intro-section')" class="nav-word hover:text-blue-400">프로그램 소개</button>
-                <button onclick="scrollToSection('guide-section')" class="nav-word hover:text-blue-400">이용 안내</button>
+                <button onclick="scrollToSection('intro-section')" class="nav-word nav-marketing hover:text-blue-400">프로그램 소개</button>
+                <button onclick="scrollToSection('guide-section')" class="nav-word nav-marketing hover:text-blue-400">이용 안내</button>
                 <button onclick="openProgram('board'); loadBoard();" class="nav-word hover:text-blue-400">공지사항</button>
                 <button onclick="openProgram('inquiry'); loadInquiries();" class="nav-word hover:text-emerald-400">문의 사항</button>
                 <a href="https://logyedu.com" target="_blank" class="nav-word hover:text-blue-400"><i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i>로지에듀 홈페이지</a>
@@ -1224,12 +1267,12 @@
                     <button onclick="goToDashboard()" class="nav-word hover:text-emerald-400">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="nav-word hover:text-orange-400">타임어택 퀴즈</button>
                     <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="nav-word hover:text-cyan-400">영어 단어 시험</button>
-                    <button onclick="openProgram('practice')" class="nav-word hover:text-violet-300">오늘의 유형 문제</button>
+                    
                     <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
                     <button onclick="openProgram('homework'); loadHomeworks();" class="nav-word hover:text-emerald-400">과제 제출</button>
                     <button onclick="openStudy()" class="nav-word hover:text-teal-400">스터디룸</button>
                     <button onclick="openProgram('qna'); loadQna();" class="nav-word hover:text-rose-400">질문 게시판</button>
-                    <button onclick="openDm()" class="nav-word hover:text-indigo-400">원장님 톡</button>
+                    
                     <button onclick="openProgram('essay')" class="nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
                 </span>
             </div>
@@ -1270,12 +1313,12 @@
                 <button onclick="goToDashboard(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
                 <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
-                <button onclick="openProgram('practice'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-violet-300 w-full">오늘의 유형 문제</button>
+                
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
                 <button onclick="openStudy(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
                 <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
-                <button onclick="openDm(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-indigo-400 w-full">원장님 톡</button>
+                
                 <button onclick="openProgram('essay'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
             </span>
             <button onclick="openProgram('mypage'); loadMyPage(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-emerald-400 w-full" id="mobile-mypage-btn" style="display:none;">마이페이지</button>
@@ -1604,7 +1647,7 @@
                     </ul>
                 </div>
             </div>
-            <div id="feature-practice" class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
+            <div id="feature-practice" class="retired feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
                 <div class="shrink-0 flex items-center gap-4 md:block">
                     <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl md:text-4xl bg-violet-600 text-white shadow-lg">🎯</div>
                 </div>
@@ -1664,11 +1707,11 @@
                     <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center text-3xl md:text-4xl bg-teal-600 text-white shadow-lg">🌱</div>
                 </div>
                 <div class="flex-grow">
-                    <h3 class="text-xl md:text-2xl font-bold text-white mb-3">나의 성장 아바타 (레벨업 & 룰렛)</h3>
-                    <p class="text-gray-300 leading-relaxed mb-4">로그인, 과제 제출, 퀴즈 응시, 오늘의 유형 문제, 그리고 틀린 문제를 다시 풀어 다 고칠 때마다 성장 포인트가 쌓이고, 포인트가 일정 기준을 넘으면 레벨이 올라갑니다. 🌰씨앗부터 🏆황금 열매까지 총 10단계로 성장하며, 레벨이 오를 때마다 모자·펫·효과 같은 아바타 아이템이 잠금 해제되어 나만의 캐릭터를 꾸밀 수 있습니다. 특히 레벨업하는 순간에는 축하 화면과 함께 룰렛을 돌려 그 레벨에 맞는 특별한 상품에 도전할 수 있습니다.</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-3">나의 성장 아바타 (레벨업)</h3>
+                    <p class="text-gray-300 leading-relaxed mb-4">로그인, 과제 제출, 퀴즈 응시, 그리고 틀린 문제를 다시 풀어 다 고칠 때마다 성장 포인트가 쌓이고, 포인트가 일정 기준을 넘으면 레벨이 올라갑니다. 🌰씨앗부터 🏆황금 열매까지 총 10단계로 성장하며, 레벨이 오를 때마다 모자·펫·효과 같은 아바타 아이템이 잠금 해제되어 나만의 캐릭터를 꾸밀 수 있습니다. 레벨업하는 순간에는 축하 화면이 나옵니다.</p>
                     <ul class="list-disc pl-5 space-y-1.5 text-sm md:text-base text-gray-400">
                     <li>10단계 레벨(씨앗 → 황금 열매), 레벨마다 새로운 꾸미기 아이템 잠금 해제</li>
-                    <li>레벨업 시 룰렛 이벤트로 상품 뽑기 도전</li>
+                    
                     <li>마이페이지의 "포인트 얻는 법"에서 정확한 적립 기준 확인 가능</li>
                     </ul>
                 </div>
@@ -1761,7 +1804,7 @@
                     <p class="text-gray-300 leading-relaxed">상단 메뉴의 [타임어택 퀴즈]에서 응시 가능한 퀴즈 목록을 확인하고 입장합니다. 제한 시간 안에 문제를 풀고 제출하면 즉시 채점되며, 점수와 함께 문항별 정답률을 바로 확인할 수 있습니다.</p>
                 </div>
             </div>
-            <div class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
+            <div class="retired feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
                 <div class="shrink-0">
                     <div class="w-12 h-12 rounded-xl bg-violet-600 text-white font-black text-xl flex items-center justify-center">4</div>
                 </div>
@@ -1794,7 +1837,7 @@
                 </div>
                 <div class="flex-grow">
                     <h3 class="text-xl font-bold text-white mb-2">레벨업과 아바타 꾸미기</h3>
-                    <p class="text-gray-300 leading-relaxed">로그인, 과제 제출, 퀴즈 응시, 오늘의 유형 문제, 그리고 틀린 문제를 다시 풀어 다 고치면 성장 포인트를 얻어 레벨이 올라갑니다 (🌰씨앗 → 🌱새싹 → 🌿떡잎 → 🪴줄기 → 🌸봉오리 → 🌼꽃 → 🍏열매 → 🍎잘 익은 열매 → 🍎빛나는 열매 → 🏆황금 열매). 레벨업 순간에는 축하 화면과 함께 룰렛을 돌려 상품에 도전할 수 있고, 마이페이지에서 레벨업으로 잠금 해제된 아이템으로 아바타를 자유롭게 꾸밀 수 있습니다. 정확한 포인트 획득 방법은 마이페이지의 "포인트 얻는 법" 버튼에서 확인할 수 있습니다.</p>
+                    <p class="text-gray-300 leading-relaxed">로그인, 과제 제출, 퀴즈 응시, 그리고 틀린 문제를 다시 풀어 다 고치면 성장 포인트를 얻어 레벨이 올라갑니다 (🌰씨앗 → 🌱새싹 → 🌿떡잎 → 🪴줄기 → 🌸봉오리 → 🌼꽃 → 🍏열매 → 🍎잘 익은 열매 → 🍎빛나는 열매 → 🏆황금 열매). 레벨업 순간에는 축하 화면이 나오고, 마이페이지에서 레벨업으로 잠금 해제된 아이템으로 아바타를 자유롭게 꾸밀 수 있습니다. 정확한 포인트 획득 방법은 마이페이지의 "포인트 얻는 법" 버튼에서 확인할 수 있습니다.</p>
                 </div>
             </div>
             <div class="feature-reveal bg-[#151922] border border-gray-700 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-5 md:gap-8">
@@ -1937,7 +1980,7 @@
                 <button onclick="openProgram('mypage'); loadMyPage();" class="shrink-0 text-xs font-bold text-teal-300 border border-teal-700 px-3 py-2 rounded-lg hover:bg-teal-900/30 transition">
                     <i class="fa-solid fa-shirt mr-1"></i><span class="hidden sm:inline">아바타 </span>꾸미기
                 </button>
-                <button id="roulette-eligible-badge" class="hidden shrink-0 text-xs font-black text-white bg-gradient-to-r from-pink-500 to-yellow-500 px-3 py-2 rounded-lg animate-pulse transition">
+                <button id="roulette-eligible-badge" class="retired hidden shrink-0 text-xs font-black text-white bg-gradient-to-r from-pink-500 to-yellow-500 px-3 py-2 rounded-lg animate-pulse transition">
                     🎰 룰렛이 기다려요!
                 </button>
             </div>
@@ -1948,7 +1991,7 @@
             <div id="schedule-banner" class="hidden mb-8"></div>
 
             <!-- 🎯 오늘의 유형 문제: 틀린 유형에서 하루 몇 문제 -->
-            <div id="practice-card" class="hidden mb-8"></div>
+            <div id="practice-card" class="retired hidden mb-8"></div>
 
             <h2 class="text-2xl font-bold mb-4">24시간 AI 도우미</h2>
             <div id="ai-subject-tiles" class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-8">
@@ -2001,7 +2044,7 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">타임어택 퀴즈</h3>
                         <p class="text-orange-200/70 text-[11px] md:text-sm word-break-keep-all">제한 시간 안에 풀고 바로 채점받아요.</p>
                     </div>
-                    <div onclick="openProgram('practice')" class="bg-[#1e2430] border border-violet-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                    <div onclick="openProgram('practice')" class="retired bg-[#1e2430] border border-violet-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-violet-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎯</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">오늘의 유형 문제</h3>
                         <p class="text-violet-200/70 text-[11px] md:text-sm word-break-keep-all">틀린 유형만 하루 몇 문제씩.</p>
@@ -2112,7 +2155,7 @@
                             <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">🔑</div>매일 접속<div class="text-emerald-400 font-bold">+20</div></div>
                                                         <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">📝</div>과제 제출<div class="text-emerald-400 font-bold">+60</div></div>
                             <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">⏱️</div>타임어택 퀴즈<div class="text-emerald-400 font-bold">+30 + 점수</div></div>
-                            <div class="bg-gray-800 rounded-lg p-2"><div class="text-lg mb-0.5">🎯</div>오늘의 유형 문제<div class="text-emerald-400 font-bold">+30</div></div>
+                            
                             <div class="bg-emerald-900/30 border border-emerald-700 rounded-lg p-2"><div class="text-lg mb-0.5">🎯</div>틀린 문제 다시 풀어 <b class="text-white">다 고치기</b><span class="block text-[9px] text-gray-500">(시험 하나당 한 번)</span><div class="text-emerald-400 font-bold">+100</div></div>
                         </div>
                     </div>
@@ -2420,6 +2463,11 @@
             <!-- 관리자 탭 -->
             <div id="prog-admin" class="prog-content w-full mx-auto">
                 <div class="bg-[#1e2430] p-6 rounded-xl border border-gray-800">
+                    <!-- 💡 2026-11-09: 옮긴 메뉴 안내 -->
+                    <div class="mb-5 rounded-xl border border-sky-700/60 bg-sky-900/20 px-4 py-3 flex flex-wrap items-center gap-3 text-sm">
+                        <span class="text-sky-200"><i class="fa-solid fa-arrow-right-arrow-left mr-1.5"></i><b>학생 상담 · 학생 공지 · 출제 · 영어 단어 시험</b>은 logyedu.com 관리자 화면의 <b>알림·소식</b>으로 옮겼습니다.</span>
+                        <a href="https://logyedu.com/admin/study/board" target="_blank" rel="noopener" class="ml-auto shrink-0 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg">logyedu.com에서 열기 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a>
+                    </div>
                     <!-- 🕘 예전 기록 시각 바로잡기 — 한 번 하고 나면 다시 보이지 않는다 -->
                     <div id="tzfix-card" class="hidden mb-5 rounded-xl border border-amber-600 bg-amber-900/20 p-4 text-sm">
                         <p class="font-bold text-amber-200"><i class="fa-solid fa-clock-rotate-left mr-1"></i>예전 기록의 시각이 9시간 이르게 저장되어 있습니다</p>
@@ -2441,6 +2489,17 @@
                         .admin-nav-btn:focus-visible { outline:2px solid #34d399; outline-offset:2px; }
                         .admin-nav-btn.admin-nav-active { color:#fff; background:#065f46; border-color:#10b981; }
                         .admin-nav-link { color:#9aa3b5; font-weight:600; }
+                        .retired { display:none !important; }
+                        html.tool-mode #main-nav, html.tool-mode footer, html.tool-mode #prog-admin nav[aria-label="관리자 메뉴"],
+                        html.tool-mode #tzfix-card, html.tool-mode .floating-help, html.tool-mode #mobile-menu { display:none !important; }
+                        html.tool-mode body { padding-top:0 !important; }
+                        html.tool-mode #program-view, html.tool-mode #dashboard-screen { padding:0 !important; max-width:none !important; }
+                        html.tool-mode #prog-admin > div:first-child { padding:0 !important; background:transparent !important; }
+                        html.tool-mode #program-view > button[onclick="closeProgram()"], html.tool-mode #prog-admin > .prog-intro,
+                        html.tool-mode #schedule-banner, html.tool-mode #main-popup { display:none !important; }
+                        html.tool-mode #admin-board { grid-template-columns: minmax(0, 760px) !important; }
+                        html.tool-mode #prog-admin { max-width:none !important; padding:0 !important; margin:0 !important; }
+                        html.tool-mode #prog-admin > div { border:0 !important; border-radius:0 !important; padding:16px !important; }
                     </style>
                     <nav aria-label="관리자 메뉴" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-6 pb-5 border-b border-gray-700">
                         <div class="admin-nav-group">
@@ -2448,15 +2507,13 @@
                             <div class="flex flex-wrap gap-1.5">
                                 <button onclick="switchAdminTab('admin-overview')" id="btn-admin-overview" class="admin-nav-btn" title="키오스크 출결과 성적을 학생마다 한 줄로">한눈에 보기</button>
                                 <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="admin-nav-btn">학생 명단</button>
-                                <button onclick="switchAdminTab('admin-dm')" id="btn-admin-dm" class="admin-nav-btn">학생 톡 <span id="admin-dm-badge" class="hidden ml-1 text-[11px] bg-rose-600 text-white rounded-full px-1.5"></span></button>
-                                <button onclick="switchAdminTab('admin-counsel')" id="btn-admin-counsel" class="admin-nav-btn">상담</button>
-                                <button onclick="switchAdminTab('admin-unsure')" id="btn-admin-unsure" class="admin-nav-btn">오답 분석 · 유형 문제</button>
+                                <span id="admin-dm-badge" class="hidden"></span>
                             </div>
                         </div>
                         <div class="admin-nav-group">
                             <p class="admin-nav-title"><i class="fa-solid fa-book-open mr-1.5"></i>수업 · 과제</p>
                             <div class="flex flex-wrap gap-1.5">
-                                <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="admin-nav-btn">과제 · 공지</button>
+                                <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="admin-nav-btn">과제</button>
                                 <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="admin-nav-btn">강의</button>
                                 <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="admin-nav-btn">대신 채점</button>
                                 <button onclick="switchAdminTab('admin-schedule')" id="btn-admin-schedule" class="admin-nav-btn">시험일정 · 클리닉</button>
@@ -2464,13 +2521,10 @@
                             </div>
                         </div>
                         <div class="admin-nav-group">
-                            <p class="admin-nav-title"><i class="fa-solid fa-file-pen mr-1.5"></i>시험 · 출제</p>
+                            <p class="admin-nav-title"><i class="fa-solid fa-file-pen mr-1.5"></i>시험 · 퀴즈</p>
                             <div class="flex flex-wrap gap-1.5">
-                                <button onclick="switchAdminTab('admin-generator')" id="btn-admin-generator" class="admin-nav-btn">출제</button>
                                 <button onclick="switchAdminTab('admin-quiz')" id="btn-admin-quiz" class="admin-nav-btn">퀴즈 출제</button>
                                 
-                                <button onclick="switchAdminTab('admin-vocab')" id="btn-admin-vocab" class="admin-nav-btn">영어 단어 시험</button>
-                                <button type="button" onclick="openAdminTool('qm')" class="admin-nav-btn admin-nav-link" title="지문을 쌓아 두면 매일 정한 시각에 문제를 만들어 두는 문제 공장">문제 공장 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></button>
                                 <button type="button" onclick="openAdminTool('sns')" class="admin-nav-btn admin-nav-link" title="인스타그램 글 · 카드뉴스 · 블로그 글을 만들어 주는 홍보글 공장">홍보글 공장 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></button>
                             </div>
                         </div>
@@ -2478,9 +2532,6 @@
                             <p class="admin-nav-title"><i class="fa-solid fa-screwdriver-wrench mr-1.5"></i>운영 도구</p>
                             <div class="flex flex-wrap gap-1.5">
                                 <button onclick="switchAdminTab('admin-knowledge')" id="btn-admin-knowledge" class="admin-nav-btn">자료학습 (AI)</button>
-                                <button onclick="switchAdminTab('admin-roulette')" id="btn-admin-roulette" class="admin-nav-btn">레벨업 룰렛</button>
-                                <a href="./proctor.html" target="_blank" rel="noopener" class="admin-nav-btn admin-nav-link" title="교실 태블릿 카메라로 자습 중 딴짓을 알려 줍니다">자습 감독 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a>
-                                <button onclick="enterPreview()" class="admin-nav-btn admin-nav-link" title="학생에게 보이는 화면 그대로 들어가 봅니다">학생 화면 보기 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></button>
                             </div>
                         </div>
                     </nav>
@@ -3564,6 +3615,10 @@
                             </div>
                             <div id="admin-hw-view-list" class="mt-2 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
+                    </div>
+
+                    <!-- 📢 학생 공지 — 2026-11-09: '과제 · 공지'에서 떼어 냈다. logyedu.com 관리자(알림·소식)에서 연다 -->
+                    <div id="admin-board" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4" style="display:none">
                         <div class="bg-[#151922] p-6 rounded">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 id="bd-form-title-admin" class="text-white font-bold">공지사항 등록</h3>
@@ -3626,6 +3681,36 @@
             f.appendChild(t); document.body.appendChild(f); f.submit(); f.remove();
         }
         let currentUser = null; let wsLive = null;
+
+        // ── 도구 모드 (2026-11-09) ─────────────────────────────
+        //   logyedu.com 관리자 화면(알림·소식)이 이 사이트를 틀 안에 열어 한 메뉴만 쓴다.
+        //   원장님 계정이면 logyedu.com 이 관리자 토큰을 보내 준다(postMessage) — 다시 로그인하지 않는다.
+        const TOOL_TABS = { counsel: 'admin-counsel', board: 'admin-board', generator: 'admin-generator', vocab: 'admin-vocab' };
+        const TOOL = (() => { try { const t = new URLSearchParams(location.search).get('tool'); return TOOL_TABS[t] ? t : ''; } catch (e) { return ''; } })();
+        const TOOL_PARENTS = ['https://logyedu.com', 'https://www.logyedu.com'];
+        if (TOOL) {
+            document.documentElement.classList.add('tool-mode');
+            window.addEventListener('message', ev => {
+                if (!TOOL_PARENTS.includes(ev.origin) && !/^http:\/\/localhost(:\d+)?$/.test(ev.origin)) return;
+                const d = ev.data || {};
+                if (d.type !== 'logyedu-admin-token' || !d.token) return;
+                let saved = null; try { saved = JSON.parse(localStorage.getItem('logyedu_user') || 'null'); } catch (e) {}
+                if (saved && saved.isAdmin && saved.admin_token === d.token) return;
+                try {
+                    localStorage.setItem('logyedu_user', JSON.stringify({ school: '미상', grade: '미상', name: d.name || '원장님',
+                        isAdmin: true, admin_token: d.token, is_owner: !!d.owner }));
+                } catch (e) { return; }
+                location.reload();
+            });
+            try { if (window.parent !== window) window.parent.postMessage({ type: 'logyedu-tool-ready', tool: TOOL }, '*'); } catch (e) {}
+        }
+        function openToolTab() {
+            if (!TOOL) return false;
+            if (!currentUser || !currentUser.isAdmin) { try { showModal('auth'); } catch (e) {} return true; }
+            if (window.location.hash !== '#prog-admin') window.location.hash = 'prog-admin';
+            setTimeout(() => switchAdminTab(TOOL_TABS[TOOL]), 50);
+            return true;
+        }
 
         let chatFiles = []; let kbFiles = []; let genFiles = []; let bdFiles = []; let bdFilesAdmin = []; let hwFilesAdmin = [];
         let generatedQuestionsData = []; let studentExamsList = [];
@@ -4951,7 +5036,7 @@ let lavUid = 0;
         //   배지로 다시 보여준다.
         let ROULETTE_SLICES = [];
 
-        async function checkRouletteEligible() {
+        async function checkRouletteEligible() { return;   // 💡 2026-11-09: 레벨업 룰렛은 없앴다
             if (!currentUser || currentUser.isAdmin) return;
             const badge = document.getElementById('roulette-eligible-badge');
             if (!badge) return;
@@ -4967,7 +5052,7 @@ let lavUid = 0;
             } catch (e) {}
         }
 
-        async function openRoulette(level) {
+        async function openRoulette(level) { return;
             document.getElementById('roulette-level-label').innerText = `Lv.${level} 전용 룰렛`;
             document.getElementById('roulette-result').innerHTML = '';
             const btn = document.getElementById('roulette-spin-btn');
@@ -5584,6 +5669,7 @@ let lavUid = 0;
             else {
                 if(!currentUser) { window.location.hash='home'; return showModal('auth'); }
                 if (h === 'prog-admin' && !currentUser.isAdmin) { alert("권한이 없습니다."); window.location.hash = 'dashboard'; return; }
+                if (h === 'prog-practice') { window.location.hash = 'dashboard'; return; }   // 💡 2026-11-09: 오늘의 유형 문제는 없앴다
                 document.getElementById('dashboard-screen').style.display='block'; document.getElementById('program-view').style.display='block';
                 const t=document.getElementById('prog-'+h.replace('prog-','')); if(t) t.style.display='block';
                 showProgramIntro(h.replace('prog-',''), t);
@@ -5709,6 +5795,8 @@ let lavUid = 0;
                 history.replaceState(null, '', location.pathname + '#home'); setTimeout(() => showModal('auth'), 300);
             }
             loadClassAutocomplete();
+            // 도구 모드인데 관리자로 들어와 있지 않으면, logyedu.com 이 토큰을 보내 줄 때까지 잠깐 기다렸다가 로그인 창을 띄운다
+            if (TOOL) setTimeout(() => { if (!currentUser || !currentUser.isAdmin) { try { showModal('auth'); } catch (e) {} } }, 2500);
             const u = localStorage.getItem('logyedu_user');
             if(u) {
                 currentUser=JSON.parse(u);
@@ -5743,7 +5831,9 @@ let lavUid = 0;
                 }
                 if(currentUser.isAdmin) { loadAdminSchedule(); refreshQuizRequests(); startAdminDmPoll(); document.getElementById('admin-smart-room').classList.remove('hidden'); document.getElementById('card-admin').classList.remove('hidden'); document.getElementById('card-admin').style.display='flex'; const bwBtn = document.getElementById('btn-show-board-write'); if(bwBtn) bwBtn.classList.remove('hidden'); }
                 document.getElementById('mobile-logout-btn').style.display='block';
-                if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange')); checkMainPopup();
+                if (openToolTab()) {}
+                else if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange'));
+                if (!TOOL) checkMainPopup();
 
                 const pendingLvlUp = localStorage.getItem('logyedu_pending_levelup');
                 if(pendingLvlUp) {
@@ -6574,6 +6664,7 @@ let lavUid = 0;
         }
 
         function lastAdminTab() {
+            if (TOOL) return TOOL_TABS[TOOL];
             let id = '';
             try { id = localStorage.getItem('logyedu_admin_tab') || ''; } catch (e) {}
             return (id && document.getElementById(id) && document.getElementById('btn-' + id)) ? id : 'admin-users';
@@ -6589,7 +6680,7 @@ let lavUid = 0;
             const tabEl = document.getElementById(id);
             tabEl.style.display = tabEl.classList.contains('grid') ? 'grid' : 'block';
             // 다음에 관리자 화면을 열면 마지막으로 쓰던 메뉴로 연다
-            try { localStorage.setItem('logyedu_admin_tab', id); } catch (e) {}
+            if (!TOOL) { try { localStorage.setItem('logyedu_admin_tab', id); } catch (e) {} }
             if(id==='admin-users'){fetchReports(); loadAdminStudents(); loadAdminAccounts();}
             // 💡 반 목록은 원래 '학생 명단' 을 열 때만 불러왔다. 마지막 메뉴(예: 과제·공지)로 바로 열리면
             //    반 고르기 칸이 텅 빈 채로 남아서, 반 고르기 칸이 있는 메뉴는 아직이면 여기서 불러온다.
@@ -6599,7 +6690,8 @@ let lavUid = 0;
             if(id==='admin-schedule'){initScheduleTab();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
-            if(id==='admin-hw'){loadAdminHWList(); loadAdminBoardList();}
+            if(id==='admin-hw'){loadAdminHWList();}
+            if(id==='admin-board'){loadAdminBoardList();}
             if(id==='admin-roulette'){loadRouletteAdmin();}
             if(id==='admin-knowledge'){loadKnowledgeList(); loadAiGuidelines();}
             if(id==='admin-grade'){initGradeForTab();}
@@ -6674,7 +6766,7 @@ let lavUid = 0;
             return !!(currentUser && currentUser.name === PREVIEW_NAME);
         }
 
-        function enterPreview() {
+        function enterPreview() { return;   // 💡 2026-11-09: '학생 화면 보기'는 없앴다
             if (!confirm('학생 화면으로 들어갑니다.\n\n여기서 푼 것은 기록에도 점수에도 남지 않습니다.\n반·과목·마감 시한에 상관없이 모두 보이고, 몇 번이든 다시 풀 수 있습니다.')) return;
             // 관리자 자격을 따로 보관해둔다 — 돌아올 때 다시 로그인하지 않아도 되게
             localStorage.setItem('logyedu_admin_backup', localStorage.getItem('logyedu_user') || '');
@@ -7055,7 +7147,7 @@ let lavUid = 0;
         }
 
         // 학생: 메뉴에서 열기 / 원장님이 말을 걸면 저절로 열림
-        async function openDm() {
+        async function openDm() { return;   // 💡 2026-11-09: 원장님 톡(학생 톡)은 없앴다
             if (!currentUser || currentUser.isAdmin) return;
             DM.role = 'student'; DM.student = currentUser.name;
             document.getElementById('dm-title').innerHTML = '<i class="fa-solid fa-comments mr-2 text-indigo-400"></i>원장님 톡';
@@ -7116,7 +7208,7 @@ let lavUid = 0;
             }
         }
 
-        function startStudentDmPoll() {
+        function startStudentDmPoll() { return;
             if (DM_POLL_TIMER || !currentUser || currentUser.isAdmin || isPreviewUser()) return;
             pollStudentDm(true);
             DM_POLL_TIMER = setInterval(() => pollStudentDm(false), 10000);
@@ -7158,7 +7250,7 @@ let lavUid = 0;
             if (dmIsOpen() && DM.role === 'admin') loadDmThread(true);
         }
 
-        function startAdminDmPoll() {
+        function startAdminDmPoll() { return;
             if (DM_POLL_TIMER || !currentUser || !currentUser.isAdmin) return;
             refreshAdminDmThreads();
             DM_POLL_TIMER = setInterval(pollAdminDm, 10000);
@@ -12103,7 +12195,7 @@ let lavUid = 0;
         function openBoardForSelected() {
             const names = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
             if (!names.length) return alert('공지를 보낼 학생을 먼저 체크해 주세요.');
-            switchAdminTab('admin-hw');
+            switchAdminTab('admin-board');
             cancelEditBoard();
             setBoardStudents(names);
             const t = document.getElementById('bd-title-admin');
@@ -16906,7 +16998,7 @@ let lavUid = 0;
                 const hw = ((typeof STUDENT_HW_LIST !== 'undefined' && STUDENT_HW_LIST) || []).find(x => x.title === o.title) || {};
                 h += `<button onclick="askTeacher('${escAttr(o.title)}', ${Number(o.no) || 0}, '${hw.kind === 'clinic' ? 'clinic' : 'class'}')" class="mt-2 inline-flex items-center gap-1 text-[11px] font-bold bg-violet-700 hover:bg-violet-600 text-white rounded-full px-3 py-1"><i class="fa-solid fa-circle-question"></i>이 문항 선생님께 질문하기</button>`;
             }
-            if (o.isWrong && o.kind && o.title) {
+            if (o.isWrong && o.kind && o.title && false) {   // 💡 2026-11-09: 오답 분석 · 유형 문제를 없애며 '왜 틀렸나요?'도 뺐다
                 if (o.canPick) {
                     const btns = WRONG_REASONS.map(r => `<button data-r="${r.key}" onclick="pickWrongReason('${id}', '${escAttr(o.kind)}', '${escAttr(o.title)}', ${Number(o.no)}, '${r.key}')"
                         class="xr-btn px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition ${o.reason === r.key ? 'bg-orange-600 border-orange-500 text-white' : 'bg-[#151922] border-gray-600 text-gray-200 hover:border-orange-400'}">${r.icon} ${r.label}</button>`).join('');
@@ -16953,7 +17045,7 @@ let lavUid = 0;
             return (weak || []).slice(0, 5).map(w => `<span class="inline-block text-[11px] font-bold bg-violet-900/50 text-violet-200 border border-violet-700/60 rounded-full px-2 py-0.5"># ${escapeHtml(w.tag)}</span>`).join(' ');
         }
 
-        async function loadPracticeCard() {
+        async function loadPracticeCard() { return;   // 💡 2026-11-09: 오늘의 유형 문제는 없앴다
             const box = document.getElementById('practice-card');
             if (!box || !currentUser || currentUser.isAdmin) { if (box) box.classList.add('hidden'); return; }
             let d;
