@@ -1269,7 +1269,8 @@
                     <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="nav-word hover:text-cyan-400">영어 단어 시험</button>
                     
                     <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
-                    <button onclick="openProgram('homework'); loadHomeworks();" class="nav-word hover:text-emerald-400">과제 제출</button>
+                    <button onclick="openHomeworkTab('class')" class="nav-word hover:text-emerald-400">과제 제출</button>
+                    <button onclick="openHomeworkTab('clinic')" class="nav-word hover:text-purple-400">클리닉 제출</button>
                     <button onclick="openStudy()" class="nav-word hover:text-teal-400">스터디룸</button>
                     <button onclick="openProgram('qna'); loadQna();" class="nav-word hover:text-rose-400">질문 게시판</button>
                     
@@ -1315,7 +1316,8 @@
                 <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
                 
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
-                <button onclick="openProgram('homework'); loadHomeworks(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
+                <button onclick="openHomeworkTab('class'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
+                <button onclick="openHomeworkTab('clinic'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">클리닉 제출</button>
                 <button onclick="openStudy(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
                 <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
                 
@@ -2049,10 +2051,15 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">오늘의 유형 문제</h3>
                         <p class="text-violet-200/70 text-[11px] md:text-sm word-break-keep-all">틀린 유형만 하루 몇 문제씩.</p>
                     </div>
-                    <div onclick="openProgram('homework'); loadHomeworks();" class="bg-[#1e2430] border border-emerald-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                    <div onclick="openHomeworkTab('class')" class="bg-[#1e2430] border border-emerald-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📚</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">과제 제출</h3>
                         <p class="text-emerald-200/70 text-[11px] md:text-sm word-break-keep-all">오늘 낼 과제를 확인하고 제출해요.</p>
+                    </div>
+                    <div onclick="openHomeworkTab('clinic')" class="bg-[#1e2430] border border-purple-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🩺</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">클리닉 제출</h3>
+                        <p class="text-purple-200/70 text-[11px] md:text-sm word-break-keep-all">클리닉 과제를 확인하고 제출해요.</p>
                     </div>
                     <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎬</div>
@@ -2337,7 +2344,12 @@
 
             <!-- 과제 제출 -->
             <div id="prog-homework" class="prog-content w-full bg-[#1e2430] p-6 rounded-xl">
-                <h2 class="text-2xl font-bold text-emerald-400 mb-4">과제 제출</h2>
+                <h2 id="hw-page-title" class="text-2xl font-bold text-emerald-400 mb-4">과제 제출</h2>
+                <!-- 💡 2026-11-09: 수업 과제와 클리닉 과제를 칸으로 나눈다 -->
+                <div class="flex gap-2 mb-4" role="tablist" aria-label="과제 종류">
+                    <button id="hw-tab-class" role="tab" onclick="setHwKind('class')" class="hw-kind-tab px-4 py-2 rounded-full text-sm font-bold transition"></button>
+                    <button id="hw-tab-clinic" role="tab" onclick="setHwKind('clinic')" class="hw-kind-tab px-4 py-2 rounded-full text-sm font-bold transition"></button>
+                </div>
                 <div id="student-hw-list" class="space-y-4"></div>
                 <div id="hw-submit-area" class="hidden mt-6 bg-[#151922] p-6 rounded-xl border border-emerald-500 shadow-xl">
                     <h3 id="hw-target-title" class="text-xl text-white font-bold mb-4 border-b border-gray-700 pb-2"></h3>
@@ -2515,7 +2527,6 @@
                             <div class="flex flex-wrap gap-1.5">
                                 <button onclick="switchAdminTab('admin-hw')" id="btn-admin-hw" class="admin-nav-btn">과제</button>
                                 <button onclick="switchAdminTab('admin-lecture')" id="btn-admin-lecture" class="admin-nav-btn">강의</button>
-                                <button onclick="switchAdminTab('admin-grade')" id="btn-admin-grade" class="admin-nav-btn">대신 채점</button>
                                 <button onclick="switchAdminTab('admin-schedule')" id="btn-admin-schedule" class="admin-nav-btn">시험일정 · 클리닉</button>
                                 <button onclick="switchAdminTab('admin-clinic')" id="btn-admin-clinic" class="admin-nav-btn">클리닉 운영 🩺</button>
                             </div>
@@ -3612,6 +3623,11 @@
                             <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-[12px]">
                                 <label class="text-gray-400 flex items-center gap-1.5"><input type="checkbox" id="admin-hw-show-hidden" onchange="loadAdminHWList()" class="accent-emerald-500"> 숨긴 과제도 보기 <span id="admin-hw-hidden-count" class="text-gray-500"></span></label>
                                 <button id="admin-hw-hide-past" onclick="hidePastHomeworks()" class="hidden bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded"><i class="fa-solid fa-eye-slash mr-1"></i>마감 지난 과제 모두 숨기기 <span id="admin-hw-past-count"></span></button>
+                            </div>
+                            <div class="mt-2 flex gap-1.5 text-[12px]" role="tablist" aria-label="과제 종류">
+                                <button id="admin-hw-kind-all" onclick="setAdminHwKind('all')" class="admin-hw-kind px-3 py-1 rounded-full font-bold">전체</button>
+                                <button id="admin-hw-kind-class" onclick="setAdminHwKind('class')" class="admin-hw-kind px-3 py-1 rounded-full font-bold">📚 수업 과제</button>
+                                <button id="admin-hw-kind-clinic" onclick="setAdminHwKind('clinic')" class="admin-hw-kind px-3 py-1 rounded-full font-bold">🩺 클리닉 과제</button>
                             </div>
                             <div id="admin-hw-view-list" class="mt-2 h-64 overflow-auto text-white space-y-2"></div>
                         </div>
@@ -12947,12 +12963,17 @@ let lavUid = 0;
                         </div>`;
                     });
                     const done = new Set();
+                    // 💡 수업 과제 · 클리닉 과제 칸: 지금 고른 칸의 과제만 보인다
+                    const kindOf = h => h.kind === 'clinic' ? 'clinic' : 'class';
+                    const left = k => data.homeworks.filter(h => kindOf(h) === k && !submittedTasks.has(h.title)).length;
+                    renderHwKindTabs(left('class'), left('clinic'));
                     data.homeworks.forEach((h, i) => {
+                        if (kindOf(h) !== HW_KIND) return;
                         if (!h.group) { c.innerHTML += itemHtml[i]; return; }
                         if (done.has(h.group)) return;
                         done.add(h.group);
                         // 묶음 안에서는 올린 순서대로 (1번 과제가 맨 위)
-                        const idx = hwGroupIndexes(h.group);
+                        const idx = hwGroupIndexes(h.group).filter(k => kindOf(data.homeworks[k]) === HW_KIND);
                         const n = idx.length, sub = idx.filter(k => submittedTasks.has(data.homeworks[k].title)).length;
                         const dl = groupDeadline[h.group];
                         c.innerHTML += `
@@ -12969,9 +12990,28 @@ let lavUid = 0;
                             <div class="space-y-2">${idx.map(k => itemHtml[k]).join('')}</div>
                         </div>`;
                     });
+                    if (!c.innerHTML.trim()) c.innerHTML = `<p class="text-center text-gray-500 py-10">${HW_KIND === 'clinic' ? '받은 클리닉 과제가 없어요.' : '받은 수업 과제가 없어요.'}</p>`;
                 }
             } catch(e){}
         }
+
+        // ── 수업 과제 · 클리닉 과제 칸 ──
+        let HW_KIND = 'class';
+        function renderHwKindTabs(nClass, nClinic) {
+            const tab = (k, label, n) => {
+                const b = document.getElementById('hw-tab-' + k); if (!b) return;
+                const on = HW_KIND === k;
+                b.className = `hw-kind-tab px-4 py-2 rounded-full text-sm font-bold transition ${on ? (k === 'clinic' ? 'bg-purple-600 text-white' : 'bg-emerald-600 text-white') : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`;
+                b.setAttribute('aria-selected', on);
+                b.innerHTML = `${label}${n ? ` <span class="ml-1 text-[11px] ${on ? 'bg-white/25' : 'bg-rose-600 text-white'} rounded-full px-1.5">${n}</span>` : ''}`;
+            };
+            tab('class', '📚 수업 과제', nClass);
+            tab('clinic', '🩺 클리닉 과제', nClinic);
+            const t = document.getElementById('hw-page-title');
+            if (t) t.innerText = HW_KIND === 'clinic' ? '클리닉 제출' : '과제 제출';
+        }
+        function setHwKind(k) { HW_KIND = k === 'clinic' ? 'clinic' : 'class'; loadHomeworks(); }
+        function openHomeworkTab(k) { HW_KIND = k === 'clinic' ? 'clinic' : 'class'; openProgram('homework'); loadHomeworks(); }
 
         let HW_SUBMITTED = new Set();
         // 같은 묶음 과제의 자리(STUDENT_HW_LIST 순번)를 올린 순서대로
@@ -12997,6 +13037,8 @@ let lavUid = 0;
         }
 
         let ADMIN_HW_LIST = [];
+        let ADMIN_HW_KIND = 'all';
+        function setAdminHwKind(k) { ADMIN_HW_KIND = k; loadAdminHWList(); }
 
         async function loadAdminHWList() {
             try {
@@ -13020,8 +13062,17 @@ let lavUid = 0;
                 pastBtn.classList.toggle('hidden', !past.length);
                 document.getElementById('admin-hw-past-count').innerText = past.length ? `(${past.length}개)` : '';
                 let shown = 0;
+                const cnt = k => ADMIN_HW_LIST.filter(h => !h.hidden && (k === 'all' || (h.kind === 'clinic' ? 'clinic' : 'class') === k)).length;
+                ['all', 'class', 'clinic'].forEach(k => {
+                    const b = document.getElementById('admin-hw-kind-' + k); if (!b) return;
+                    const on = ADMIN_HW_KIND === k;
+                    b.className = `admin-hw-kind px-3 py-1 rounded-full font-bold ${on ? (k === 'clinic' ? 'bg-purple-600 text-white' : 'bg-emerald-600 text-white') : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
+                    b.dataset.n = cnt(k);
+                    b.innerHTML = b.innerHTML.replace(/ \(\d+\)$/, '') + ` (${cnt(k)})`;
+                });
                 data.homeworks.forEach((h, hwIdx) => {
                     if (h.hidden && !showHidden) return;
+                    if (ADMIN_HW_KIND !== 'all' && (h.kind === 'clinic' ? 'clinic' : 'class') !== ADMIN_HW_KIND) return;
                     shown++;
                     const kindLabel = h.kind === 'clinic' ? '클리닉' : '수업';
                     const kindTone = h.kind === 'clinic' ? 'bg-purple-900/60 text-purple-200' : 'bg-blue-900/60 text-blue-200';
@@ -13126,6 +13177,8 @@ let lavUid = 0;
                 i = STUDENT_HW_LIST.findIndex(h => h.id === id);
             }
             if (i < 0) { alert('이 과제를 찾을 수 없어요. 아직 배포 전이거나, 내 반 과제가 아니거나, 원장님이 내렸을 수 있어요.'); return; }
+            const kind = STUDENT_HW_LIST[i].kind === 'clinic' ? 'clinic' : 'class';
+            if (kind !== HW_KIND) { HW_KIND = kind; await loadHomeworks(); }
             if ((STUDENT_HW_LIST[i].question_count || 0) > 0) openHomeworkOmr(i);
             else openHomeworkUpload(i);
         }
