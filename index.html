@@ -3568,8 +3568,8 @@
 
                     <!-- 과제/공지 탭 -->
                     <div id="admin-hw" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <details id="hwg-box" class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) openHomeworkGrid()"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-emerald-300"><i class="fa-solid fa-table-cells mr-1"></i>반별 과제 제출표 <span class="text-[11px] font-normal text-gray-500 ml-1">반을 고르면 학생 × 과제로 냈는지 한눈에</span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2 flex-wrap"><select id="hwg-class" onchange="loadHomeworkGrid()" class="p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs"><option value="">반을 고르세요</option></select><span class="text-[11px] text-gray-400"><b class="text-emerald-300">✔</b> 냄 · <b class="text-amber-300">늦게</b> 기한 뒤 냄 · <b class="text-red-400">✕</b> 안 냄 · <b class="text-gray-500">–</b> 마감 전</span><button onclick="loadHomeworkGrid()" class="text-[11px] text-gray-400 hover:text-white ml-auto"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="hwg-body" class="overflow-x-auto text-xs text-gray-500">반을 고르면 최근 과제 10개까지 보여 줍니다.</div></div></details>
-                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        <details id="hwg-box" class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) openHomeworkGrid()"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-emerald-300"><i class="fa-solid fa-table-cells mr-1"></i>반별 과제 제출표 <span class="text-[11px] font-normal text-gray-500 ml-1">반을 고르면 학생 × 과제로 냈는지 한눈에 · 수업 과제와 클리닉 과제 따로</span></summary><div class="px-3 pb-3"><div class="flex gap-1.5 mb-2" role="tablist"><button id="hwgk-class" onclick="setHwgKind('class')" class="hwgk-tab px-3 py-1 rounded-full text-[12px] font-bold">📚 수업 과제</button><button id="hwgk-clinic" onclick="setHwgKind('clinic')" class="hwgk-tab px-3 py-1 rounded-full text-[12px] font-bold">🩺 클리닉 과제</button></div><div class="flex items-center gap-2 mb-2 flex-wrap"><select id="hwg-class" onchange="loadHomeworkGrid()" class="p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs"><option value="">반을 고르세요</option></select><span class="text-[11px] text-gray-400"><b class="text-emerald-300">✔</b> 냄 · <b class="text-amber-300">늦게</b> 기한 뒤 냄 · <b class="text-red-400">✕</b> 안 냄 · <b class="text-gray-500">–</b> 마감 전</span><button onclick="loadHomeworkGrid()" class="text-[11px] text-gray-400 hover:text-white ml-auto"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="hwg-body" class="overflow-x-auto text-xs text-gray-500">반을 고르면 최근 과제 10개까지 보여 줍니다.</div></div></details>
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점 · 수업 과제와 클리닉 과제 따로</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex gap-1.5 mb-2" role="tablist"><button id="acthk-class" onclick="setActHwKind('class')" class="acthk-tab px-3 py-1 rounded-full text-[12px] font-bold">📚 수업 과제</button><button id="acthk-clinic" onclick="setActHwKind('clinic')" class="acthk-tab px-3 py-1 rounded-full text-[12px] font-bold">🩺 클리닉 과제</button></div><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
                             <div class="flex justify-between items-center mb-4">
@@ -6298,7 +6298,20 @@ let lavUid = 0;
         // ─────────────────────────────────────────────
         // 반별 과제 제출표 — 반을 고르면 학생(줄) × 최근 과제(열)
         // ─────────────────────────────────────────────
+        // 💡 2026-11-10: 수업 과제와 클리닉 과제의 제출표 · 채점 결과를 따로 본다
+        let HWG_KIND = 'class', ACT_HW_KIND = 'class';
+        function paintKindTabs(prefix, kind) {
+            document.querySelectorAll('.' + prefix + '-tab').forEach(b => {
+                const on = b.id === prefix + '-' + kind;
+                const color = kind === 'clinic' ? ['bg-purple-600', 'text-white'] : ['bg-emerald-600', 'text-white'];
+                b.classList.remove('bg-purple-600', 'bg-emerald-600', 'text-white', 'bg-gray-800', 'text-gray-400');
+                b.classList.add(...(on ? color : ['bg-gray-800', 'text-gray-400']));
+            });
+        }
+        function setHwgKind(kind) { HWG_KIND = kind === 'clinic' ? 'clinic' : 'class'; paintKindTabs('hwgk', HWG_KIND); loadHomeworkGrid(); }
+        function setActHwKind(kind) { ACT_HW_KIND = kind === 'clinic' ? 'clinic' : 'class'; paintKindTabs('acthk', ACT_HW_KIND); loadActivity('homework'); }
         async function openHomeworkGrid() {
+            paintKindTabs('hwgk', HWG_KIND);
             if (!CLASS_DATA_LOADED) { try { await loadAdminClassData(); } catch (e) {} }
             const sel = document.getElementById('hwg-class');
             const keep = sel.value;
@@ -6313,11 +6326,11 @@ let lavUid = 0;
             const box = document.getElementById('hwg-body');
             if (!cls) { box.innerHTML = '반을 고르면 최근 과제 10개까지 보여 줍니다.'; return; }
             box.innerHTML = '불러오는 중…';
-            const r = await adminGet(`/api/admin/homework_grid?class_name=${encodeURIComponent(cls)}`);
+            const r = await adminGet(`/api/admin/homework_grid?class_name=${encodeURIComponent(cls)}&kind=${HWG_KIND}`);
             if (!r.ok) { box.innerHTML = `<p class="text-red-400">${escapeHtml(r.message)}</p>`; return; }
             const d = r.data;
             if (!d.rows.length) { box.innerHTML = '이 반에 학생이 없습니다. 학생 명단에서 반을 배정해 주세요.'; return; }
-            if (!d.homeworks.length) { box.innerHTML = '최근 45일 안에 이 반에 낸 과제가 없습니다.'; return; }
+            if (!d.homeworks.length) { box.innerHTML = `최근 45일 안에 이 반에 낸 ${HWG_KIND === 'clinic' ? '클리닉 과제' : '수업 과제'}가 없습니다.`; return; }
             const cell = (c) => {
                 const pct = c.percent != null ? `<span class="block text-[10px] text-gray-400">${c.percent}%</span>` : '';
                 if (c.status === 'submitted') return `<td class="p-1.5 text-center bg-emerald-900/25"><b class="text-emerald-300">✔</b>${pct}</td>`;
@@ -16756,7 +16769,8 @@ let lavUid = 0;
             const list = document.getElementById('act-list-' + kind);
             if (!list) return;
             list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
-            const r = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind));
+            if (kind === 'homework') paintKindTabs('acthk', ACT_HW_KIND);
+            const r = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind) + (kind === 'homework' ? '&hw_kind=' + ACT_HW_KIND : ''));
             if (!r.ok) {
                 list.innerHTML = `<p class="text-xs text-gray-600 py-4 text-center">${escapeHtml(r.message)}</p>`;
                 return;
