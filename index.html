@@ -3678,6 +3678,9 @@
                                 <button id="admin-hw-kind-class" onclick="setAdminHwKind('class')" class="admin-hw-kind px-3 py-1 rounded-full font-bold">📚 수업 과제</button>
                                 <button id="admin-hw-kind-clinic" onclick="setAdminHwKind('clinic')" class="admin-hw-kind px-3 py-1 rounded-full font-bold">🩺 클리닉 과제</button>
                             </div>
+                            <!-- 💡 2026-11-10: 학년을 누르면 그 학년 과제 · 클리닉마다 정답을 올렸는지와 낸 학생 · 안 낸 학생 -->
+                            <div id="admin-hw-grades" class="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]"></div>
+                            <div id="admin-hw-grade-board" class="hidden mt-3 max-h-[70vh] overflow-auto space-y-2"></div>
                             <div id="admin-hw-view-list" class="mt-3 max-h-[70vh] overflow-auto text-white space-y-2"></div>
                         </div>
                     </div>
@@ -13441,7 +13444,65 @@ let lavUid = 0;
 
         let ADMIN_HW_LIST = [];
         let ADMIN_HW_KIND = 'all';
-        function setAdminHwKind(k) { ADMIN_HW_KIND = k; loadAdminHWList(); }
+        function setAdminHwKind(k) { ADMIN_HW_KIND = k; loadAdminHWList(); if (ADMIN_HW_GRADE) loadHwGradeBoard(); }
+
+        // ── 학년별 과제 · 클리닉 (2026-11-10) ─────────────────────
+        //   학년을 누르면 그 학년에 나간 최근 과제마다 정답을 올렸는지, 낸 학생 · 안 낸 학생을 바로 본다.
+        let ADMIN_HW_GRADE = '', HW_GRADES = null;
+        async function loadHwGrades() {
+            const r = await adminGet('/api/admin/homework_by_grade');
+            if (!r.ok) return;
+            HW_GRADES = r.data.grades || [];
+            renderHwGradeChips();
+        }
+        function renderHwGradeChips() {
+            const box = document.getElementById('admin-hw-grades');
+            if (!box || !HW_GRADES) return;
+            const chip = (g, label) => {
+                const on = ADMIN_HW_GRADE === g;
+                return `<button onclick="setAdminHwGrade('${escAttr(g)}')" class="px-3 py-1 rounded-full font-bold ${on ? 'bg-sky-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}">${label}</button>`;
+            };
+            box.innerHTML = '<span class="text-gray-400 mr-0.5">학년별</span>' + chip('', '전체 목록') +
+                HW_GRADES.map(x => chip(x.grade, `${escapeHtml(x.grade)} <span class="font-normal opacity-70">${x.students}명</span>`)).join('');
+        }
+        function setAdminHwGrade(g) {
+            ADMIN_HW_GRADE = g;
+            renderHwGradeChips();
+            document.getElementById('admin-hw-view-list').classList.toggle('hidden', !!g);
+            document.getElementById('admin-hw-grade-board').classList.toggle('hidden', !g);
+            if (g) loadHwGradeBoard();
+        }
+        async function loadHwGradeBoard() {
+            const box = document.getElementById('admin-hw-grade-board');
+            const g = ADMIN_HW_GRADE; if (!g) return;
+            box.innerHTML = '<p class="text-[12px] text-gray-500 py-6 text-center">불러오는 중…</p>';
+            const kind = ADMIN_HW_KIND === 'all' ? '' : ADMIN_HW_KIND;
+            const r = await adminGet(`/api/admin/homework_by_grade?grade=${encodeURIComponent(g)}&kind=${kind}`);
+            if (g !== ADMIN_HW_GRADE) return;
+            if (!r.ok) { box.innerHTML = `<p class="text-[12px] text-red-300 py-4 text-center">${escapeHtml(r.message || '불러오지 못했습니다.')}</p>`; return; }
+            const d = r.data, list = d.homeworks || [];
+            const kindName = kind === 'clinic' ? '클리닉 과제' : kind === 'class' ? '수업 과제' : '과제 · 클리닉';
+            if (!list.length) { box.innerHTML = `<p class="text-[12px] text-gray-500 py-6 text-center">최근 45일 안에 ${escapeHtml(g)}에게 나간 ${kindName}가 없습니다.</p>`; return; }
+            const nameChip = (n, cls) => `<span class="inline-block px-2 py-0.5 rounded-full text-[11px] ${cls}">${n}</span>`;
+            box.innerHTML = `<p class="text-[12px] text-gray-400">${escapeHtml(g)} 학생 ${d.students}명 · 최근 ${kindName} ${list.length}개</p>` + list.map(h => {
+                const clinic = h.kind === 'clinic';
+                const ans = h.question_count ? `<span class="text-emerald-300">✅ 정답 ${h.question_count}문항</span>`
+                    : h.has_answer_file ? '<span class="text-sky-300">📄 해답 파일만</span>' : '<span class="text-amber-300 font-bold">⚠️ 정답 안 올림</span>';
+                const done = h.submitted.length;
+                return `<div class="rounded-xl border ${clinic ? 'border-purple-800/70' : 'border-gray-700'} bg-[#1b2030] p-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] px-2 py-0.5 rounded-full ${clinic ? 'bg-purple-900/60 text-purple-200' : 'bg-emerald-900/60 text-emerald-200'}">${clinic ? '🩺 클리닉' : '📚 수업'}</span>
+                        <b class="text-white text-sm">${escapeHtml(h.title)}</b>
+                        <span class="ml-auto text-[11px] text-gray-400">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5)) : '마감 없음'}</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 mt-1.5 text-[12px]">${ans}
+                        <span class="text-gray-300">낸 학생 <b class="${done === h.audience ? 'text-emerald-300' : 'text-white'}">${done}</b> / ${h.audience}명</span></div>
+                    ${done ? `<div class="mt-2 flex flex-wrap gap-1">${h.submitted.map(x => nameChip(`${escapeHtml(x.name)}${x.percent != null ? ' ' + x.percent + '점' : ''}${x.late ? ' ⏰' : ''}`, 'bg-emerald-900/50 text-emerald-200')).join('')}</div>` : ''}
+                    ${h.missing.length ? `<div class="mt-1.5 flex flex-wrap items-center gap-1"><span class="text-[11px] text-red-300 mr-1">안 냄</span>${h.missing.map(n => nameChip(escapeHtml(n), 'bg-red-900/40 text-red-200')).join('')}</div>` : ''}
+                    ${h.pending.length ? `<div class="mt-1.5 flex flex-wrap items-center gap-1"><span class="text-[11px] text-gray-400 mr-1">마감 전 · 아직</span>${h.pending.map(n => nameChip(escapeHtml(n), 'bg-gray-700 text-gray-300')).join('')}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
 
         async function loadAdminHWList() {
             try {
@@ -13454,6 +13515,7 @@ let lavUid = 0;
                 c.innerHTML = '';
                 if (!data.success) return;
                 ADMIN_HW_LIST = data.homeworks;
+                if (!HW_GRADES) loadHwGrades();
                 // 최근 묶음 이름을 고를 수 있게 (같은 묶음에 과제를 더 넣을 때)
                 const groups = [...new Set(ADMIN_HW_LIST.filter(h => h.group && !h.hidden).map(h => h.group))].slice(0, 12);
                 document.getElementById('hw-group-list').innerHTML = groups.map(g => `<option value="${escAttr(g)}"></option>`).join('');
