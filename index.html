@@ -3568,8 +3568,8 @@
 
                     <!-- 과제/공지 탭 -->
                     <div id="admin-hw" class="admin-tab-content grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <details id="hwg-box" class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) openHomeworkGrid()"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-emerald-300"><i class="fa-solid fa-table-cells mr-1"></i>반별 과제 제출표 <span class="text-[11px] font-normal text-gray-500 ml-1">반을 고르면 학생 × 과제로 냈는지 한눈에</span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2 flex-wrap"><select id="hwg-class" onchange="loadHomeworkGrid()" class="p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs"><option value="">반을 고르세요</option></select><span class="text-[11px] text-gray-400"><b class="text-emerald-300">✔</b> 냄 · <b class="text-amber-300">늦게</b> 기한 뒤 냄 · <b class="text-red-400">✕</b> 안 냄 · <b class="text-gray-500">–</b> 마감 전</span><button onclick="loadHomeworkGrid()" class="text-[11px] text-gray-400 hover:text-white ml-auto"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="hwg-body" class="overflow-x-auto text-xs text-gray-500">반을 고르면 최근 과제 10개까지 보여 줍니다.</div></div></details>
-                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
+                        <details id="hwg-box" class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) openHomeworkGrid()"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-emerald-300"><i class="fa-solid fa-table-cells mr-1"></i>반별 과제 제출표 <span class="text-[11px] font-normal text-gray-500 ml-1">반을 고르면 학생 × 과제로 냈는지 한눈에 · 수업 과제와 클리닉 과제 따로</span></summary><div class="px-3 pb-3"><div class="flex gap-1.5 mb-2" role="tablist"><button id="hwgk-class" onclick="setHwgKind('class')" class="hwgk-tab px-3 py-1 rounded-full text-[12px] font-bold">📚 수업 과제</button><button id="hwgk-clinic" onclick="setHwgKind('clinic')" class="hwgk-tab px-3 py-1 rounded-full text-[12px] font-bold">🩺 클리닉 과제</button></div><div class="flex items-center gap-2 mb-2 flex-wrap"><select id="hwg-class" onchange="loadHomeworkGrid()" class="p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs"><option value="">반을 고르세요</option></select><span class="text-[11px] text-gray-400"><b class="text-emerald-300">✔</b> 냄 · <b class="text-amber-300">늦게</b> 기한 뒤 냄 · <b class="text-red-400">✕</b> 안 냄 · <b class="text-gray-500">–</b> 마감 전</span><button onclick="loadHomeworkGrid()" class="text-[11px] text-gray-400 hover:text-white ml-auto"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="hwg-body" class="overflow-x-auto text-xs text-gray-500">반을 고르면 최근 과제 10개까지 보여 줍니다.</div></div></details>
+                        <details class="col-span-full bg-[#151922] border border-gray-700 rounded-xl mb-2" ontoggle="if(this.open) loadActivity('homework')"><summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-lime-300"><i class="fa-solid fa-list-check mr-1"></i>과제 제출 현황 <span class="text-[11px] font-normal text-gray-500 ml-1">누가 · 무엇을 · 몇 점 · 수업 과제와 클리닉 과제 따로</span><span id="act-sum-homework" class="text-[11px] font-normal text-gray-400 ml-2"></span></summary><div class="px-3 pb-3"><div class="flex gap-1.5 mb-2" role="tablist"><button id="acthk-class" onclick="setActHwKind('class')" class="acthk-tab px-3 py-1 rounded-full text-[12px] font-bold">📚 수업 과제</button><button id="acthk-clinic" onclick="setActHwKind('clinic')" class="acthk-tab px-3 py-1 rounded-full text-[12px] font-bold">🩺 클리닉 과제</button></div><div class="flex items-center gap-2 mb-2"><input type="text" id="act-find-homework" oninput="renderActivity('homework')" placeholder="학생 이름이나 제목으로 찾기" class="flex-grow p-2 bg-[#1e2430] border border-gray-600 rounded text-white text-xs outline-none"><button onclick="loadActivity('homework')" class="text-[11px] text-gray-400 hover:text-white shrink-0"><i class="fa-solid fa-rotate mr-1"></i>새로고침</button></div><div id="act-list-homework" class="max-h-72 overflow-y-auto space-y-1"></div></div></details>
                         
                         <div class="bg-[#151922] p-6 rounded">
                             <div class="flex justify-between items-center mb-4">
@@ -3703,6 +3703,7 @@
                                     <div class="flex flex-col justify-end gap-1 text-[12px] text-gray-300">
                                         <label class="flex items-center gap-1.5"><input id="sv-anon" type="checkbox" class="accent-violet-500"> 이름 없이 받기(익명)</label>
                                         <label class="flex items-center gap-1.5"><input id="sv-push" type="checkbox" checked class="accent-violet-500"> 올릴 때 앱 알림 보내기</label>
+                                        <label class="flex items-center gap-1.5"><input id="sv-kakao" type="checkbox" class="accent-yellow-400"> 올릴 때 카톡으로도 보내기 <i class="fa-solid fa-comment text-yellow-400"></i></label>
                                     </div>
                                 </div>
                             </div>
@@ -6297,7 +6298,20 @@ let lavUid = 0;
         // ─────────────────────────────────────────────
         // 반별 과제 제출표 — 반을 고르면 학생(줄) × 최근 과제(열)
         // ─────────────────────────────────────────────
+        // 💡 2026-11-10: 수업 과제와 클리닉 과제의 제출표 · 채점 결과를 따로 본다
+        let HWG_KIND = 'class', ACT_HW_KIND = 'class';
+        function paintKindTabs(prefix, kind) {
+            document.querySelectorAll('.' + prefix + '-tab').forEach(b => {
+                const on = b.id === prefix + '-' + kind;
+                const color = kind === 'clinic' ? ['bg-purple-600', 'text-white'] : ['bg-emerald-600', 'text-white'];
+                b.classList.remove('bg-purple-600', 'bg-emerald-600', 'text-white', 'bg-gray-800', 'text-gray-400');
+                b.classList.add(...(on ? color : ['bg-gray-800', 'text-gray-400']));
+            });
+        }
+        function setHwgKind(kind) { HWG_KIND = kind === 'clinic' ? 'clinic' : 'class'; paintKindTabs('hwgk', HWG_KIND); loadHomeworkGrid(); }
+        function setActHwKind(kind) { ACT_HW_KIND = kind === 'clinic' ? 'clinic' : 'class'; paintKindTabs('acthk', ACT_HW_KIND); loadActivity('homework'); }
         async function openHomeworkGrid() {
+            paintKindTabs('hwgk', HWG_KIND);
             if (!CLASS_DATA_LOADED) { try { await loadAdminClassData(); } catch (e) {} }
             const sel = document.getElementById('hwg-class');
             const keep = sel.value;
@@ -6312,11 +6326,11 @@ let lavUid = 0;
             const box = document.getElementById('hwg-body');
             if (!cls) { box.innerHTML = '반을 고르면 최근 과제 10개까지 보여 줍니다.'; return; }
             box.innerHTML = '불러오는 중…';
-            const r = await adminGet(`/api/admin/homework_grid?class_name=${encodeURIComponent(cls)}`);
+            const r = await adminGet(`/api/admin/homework_grid?class_name=${encodeURIComponent(cls)}&kind=${HWG_KIND}`);
             if (!r.ok) { box.innerHTML = `<p class="text-red-400">${escapeHtml(r.message)}</p>`; return; }
             const d = r.data;
             if (!d.rows.length) { box.innerHTML = '이 반에 학생이 없습니다. 학생 명단에서 반을 배정해 주세요.'; return; }
-            if (!d.homeworks.length) { box.innerHTML = '최근 45일 안에 이 반에 낸 과제가 없습니다.'; return; }
+            if (!d.homeworks.length) { box.innerHTML = `최근 45일 안에 이 반에 낸 ${HWG_KIND === 'clinic' ? '클리닉 과제' : '수업 과제'}가 없습니다.`; return; }
             const cell = (c) => {
                 const pct = c.percent != null ? `<span class="block text-[10px] text-gray-400">${c.percent}%</span>` : '';
                 if (c.status === 'submitted') return `<td class="p-1.5 text-center bg-emerald-900/25"><b class="text-emerald-300">✔</b>${pct}</td>`;
@@ -6561,7 +6575,7 @@ let lavUid = 0;
         function resetSurveyForm() {
             SV_EDIT_ID = ''; SV_QS = [{ id: svUid(), kind: 'single', text: '', options: ['', ''], required: true }];
             ['sv-title', 'sv-note', 'sv-students', 'sv-deadline'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('sv-anon').checked = false; document.getElementById('sv-push').checked = true;
+            document.getElementById('sv-anon').checked = false; document.getElementById('sv-push').checked = true; document.getElementById('sv-kakao').checked = false;
             clearClassPicker('sv-target-class');
             document.getElementById('sv-form-title').innerHTML = '<i class="fa-solid fa-square-poll-vertical mr-1.5 text-violet-400"></i>새 설문 만들기';
             document.getElementById('sv-submit').innerText = '설문 올리기';
@@ -6580,12 +6594,13 @@ let lavUid = 0;
                 target_classes: getPickedClasses('sv-target-class'),
                 target_students: document.getElementById('sv-students').value.split(/[,\n]/).map(x => x.trim()).filter(Boolean),
                 deadline: document.getElementById('sv-deadline').value || '', anonymous: document.getElementById('sv-anon').checked,
-                open: true, push: document.getElementById('sv-push').checked };
+                open: true, push: document.getElementById('sv-push').checked, kakao: !SV_EDIT_ID && document.getElementById('sv-kakao').checked };
             showLoader(SV_EDIT_ID ? '설문을 고치는 중...' : '설문을 올리는 중...');
             const r = await adminPost('/api/admin/survey', body);
             hideLoader();
             if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || '저장하지 못했습니다.');
             showToast(SV_EDIT_ID ? '설문을 고쳤어요.' : '설문을 올렸어요. 학생 바탕화면 맨 위에 보입니다.');
+            if (r.data.kakao) showSurveyKakaoResult(r.data.kakao, '설문을 올렸');
             const id = r.data.id; resetSurveyForm(); await loadSurveyList(); openSurveyResult(id);
         }
         async function loadSurveyList() {
@@ -6635,10 +6650,33 @@ let lavUid = 0;
                         <button onclick="deleteSurvey()" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-red-900/60 hover:bg-red-800 text-red-200">삭제</button>
                     </span>
                 </div>
-                <p class="text-[12px] text-gray-400 mb-3">대상 ${res.audience_count}명 중 <b class="text-violet-300">${res.answered_count}명</b>이 답했어요.</p>
+                <p class="text-[12px] text-gray-400 mb-2">대상 ${res.audience_count}명 중 <b class="text-violet-300">${res.answered_count}명</b>이 답했어요.</p>
+                ${SV_CUR.is_open ? `<div class="flex flex-wrap gap-1.5 mb-3">
+                    ${res.missing.length ? `<button onclick="surveyKakao(true)" class="text-[11px] font-black px-2.5 py-1 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-gray-900"><i class="fa-solid fa-comment mr-1"></i>안 한 학생 ${res.missing.length}명에게 카톡</button>` : ''}
+                    <button onclick="surveyKakao(false)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-yellow-200"><i class="fa-solid fa-comment mr-1"></i>모두에게 카톡</button>
+                </div>` : ''}
                 <div class="space-y-3">${qHtml}</div>
                 ${res.missing.length ? `<details class="mt-3"><summary class="text-[12px] text-amber-300 cursor-pointer">아직 안 한 학생 ${res.missing.length}명</summary><p class="text-[12px] text-gray-300 mt-1 leading-relaxed">${escapeHtml(res.missing.join(', '))}</p></details>` : '<p class="text-[12px] text-emerald-300 mt-3">대상 학생이 모두 답했어요.</p>'}
             </div>`;
+        }
+        // 💡 카톡 결과(보낸 수 · 번호 없는 학생 · 설정 문제)를 공지와 같은 방식으로 알려 준다
+        function showSurveyKakaoResult(k, done) {
+            const lines = [];
+            if (k.error) lines.push((done ? done + '지만 ' : '') + '카톡은 보내지 못했습니다.', '', '이유: ' + k.error);
+            else lines.push(`${done ? done + '고, ' : ''}카톡을 ${k.sent || 0}명에게 보냈습니다.`);
+            if ((k.no_phone || []).length) lines.push('', `휴대폰 번호가 없어 못 보낸 학생: ${k.no_phone.join(', ')}`, '→ logyedu.com 관리자 학생 명단에 학생 번호를 넣어 주세요.');
+            if ((k.unknown || []).length) lines.push('', `logyedu.com 학생 명단에 없는 이름: ${k.unknown.join(', ')}`, '→ 두 사이트의 학생 이름이 한 글자도 다르지 않게 맞춰 주세요.');
+            alert(lines.join('\n'));
+        }
+        async function surveyKakao(onlyMissing) {
+            if (!SV_CUR) return;
+            const who = onlyMissing ? '아직 답하지 않은 학생' : '대상 학생 모두';
+            if (!confirm(`'${SV_CUR.title}' 설문을 ${who}에게 카톡으로 보낼까요?`)) return;
+            showLoader('카톡을 보내는 중...');
+            const r = await adminPost('/api/admin/survey/kakao', { id: SV_CUR.id, only_missing: !!onlyMissing });
+            hideLoader();
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || '보내지 못했습니다.');
+            showSurveyKakaoResult(r.data.kakao || {}, '');
         }
         function svBody(extra) {
             const v = SV_CUR;
@@ -6661,6 +6699,7 @@ let lavUid = 0;
             document.getElementById('sv-deadline').value = String(SV_CUR.deadline || '').slice(0, 16);
             document.getElementById('sv-anon').checked = !!SV_CUR.anonymous;
             document.getElementById('sv-push').checked = false;
+            document.getElementById('sv-kakao').checked = false;
             setPickedClasses('sv-target-class', SV_CUR.target_classes || []);
             document.getElementById('sv-form-title').innerHTML = `<i class="fa-solid fa-pen mr-1.5 text-violet-400"></i>'${escapeHtml(SV_CUR.title)}' 고치는 중`;
             document.getElementById('sv-submit').innerText = '고친 내용 저장';
@@ -16730,7 +16769,8 @@ let lavUid = 0;
             const list = document.getElementById('act-list-' + kind);
             if (!list) return;
             list.innerHTML = '<p class="text-xs text-gray-600 py-4 text-center">불러오는 중...</p>';
-            const r = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind));
+            if (kind === 'homework') paintKindTabs('acthk', ACT_HW_KIND);
+            const r = await adminGet('/api/admin/activity?kind=' + encodeURIComponent(kind) + (kind === 'homework' ? '&hw_kind=' + ACT_HW_KIND : ''));
             if (!r.ok) {
                 list.innerHTML = `<p class="text-xs text-gray-600 py-4 text-center">${escapeHtml(r.message)}</p>`;
                 return;
