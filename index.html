@@ -1266,15 +1266,15 @@
                 <span id="nav-student-menu" class="hidden md:flex items-center gap-6 border-l border-gray-700 pl-6">
                     <button onclick="goToDashboard()" class="nav-word hover:text-emerald-400">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="nav-word hover:text-orange-400">타임어택 퀴즈</button>
-                    <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="nav-word hover:text-cyan-400">영어 단어 시험</button>
+                    <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="retired nav-word hover:text-cyan-400">영어 단어 시험</button>
                     
                     <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
                     <button onclick="openHomeworkTab('class')" class="nav-word hover:text-emerald-400">과제 제출</button>
                     <button onclick="openHomeworkTab('clinic')" class="nav-word hover:text-purple-400">클리닉 제출</button>
-                    <button onclick="openStudy()" class="nav-word hover:text-teal-400">스터디룸</button>
+                    <button onclick="openStudy()" class="retired nav-word hover:text-teal-400">스터디룸</button>
                     <button onclick="openProgram('qna'); loadQna();" class="nav-word hover:text-rose-400">질문 게시판</button>
                     
-                    <button onclick="openProgram('essay')" class="nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
+                    <button onclick="openProgram('essay')" class="retired nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
                 </span>
             </div>
             <div class="flex items-center gap-3">
@@ -1313,15 +1313,15 @@
             <span id="mobile-student-menu" class="hidden" style="display:none;">
                 <button onclick="goToDashboard(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">바탕화면</button>
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
-                <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
+                <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
                 
                 <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openHomeworkTab('class'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
                 <button onclick="openHomeworkTab('clinic'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">클리닉 제출</button>
-                <button onclick="openStudy(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
+                <button onclick="openStudy(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
                 <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
                 
-                <button onclick="openProgram('essay'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
+                <button onclick="openProgram('essay'); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
             </span>
             <button onclick="openProgram('mypage'); loadMyPage(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-emerald-400 w-full" id="mobile-mypage-btn" style="display:none;">마이페이지</button>
             <button onclick="openProgram('counsel'); loadMyCounsel(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-pink-400 w-full" id="mobile-counsel-btn" style="display:none;">나의 진학 상담</button>
@@ -2072,12 +2072,17 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">나의 진학 상담</h3>
                         <p class="text-rose-200/70 text-[11px] md:text-sm word-break-keep-all">내 성적으로 갈 수 있는 대학을 봐요.</p>
                     </div>
-                    <div onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="bg-[#1e2430] border border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                    <a href="https://logyedu.com/study" target="_blank" rel="noopener" class="block bg-[#1e2430] border border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">📖</div>
+                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">학습실 <span class="text-[11px] font-normal text-cyan-300">logyedu.com ↗</span></h3>
+                        <p class="text-cyan-200/70 text-[11px] md:text-sm word-break-keep-all">영어 단어 시험 · AI 논술 첨삭 · 스터디룸은 홈페이지 학습실로 옮겼어요.</p>
+                    </a>
+                    <div onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="retired bg-[#1e2430] border border-cyan-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-cyan-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🔤</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">영어 단어 시험</h3>
                         <p class="text-cyan-200/70 text-[11px] md:text-sm word-break-keep-all">외운 단어를 실제로 확인해요.</p>
                     </div>
-                    <div onclick="openStudy()" class="bg-[#1e2430] border border-teal-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                    <div onclick="openStudy()" class="retired bg-[#1e2430] border border-teal-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-teal-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">⏱️</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">스터디룸</h3>
                         <p class="text-teal-200/70 text-[11px] md:text-sm word-break-keep-all">공부 시간을 재고 함께 공부해요.</p>
@@ -2092,7 +2097,7 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">공지사항</h3>
                         <p class="text-blue-200/70 text-[11px] md:text-sm word-break-keep-all">학원 소식을 확인해요.</p>
                     </div>
-                    <div onclick="openProgram('essay');" class="bg-[#1e2430] border border-pink-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
+                    <div onclick="openProgram('essay');" class="retired bg-[#1e2430] border border-pink-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-pink-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">✍️</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">AI 논술·요약 첨삭</h3>
                         <p class="text-pink-200/70 text-[11px] md:text-sm word-break-keep-all">쓴 글을 바로 첨삭받아요.</p>
@@ -2541,6 +2546,9 @@
                         html.tool-mode #main-nav, html.tool-mode footer, html.tool-mode #prog-admin nav[aria-label="관리자 메뉴"],
                         html.tool-mode #tzfix-card, html.tool-mode .floating-help, html.tool-mode #mobile-menu { display:none !important; }
                         html.tool-mode body { padding-top:0 !important; }
+                        html.student-tool #home-view, html.student-tool #dashboard-home, html.student-tool .prog-intro,
+                        html.student-tool #study-pill, html.student-tool #study-strip, html.student-tool #pushask-modal { display:none !important; }
+                        html.student-tool #program-view > * { max-width:none; }
                         html.tool-mode #program-view, html.tool-mode #dashboard-screen { padding:0 !important; max-width:none !important; }
                         html.tool-mode #prog-admin > div:first-child { padding:0 !important; background:transparent !important; }
                         html.tool-mode #program-view > button[onclick="closeProgram()"], html.tool-mode #prog-admin > .prog-intro,
@@ -3806,7 +3814,51 @@
             });
             try { if (window.parent !== window) window.parent.postMessage({ type: 'logyedu-tool-ready', tool: TOOL }, '*'); } catch (e) {}
         }
+        // ── 학생 도구 모드 (2026-11-10) ─────────────────────────
+        //   logyedu.com/study(재학생 학습실)가 이 사이트를 틀 안에 열어 학생 메뉴 하나만 쓴다.
+        //   학생은 logyedu.com 에서 학교 · 학년 · 이름을 적고, 그 정보가 postMessage 로 넘어오면
+        //   여기서 평소 로그인(/api/auth)과 똑같이 확인한다.
+        const STUDENT_TOOLS = { 'vocab-test': 'vocab-list', essay: 'essay', studyroom: 'study' };
+        const STOOL = (() => { try { const t = new URLSearchParams(location.search).get('tool'); return STUDENT_TOOLS[t] ? t : ''; } catch (e) { return ''; } })();
+        function stoolPost(msg) { try { if (window.parent !== window) window.parent.postMessage(msg, '*'); } catch (e) {} }
+        if (STOOL) {
+            document.documentElement.classList.add('tool-mode', 'student-tool');
+            window.addEventListener('message', async ev => {
+                if (!TOOL_PARENTS.includes(ev.origin) && !/^http:\/\/localhost(:\d+)?$/.test(ev.origin)) return;
+                const d = ev.data || {};
+                if (d.type === 'logyedu-student-logout') {
+                    try { localStorage.removeItem('logyedu_user'); } catch (e) {}
+                    location.reload(); return;
+                }
+                if (d.type !== 'logyedu-student-login') return;
+                const school = String(d.school || '').trim(), grade = String(d.grade || '').trim(), name = String(d.name || '').trim();
+                if (!school || !grade || !name) return stoolPost({ type: 'logyedu-student-login-result', ok: false, detail: '학교 · 학년 · 이름을 모두 적어 주세요.' });
+                let saved = null; try { saved = JSON.parse(localStorage.getItem('logyedu_user') || 'null'); } catch (e) {}
+                if (saved && !saved.isAdmin && saved.name === name) return stoolPost({ type: 'logyedu-student-login-result', ok: true });
+                try {
+                    const res = await fetch(`${API_URL}/api/auth`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ school, grade, student_name: name, admin_password: '' }) });
+                    const data = await res.json();
+                    if (!data.success || data.is_admin) return stoolPost({ type: 'logyedu-student-login-result', ok: false, detail: data.detail || '학생 정보를 확인하지 못했어요.' });
+                    localStorage.setItem('logyedu_user', JSON.stringify({ school, grade, name, isAdmin: false }));
+                    stoolPost({ type: 'logyedu-student-login-result', ok: true });
+                    location.reload();
+                } catch (e) {
+                    stoolPost({ type: 'logyedu-student-login-result', ok: false, detail: '서버 연결이 늦어요. 잠시 뒤 다시 해 주세요.' });
+                }
+            });
+            // 틀 안에 이미 들어와 있는 학생을 알려 준다 — 같은 학생이면 logyedu.com 이 다시 보내지 않는다
+            let who = ''; try { const u = JSON.parse(localStorage.getItem('logyedu_user') || 'null'); if (u && !u.isAdmin) who = u.name || ''; } catch (e) {}
+            stoolPost({ type: 'logyedu-tool-ready', tool: STOOL, student: who });
+        }
         function openToolTab() {
+            if (STOOL) {
+                if (!currentUser || currentUser.isAdmin) return true;
+                const target = 'prog-' + STUDENT_TOOLS[STOOL];
+                if (window.location.hash !== '#' + target) window.location.hash = target; else window.dispatchEvent(new Event('hashchange'));
+                if (STOOL === 'vocab-test') setTimeout(loadStudentVocabTests, 60);
+                return true;
+            }
             if (!TOOL) return false;
             if (!currentUser || !currentUser.isAdmin) { try { showModal('auth'); } catch (e) {} return true; }
             if (window.location.hash !== '#prog-admin') window.location.hash = 'prog-admin';
@@ -5755,6 +5807,7 @@ let lavUid = 0;
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#','');
+            if (STOOL && currentUser && !currentUser.isAdmin && (!h || h === 'home' || h === 'dashboard')) { window.location.hash = 'prog-' + STUDENT_TOOLS[STOOL]; return; }
             if (h === 'dm') { window.location.hash = 'dashboard'; setTimeout(openDm, 400); return; }
             // 💡 시험지 QR(#hw-과제id, 또는 문제지 만들기에서 찍은 #hwt-과제이름): 어떤 과제였는지 적어두고
             //    과제 화면으로. 로그인 전이면 로그인 뒤 학습실(#dashboard)로 오므로, 거기서 적어둔 과제를 보고
@@ -5916,7 +5969,7 @@ let lavUid = 0;
                     // 💡 알림을 켤 수 있다는 걸 모르는 학생이 대부분이다. 마이페이지에
                     //    들어가 본 적이 없으면 알림 카드를 볼 일이 없기 때문. 들어온 김에
                     //    한 번 권한다(세 번까지만, 사흘 간격으로).
-                    maybeAskPush();
+                    if (!STOOL) maybeAskPush();
                     }
                     document.getElementById('btn-mypage-nav').style.display='inline-block';
                     document.getElementById('btn-counsel-nav').style.display='inline-block';
@@ -5935,7 +5988,7 @@ let lavUid = 0;
                 document.getElementById('mobile-logout-btn').style.display='block';
                 if (openToolTab()) {}
                 else if(!window.location.hash||window.location.hash==='#home') window.location.hash='dashboard'; else window.dispatchEvent(new Event('hashchange'));
-                if (!TOOL) checkMainPopup();
+                if (!TOOL && !STOOL) checkMainPopup();
 
                 const pendingLvlUp = localStorage.getItem('logyedu_pending_levelup');
                 if(pendingLvlUp) {
