@@ -13671,7 +13671,9 @@ let lavUid = 0;
             HW_OMR = { title: h.title, count: count,
                        answers: Array.from({ length: count }, (_, k) => (mineBefore[k] == null ? '' : String(mineBefore[k]))),
                        kinds: (h.omr_kinds && h.omr_kinds.length === count) ? h.omr_kinds : new Array(count).fill('choice'),
-                       editing: !!MY_HW_REPORTS[h.title] };
+                       editing: !!MY_HW_REPORTS[h.title], kind: h.kind || 'class',
+                       // 💡 2026-11-10: 낸 뒤에는 한 문항을 2번까지만 고칠 수 있다(서버도 막는다)
+                       qEdits: ((MY_HW_REPORTS[h.title] || {}).q_edits) || {} };
             document.getElementById('hw-omr-title').innerText = h.title;
             document.getElementById('hw-omr-kind').innerText = (kindLabel || '') + (HW_OMR.editing ? ' · 전에 낸 답이 채워져 있어요. 고칠 문항만 고쳐 다시 내세요.' : '');
             document.getElementById('hw-omr-result').innerHTML = '';
@@ -13705,10 +13707,26 @@ let lavUid = 0;
                 class="h-11 rounded-lg border font-bold ${size} flex items-center justify-center transition active:scale-95 ${on}">${label}</button>`;
         }
 
+        const OMR_MAX_EDITS = 2;
         function renderHomeworkOmr() {
             const box = document.getElementById('hw-omr-sheet');
-            box.innerHTML = HW_OMR.answers.map((v, i) => {
+            const usedOf = i => Number((HW_OMR.qEdits || {})[String(i + 1)] || 0);
+            const editNote = HW_OMR.editing
+                ? `<p class="text-[11.5px] text-amber-200 bg-amber-900/25 border border-amber-800/60 rounded-lg px-3 py-2 mb-1">✏️ 낸 뒤에는 <b>한 문항을 ${OMR_MAX_EDITS}번까지만</b> 고칠 수 있어요. 그 뒤로는 수업 시간이나 질문 게시판에서 해결해요.</p>` : '';
+            box.innerHTML = editNote + HW_OMR.answers.map((v, i) => {
                 const kind = (HW_OMR.kinds || [])[i];
+                const used = usedOf(i);
+                if (HW_OMR.editing && kind !== 'none' && used >= OMR_MAX_EDITS) {
+                    return `
+                <div id="hwomr-row-${i}" class="bg-[#12161d] border border-gray-700 rounded-xl px-2.5 py-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
+                        <span class="text-[12px] text-gray-300 shrink-0">낸 답 <b class="text-white">${escapeHtml(v === OMR_UNSURE ? '모름' : (v || '-'))}</b></span>
+                        <span class="text-[11px] text-gray-500 flex-grow">🔒 ${OMR_MAX_EDITS}번 고쳐서 더 못 고쳐요</span>
+                        <button onclick="askTeacher('${escAttr(HW_OMR.title)}', ${i + 1}, '${escAttr(HW_OMR.kind || '')}')" class="shrink-0 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-sky-800 hover:bg-sky-700 text-white">질문하기</button>
+                    </div>
+                </div>`;
+                }
                 // 💡 원장님이 정답표에 '-'를 적어둔 문항은 답을 안 내도 되는 자리다.
                 //    빈칸으로 두면 학생이 '빠뜨렸나' 싶어 불안해하므로 그렇다고 적어준다.
                 if (kind === 'none') {
@@ -13734,6 +13752,7 @@ let lavUid = 0;
                 return `
                 <div id="hwomr-row-${i}" class="bg-[#151922] border border-gray-700 rounded-xl px-2.5 py-1.5 transition-colors">
                     ${pick > 1 ? `<p class="text-[11px] font-bold text-amber-300 pl-9 pt-0.5">${pick}개 고르기</p>` : ''}
+                    ${HW_OMR.editing && used ? `<p class="text-[10.5px] text-amber-300/80 pl-9 pt-0.5">이 문항 ${used}번 고침 · ${OMR_MAX_EDITS - used}번 더 고칠 수 있어요</p>` : ''}
                     <div class="flex items-center gap-2">
                         <span id="hwomr-no-${i}" class="text-gray-400 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${i + 1}</span>
                         ${body}
@@ -13902,6 +13921,13 @@ let lavUid = 0;
             const d = r.data;
             if (d && d.success === false) return alert(d.detail || "제출하지 못했습니다.");
             showOmrResult(d);
+            // 서버가 센 고친 횟수로 바꾸고, 더 못 고치게 된 문항은 앞의 답 그대로 둔다
+            if (d.q_edits) HW_OMR.qEdits = d.q_edits;
+            if (Array.isArray(d.mine) && d.mine.length) HW_OMR.answers = HW_OMR.answers.map((a, k) => d.mine[k] == null ? a : String(d.mine[k]));
+            if ((d.blocked || []).length) {
+                document.getElementById('hw-omr-result').insertAdjacentHTML('afterbegin',
+                    `<p class="mb-2 text-center text-[12.5px] font-bold text-amber-200 bg-amber-900/30 border border-amber-700 rounded-lg py-2 px-3">🔒 ${d.blocked.join(', ')}번은 이미 ${d.max_edits || OMR_MAX_EDITS}번 고쳐서 바꾼 답을 받지 않았어요. 수업 시간이나 질문 게시판에서 선생님께 물어보세요.</p>`);
+            }
             if (d.expl_locked) {
                 document.getElementById('hw-omr-result').insertAdjacentHTML('afterbegin',
                     `<p class="mb-2 text-center text-[12px] text-sky-200 bg-sky-900/30 border border-sky-800 rounded-lg py-2">틀린 번호를 보고 답을 고쳐 다시 낼 수 있어요. 해설은 마감(${escapeHtml(hwDeadlineLabel(d.expl_open_at))}) 뒤에 열립니다.</p>`);
@@ -13912,6 +13938,7 @@ let lavUid = 0;
             }
             // 💡 한 번 내고 끝이 아니다. 틀린 문항의 답을 고쳐 바로 다시 낼 수 있다.
             HW_OMR.editing = true;
+            renderHomeworkOmr();
             document.getElementById('hw-omr-submit-btn').innerText = '고친 답으로 다시 제출하기';
             if (d.edited) showToast("고친 답으로 다시 채점했습니다.");
             HW_SUBMITTED.add(HW_OMR.title);
@@ -16709,10 +16736,13 @@ let lavUid = 0;
             if (!(d.wrongs || []).length) return alert("이 시험은 틀린 문항이 없습니다.");
 
             RETRY = { title: title, kind: kind, nos: d.wrongs, answers: {},
-                      has_explanation: !!d.has_explanation, qtypes: d.qtypes || {} };
+                      has_explanation: !!d.has_explanation, qtypes: d.qtypes || {},
+                      locked: new Set((d.locked || []).map(Number)), qEdits: d.q_edits || {}, max: d.max_edits || 2 };
+            if (RETRY.locked.size && RETRY.locked.size === d.wrongs.length)
+                return alert(`틀린 문항을 모두 ${RETRY.max}번씩 고쳐서 더 다시 풀 수 없어요.\n수업 시간이나 질문 게시판에서 선생님께 물어보세요.`);
             document.getElementById('retry-title').innerText = title;
             document.getElementById('retry-sub').innerText =
-                `틀린 ${d.wrongs.length}문항 다시 풀기${d.retry_count ? ' · 지금까지 ' + d.retry_count + '번 다시 풀었어요' : ''}`;
+                `틀린 ${d.wrongs.length}문항 다시 풀기 · 한 문항은 ${RETRY.max}번까지만${d.retry_count ? ' · 지금까지 ' + d.retry_count + '번 다시 풀었어요' : ''}`;
             document.getElementById('retry-result').innerHTML = '';
             document.getElementById('retry-submit-btn').disabled = false;
             renderRetrySheet();
@@ -16724,8 +16754,12 @@ let lavUid = 0;
             box.innerHTML = RETRY.nos.map(no => {
                 const expl = RETRY.has_explanation;   // 해설 내용은 제출 전에 안 보낸다
                 const qtype = RETRY.qtypes[no] || 'choice';
+                const used = Number(RETRY.qEdits[String(no)] || 0);
                 let body;
-                if (qtype === 'essay') {
+                if (RETRY.locked.has(no)) {
+                    body = `<span class="text-[11.5px] text-gray-400 flex-grow">🔒 ${RETRY.max}번 고쳐서 더 다시 풀 수 없어요. 수업이나 질문 게시판에서 해결해요.</span>
+                        <button onclick="closeModal('retry-modal'); ${RETRY.kind === '과제 제출' ? `askTeacher('${escAttr(RETRY.title)}', ${no}, '')` : `openProgram('qna'); loadQna();`}" class="shrink-0 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-sky-800 hover:bg-sky-700 text-white">질문하기</button>`;
+                } else if (qtype === 'essay') {
                     // 서술형은 정해진 정답이 하나가 아니라 자동으로 다시 채점할 수 없다
                     body = `<p class="text-[11px] text-gray-500 flex-grow">서술형 문항은 자동으로 다시 채점할 수 없어요. 제출한 뒤 마이페이지에서 해설을 보며 스스로 확인해 주세요.</p>`;
                 } else if (qtype === 'short') {
@@ -16747,7 +16781,8 @@ let lavUid = 0;
                         <span id="retry-no-${no}" class="text-red-300 text-sm font-bold w-7 shrink-0 text-right tabular-nums">${no}</span>
                         ${body}
                     </div>
-                    ${expl ? `<p class="text-[10.5px] text-gray-500 mt-1 ml-9">해설은 제출한 뒤 마이페이지에서 볼 수 있어요.</p>` : ''}
+                    ${!RETRY.locked.has(no) && used ? `<p class="text-[10.5px] text-amber-300/80 mt-1 ml-9">${used}번 고침 · ${RETRY.max - used}번 더 고칠 수 있어요</p>` : ''}
+                    ${expl && !RETRY.locked.has(no) ? `<p class="text-[10.5px] text-gray-500 mt-1 ml-9">해설은 제출한 뒤 마이페이지에서 볼 수 있어요.</p>` : ''}
                 </div>`;
             }).join('');
         }
@@ -16797,6 +16832,10 @@ let lavUid = 0;
 
             const fixed = d.newly_fixed || [];
             const still = d.still_wrong || [];
+            RETRY.qEdits = d.q_edits || RETRY.qEdits;
+            RETRY.locked = new Set((d.locked || []).map(Number));
+            RETRY.answers = {};
+            renderRetrySheet();
             document.getElementById('retry-result').innerHTML = `
                 <div class="bg-sky-900/30 border border-sky-700 rounded-lg p-3 text-xs">
                     ${fixed.length ? `<p class="text-emerald-300 font-bold">이번에 맞힌 문항: ${fixed.join(', ')}번</p>` : '<p class="text-gray-300">이번에는 새로 맞힌 문항이 없어요.</p>'}
