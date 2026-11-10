@@ -3703,6 +3703,7 @@
                                     <div class="flex flex-col justify-end gap-1 text-[12px] text-gray-300">
                                         <label class="flex items-center gap-1.5"><input id="sv-anon" type="checkbox" class="accent-violet-500"> 이름 없이 받기(익명)</label>
                                         <label class="flex items-center gap-1.5"><input id="sv-push" type="checkbox" checked class="accent-violet-500"> 올릴 때 앱 알림 보내기</label>
+                                        <label class="flex items-center gap-1.5"><input id="sv-kakao" type="checkbox" class="accent-yellow-400"> 올릴 때 카톡으로도 보내기 <i class="fa-solid fa-comment text-yellow-400"></i></label>
                                     </div>
                                 </div>
                             </div>
@@ -6561,7 +6562,7 @@ let lavUid = 0;
         function resetSurveyForm() {
             SV_EDIT_ID = ''; SV_QS = [{ id: svUid(), kind: 'single', text: '', options: ['', ''], required: true }];
             ['sv-title', 'sv-note', 'sv-students', 'sv-deadline'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('sv-anon').checked = false; document.getElementById('sv-push').checked = true;
+            document.getElementById('sv-anon').checked = false; document.getElementById('sv-push').checked = true; document.getElementById('sv-kakao').checked = false;
             clearClassPicker('sv-target-class');
             document.getElementById('sv-form-title').innerHTML = '<i class="fa-solid fa-square-poll-vertical mr-1.5 text-violet-400"></i>새 설문 만들기';
             document.getElementById('sv-submit').innerText = '설문 올리기';
@@ -6580,12 +6581,13 @@ let lavUid = 0;
                 target_classes: getPickedClasses('sv-target-class'),
                 target_students: document.getElementById('sv-students').value.split(/[,\n]/).map(x => x.trim()).filter(Boolean),
                 deadline: document.getElementById('sv-deadline').value || '', anonymous: document.getElementById('sv-anon').checked,
-                open: true, push: document.getElementById('sv-push').checked };
+                open: true, push: document.getElementById('sv-push').checked, kakao: !SV_EDIT_ID && document.getElementById('sv-kakao').checked };
             showLoader(SV_EDIT_ID ? '설문을 고치는 중...' : '설문을 올리는 중...');
             const r = await adminPost('/api/admin/survey', body);
             hideLoader();
             if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || '저장하지 못했습니다.');
             showToast(SV_EDIT_ID ? '설문을 고쳤어요.' : '설문을 올렸어요. 학생 바탕화면 맨 위에 보입니다.');
+            if (r.data.kakao) showSurveyKakaoResult(r.data.kakao, '설문을 올렸');
             const id = r.data.id; resetSurveyForm(); await loadSurveyList(); openSurveyResult(id);
         }
         async function loadSurveyList() {
@@ -6635,10 +6637,33 @@ let lavUid = 0;
                         <button onclick="deleteSurvey()" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-red-900/60 hover:bg-red-800 text-red-200">삭제</button>
                     </span>
                 </div>
-                <p class="text-[12px] text-gray-400 mb-3">대상 ${res.audience_count}명 중 <b class="text-violet-300">${res.answered_count}명</b>이 답했어요.</p>
+                <p class="text-[12px] text-gray-400 mb-2">대상 ${res.audience_count}명 중 <b class="text-violet-300">${res.answered_count}명</b>이 답했어요.</p>
+                ${SV_CUR.is_open ? `<div class="flex flex-wrap gap-1.5 mb-3">
+                    ${res.missing.length ? `<button onclick="surveyKakao(true)" class="text-[11px] font-black px-2.5 py-1 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-gray-900"><i class="fa-solid fa-comment mr-1"></i>안 한 학생 ${res.missing.length}명에게 카톡</button>` : ''}
+                    <button onclick="surveyKakao(false)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-yellow-200"><i class="fa-solid fa-comment mr-1"></i>모두에게 카톡</button>
+                </div>` : ''}
                 <div class="space-y-3">${qHtml}</div>
                 ${res.missing.length ? `<details class="mt-3"><summary class="text-[12px] text-amber-300 cursor-pointer">아직 안 한 학생 ${res.missing.length}명</summary><p class="text-[12px] text-gray-300 mt-1 leading-relaxed">${escapeHtml(res.missing.join(', '))}</p></details>` : '<p class="text-[12px] text-emerald-300 mt-3">대상 학생이 모두 답했어요.</p>'}
             </div>`;
+        }
+        // 💡 카톡 결과(보낸 수 · 번호 없는 학생 · 설정 문제)를 공지와 같은 방식으로 알려 준다
+        function showSurveyKakaoResult(k, done) {
+            const lines = [];
+            if (k.error) lines.push((done ? done + '지만 ' : '') + '카톡은 보내지 못했습니다.', '', '이유: ' + k.error);
+            else lines.push(`${done ? done + '고, ' : ''}카톡을 ${k.sent || 0}명에게 보냈습니다.`);
+            if ((k.no_phone || []).length) lines.push('', `휴대폰 번호가 없어 못 보낸 학생: ${k.no_phone.join(', ')}`, '→ logyedu.com 관리자 학생 명단에 학생 번호를 넣어 주세요.');
+            if ((k.unknown || []).length) lines.push('', `logyedu.com 학생 명단에 없는 이름: ${k.unknown.join(', ')}`, '→ 두 사이트의 학생 이름이 한 글자도 다르지 않게 맞춰 주세요.');
+            alert(lines.join('\n'));
+        }
+        async function surveyKakao(onlyMissing) {
+            if (!SV_CUR) return;
+            const who = onlyMissing ? '아직 답하지 않은 학생' : '대상 학생 모두';
+            if (!confirm(`'${SV_CUR.title}' 설문을 ${who}에게 카톡으로 보낼까요?`)) return;
+            showLoader('카톡을 보내는 중...');
+            const r = await adminPost('/api/admin/survey/kakao', { id: SV_CUR.id, only_missing: !!onlyMissing });
+            hideLoader();
+            if (!r.ok || !r.data.success) return alert((r.data && r.data.detail) || r.message || '보내지 못했습니다.');
+            showSurveyKakaoResult(r.data.kakao || {}, '');
         }
         function svBody(extra) {
             const v = SV_CUR;
@@ -6661,6 +6686,7 @@ let lavUid = 0;
             document.getElementById('sv-deadline').value = String(SV_CUR.deadline || '').slice(0, 16);
             document.getElementById('sv-anon').checked = !!SV_CUR.anonymous;
             document.getElementById('sv-push').checked = false;
+            document.getElementById('sv-kakao').checked = false;
             setPickedClasses('sv-target-class', SV_CUR.target_classes || []);
             document.getElementById('sv-form-title').innerHTML = `<i class="fa-solid fa-pen mr-1.5 text-violet-400"></i>'${escapeHtml(SV_CUR.title)}' 고치는 중`;
             document.getElementById('sv-submit').innerText = '고친 내용 저장';
