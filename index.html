@@ -12778,7 +12778,7 @@ let lavUid = 0;
             if (!file) return;
             const isPdf = /\.pdf$/i.test(file.name || '') || file.type === 'application/pdf';
             if (!isPdf && !/^image\//.test(file.type || '')) return;   // 한글 · 워드 파일은 첨부만 한다
-            showLoader("해설지를 읽고 문항별 해설을 채우는 중입니다...\n(쪽수가 많으면 1분쯤 걸릴 수 있어요)");
+            showLoader("해설지를 읽고 문항별 해설을 채우는 중입니다...\n(3쪽씩 나눠 읽어요. 쪽수가 많으면 1~2분 걸릴 수 있어요)");
             const fd = new FormData();
             fd.append('files', file, file.name || 'answer.pdf');
             let data;
@@ -12808,6 +12808,7 @@ let lavUid = 0;
             }
             updateHwExplCount();
             showToast(`해설 ${Object.keys(HW_EXPLANATIONS).length}문항${filled ? `, 정답 ${filled}문항` : ''}을 채웠습니다. 배포하기를 누르면 함께 저장돼요.`);
+            if (data.warning) alert(data.warning);
         }
 
         function updateHwExplCount() {
@@ -13165,6 +13166,9 @@ let lavUid = 0;
         async function extractHomeworkAnswers(fileList) {
             const files = Array.from(fileList || []);
             if (!files.length) return;
+            // 💡 2026-11-13: 해설지 PDF는 길어서 정답표 읽기로는 해설이 들어가지 않았다 → 해설지 읽기로 보낸다
+            const pdf = files.find(f => /\.pdf$/i.test(f.name || '') || f.type === 'application/pdf');
+            if (pdf) return readHwExplFile(pdf);
             showLoader("정답표를 읽는 중입니다...");
             const fd = new FormData();
             files.forEach(f => fd.append('files', f, f.name || 'capture.png'));
@@ -16588,6 +16592,7 @@ let lavUid = 0;
             } catch (e) { hideLoader(); alert("보내지 못했습니다: " + e.message); return false; }
             hideLoader();
             if (!data || !data.success) { alert((data && data.detail) || "해설을 읽지 못했습니다."); return false; }
+            if (data.warning) setTimeout(() => alert(data.warning), 300);
             const items = data.items || {};
             const nos = Object.keys(items).filter(no => !EXPL.count || Number(no) <= EXPL.count);
             if (!nos.length) { alert("이 시험 문항 번호에 맞는 해설을 찾지 못했습니다."); return false; }
