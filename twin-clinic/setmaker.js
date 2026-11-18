@@ -22,6 +22,9 @@ window.TwinSet = (function () {
   const VAR = /^\s*(\d{1,3})\s*-\s*([A-Da-d])\s*[.)．]\s*(.*)$/;
   const Q = /^\s*(\d{1,3})\s*[.)．]\s*(.+)$/;
   const BOX = /^\s*[〈<＜]\s*보\s*기\s*[〉>＞]\s*/;
+  const PASSAGE = /^\s*지문\s*[:：]\s*(.+)$/;                   // '지문: 정보 시스템 접근' 양식
+  const ORIG = /^\s*원\s*(\d{1,3})\s*번\s*의?\s*(쌍둥이|유사)/;     // '원 3번의 쌍둥이' — 원래 문제 없이 유사 문제만
+  const EXP_TAIL = /^\s*(\d{1,3}(?:\s*-\s*[A-Da-d])?)\s*[.)．]\s*(?:\[?정답\]?\s*[:：]?\s*)?([①②③④⑤]|[1-5](?![\d.]))?\s*(.*)$/;
 
   function ansOf(s) {
     s = String(s || "").trim();
@@ -38,6 +41,9 @@ window.TwinSet = (function () {
     return at.map(([i, k], j) => ({ k, t: line.slice(i + 1, j + 1 < at.length ? at[j + 1][0] : line.length).trim() }));
   }
 
+  // 원래 문제는 종이로만 나눠 주고 여기에는 유사 문제만 적은 경우의 빈 자리
+  function baseOnly(no, passage) { const q = newQ("", passage); q.no = no; q.variants = []; q.twinOnly = true; q.choices = []; return q; }
+
   function newQ(stem, passage) {
     const three = /\[\s*3\s*점\s*\]/.test(stem);
     return { stem: stem.replace(/\s*\[\s*3\s*점\s*\]\s*/, " ").trim(), box: [], choices: ["", "", "", "", ""], answer: 0,
@@ -46,7 +52,7 @@ window.TwinSet = (function () {
 
   function parse(text) {
     const lines = String(text || "").replace(/\r/g, "").split("\n");
-    const passages = [], items = [], key = {}, warn = [];
+    const passages = [], items = [], key = {}, warn = [], tailEx = {};
     let title = "", pass = null, cur = null, mode = "", tail = "";
 
     // 제목: 첫 줄이 지문 · 문항 시작이 아니면
@@ -57,16 +63,30 @@ window.TwinSet = (function () {
       const l = raw.trim();
       if (!l) { if (mode === "passage" && pass) pass.paras.push(""); continue; }
       if (/^[\[【]?\s*정답\s*(모아\s*보기|표|한눈에)\s*[\]】]?$/.test(l)) { tail = "key"; cur = null; mode = ""; continue; }
-      if (tail && /^[\[【]?\s*(상세\s*|자세한\s*)?해설\s*[\]】]?$/.test(l)) { tail = "ex"; continue; }
+      if (tail && /^[\[【]?\s*(상세\s*|자세한\s*)?(정답\s*(과|및)\s*)?해설\s*[\]】]?$/.test(l)) { tail = "ex"; continue; }
       if (tail === "key") {
         for (const m of l.matchAll(/(\d{1,3}(?:\s*-\s*[A-Da-d])?)\s*번?\s*[.:)]?\s*([①②③④⑤]|[1-5](?![\d.]))/g))
           key[m[1].replace(/\s/g, "").toUpperCase()] = ansOf(m[2]);
         continue;
       }
-      if (tail === "ex") continue;
+      if (tail === "ex") {   // '1-A. 정답 ③ 해설…' — 번호마다 정답 · 해설
+        const m = l.match(EXP_TAIL);
+        if (m && /\d/.test(m[1])) { const k = m[1].replace(/\s/g, "").toUpperCase(); tailEx[k] = { a: m[2] ? ansOf(m[2]) : 0, t: m[3] || "" }; tailEx._last = k; }
+        else if (tailEx._last) tailEx[tailEx._last].t += "\n" + l;
+        continue;
+      }
       if (!items.length && !pass && /^[○●◦※▶·•]/.test(l)) continue;   // 맨 앞 메모
 
       let m;
+      if ((m = l.match(PASSAGE))) {
+        pass = { id: "p" + (passages.length + 1), range: "", title: m[1].trim(), lead: "", paras: [] };
+        passages.push(pass); mode = "passage"; cur = null; continue;
+      }
+      if (mode === "passage" && pass && !pass.lead && !pass.paras.some(Boolean) && /^(다음|윗글|아래)/.test(l) && /읽고|물음/.test(l)) { pass.lead = l; continue; }
+      if ((m = l.match(ORIG))) {
+        if (!items.some(x => x.no === +m[1])) items.push(baseOnly(+m[1], pass ? pass.id : ""));
+        mode = ""; cur = null; continue;
+      }
       if ((m = l.match(RANGE))) {
         const range = m[1] + "~" + m[2], isLead = /다음|읽고|물음/.test(m[3]);
         if (pass && pass.range === range && !pass.paras.some(Boolean)) {   // '[1~14] 주제' 다음 '[1~14] 다음 글을…'
@@ -78,7 +98,8 @@ window.TwinSet = (function () {
         mode = "passage"; cur = null; continue;
       }
       if ((m = l.match(VAR))) {
-        const base = items.find(x => x.no === +m[1]);
+        let base = items.find(x => x.no === +m[1]);
+        if (!base) { base = baseOnly(+m[1], pass ? pass.id : ""); items.push(base); }
         if (base) {
           cur = newQ(m[3], base.passage);
           cur.vid = m[1] + "-" + m[2].toUpperCase();
@@ -106,11 +127,13 @@ window.TwinSet = (function () {
       if (cur._inBox) cur.box.push(l); else cur.stem += "\n" + l;
     }
 
-    // 맨 뒤 정답 모아보기로 빈 정답 채우기
-    for (const it of items) {
-      if (!it.answer && key[String(it.no)]) it.answer = key[String(it.no)];
-      for (const v of it.variants) if (!v.answer && key[v.vid]) v.answer = key[v.vid];
-    }
+    // 맨 뒤 정답 모아보기 · 정답과 해설로 빈 정답 · 해설 채우기
+    const fill = (q, k) => {
+      if (!q.answer && key[k]) q.answer = key[k];
+      const e = tailEx[k];
+      if (e) { if (!q.answer && e.a) q.answer = e.a; if (!q.explain && e.t) q.explain = e.t.trim(); }
+    };
+    for (const it of items) { if (!it.twinOnly) fill(it, String(it.no)); for (const v of it.variants) fill(v, v.vid); }
     const clean = q => { const o = { ...q }; delete o._inBox; delete o._seenChoice; delete o._last; o.explain = o.explain.trim(); return o; };
     const outItems = items.map(it => ({ ...clean(it), variants: it.variants.map(clean) })).sort((a, b) => a.no - b.no);
     const outPass = passages.map((p, i) => {
@@ -125,15 +148,16 @@ window.TwinSet = (function () {
     // 점검
     for (const it of outItems) {
       const name = it.no + "번";
-      if (it.choices.some(c => !c)) warn.push(name + ": 선택지 ①~⑤가 다 있지 않습니다.");
-      if (!it.answer) warn.push(name + ": 정답이 없습니다.");
+      if (!it.twinOnly && it.choices.some(c => !c)) warn.push(name + ": 선택지 ①~⑤가 다 있지 않습니다.");
+      if (!it.twinOnly && !it.answer) warn.push(name + ": 정답이 없습니다.");
       if (!it.variants.length) warn.push(name + ": 유사 문제가 없습니다. (" + it.no + "-A. 처럼 붙여 주세요)");
       for (const v of it.variants) {
         if (v.choices.some(c => !c)) warn.push(v.vid + ": 선택지 ①~⑤가 다 있지 않습니다.");
         if (!v.answer) warn.push(v.vid + ": 정답이 없습니다.");
       }
     }
-    return { bank: { title, passages: outPass, items: outItems }, warn };
+    const twinOnly = outItems.length > 0 && outItems.every(i => i.twinOnly);
+    return { bank: { title, passages: outPass, items: outItems, twinOnly }, warn };
   }
 
   // ── 워드(.docx) 읽기: 브라우저만으로 (라이브러리 없이) ──
