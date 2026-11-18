@@ -235,6 +235,7 @@ window.addEventListener("hashchange",route);
 
 /* ---------- student flow ---------- */
 function stepsBar(){
+  if(S.hw) return `<div class="steps" aria-label="진행 단계"><span class="done">과제 채점: ${esc(S.hw)}</span><span class="${S.view==="twin"?"on":"done"}">유사 문제</span><span class="${S.view==="report"?"on":""}">결과</span></div>`;
   const names=["답 입력","채점","다시 풀기","쌍둥이 문제","결과"];
   const idx={omr:0,score:1,retry:2,twin:3,report:4}[S.view]??0;
   return `<div class="steps" aria-label="진행 단계">${names.map((n,i)=>`<span class="${i<idx?"done":i===idx?"on":""}">${i+1}. ${n}</span>`).join("")}</div>`;
@@ -381,6 +382,7 @@ async function saveResult(){
     twins:twinQueue().map(x=>({vid:x.v.vid,no:x.no,pick:S.twins[x.v.vid]?.pick||0,correct:S.twins[x.v.vid]?.pick===x.v.answer})),
     ask:sm.ask};
   if(CFG.student) Object.assign(doc,{studentId:CFG.student.id||null});
+  if(S.hw) doc.hw=S.hw;
   try{const r=await storeResult(doc);if(r!=="fail")S.saved=true;return r}catch(e){return "fail"}
 }
 function renderReport(){
@@ -389,16 +391,16 @@ function renderReport(){
     <div><h2>${esc(S.name)} 학생의 클리닉 결과</h2><p class="lede">${esc(bank.title)}</p></div>
     <div class="stats">
       <div class="stat"><div class="k">처음 맞힌 문항</div><div class="v">${sm.right} / ${sm.total}</div></div>
-      <div class="stat"><div class="k">다시 풀어 고친 문항</div><div class="v">${sm.retryOk} / ${S.wrong.length}</div></div>
+      ${S.hw?"":`<div class="stat"><div class="k">다시 풀어 고친 문항</div><div class="v">${sm.retryOk} / ${S.wrong.length}</div></div>`}
       <div class="stat"><div class="k">쌍둥이 정답</div><div class="v">${sm.twOk} / ${sm.twTotal}</div></div>
     </div>
     ${S.wrong.length?`<div class="card stack"><h3>문항별 결과</h3><div class="list">${S.wrong.map(no=>{const it=itemByNo(no);const r=S.retry[no]||{};
       const tw=it.variants.map(v=>{const ok=S.twins[v.vid]?.pick===v.answer;return `<span class="pill ${ok?"ok":"no"}">쌍둥이 ${v.vid.slice(-1)} ${ok?"정답":"오답"}</span>`}).join(" ");
-      return `<div class="li"><b>${no}번</b><span class="pill ${r.pick===it.answer?"ok":"no"}">다시 풀기 ${r.pick===it.answer?"정답":"오답"}</span>${tw}${sm.ask.includes(no)?'<span class="pill ask">선생님께 질문</span>':""}<span class="muted" style="flex-basis:100%">틀린 이유: ${esc(r.reason||"-")}</span></div>`}).join("")}</div></div>`:""}
+      return `<div class="li"><b>${no}번</b>${S.hw?"":`<span class="pill ${r.pick===it.answer?"ok":"no"}">다시 풀기 ${r.pick===it.answer?"정답":"오답"}</span>`}${tw}${sm.ask.includes(no)?'<span class="pill ask">선생님께 질문</span>':""}${S.hw?"":`<span class="muted" style="flex-basis:100%">틀린 이유: ${esc(r.reason||"-")}</span>`}</div>`}).join("")}</div></div>`:""}
     ${sm.ask.length?`<div class="card"><h3>국최 선생님께 질문할 문항</h3><p class="muted">쌍둥이 문제에서 아직 틀린 문항입니다: ${sm.ask.map(n=>n+"번").join(", ")}</p><p style="margin-top:10px"><a class="btn omr" style="display:inline-block;text-decoration:none" href="../#prog-qna">질문 게시판에서 묻기</a></p></div>`:`<div class="card"><h3>질문할 문항이 없습니다</h3><p class="muted">틀린 개념을 모두 스스로 바로잡았어요.</p></div>`}
-    <div class="bar"><span class="note" id="saveMsg">결과를 저장하는 중…</span><span class="row">${S.wrong.length?'<button class="btn ghost" id="printBtn2">🖨 유사 문제 출력</button>':""}<button class="btn omr" id="newBtn">다음 학생</button></span></div>
+    <div class="bar"><span class="note" id="saveMsg">결과를 저장하는 중…</span><span class="row">${S.wrong.length?'<button class="btn ghost" id="printBtn2">🖨 유사 문제 출력</button>':""}<button class="btn omr" id="newBtn">${S.hw?"앱으로 돌아가기":"다음 학생"}</button></span></div>
   </section>`;
-  document.getElementById("newBtn").onclick=()=>{S=null;renderStart()};
+  document.getElementById("newBtn").onclick=()=>{if(S&&S.hw){location.href="../";return}S=null;renderStart()};
   {const pb=document.getElementById("printBtn2"); if(pb) pb.onclick=printTwins;}
   saveResult().then(r=>{const m=document.getElementById("saveMsg");if(!m)return;
     m.textContent=r==="saved"?"결과를 저장했습니다. 선생님 탭에서 볼 수 있어요.":r==="local"?"이 기기에 결과를 저장했습니다(서버 연동 전 임시 저장).":"결과를 저장하지 못했습니다. 선생님께 알려 주세요."});
@@ -491,7 +493,21 @@ function drawTeacher(rows){
 }
 
 /* ---------- boot ---------- */
-loadBanks().then(route);
+/* 💡 2026-11-18: 클리닉 과제 채점 뒤 [유사 문제 풀기 · 출력]으로 들어오면 (?set=…&wrong=3,5&hw=과제명)
+   답 입력 · 다시 풀기 없이 틀린 문항의 유사 문제부터 시작한다. &print=1 이면 바로 출력 창. */
+async function startFromHw(){
+  const q=new URLSearchParams(location.search), sid=q.get("set");
+  if(!sid||location.hash==="#teacher") return false;
+  if(!banks.some(b=>b.id===sid)) banks.unshift({id:sid,server:true,title:""});
+  try{await loadBank(sid)}catch(e){$app.innerHTML=`<div class="card"><h3>유사 문제를 불러오지 못했습니다</h3><p class="muted">잠시 뒤 다시 열어 주세요. 계속 안 되면 선생님께 알려 주세요.</p></div>`;return true}
+  const wrong=(q.get("wrong")||"").split(",").map(Number).filter(n=>bank.items.some(i=>i.no===n));
+  S={view:wrong.length?"twin":"report",name:(CFG.student&&CFG.student.name)||"",answers:bank.items.map(it=>wrong.includes(it.no)?0:it.answer),
+     wrong,retry:{},twins:{},ri:0,ti:0,saved:false,hw:q.get("hw")||""};
+  render();
+  if(q.get("print")==="1"&&wrong.length) setTimeout(printTwins,300);
+  return true;
+}
+loadBanks().then(startFromHw).then(done=>{if(!done)route()});
 })();
 </script>
 </body>
