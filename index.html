@@ -12795,7 +12795,7 @@ let lavUid = 0;
             // 정답표 · 해설이 비어 있으면 세트의 원래 문제에서 채운다
             const ansBox = document.getElementById('hw-answers');
             let filled = '';
-            if (ansBox && !ansBox.value.trim()) {
+            if (ansBox && !ansBox.value.trim() && b.items.every(i => i.answer >= 1)) {
                 const maxNo = Math.max(...b.items.map(i => i.no)), list = [];
                 for (let i = 1; i <= maxNo; i++) { const it = b.items.find(x => x.no === i); list.push(it ? String(it.answer) : '-'); }
                 ansBox.value = list.join(', '); updateHomeworkAnswerCount(); filled = ' · 정답표도 채웠어요';
@@ -12804,7 +12804,8 @@ let lavUid = 0;
                 b.items.forEach(i => { if (i.explain) HW_EXPLANATIONS[i.no] = i.explain; });
                 updateHwExplCount();
             }
-            hwTwinStatus(`<span class="text-rose-300">👯 유사 문제 세트: 문항 ${b.items.length}개 · 유사 문제 ${nv}개${filled}. 배포하면 함께 올라갑니다.</span>`);
+            const needKey = !ansBox.value.trim() ? ' · <b class="text-amber-300">원래 문제의 정답표는 위 칸에 넣어 주세요</b>' : '';
+            hwTwinStatus(`<span class="text-rose-300">👯 유사 문제 세트: 원 문항 ${b.items.length}개 · 유사 문제 ${nv}개${filled}${b.twinOnly ? needKey : ''}. 배포하면 함께 올라갑니다.</span>`);
         }
         // 배포 직전에 세트를 서버에 올리고 그 id를 돌려준다 (없으면 '')
         async function uploadHwTwin(title) {
