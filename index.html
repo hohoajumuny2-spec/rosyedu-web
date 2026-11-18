@@ -563,6 +563,7 @@
         </div>
     </div>
 
+    <script src="twin-clinic/setmaker.js" defer></script>
     <!-- 📝 해설 나중에 붙이기 -->
     <div id="expl-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-3xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
@@ -2062,12 +2063,6 @@
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">클리닉 제출</h3>
                         <p class="text-purple-200/70 text-[11px] md:text-sm word-break-keep-all">클리닉 과제를 확인하고 제출해요.</p>
                     </div>
-                    <!-- 💡 2026-11-18: 오답 쌍둥이 클리닉 — 답 입력 → 틀린 문제 다시 풀기 → 문항마다 쌍둥이 2문제 -->
-                    <a href="twin-clinic/" class="block bg-[#1e2430] border border-rose-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
-                        <div class="w-12 h-12 md:w-14 md:h-14 bg-rose-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">👯</div>
-                        <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">오답 쌍둥이 클리닉</h3>
-                        <p class="text-rose-200/70 text-[11px] md:text-sm word-break-keep-all">틀린 문제를 다시 풀고, 같은 개념 쌍둥이 문제 2개로 확인해요.</p>
-                    </a>
                     <div onclick="openProgram('lecture'); loadLectures();" class="bg-[#1e2430] border border-purple-600/60 p-5 md:p-7 rounded-2xl cursor-pointer app-card">
                         <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-5">🎬</div>
                         <h3 class="text-base md:text-xl font-bold mb-1 text-white word-break-keep-all">해설 강의실</h3>
@@ -3659,6 +3654,11 @@
                             <label class="text-[11px] text-gray-400 block mb-1">해답지 · 해설지 파일 (선택) — <b class="text-sky-300">PDF · 사진이면 AI가 문항별 해설을 자동으로 채웁니다</b></label>
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="const f = this.files && this.files[0]; handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual'); readHwExplFile(f);">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
+                            <!-- 💡 2026-11-18: 원장님이 만든 유사 문제(원래 문제 + 1-A. 1-B.)를 과제에 붙인다. 채점 뒤 틀린 문항의 유사 문제 버튼이 나온다 -->
+                            <label class="text-[11px] text-gray-400 block mb-1">👯 유사 문제 세트 (선택) — 원래 문제 아래에 <b class="text-gray-300">1-A. 1-B.</b>처럼 유사 문제를 적은 워드 · 글 파일.
+                                채점 뒤 틀린 문항의 <b class="text-rose-300">유사 문제 풀기 · 출력</b> 버튼이 나옵니다. <a href="twin-clinic/#teacher" target="_blank" rel="noopener" class="text-sky-300 underline">양식 · 학생 결과 보기 ↗</a></label>
+                            <input type="file" id="hw-twin-file" accept=".docx,.txt,text/plain" class="mb-1 text-white" onchange="readHwTwinSet(this.files && this.files[0]); this.value='';">
+                            <div id="hw-twin-status" class="text-[11px] text-gray-500 mb-4"></div>
                             <!-- 💡 같은 날 과제가 여러 개면 과제마다 제목·정답표를 따로 넣고 한 번에 배포한다.
                                  위 칸이 첫 번째 과제, 여기서 더한 칸이 두 번째·세 번째 과제가 된다. -->
                             <div id="hw-extra-wrap" class="mb-3">
@@ -12777,6 +12777,42 @@ let lavUid = 0;
         let HW_EXPLANATIONS = {};
         // 💡 2026-11-13: 해설지 PDF에서 읽은 요약 해설 · 유형 {"1": {"summary", "tag"}} — 배포할 때 함께 저장
         let HW_QMETA = {};
+        // 💡 2026-11-18: 과제에 붙일 유사 문제 세트(쌍둥이 클리닉 양식). 배포할 때 서버에 올리고 과제에 잇는다.
+        let HW_TWIN = null;
+        function hwTwinStatus(t) { const el = document.getElementById('hw-twin-status'); if (el) el.innerHTML = t || ''; }
+        async function readHwTwinSet(f) {
+            if (!f) return;
+            if (!window.TwinSet) return alert('잠시 뒤 다시 골라 주세요. (읽기 도구를 불러오는 중)');
+            let r;
+            try { r = window.TwinSet.parse(await window.TwinSet.readFile(f)); }
+            catch (e) { HW_TWIN = null; hwTwinStatus(''); return alert(e.message || '파일을 읽지 못했습니다.'); }
+            const b = r.bank, nv = b.items.reduce((a, i) => a + i.variants.length, 0);
+            if (!b.items.length || r.warn.length) {
+                HW_TWIN = null; hwTwinStatus('');
+                return alert(`유사 문제 세트에서 고칠 곳이 ${r.warn.length || 1}군데 있습니다. 파일을 고친 뒤 다시 골라 주세요.\n\n` + (r.warn.slice(0, 15).join('\n') || '문항을 찾지 못했습니다.'));
+            }
+            HW_TWIN = b;
+            // 정답표 · 해설이 비어 있으면 세트의 원래 문제에서 채운다
+            const ansBox = document.getElementById('hw-answers');
+            let filled = '';
+            if (ansBox && !ansBox.value.trim()) {
+                const maxNo = Math.max(...b.items.map(i => i.no)), list = [];
+                for (let i = 1; i <= maxNo; i++) { const it = b.items.find(x => x.no === i); list.push(it ? String(it.answer) : '-'); }
+                ansBox.value = list.join(', '); updateHomeworkAnswerCount(); filled = ' · 정답표도 채웠어요';
+            }
+            if (!Object.keys(HW_EXPLANATIONS || {}).length) {
+                b.items.forEach(i => { if (i.explain) HW_EXPLANATIONS[i.no] = i.explain; });
+                updateHwExplCount();
+            }
+            hwTwinStatus(`<span class="text-rose-300">👯 유사 문제 세트: 문항 ${b.items.length}개 · 유사 문제 ${nv}개${filled}. 배포하면 함께 올라갑니다.</span>`);
+        }
+        // 배포 직전에 세트를 서버에 올리고 그 id를 돌려준다 (없으면 '')
+        async function uploadHwTwin(title) {
+            if (!HW_TWIN) return '';
+            const r = await adminPost('/api/admin/twin-clinic/sets', { ...HW_TWIN, title });
+            if (!r.ok) throw new Error('유사 문제 세트를 올리지 못했습니다: ' + r.message);
+            return r.data.id || '';
+        }
 
         // 해답지 · 해설지 파일(PDF · 사진)을 고르면 AI가 문항별 자세한 해설 · 요약 해설 · 유형(+정답)을 읽어 채운다.
         // 💡 원장님 요청: 해설지를 PDF로 넣으면 해설을 손으로 옮기지 않아도 자동으로 들어가게.
@@ -12902,6 +12938,7 @@ let lavUid = 0;
             setPickedClasses('hw-target-class', h.target_classes || []);
             setHwStudents(h.target_students || []);
             HW_EXPLANATIONS = Object.assign({}, h.explanations || {}); HW_QMETA = {};
+            HW_TWIN = null; hwTwinStatus(h.twin_set ? '<span class="text-rose-300">👯 유사 문제 세트가 붙어 있어요. 새 파일을 고르면 바뀝니다.</span>' : '');
             updateHomeworkAnswerCount();
             updateHwExplCount();
             document.getElementById('hw-form-title').innerText = `'${h.title}' 수정 중`;
@@ -12923,6 +12960,7 @@ let lavUid = 0;
                 setHwStudents([]);
             }
             HW_EXPLANATIONS = {}; HW_QMETA = {};
+            HW_TWIN = null; hwTwinStatus('');
             updateHomeworkAnswerCount();
             updateHwExplCount();
             document.getElementById('hw-form-title').innerText = '과제/정답 배포';
@@ -13007,6 +13045,8 @@ let lavUid = 0;
             fd.append("answers", answers);
             fd.append("explanations", JSON.stringify(HW_EXPLANATIONS || {}));
             fd.append("qmeta", JSON.stringify(HW_QMETA || {}));
+            try { const tw = await uploadHwTwin(t); if (tw) fd.append("twin_set", tw); }
+            catch (e) { hideLoader(); return alert(e.message); }
             fd.append("old_title", isEdit ? EDITING_HW_TITLE : "");
             fd.append("target_classes", getPickedClasses('hw-target-class').join(","));
             fd.append("target_students", HW_STUDENTS.join(","));
@@ -13051,6 +13091,7 @@ let lavUid = 0;
                 fd.append("answers", it.answers);
                 fd.append("explanations", JSON.stringify(it.explanations));
                 if (it.qmeta) fd.append("qmeta", JSON.stringify(it.qmeta));
+                if (k === 0 && HW_TWIN) { try { const tw = await uploadHwTwin(it.title); if (tw) fd.append("twin_set", tw); } catch (e) { failed.push(it.title + ' (유사 문제 세트)'); } }
                 fd.append("old_title", "");
                 Object.entries(common).forEach(([key, v]) => fd.append(key, v));
                 if (it.file) fd.append("answer_file", it.file);
@@ -13793,7 +13834,9 @@ let lavUid = 0;
                        qEdits: ((MY_HW_REPORTS[h.title] || {}).q_edits) || {} };
             document.getElementById('hw-omr-title').innerText = h.title;
             document.getElementById('hw-omr-kind').innerText = (kindLabel || '') + (HW_OMR.editing ? ' · 전에 낸 답이 채워져 있어요. 고칠 문항만 고쳐 다시 내세요.' : '');
-            document.getElementById('hw-omr-result').innerHTML = '';
+            const prevRep = MY_HW_REPORTS[h.title];
+            document.getElementById('hw-omr-result').innerHTML = (prevRep && h.twin_set)
+                ? `<div class="bg-[#151922] border border-rose-700 rounded-xl p-3 text-center"><p class="text-[11px] text-gray-400">지난번에 틀린 문항의 유사 문제</p>${twinButtonsHtml(h.twin_set, prevRep.wrongs || [], h.title)}</div>` : '';
             const sb = document.getElementById('hw-omr-submit-btn');
             sb.disabled = false;
             sb.innerText = HW_OMR.editing ? '고친 답으로 다시 제출하기' : '제출하고 채점받기';
@@ -13960,6 +14003,16 @@ let lavUid = 0;
         //    찍어서 맞힌 것을 스스로 걸러낼 수 있다.
         let OMR_RESULT = null;
 
+        // 💡 2026-11-18: 과제에 유사 문제 세트가 붙어 있으면 채점 뒤 틀린 문항의 유사 문제를 풀거나 출력하는 버튼
+        function twinButtonsHtml(setId, wrongs, title) {
+            const w = [...wrongs].map(Number).filter(n => n > 0).sort((a, b) => a - b);
+            if (!setId || !w.length) return '';
+            const url = `twin-clinic/?set=${encodeURIComponent(setId)}&wrong=${w.join(',')}&hw=${encodeURIComponent(title || '')}`;
+            return `<div class="flex flex-wrap items-center justify-center gap-2 my-2">
+                <a href="${url}" class="inline-flex items-center gap-1 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-full px-4 py-2">👯 유사 문제 풀기 (${w.length}문항)</a>
+                <a href="${url}&print=1" class="inline-flex items-center gap-1 bg-[#151922] border border-rose-500 text-rose-200 text-sm font-bold rounded-full px-4 py-2">🖨 유사 문제 출력</a></div>`;
+        }
+
         function showOmrResult(d) {
             OMR_RESULT = d;
             d.reasons = d.reasons || {};
@@ -13991,6 +14044,7 @@ let lavUid = 0;
             document.getElementById('hw-omr-result').innerHTML = `
                 <div class="bg-[#151922] border border-emerald-700 rounded-xl p-3">
                     <p class="text-emerald-300 font-black text-lg text-center mb-1">${d.correct} / ${total}문항 맞음 (${d.score}점)</p>
+                    ${twinButtonsHtml(d.twin_set, wrongs, HW_OMR.title)}
                     ${unsureNote}
                     <p class="text-[11px] text-gray-500 text-center mb-2">문항을 누르면 해설을 볼 수 있어요. 틀린 답은 위에서 고쳐 다시 낼 수 있어요.</p>
                     <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-40 overflow-y-auto">${grid}</div>
