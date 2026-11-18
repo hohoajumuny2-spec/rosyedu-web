@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>로지에듀 오답 쌍둥이 클리닉</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;600&display=swap">
+<style>
+/* Layout: OMR 답안지 감각 — 종이 바탕, 분홍 OMR 괘선, 남색 잉크. 한 화면에 한 문항, 태블릿 터치 우선 */
+:root{
+  --paper:#FBFAF7; --sheet:#FFFFFF; --ink:#1C2440; --muted:#5D6478; --line:#E5D5D8;
+  --omr:#C8384A; --omr-soft:#F7E3E6; --ok:#1F7A55; --ok-soft:#E1F2EA; --bad:#B4372B; --bad-soft:#F8E4E1;
+  --focus:#2F5BD3;
+  --f-ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-read:"Noto Serif KR","AppleMyungjo","Batang",serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14161D; --sheet:#1C1F29; --ink:#E9EBF2; --muted:#A3A9BA; --line:#3A2F35;
+  --omr:#E8677A; --omr-soft:#3A2228; --ok:#5CC596; --ok-soft:#173327; --bad:#EE7B6E; --bad-soft:#3A1F1C; --focus:#86A6FF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#14161D; --sheet:#1C1F29; --ink:#E9EBF2; --muted:#A3A9BA; --line:#3A2F35;
+  --omr:#E8677A; --omr-soft:#3A2228; --ok:#5CC596; --ok-soft:#173327; --bad:#EE7B6E; --bad-soft:#3A1F1C; --focus:#86A6FF; color-scheme:dark}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:16px;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--omr);padding-bottom:10px;margin-bottom:18px}
+header.top h1{font-size:20px;margin:0;letter-spacing:-.01em}
+header.top .who{font-size:14px;color:var(--muted)}
+nav.tabs{display:flex;gap:6px}
+nav.tabs a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px}
+nav.tabs a[aria-current="page"]{background:var(--omr-soft);color:var(--omr);font-weight:700}
+h2{font-size:22px;margin:0 0 6px;text-wrap:balance}
+h3{font-size:17px;margin:0 0 6px}
+p.lede{color:var(--muted);margin:0 0 16px}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);flex:1 1 200px;min-width:0}
+input[type=text],select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px}
+button{font:inherit;cursor:pointer}
+.btn{border:0;border-radius:10px;padding:12px 18px;min-height:48px;font-weight:700;background:var(--ink);color:var(--sheet)}
+.btn.omr{background:var(--omr);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.steps span{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.steps span.on{border-color:var(--omr);color:var(--omr);font-weight:700}
+.steps span.done{color:var(--ok);border-color:var(--ok)}
+/* OMR */
+.omr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 18px}
+.omr-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.omr-row .n{width:34px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--omr);text-align:right;flex:none}
+.bub{width:36px;height:44px;border-radius:18px;border:1.5px solid var(--omr);background:transparent;color:var(--omr);font-weight:700;display:grid;place-items:center;flex:none}
+.bub[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.omr-row.miss .n{color:var(--muted)}
+/* question */
+.passage{font-family:var(--f-read);font-size:16px;line-height:1.85;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;max-height:46vh;overflow:auto}
+.passage p{margin:0 0 .8em;text-indent:.6em}
+.passage .lead{text-indent:0;color:var(--muted);font-family:var(--f-ui);font-size:14px}
+details.pas summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 0}
+.q{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.q .stem{font-weight:700;font-size:17px;margin-bottom:10px}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;margin-right:6px;vertical-align:2px}
+.tag.no{background:var(--omr-soft);color:var(--omr)}
+.tag.tw{background:var(--ink);color:var(--sheet)}
+.tag.pt{border:1px solid var(--muted);color:var(--muted)}
+.box{border:1px solid var(--ink);border-radius:6px;padding:12px 14px;margin:10px 0 14px;font-size:15px;position:relative}
+.box::before{content:"보기";position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--sheet);padding:0 8px;font-size:13px;font-weight:700}
+.box div{min-height:.6em}
+.choices{display:flex;flex-direction:column;gap:8px}
+.ch{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink);min-height:48px}
+.ch .c{flex:none;font-weight:700;color:var(--omr);width:22px}
+.ch[aria-pressed="true"]{border-color:var(--ink);background:var(--sheet);box-shadow:inset 0 0 0 1px var(--ink)}
+.ch.right{border-color:var(--ok);background:var(--ok-soft)}
+.ch.wrongpick{border-color:var(--bad);background:var(--bad-soft)}
+.ch:disabled{cursor:default}
+.verdict{border-radius:10px;padding:12px 14px;font-weight:700}
+.verdict.ok{background:var(--ok-soft);color:var(--ok)}
+.verdict.no{background:var(--bad-soft);color:var(--bad)}
+.explain{font-size:15px;white-space:pre-wrap;border-left:3px solid var(--omr);padding:4px 0 4px 12px;color:var(--ink)}
+.reasons{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.reasons button{background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;color:var(--ink);min-height:48px}
+.reasons button[aria-pressed="true"]{border-color:var(--omr);background:var(--omr-soft)}
+.bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.prog{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat .k{font-size:13px;color:var(--muted)}
+.stat .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.list{display:flex;flex-direction:column;gap:6px}
+.li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--sheet)}
+.pill{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.no{background:var(--bad-soft);color:var(--bad)}
+.pill.ask{background:var(--omr-soft);color:var(--omr)}
+.muted{color:var(--muted)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:500}
+.note{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.fade{animation:fd .18s ease-out}@keyframes fd{from{opacity:.4}to{opacity:1}}}
+</style>
+<!-- 연동 설정(선택): 스마트 로지에듀에서 아래 객체를 채우면 서버 저장·로그인 학생 정보를 씁니다. README.md 참고 -->
+<script>
+/* 스마트 로지에듀(logyedu.co.kr) 연동: 앱에 로그인한 학생 이름으로 결과를 서버에 저장하고,
+   원장님(관리자)으로 로그인했을 때만 선생님 화면에서 결과를 불러온다. */
+(function () {
+  var API = "https://korean-ai-tutor.onrender.com";
+  var u = null;
+  try { u = JSON.parse(localStorage.getItem("logyedu_user") || "null"); } catch (e) {}
+  var C = window.LOGY_TWIN_CONFIG = window.LOGY_TWIN_CONFIG || {};
+  if (u && u.name && !u.isAdmin && !u.admin_token) C.student = { id: u.name, name: u.name, school: u.school || "", grade: u.grade || "" };
+  C.isAdmin = !!(u && u.admin_token);
+  C.saveResult = async function (doc) {
+    if (C.student) { doc.school = C.student.school; doc.grade = C.student.grade; }
+    var r = await fetch(API + "/api/twin-clinic/results", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(doc) });
+    if (!r.ok) throw new Error("save failed");
+  };
+  if (C.isAdmin) C.loadResults = async function () {
+    var r = await fetch(API + "/api/admin/twin-clinic/results", { headers: { "x-admin-token": u.admin_token } });
+    if (!r.ok) throw new Error("load failed");
+    return r.json();
+  };
+})();
+</script>
+<!-- 문항은행: 파일을 더블클릭해 열 때도 동작하도록 JS로 함께 실음 -->
+<script src="banks/banks.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>오답 쌍둥이 클리닉</h1>
+    <nav class="tabs" aria-label="화면">
+      <a href="../" id="tabHome">← 로지에듀 앱</a>
+      <a href="#" id="tabStudent">학생</a>
+      <a href="#teacher" id="tabTeacher" hidden>선생님</a>
+    </nav>
+  </header>
+  <main id="app" class="stack"></main>
+</div>
+
+<script>
+(function(){
+const C="①②③④⑤";
+const REASONS=["지문 내용을 잘못 이해했어요","〈보기〉 조건을 놓쳤어요","선지의 한 단어를 놓쳤어요","개념을 정확히 몰랐어요","두 선지 중에서 헷갈렸어요","시간이 부족해 찍었어요"];
+const $app=document.getElementById("app");
+let banks=[], bank=null, db=null, dbTried=false;
+let S=null;
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function inline(s){let h=esc(s);h=h.replace(/&lt;u&gt;/g,"<u>").replace(/&lt;\/u&gt;/g,"</u>");h=h.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");return h}
+function passageHTML(p){const paras=p.text.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+  return `<div class="passage" tabindex="0" aria-label="지문"><p class="lead">${inline(p.lead)}</p>${paras.map(x=>`<p>${inline(x).replace(/\\?\n/g,"<br>")}</p>`).join("")}</div>`}
+function pById(id){return bank.passages.find(p=>p.id===id)}
+function itemByNo(no){return bank.items.find(i=>i.no===no)}
+
+/* ---------- data loading ---------- */
+const CFG=window.LOGY_TWIN_CONFIG||{};
+if(CFG.isAdmin) document.getElementById("tabTeacher").hidden=false;
+/* 문항은행: banks/banks.js(window.LOGY_TWIN_BANKS)가 있으면 그것을, 없으면 banks/index.json을 fetch */
+async function loadBanks(){
+  if(window.LOGY_TWIN_BANKS){banks=window.LOGY_TWIN_BANKS.index;return}
+  try{const r=await fetch("banks/index.json");banks=await r.json()}catch(e){banks=[]}
+}
+async function loadBank(id){
+  if(window.LOGY_TWIN_BANKS){bank=window.LOGY_TWIN_BANKS.sets[id];return}
+  const meta=banks.find(b=>b.id===id); const r=await fetch(meta.file); bank=await r.json();
+}
+/* 결과 저장소 어댑터: CFG.saveResult/loadResults(스마트 로지에듀 서버) > claude.ai db > 이 기기의 localStorage */
+async function getDB(){
+  if(dbTried) return db; dbTried=true;
+  try{db=window.claude?await window.claude.use("db"):null}catch(e){db=null}
+  return db;
+}
+const LS_KEY="logyTwinResults";
+function lsRead(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch(e){return []}}
+function lsWrite(a){try{localStorage.setItem(LS_KEY,JSON.stringify(a));return true}catch(e){return false}}
+async function storeResult(doc){
+  if(typeof CFG.saveResult==="function"){await CFG.saveResult(doc);return "saved"}
+  const d=await getDB();
+  if(d){await d.collection("results").add(doc);return "saved"}
+  const a=lsRead();a.push(doc);return lsWrite(a)?"local":"fail";
+}
+async function fetchResults(){
+  if(typeof CFG.loadResults==="function") return await CFG.loadResults();
+  const d=await getDB();
+  if(d){const s=await d.collection("results").orderBy("createdAt","desc").limit(300).get();return s.docs.map(x=>x.data())}
+  return lsRead().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+}
+
+/* ---------- routing ---------- */
+function route(){
+  const t=location.hash==="#teacher";
+  document.getElementById("tabStudent").setAttribute("aria-current",t?"false":"page");
+  document.getElementById("tabTeacher").setAttribute("aria-current",t?"page":"false");
+  if(t) renderTeacher(); else if(!S) renderStart(); else render();
+}
+window.addEventListener("hashchange",route);
+
+/* ---------- student flow ---------- */
+function stepsBar(){
+  const names=["답 입력","채점","다시 풀기","쌍둥이 문제","결과"];
+  const idx={omr:0,score:1,retry:2,twin:3,report:4}[S.view]??0;
+  return `<div class="steps" aria-label="진행 단계">${names.map((n,i)=>`<span class="${i<idx?"done":i===idx?"on":""}">${i+1}. ${n}</span>`).join("")}</div>`;
+}
+function renderStart(){
+  const opts=banks.map(b=>`<option value="${esc(b.id)}">${esc(b.title)} (${b.count}문항)</option>`).join("");
+  $app.innerHTML=`<section class="stack fade">
+    <div><h2>시험지를 다 풀었나요?</h2><p class="lede">답을 입력하면 바로 채점하고, 틀린 문제를 다시 풀어 본 뒤 같은 개념의 쌍둥이 문제를 2개씩 더 풉니다.</p></div>
+    <div class="card stack">
+      <div class="row">
+        <label class="f" for="setSel">문제 세트<select id="setSel">${opts||'<option>등록된 세트가 없습니다</option>'}</select></label>
+        <label class="f" for="nameIn">이름<input id="nameIn" type="text" autocomplete="off" placeholder="예: 김로지" value="${esc((CFG.student&&CFG.student.name)||"")}" ${CFG.student?"readonly":""}></label>
+      </div>
+      <div class="row"><button class="btn omr" id="goBtn">답 입력 시작</button><span class="note" id="startMsg"></span></div>
+    </div>
+    <p class="note">${CFG.student?"로지에듀 앱에 로그인한 이름으로 결과가 저장됩니다.":'<a href="../">로지에듀 앱</a>에 로그인하고 들어오면 결과가 내 이름으로 저장됩니다.'}</p>
+  </section>`;
+  document.getElementById("goBtn").onclick=async()=>{
+    const name=document.getElementById("nameIn").value.trim();
+    const id=document.getElementById("setSel").value;
+    if(!name){document.getElementById("startMsg").textContent="이름을 입력해 주세요.";return}
+    if(!banks.length){document.getElementById("startMsg").textContent="문제 세트를 불러오지 못했습니다. 새로고침해 주세요.";return}
+    document.getElementById("startMsg").textContent="불러오는 중…";
+    try{await loadBank(id)}catch(e){document.getElementById("startMsg").textContent="세트를 불러오지 못했습니다.";return}
+    S={view:"omr",name,answers:Array(bank.items.length).fill(0),retry:{},twins:{},ri:0,ti:0,saved:false};
+    render();
+  };
+}
+function render(){
+  if(!S) return renderStart();
+  ({omr:renderOMR,score:renderScore,retry:renderRetry,twin:renderTwin,report:renderReport})[S.view]();
+  window.scrollTo({top:0});
+}
+function renderOMR(){
+  const rows=bank.items.map((it,i)=>`<div class="omr-row${S.answers[i]?"":" miss"}" role="group" aria-label="${it.no}번"><span class="n">${it.no}</span>${[1,2,3,4,5].map(k=>`<button class="bub" data-i="${i}" data-k="${k}" aria-pressed="${S.answers[i]===k}" aria-label="${it.no}번 ${k}번">${C[k-1]}</button>`).join("")}</div>`).join("");
+  const filled=S.answers.filter(Boolean).length;
+  $app.innerHTML=`${stepsBar()}<section class="stack fade">
+    <div><h2>${esc(S.name)} 학생, 답을 표시하세요</h2><p class="lede">${esc(bank.title)} · 시험지에 고른 번호를 그대로 누르세요.</p></div>
+    <div class="card"><div class="omr-grid">${rows}</div></div>
+    <div class="bar"><span class="prog">${filled} / ${bank.items.length} 표시함</span><button class="btn omr" id="submitBtn" ${filled<bank.items.length?"disabled":""}>채점하기</button></div>
+  </section>`;
+  $app.querySelectorAll(".bub").forEach(b=>b.onclick=()=>{S.answers[+b.dataset.i]=+b.dataset.k;renderOMR()});
+  document.getElementById("submitBtn").onclick=()=>{
+    S.wrong=bank.items.filter((it,i)=>S.answers[i]!==it.answer).map(it=>it.no);
+    S.view="score";render();
+  };
+}
+function renderScore(){
+  const total=bank.items.length, right=total-S.wrong.length;
+  const pts=bank.items.reduce((a,it,i)=>a+(S.answers[i]===it.answer?it.points:0),0);
+  const maxPts=bank.items.reduce((a,it)=>a+it.points,0);
+  $app.innerHTML=`${stepsBar()}<section class="stack fade">
+    <div><h2>채점 결과</h2><p class="lede">${right===total?"모두 맞혔어요. 쌍둥이 문제 없이 끝납니다.":`틀린 ${S.wrong.length}문제를 먼저 다시 풀어 보고, 문제마다 쌍둥이 2개를 더 풉니다.`}</p></div>
+    <div class="stats">
+      <div class="stat"><div class="k">맞힌 문항</div><div class="v">${right} / ${total}</div></div>
+      <div class="stat"><div class="k">점수(배점 합)</div><div class="v">${pts} / ${maxPts}</div></div>
+      <div class="stat"><div class="k">풀어야 할 쌍둥이</div><div class="v">${S.wrong.length*2}문제</div></div>
+    </div>
+    ${S.wrong.length?`<div class="card"><h3>틀린 문항</h3><div class="row">${S.wrong.map(n=>`<span class="pill no">${n}번</span>`).join("")}</div></div>`:""}
+    <div class="bar"><button class="btn ghost" id="backBtn">답 고치기</button><button class="btn omr" id="nextBtn">${S.wrong.length?"틀린 문제 다시 풀기":"결과 저장하기"}</button></div>
+  </section>`;
+  document.getElementById("backBtn").onclick=()=>{S.view="omr";render()};
+  document.getElementById("nextBtn").onclick=()=>{S.view=S.wrong.length?"retry":"report";S.ri=0;render()};
+}
+function qHTML(q,label,state){
+  const p=pById(q.passage);
+  const box=q.box&&q.box.length?`<div class="box">${q.box.map(l=>`<div>${inline(l)}</div>`).join("")}</div>`:"";
+  const ch=q.choices.map((c,i)=>{const k=i+1;let cls="ch";
+    if(state.done){if(k===q.answer)cls+=" right";else if(k===state.pick)cls+=" wrongpick"}
+    return `<button class="${cls}" data-k="${k}" aria-pressed="${state.pick===k}" ${state.done?"disabled":""}><span class="c">${C[i]}</span><span>${inline(c)}</span></button>`}).join("");
+  const note=q.note&&q.note.length?`<p class="note">${q.note.map(inline).join("<br>")}</p>`:"";
+  return `<details class="pas" ${state.open?"open":""}><summary>지문 보기 · ${esc(p.title)}</summary>${passageHTML(p)}</details>
+  <div class="q"><div class="stem">${label} ${inline(q.stem)}${q.points===3?' <span class="tag pt">3점</span>':""}</div>${box}<div class="choices">${ch}</div>${note}</div>`;
+}
+function bindChoices(state,onPick){$app.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{if(state.done)return;state.pick=+b.dataset.k;onPick()})}
+
+function renderRetry(){
+  const no=S.wrong[S.ri], it=itemByNo(no);
+  const st=S.retry[no]||(S.retry[no]={pick:0,done:false,reason:"",open:true});
+  const label=`<span class="tag no">${no}번 다시 풀기</span>`;
+  let after="";
+  if(st.done){
+    const ok=st.pick===it.answer;
+    after=`<div class="verdict ${ok?"ok":"no"}">${ok?"이번에는 맞혔어요. 스스로 고쳤습니다.":"아직 틀렸어요. 정답은 "+C[it.answer-1]+"입니다."}</div>
+    <div class="card stack"><h3>처음에 왜 틀렸을까요?</h3><div class="reasons">${REASONS.map(r=>`<button data-r="${esc(r)}" aria-pressed="${st.reason===r}">${esc(r)}</button>`).join("")}</div></div>
+    ${st.reason?`<div class="card stack"><h3>해설</h3><div class="explain">${inline(it.explain)}</div></div>`:""}`;
+  }
+  const last=S.ri===S.wrong.length-1;
+  $app.innerHTML=`${stepsBar()}<section class="stack fade">
+    <div class="bar"><h2>틀린 문제 다시 풀기</h2><span class="prog">${S.ri+1} / ${S.wrong.length}</span></div>
+    <p class="lede">처음 고른 답: ${C[S.answers[it.no-1]-1]} · 다시 읽고 답을 고르세요.</p>
+    ${qHTML(it,label,st)}
+    ${after}
+    <div class="bar"><span></span>${!st.done?`<button class="btn" id="chk" ${st.pick?"":"disabled"}>확인</button>`:`<button class="btn omr" id="nx" ${st.reason?"":"disabled"}>${last?"쌍둥이 문제 풀기":"다음 문제"}</button>`}</div>
+  </section>`;
+  bindChoices(st,renderRetry);
+  $app.querySelector("details.pas").ontoggle=e=>{st.open=e.target.open};
+  const chk=document.getElementById("chk"); if(chk) chk.onclick=()=>{st.done=true;renderRetry()};
+  $app.querySelectorAll(".reasons button").forEach(b=>b.onclick=()=>{st.reason=b.dataset.r;renderRetry()});
+  const nx=document.getElementById("nx"); if(nx) nx.onclick=()=>{if(last){S.view="twin";S.ti=0}else S.ri++;render()};
+}
+function twinQueue(){const q=[];S.wrong.forEach(no=>itemByNo(no).variants.forEach(v=>q.push({no,v})));return q}
+function renderTwin(){
+  const Q=twinQueue(), cur=Q[S.ti], v=cur.v;
+  const st=S.twins[v.vid]||(S.twins[v.vid]={pick:0,done:false,open:false});
+  const label=`<span class="tag tw">쌍둥이 ${v.vid.endsWith("A")?"A":"B"}</span><span class="tag no">원 ${cur.no}번</span>`;
+  const last=S.ti===Q.length-1;
+  let after="";
+  if(st.done){const ok=st.pick===v.answer;
+    after=`<div class="verdict ${ok?"ok":"no"}">${ok?"정답입니다.":"틀렸어요. 정답은 "+C[v.answer-1]+"입니다."}</div><div class="card stack"><h3>해설</h3><div class="explain">${inline(v.explain)}</div></div>`}
+  $app.innerHTML=`${stepsBar()}<section class="stack fade">
+    <div class="bar"><h2>쌍둥이 문제</h2><span class="prog">${S.ti+1} / ${Q.length}</span></div>
+    <p class="lede">원 ${cur.no}번과 같은 개념을 다른 사례로 묻는 문제입니다.</p>
+    ${qHTML(v,label,st)}
+    ${after}
+    <div class="bar"><span></span>${!st.done?`<button class="btn" id="chk" ${st.pick?"":"disabled"}>확인</button>`:`<button class="btn omr" id="nx">${last?"결과 보기":"다음 문제"}</button>`}</div>
+  </section>`;
+  bindChoices(st,renderTwin);
+  $app.querySelector("details.pas").ontoggle=e=>{st.open=e.target.open};
+  const chk=document.getElementById("chk"); if(chk) chk.onclick=()=>{st.done=true;renderTwin()};
+  const nx=document.getElementById("nx"); if(nx) nx.onclick=()=>{if(last)S.view="report";else S.ti++;render()};
+}
+function summary(){
+  const total=bank.items.length, right=total-S.wrong.length;
+  const retryOk=S.wrong.filter(no=>S.retry[no]&&S.retry[no].pick===itemByNo(no).answer).length;
+  const Q=twinQueue(); const twOk=Q.filter(x=>S.twins[x.v.vid]&&S.twins[x.v.vid].pick===x.v.answer).length;
+  const ask=S.wrong.filter(no=>itemByNo(no).variants.some(v=>!(S.twins[v.vid]&&S.twins[v.vid].pick===v.answer)));
+  return {total,right,retryOk,twTotal:Q.length,twOk,ask};
+}
+async function saveResult(){
+  if(S.saved) return "saved";
+  const sm=summary();
+  const doc={setId:bank.set_id,setTitle:bank.title,student:S.name,createdAt:new Date().toISOString(),
+    total:sm.total,right:sm.right,answers:S.answers,wrong:S.wrong,
+    retry:S.wrong.map(no=>({no,pick:S.retry[no]?.pick||0,correct:S.retry[no]?.pick===itemByNo(no).answer,reason:S.retry[no]?.reason||""})),
+    twins:twinQueue().map(x=>({vid:x.v.vid,no:x.no,pick:S.twins[x.v.vid]?.pick||0,correct:S.twins[x.v.vid]?.pick===x.v.answer})),
+    ask:sm.ask};
+  if(CFG.student) Object.assign(doc,{studentId:CFG.student.id||null});
+  try{const r=await storeResult(doc);if(r!=="fail")S.saved=true;return r}catch(e){return "fail"}
+}
+function renderReport(){
+  const sm=summary();
+  $app.innerHTML=`${stepsBar()}<section class="stack fade">
+    <div><h2>${esc(S.name)} 학생의 클리닉 결과</h2><p class="lede">${esc(bank.title)}</p></div>
+    <div class="stats">
+      <div class="stat"><div class="k">처음 맞힌 문항</div><div class="v">${sm.right} / ${sm.total}</div></div>
+      <div class="stat"><div class="k">다시 풀어 고친 문항</div><div class="v">${sm.retryOk} / ${S.wrong.length}</div></div>
+      <div class="stat"><div class="k">쌍둥이 정답</div><div class="v">${sm.twOk} / ${sm.twTotal}</div></div>
+    </div>
+    ${S.wrong.length?`<div class="card stack"><h3>문항별 결과</h3><div class="list">${S.wrong.map(no=>{const it=itemByNo(no);const r=S.retry[no]||{};
+      const tw=it.variants.map(v=>{const ok=S.twins[v.vid]?.pick===v.answer;return `<span class="pill ${ok?"ok":"no"}">쌍둥이 ${v.vid.slice(-1)} ${ok?"정답":"오답"}</span>`}).join(" ");
+      return `<div class="li"><b>${no}번</b><span class="pill ${r.pick===it.answer?"ok":"no"}">다시 풀기 ${r.pick===it.answer?"정답":"오답"}</span>${tw}${sm.ask.includes(no)?'<span class="pill ask">선생님께 질문</span>':""}<span class="muted" style="flex-basis:100%">틀린 이유: ${esc(r.reason||"-")}</span></div>`}).join("")}</div></div>`:""}
+    ${sm.ask.length?`<div class="card"><h3>국최 선생님께 질문할 문항</h3><p class="muted">쌍둥이 문제에서 아직 틀린 문항입니다: ${sm.ask.map(n=>n+"번").join(", ")}</p><p style="margin-top:10px"><a class="btn omr" style="display:inline-block;text-decoration:none" href="../#prog-qna">질문 게시판에서 묻기</a></p></div>`:`<div class="card"><h3>질문할 문항이 없습니다</h3><p class="muted">틀린 개념을 모두 스스로 바로잡았어요.</p></div>`}
+    <div class="bar"><span class="note" id="saveMsg">결과를 저장하는 중…</span><button class="btn omr" id="newBtn">다음 학생</button></div>
+  </section>`;
+  document.getElementById("newBtn").onclick=()=>{S=null;renderStart()};
+  saveResult().then(r=>{const m=document.getElementById("saveMsg");if(!m)return;
+    m.textContent=r==="saved"?"결과를 저장했습니다. 선생님 탭에서 볼 수 있어요.":r==="local"?"이 기기에 결과를 저장했습니다(서버 연동 전 임시 저장).":"결과를 저장하지 못했습니다. 선생님께 알려 주세요."});
+}
+
+/* ---------- teacher view ---------- */
+async function renderTeacher(){
+  if(typeof CFG.loadResults!=="function"){$app.innerHTML=`<section class="stack fade"><div class="card"><h3>선생님 화면</h3><p class="muted"><a href="../">로지에듀 앱</a>에 원장님(관리자)으로 로그인한 뒤 다시 열어 주세요.</p></div></section>`;return}
+  $app.innerHTML=`<section class="stack fade"><div class="bar"><div><h2>학생별 결과</h2><p class="lede">학생이 클리닉을 끝내면 이곳에 결과가 쌓입니다. 문항별 오답률로 다음 수업에서 짚을 문항을 고를 수 있습니다.</p></div><button class="btn ghost" id="reload">새로 고침</button></div><div id="tbody" class="stack"><p class="muted">결과를 불러오는 중…</p></div></section>`;
+  document.getElementById("reload").onclick=renderTeacher;
+  const box=document.getElementById("tbody");
+  try{const rows=await fetchResults();drawTeacher(rows)}catch(e){box.innerHTML=`<div class="card"><p class="muted">결과를 불러오지 못했습니다.</p></div>`}
+}
+function drawTeacher(rows){
+  const box=document.getElementById("tbody"); if(!box) return;
+  if(!rows.length){box.innerHTML=`<div class="card"><h3>아직 저장된 결과가 없습니다</h3><p class="muted">학생 탭에서 세트를 고르고 답을 입력해 클리닉을 마치면 여기에 첫 결과가 나타납니다.</p></div>`;return}
+  const sets=[...new Set(rows.map(r=>r.setTitle))];
+  const sel=box.dataset.set&&sets.includes(box.dataset.set)?box.dataset.set:sets[0];
+  const R=rows.filter(r=>r.setTitle===sel);
+  const n=R.length; const items={};
+  R.forEach(r=>{(r.wrong||[]).forEach(no=>{items[no]=items[no]||{w:0,fix:0,tw:0,twOk:0};items[no].w++});
+    (r.retry||[]).forEach(x=>{if(x.correct)items[x.no].fix++});
+    (r.twins||[]).forEach(x=>{items[x.no].tw++;if(x.correct)items[x.no].twOk++})});
+  const reasons={}; R.forEach(r=>(r.retry||[]).forEach(x=>{if(x.reason)reasons[x.reason]=(reasons[x.reason]||0)+1}));
+  const avg=n?(R.reduce((a,r)=>a+r.right,0)/n).toFixed(1):"-";
+  const total=R[0]?.total||0;
+  const top=Object.entries(items).sort((a,b)=>b[1].w-a[1].w);
+  box.innerHTML=`<div class="row"><label class="f" for="tSet">세트<select id="tSet">${sets.map(s=>`<option ${s===sel?"selected":""}>${esc(s)}</option>`).join("")}</select></label></div>
+  <div class="stats"><div class="stat"><div class="k">응시 학생</div><div class="v">${n}명</div></div><div class="stat"><div class="k">평균 맞힌 문항</div><div class="v">${avg} / ${total}</div></div><div class="stat"><div class="k">질문 대상 학생</div><div class="v">${R.filter(r=>(r.ask||[]).length).length}명</div></div></div>
+  <div class="card stack"><h3>문항별 오답</h3><div class="tbl-wrap"><table><thead><tr><th>문항</th><th>틀린 학생</th><th>오답률</th><th>다시 풀어 고침</th><th>쌍둥이 정답률</th></tr></thead><tbody>
+  ${top.map(([no,v])=>`<tr><td>${no}번</td><td>${v.w}명</td><td>${Math.round(v.w/n*100)}%</td><td>${v.fix} / ${v.w}</td><td>${v.tw?Math.round(v.twOk/v.tw*100)+"%":"-"}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">모든 학생이 전부 맞혔습니다.</td></tr>'}
+  </tbody></table></div></div>
+  <div class="card stack"><h3>학생이 고른 틀린 이유</h3><div class="list">${Object.entries(reasons).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="li"><span>${esc(k)}</span><b>${v}회</b></div>`).join("")||'<p class="muted">아직 없습니다.</p>'}</div></div>
+  <div class="card stack"><h3>학생별 기록</h3><div class="tbl-wrap"><table><thead><tr><th>날짜</th><th>이름</th><th>맞힌 문항</th><th>틀린 문항</th><th>쌍둥이</th><th>질문할 문항</th></tr></thead><tbody>
+  ${R.map(r=>{const tw=(r.twins||[]);return `<tr><td>${esc(new Date(r.createdAt).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(r.student)}</td><td>${r.right} / ${r.total}</td><td>${(r.wrong||[]).join(", ")||"-"}</td><td>${tw.filter(x=>x.correct).length} / ${tw.length}</td><td>${(r.ask||[]).join(", ")||"-"}</td></tr>`}).join("")}
+  </tbody></table></div></div>`;
+  const s=document.getElementById("tSet"); s.onchange=()=>{box.dataset.set=s.value;drawTeacher(rows)};
+}
+
+/* ---------- boot ---------- */
+loadBanks().then(route);
+})();
+</script>
+</body>
+</html>
