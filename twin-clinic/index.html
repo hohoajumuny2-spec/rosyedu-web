@@ -101,6 +101,28 @@ table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:ta
 th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;white-space:nowrap}
 th{color:var(--muted);font-weight:500}
 .note{font-size:13px;color:var(--muted)}
+/* 학생별 유사 문제지 출력 (A4) */
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:14mm 13mm}
+  html,body{background:#fff!important;color:#000!important}
+  body>.wrap{display:none!important}
+  #printArea{display:block;font-family:var(--f-read);font-size:10.5pt;line-height:1.65;color:#000}
+  .pr-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px;font-family:var(--f-ui)}
+  .pr-head span{font-size:9.5pt}
+  .pr-who{text-align:right;font-size:9.5pt}
+  .pr-note{font-family:var(--f-ui);font-size:9pt;margin:0 0 8px}
+  .pr-pas{border:1px solid #000;padding:8px 10px;margin:10px 0;break-inside:auto}
+  .pr-pas p{margin:0 0 .5em;text-indent:.6em}
+  .pr-lead{font-family:var(--f-ui);font-size:9pt;margin-bottom:4px}
+  .pr-q{margin:10px 0 14px;break-inside:avoid}
+  .pr-stem{margin-bottom:4px}
+  .pr-tag{font-family:var(--f-ui);font-size:8pt;border:1px solid #000;padding:0 4px;border-radius:3px}
+  .pr-box{border:1px solid #000;padding:6px 9px;margin:4px 0 6px}
+  .pr-ch div{padding-left:1.2em;text-indent:-1.2em}
+  .pr-omr{margin-top:14px;border-top:1px solid #000;padding-top:8px;font-family:var(--f-ui);display:flex;flex-wrap:wrap;gap:6px 14px}
+  .pr-ans{break-before:page;font-family:var(--f-ui)}
+}
 @media (prefers-reduced-motion:no-preference){.fade{animation:fd .18s ease-out}@keyframes fd{from{opacity:.4}to{opacity:1}}}
 </style>
 <!-- 연동 설정(선택): 스마트 로지에듀에서 아래 객체를 채우면 서버 저장·로그인 학생 정보를 씁니다. README.md 참고 -->
@@ -114,6 +136,11 @@ th{color:var(--muted);font-weight:500}
   var C = window.LOGY_TWIN_CONFIG = window.LOGY_TWIN_CONFIG || {};
   if (u && u.name && !u.isAdmin && !u.admin_token) C.student = { id: u.name, name: u.name, school: u.school || "", grade: u.grade || "" };
   C.isAdmin = !!(u && u.admin_token);
+  C.api = API;
+  C.adminFetch = function (path, opt) {
+    opt = opt || {};
+    return fetch(API + path, Object.assign({}, opt, { headers: Object.assign({ "Content-Type": "application/json", "x-admin-token": (u && u.admin_token) || "" }, opt.headers || {}) }));
+  };
   C.saveResult = async function (doc) {
     if (C.student) { doc.school = C.student.school; doc.grade = C.student.grade; }
     var r = await fetch(API + "/api/twin-clinic/results", {
@@ -129,6 +156,7 @@ th{color:var(--muted);font-weight:500}
 </script>
 <!-- 문항은행: 파일을 더블클릭해 열 때도 동작하도록 JS로 함께 실음 -->
 <script src="banks/banks.js"></script>
+<script src="setmaker.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -142,6 +170,7 @@ th{color:var(--muted);font-weight:500}
   </header>
   <main id="app" class="stack"></main>
 </div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -162,12 +191,16 @@ const CFG=window.LOGY_TWIN_CONFIG||{};
 if(CFG.isAdmin) document.getElementById("tabTeacher").hidden=false;
 /* 문항은행: banks/banks.js(window.LOGY_TWIN_BANKS)가 있으면 그것을, 없으면 banks/index.json을 fetch */
 async function loadBanks(){
-  if(window.LOGY_TWIN_BANKS){banks=window.LOGY_TWIN_BANKS.index;return}
-  try{const r=await fetch("banks/index.json");banks=await r.json()}catch(e){banks=[]}
+  if(window.LOGY_TWIN_BANKS){banks=window.LOGY_TWIN_BANKS.index}
+  else{try{const r=await fetch("banks/index.json");banks=await r.json()}catch(e){banks=[]}}
+  // 원장님이 선생님 탭에서 올린 세트가 맨 위에 온다
+  if(CFG.api){try{const r=await fetch(CFG.api+"/api/twin-clinic/sets");if(r.ok){const s=await r.json();banks=[...s.map(x=>({...x,server:true})),...banks]}}catch(e){}}
 }
 async function loadBank(id){
+  const meta=banks.find(b=>b.id===id);
+  if(meta&&meta.server){const r=await fetch(CFG.api+"/api/twin-clinic/sets/"+encodeURIComponent(id));if(!r.ok)throw new Error("load");bank=await r.json();bank.set_id=id;return}
   if(window.LOGY_TWIN_BANKS){bank=window.LOGY_TWIN_BANKS.sets[id];return}
-  const meta=banks.find(b=>b.id===id); const r=await fetch(meta.file); bank=await r.json();
+  const r=await fetch(meta.file); bank=await r.json();
 }
 /* 결과 저장소 어댑터: CFG.saveResult/loadResults(스마트 로지에듀 서버) > claude.ai db > 이 기기의 localStorage */
 async function getDB(){
@@ -261,19 +294,21 @@ function renderScore(){
       <div class="stat"><div class="k">풀어야 할 쌍둥이</div><div class="v">${S.wrong.length*2}문제</div></div>
     </div>
     ${S.wrong.length?`<div class="card"><h3>틀린 문항</h3><div class="row">${S.wrong.map(n=>`<span class="pill no">${n}번</span>`).join("")}</div></div>`:""}
+    ${S.wrong.length?`<div class="card row"><span class="muted" style="flex:1 1 220px">유사 문제를 종이로 풀고 싶으면 먼저 출력하세요. 틀린 문항의 유사 문제만 나옵니다.</span><button class="btn ghost" id="printBtn">🖨 유사 문제 출력</button></div>`:""}
     <div class="bar"><button class="btn ghost" id="backBtn">답 고치기</button><button class="btn omr" id="nextBtn">${S.wrong.length?"틀린 문제 다시 풀기":"결과 저장하기"}</button></div>
   </section>`;
   document.getElementById("backBtn").onclick=()=>{S.view="omr";render()};
+  {const pb=document.getElementById("printBtn"); if(pb) pb.onclick=printTwins;}
   document.getElementById("nextBtn").onclick=()=>{S.view=S.wrong.length?"retry":"report";S.ri=0;render()};
 }
 function qHTML(q,label,state){
-  const p=pById(q.passage);
+  const p=q.passage?pById(q.passage):null;
   const box=q.box&&q.box.length?`<div class="box">${q.box.map(l=>`<div>${inline(l)}</div>`).join("")}</div>`:"";
   const ch=q.choices.map((c,i)=>{const k=i+1;let cls="ch";
     if(state.done){if(k===q.answer)cls+=" right";else if(k===state.pick)cls+=" wrongpick"}
     return `<button class="${cls}" data-k="${k}" aria-pressed="${state.pick===k}" ${state.done?"disabled":""}><span class="c">${C[i]}</span><span>${inline(c)}</span></button>`}).join("");
   const note=q.note&&q.note.length?`<p class="note">${q.note.map(inline).join("<br>")}</p>`:"";
-  return `<details class="pas" ${state.open?"open":""}><summary>지문 보기 · ${esc(p.title)}</summary>${passageHTML(p)}</details>
+  return `${p?`<details class="pas" ${state.open?"open":""}><summary>지문 보기 · ${esc(p.title)}</summary>${passageHTML(p)}</details>`:""}
   <div class="q"><div class="stem">${label} ${inline(q.stem)}${q.points===3?' <span class="tag pt">3점</span>':""}</div>${box}<div class="choices">${ch}</div>${note}</div>`;
 }
 function bindChoices(state,onPick){$app.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{if(state.done)return;state.pick=+b.dataset.k;onPick()})}
@@ -298,7 +333,7 @@ function renderRetry(){
     <div class="bar"><span></span>${!st.done?`<button class="btn" id="chk" ${st.pick?"":"disabled"}>확인</button>`:`<button class="btn omr" id="nx" ${st.reason?"":"disabled"}>${last?"쌍둥이 문제 풀기":"다음 문제"}</button>`}</div>
   </section>`;
   bindChoices(st,renderRetry);
-  $app.querySelector("details.pas").ontoggle=e=>{st.open=e.target.open};
+  {const dp=$app.querySelector("details.pas"); if(dp) dp.ontoggle=e=>{st.open=e.target.open};}
   const chk=document.getElementById("chk"); if(chk) chk.onclick=()=>{st.done=true;renderRetry()};
   $app.querySelectorAll(".reasons button").forEach(b=>b.onclick=()=>{st.reason=b.dataset.r;renderRetry()});
   const nx=document.getElementById("nx"); if(nx) nx.onclick=()=>{if(last){S.view="twin";S.ti=0}else S.ri++;render()};
@@ -320,9 +355,15 @@ function renderTwin(){
     <div class="bar"><span></span>${!st.done?`<button class="btn" id="chk" ${st.pick?"":"disabled"}>확인</button>`:`<button class="btn omr" id="nx">${last?"결과 보기":"다음 문제"}</button>`}</div>
   </section>`;
   bindChoices(st,renderTwin);
-  $app.querySelector("details.pas").ontoggle=e=>{st.open=e.target.open};
+  {const dp=$app.querySelector("details.pas"); if(dp) dp.ontoggle=e=>{st.open=e.target.open};}
   const chk=document.getElementById("chk"); if(chk) chk.onclick=()=>{st.done=true;renderTwin()};
   const nx=document.getElementById("nx"); if(nx) nx.onclick=()=>{if(last)S.view="report";else S.ti++;render()};
+}
+/* 학생별 유사 문제지 출력: 틀린 문항의 유사 문제만 모아 A4로 (태블릿에 이어 둔 복사기로 바로) */
+function printTwins(){
+  if(!S||!S.wrong||!S.wrong.length) return;
+  document.getElementById("printArea").innerHTML=window.TwinSet.printHTML(bank,S.wrong,S.name,{withAnswers:!!CFG.isAdmin});
+  window.print();
 }
 function summary(){
   const total=bank.items.length, right=total-S.wrong.length;
@@ -355,9 +396,10 @@ function renderReport(){
       const tw=it.variants.map(v=>{const ok=S.twins[v.vid]?.pick===v.answer;return `<span class="pill ${ok?"ok":"no"}">쌍둥이 ${v.vid.slice(-1)} ${ok?"정답":"오답"}</span>`}).join(" ");
       return `<div class="li"><b>${no}번</b><span class="pill ${r.pick===it.answer?"ok":"no"}">다시 풀기 ${r.pick===it.answer?"정답":"오답"}</span>${tw}${sm.ask.includes(no)?'<span class="pill ask">선생님께 질문</span>':""}<span class="muted" style="flex-basis:100%">틀린 이유: ${esc(r.reason||"-")}</span></div>`}).join("")}</div></div>`:""}
     ${sm.ask.length?`<div class="card"><h3>국최 선생님께 질문할 문항</h3><p class="muted">쌍둥이 문제에서 아직 틀린 문항입니다: ${sm.ask.map(n=>n+"번").join(", ")}</p><p style="margin-top:10px"><a class="btn omr" style="display:inline-block;text-decoration:none" href="../#prog-qna">질문 게시판에서 묻기</a></p></div>`:`<div class="card"><h3>질문할 문항이 없습니다</h3><p class="muted">틀린 개념을 모두 스스로 바로잡았어요.</p></div>`}
-    <div class="bar"><span class="note" id="saveMsg">결과를 저장하는 중…</span><button class="btn omr" id="newBtn">다음 학생</button></div>
+    <div class="bar"><span class="note" id="saveMsg">결과를 저장하는 중…</span><span class="row">${S.wrong.length?'<button class="btn ghost" id="printBtn2">🖨 유사 문제 출력</button>':""}<button class="btn omr" id="newBtn">다음 학생</button></span></div>
   </section>`;
   document.getElementById("newBtn").onclick=()=>{S=null;renderStart()};
+  {const pb=document.getElementById("printBtn2"); if(pb) pb.onclick=printTwins;}
   saveResult().then(r=>{const m=document.getElementById("saveMsg");if(!m)return;
     m.textContent=r==="saved"?"결과를 저장했습니다. 선생님 탭에서 볼 수 있어요.":r==="local"?"이 기기에 결과를 저장했습니다(서버 연동 전 임시 저장).":"결과를 저장하지 못했습니다. 선생님께 알려 주세요."});
 }
@@ -365,10 +407,62 @@ function renderReport(){
 /* ---------- teacher view ---------- */
 async function renderTeacher(){
   if(typeof CFG.loadResults!=="function"){$app.innerHTML=`<section class="stack fade"><div class="card"><h3>선생님 화면</h3><p class="muted"><a href="../">로지에듀 앱</a>에 원장님(관리자)으로 로그인한 뒤 다시 열어 주세요.</p></div></section>`;return}
-  $app.innerHTML=`<section class="stack fade"><div class="bar"><div><h2>학생별 결과</h2><p class="lede">학생이 클리닉을 끝내면 이곳에 결과가 쌓입니다. 문항별 오답률로 다음 수업에서 짚을 문항을 고를 수 있습니다.</p></div><button class="btn ghost" id="reload">새로 고침</button></div><div id="tbody" class="stack"><p class="muted">결과를 불러오는 중…</p></div></section>`;
+  $app.innerHTML=`<section class="stack fade"><div id="setBox" class="card stack"></div></section><section class="stack fade"><div class="bar"><div><h2>학생별 결과</h2><p class="lede">학생이 클리닉을 끝내면 이곳에 결과가 쌓입니다. 문항별 오답률로 다음 수업에서 짚을 문항을 고를 수 있습니다.</p></div><button class="btn ghost" id="reload">새로 고침</button></div><div id="tbody" class="stack"><p class="muted">결과를 불러오는 중…</p></div></section>`;
   document.getElementById("reload").onclick=renderTeacher;
+  drawSetBox();
   const box=document.getElementById("tbody");
   try{const rows=await fetchResults();drawTeacher(rows)}catch(e){box.innerHTML=`<div class="card"><p class="muted">결과를 불러오지 못했습니다.</p></div>`}
+}
+/* 원장님이 만든 세트(원래 문제 + 유사 문제)를 워드 · 글 파일로 올린다 */
+let NEWSET=null;
+async function drawSetBox(){
+  const box=document.getElementById("setBox"); if(!box) return;
+  box.innerHTML=`<h3>새 세트 올리기 — 원래 문제 + 내가 만든 유사 문제</h3>
+    <p class="muted">워드(.docx)나 글(.txt) 파일을 고르세요. 문항마다 <b>정답:</b>을 적고, 그 아래에 <b>1-A.</b> <b>1-B.</b>처럼 유사 문제를 붙입니다. <a href="#" id="sampleDl">양식 내려받기</a></p>
+    <div class="row"><label class="f">세트 파일<input type="file" id="setFile" accept=".docx,.txt,text/plain"></label>
+      <label class="f" for="setTitle">세트 제목<input id="setTitle" type="text" placeholder="예: 11월 2주 클리닉"></label>
+      <label class="f" for="setSchool">학교 · 학년(선택)<input id="setSchool" type="text" placeholder="예: 미강고 2학년"></label></div>
+    <div id="setPrev"></div>
+    <div class="row"><button class="btn omr" id="setSave" disabled>이 세트 올리기</button><span class="note" id="setMsg"></span></div>
+    <h3 style="margin-top:8px">올린 세트</h3><div id="setList" class="list"><p class="muted">불러오는 중…</p></div>`;
+  document.getElementById("sampleDl").onclick=e=>{e.preventDefault();const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([window.TwinSet.SAMPLE],{type:"text/plain"}));a.download="쌍둥이_세트_양식.txt";a.click()};
+  document.getElementById("setFile").onchange=async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const prev=document.getElementById("setPrev"), save=document.getElementById("setSave");
+    save.disabled=true; NEWSET=null;
+    try{
+      const {bank:b,warn}=window.TwinSet.parse(await window.TwinSet.readFile(f));
+      const t=document.getElementById("setTitle"); if(!t.value.trim()) t.value=b.title||f.name.replace(/\.[^.]+$/,"");
+      const nv=b.items.reduce((a,i)=>a+i.variants.length,0);
+      prev.innerHTML=`<div class="li"><b>문항 ${b.items.length}개</b><span>유사 문제 ${nv}개</span><span>지문 ${b.passages.length}개</span></div>`+
+        (warn.length?`<div class="card" style="border-color:var(--bad)"><b style="color:var(--bad)">고칠 곳 ${warn.length}군데 — 파일을 고친 뒤 다시 골라 주세요</b><ul>${warn.slice(0,30).map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>`
+                   :`<p class="note">문제없이 읽었습니다. 제목을 확인하고 올리세요.</p>`);
+      if(b.items.length&&!warn.length){NEWSET=b;save.disabled=false}
+    }catch(err){prev.innerHTML=`<p style="color:var(--bad)">${esc(err.message||"파일을 읽지 못했습니다.")}</p>`}
+  };
+  document.getElementById("setSave").onclick=async()=>{
+    if(!NEWSET) return;
+    const msgEl=document.getElementById("setMsg");
+    const b={...NEWSET,title:document.getElementById("setTitle").value.trim(),school:document.getElementById("setSchool").value.trim()};
+    if(!b.title){msgEl.textContent="세트 제목을 적어 주세요.";return}
+    msgEl.textContent="올리는 중…";
+    try{const r=await CFG.adminFetch("/api/admin/twin-clinic/sets",{method:"POST",body:JSON.stringify(b)});const d=await r.json();
+      if(!r.ok) throw new Error(d.detail||"올리지 못했습니다.");
+      msgEl.textContent=`올렸습니다 — 문항 ${d.count}개 · 유사 문제 ${d.variants}개. 학생 화면 세트 목록에 바로 나옵니다.`;
+      NEWSET=null;document.getElementById("setSave").disabled=true;loadSetList();loadBanks();
+    }catch(err){msgEl.textContent=err.message}
+  };
+  loadSetList();
+}
+async function loadSetList(){
+  const el=document.getElementById("setList"); if(!el) return;
+  try{const r=await fetch(CFG.api+"/api/twin-clinic/sets");const rows=await r.json();
+    el.innerHTML=rows.length?rows.map(x=>`<div class="li"><b>${esc(x.title)}</b><span class="muted">${esc(x.school||"")} · ${x.count}문항 · ${esc(String(x.createdAt||"").slice(0,10))}</span><button class="btn ghost" style="margin-left:auto;min-height:36px;padding:6px 12px" data-del="${esc(x.id)}">지우기</button></div>`).join(""):'<p class="muted">아직 올린 세트가 없습니다.</p>';
+    el.querySelectorAll("[data-del]").forEach(bt=>bt.onclick=async()=>{
+      if(!confirm("이 세트를 지울까요? 학생 화면에서 사라집니다. (이미 푼 학생 기록은 남습니다)")) return;
+      await CFG.adminFetch("/api/admin/twin-clinic/sets/"+encodeURIComponent(bt.dataset.del),{method:"DELETE"});loadSetList();loadBanks();
+    });
+  }catch(e){el.innerHTML='<p class="muted">목록을 불러오지 못했습니다.</p>'}
 }
 function drawTeacher(rows){
   const box=document.getElementById("tbody"); if(!box) return;
