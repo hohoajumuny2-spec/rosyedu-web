@@ -1269,11 +1269,11 @@
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes();" class="nav-word hover:text-orange-400">타임어택 퀴즈</button>
                     <button onclick="openProgram('vocab-list'); loadStudentVocabTests();" class="retired nav-word hover:text-cyan-400">영어 단어 시험</button>
                     
-                    <button onclick="openProgram('lecture'); loadLectures();" class="nav-word hover:text-purple-400">해설 강의실</button>
+                    <button onclick="openProgram('lecture'); loadLectures();" class="retired nav-word hover:text-purple-400">해설 강의실</button>
                     <button onclick="openHomeworkTab('class')" class="nav-word hover:text-emerald-400">과제 제출</button>
                     <button onclick="openHomeworkTab('clinic')" class="nav-word hover:text-purple-400">클리닉 제출</button>
                     <button onclick="openStudy()" class="retired nav-word hover:text-teal-400">스터디룸</button>
-                    <button onclick="openProgram('qna'); loadQna();" class="nav-word hover:text-rose-400">질문 게시판</button>
+                    <button onclick="openProgram('qna'); loadQna();" class="retired nav-word hover:text-rose-400">질문 게시판</button>
                     
                     <button onclick="openProgram('essay')" class="retired nav-word hover:text-pink-400">AI 논술/요약 첨삭</button>
                 </span>
@@ -1297,7 +1297,7 @@
                     </div>
                     <span id="header-user-info" class="nav-word text-blue-400 font-bold text-xs md:text-sm"></span>
                     <button onclick="openProgram('mypage'); loadMyPage();" class="nav-word text-emerald-400 font-bold border border-emerald-600 px-3 py-1.5 rounded-lg text-xs bg-emerald-900/20" id="btn-mypage-nav" style="display:none;">마이페이지</button>
-                    <button onclick="openProgram('counsel'); loadMyCounsel();" class="nav-word text-pink-400 font-bold border border-pink-600 px-2 py-1.5 rounded-lg text-[11px] bg-pink-900/20 hidden sm:inline-block" id="btn-counsel-nav" style="display:none;" title="나의 진학 상담"><i class="fa-solid fa-compass"></i></button>
+                    <button onclick="openProgram('counsel'); loadMyCounsel();" class="retired nav-word text-pink-400 font-bold border border-pink-600 px-2 py-1.5 rounded-lg text-[11px] bg-pink-900/20 hidden sm:inline-block" id="btn-counsel-nav" style="display:none;" title="나의 진학 상담"><i class="fa-solid fa-compass"></i></button>
                     <button onclick="goToDashboard()" class="nav-word text-white hover:text-blue-400 font-bold border border-gray-600 px-3 py-1.5 rounded-lg text-xs">학습실</button>
                     <button onclick="logout()" class="text-gray-400 hover:text-white underline text-xs hidden md:inline">로그아웃</button>
                 </div>
@@ -1316,16 +1316,16 @@
                     <button onclick="openProgram('quiz-list'); loadStudentQuizzes(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-orange-400 w-full">타임어택 퀴즈</button>
                 <button onclick="openProgram('vocab-list'); loadStudentVocabTests(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-cyan-400 w-full">영어 단어 시험</button>
                 
-                <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
+                <button onclick="openProgram('lecture'); loadLectures(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">해설 강의실</button>
                 <button onclick="openHomeworkTab('class'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-emerald-400 w-full">과제 제출</button>
                 <button onclick="openHomeworkTab('clinic'); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-purple-400 w-full">클리닉 제출</button>
                 <button onclick="openStudy(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-teal-400 w-full">스터디룸</button>
-                <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
+                <button onclick="openProgram('qna'); loadQna(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-rose-400 w-full">질문 게시판</button>
                 
                 <button onclick="openProgram('essay'); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 hover:text-pink-400 w-full">AI 논술/요약 첨삭</button>
             </span>
             <button onclick="openProgram('mypage'); loadMyPage(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-emerald-400 w-full" id="mobile-mypage-btn" style="display:none;">마이페이지</button>
-            <button onclick="openProgram('counsel'); loadMyCounsel(); toggleMobileMenu();" class="text-left p-4 border-b border-gray-800 text-pink-400 w-full" id="mobile-counsel-btn" style="display:none;">나의 진학 상담</button>
+            <button onclick="openProgram('counsel'); loadMyCounsel(); toggleMobileMenu();" class="retired text-left p-4 border-b border-gray-800 text-pink-400 w-full" id="mobile-counsel-btn" style="display:none;">나의 진학 상담</button>
             <button onclick="logout()" class="text-left p-4 text-red-400 w-full" id="mobile-logout-btn" style="display:none;">로그아웃</button>
         </div>
     </nav>
