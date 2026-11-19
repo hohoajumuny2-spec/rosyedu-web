@@ -2709,6 +2709,7 @@
                                 <div class="flex gap-1">
                                     <button onclick="setClinicView('week')" id="cl-view-week" class="px-3 py-1.5 rounded text-xs font-bold bg-sky-600 text-white">매주</button>
                                     <button onclick="setClinicView('once')" id="cl-view-once" class="px-3 py-1.5 rounded text-xs font-bold bg-gray-700 text-gray-300">날짜별 보강</button>
+                                    <button onclick="setClinicView('check')" id="cl-view-check" class="px-3 py-1.5 rounded text-xs font-bold bg-gray-700 text-gray-300">출석 · 메모</button>
                                 </div>
                             </div>
 
@@ -2728,6 +2729,24 @@
                                 <p class="text-[11px] text-gray-500 mb-3">날짜를 정해 한 번만 하는 보강입니다.</p>
                                 <button onclick="openClinicPick({kind:'once'})" class="w-full bg-sky-600 hover:bg-sky-700 py-2.5 text-white font-bold rounded transition text-sm mb-3">+ 보강 잡기</button>
                                 <div id="cl-once-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                            </div>
+
+                            <!-- 💡 2026-11-19: 그날 클리닉에 온 학생 체크 + 메모. 그 요일 · 날짜에 잡힌 학생이 저절로 나온다 -->
+                            <div id="cl-check-view" class="hidden">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <input type="date" id="cl-check-date" onchange="renderClinicCheck()" class="p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                    <button onclick="shiftClinicCheckDate(-1)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-200 text-xs">◀ 전날</button>
+                                    <button onclick="shiftClinicCheckDate(0)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-200 text-xs">오늘</button>
+                                    <button onclick="shiftClinicCheckDate(1)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-200 text-xs">다음날 ▶</button>
+                                    <span id="cl-check-sum" class="text-[12px] text-sky-300 font-bold ml-auto"></span>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mb-2">그날 잡힌 클리닉 학생이 나옵니다. <b class="text-gray-300">참여</b>를 체크하고 메모를 적으면 바로 저장됩니다. 이름을 누르면 그 학생의 지난 기록을 봅니다.</p>
+                                <div id="cl-check-list" class="space-y-2 max-h-[28rem] overflow-y-auto"></div>
+                                <div class="flex gap-2 mt-2">
+                                    <input id="cl-check-add" list="cl-check-names" placeholder="일정에 없던 학생 추가 (이름)" class="flex-1 p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm">
+                                    <datalist id="cl-check-names"></datalist>
+                                    <button onclick="addClinicCheckStudent()" class="px-3 py-2 rounded bg-sky-700 hover:bg-sky-600 text-white text-xs font-bold">추가</button>
+                                </div>
                             </div>
                         </div>
 
@@ -6043,12 +6062,89 @@ let lavUid = 0;
 
         function setClinicView(view) {
             CLINIC_VIEW = view;
-            document.getElementById('cl-week-view').classList.toggle('hidden', view !== 'week');
-            document.getElementById('cl-once-view').classList.toggle('hidden', view !== 'once');
             const on = 'px-3 py-1.5 rounded text-xs font-bold bg-sky-600 text-white';
             const off = 'px-3 py-1.5 rounded text-xs font-bold bg-gray-700 text-gray-300';
-            document.getElementById('cl-view-week').className = view === 'week' ? on : off;
-            document.getElementById('cl-view-once').className = view === 'once' ? on : off;
+            ['week', 'once', 'check'].forEach(v => {
+                document.getElementById(`cl-${v}-view`).classList.toggle('hidden', view !== v);
+                document.getElementById(`cl-view-${v}`).className = view === v ? on : off;
+            });
+            if (view === 'check') {
+                const d = document.getElementById('cl-check-date');
+                if (!d.value) d.value = clinicYmd(new Date());
+                renderClinicCheck();
+            }
+        }
+
+        // ── 클리닉 출석 · 메모 ─────────────────────────
+        let CLINIC_CHECKS = {};       // 이름 → {attended, memo, time}
+        let CLINIC_CHECK_EXTRA = [];  // 일정에 없던 학생을 그날만 더한 것
+        function clinicYmd(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+        function shiftClinicCheckDate(n) {
+            const el = document.getElementById('cl-check-date');
+            const base = n === 0 || !el.value ? new Date() : new Date(el.value + 'T12:00:00');
+            if (n) base.setDate(base.getDate() + n);
+            el.value = clinicYmd(base); CLINIC_CHECK_EXTRA = []; renderClinicCheck();
+        }
+        /** 그날 잡힌 클리닉: 매주 고정(요일이 같은 것) + 그 날짜 보강 */
+        function clinicScheduledOn(ymd) {
+            const wd = (new Date(ymd + 'T12:00:00').getDay() + 6) % 7;   // 0=월 … 6=일
+            return CLINIC_ROWS.filter(x => x.kind === 'once' ? x.date === ymd : Number(x.weekday) === wd);
+        }
+        async function renderClinicCheck() {
+            const box = document.getElementById('cl-check-list');
+            const ymd = document.getElementById('cl-check-date').value;
+            if (!box || !ymd) return;
+            box.innerHTML = '<p class="text-[11px] text-gray-500">불러오는 중…</p>';
+            if (!CLINIC_ROWS.length) await refreshClinics();
+            const r = await adminGet('/api/admin/clinic_checks?date=' + encodeURIComponent(ymd));
+            CLINIC_CHECKS = {};
+            ((r.ok && r.data.rows) || []).forEach(x => CLINIC_CHECKS[x.student_name] = x);
+            const people = new Map();
+            clinicScheduledOn(ymd).forEach(x => { if (!people.has(x.student_name)) people.set(x.student_name, { time: x.time || '', subject: x.subject || '', planned: true }); });
+            [...Object.keys(CLINIC_CHECKS), ...CLINIC_CHECK_EXTRA].forEach(n => { if (!people.has(n)) people.set(n, { time: (CLINIC_CHECKS[n] || {}).time || '', subject: '', planned: false }); });
+            const list = [...people.entries()].sort((a, b) => String(a[1].time).localeCompare(String(b[1].time)) || a[0].localeCompare(b[0]));
+            const done = list.filter(([n]) => (CLINIC_CHECKS[n] || {}).attended).length;
+            document.getElementById('cl-check-sum').innerText = list.length ? `참여 ${done} / ${list.length}명` : '';
+            if (!list.length) { box.innerHTML = '<p class="text-[11px] text-gray-500">이날 잡힌 클리닉이 없습니다. 아래에서 학생을 추가할 수 있어요.</p>'; return; }
+            box.innerHTML = list.map(([n, info]) => {
+                const c = CLINIC_CHECKS[n] || {};
+                return `<div class="bg-[#1e2430] border ${c.attended ? 'border-emerald-700' : 'border-gray-700'} rounded-lg p-2.5">
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" ${c.attended ? 'checked' : ''} onchange="saveClinicCheck('${escAttr(n)}', {attended: this.checked})" class="w-5 h-5 accent-emerald-500"><span class="text-[12px] text-emerald-300 font-bold">참여</span></label>
+                        <button onclick="showClinicHistory('${escAttr(n)}')" class="text-sm font-bold text-white hover:text-sky-300 truncate">${escapeHtml(n)}</button>
+                        <span class="text-[11px] text-gray-400 shrink-0">${escapeHtml(info.time || '')}${info.subject ? ' · ' + escapeHtml(info.subject) : ''}${info.planned ? '' : ' · 추가'}</span>
+                        <span id="cl-check-ok-${escAttr(n)}" class="text-[10px] text-emerald-400 ml-auto"></span>
+                    </div>
+                    <textarea rows="1" placeholder="메모 (예: 쌍둥이 3번 질문함 · 다음 주 보강)" onchange="saveClinicCheck('${escAttr(n)}', {memo: this.value})"
+                        class="w-full mt-1.5 p-1.5 bg-[#151922] text-gray-100 rounded border border-gray-700 text-[12px] resize-y">${escapeHtml(c.memo || '')}</textarea>
+                </div>`;
+            }).join('');
+            const dl = document.getElementById('cl-check-names');
+            if (dl && CLINIC_STUDENTS.length) dl.innerHTML = CLINIC_STUDENTS.map(x => `<option value="${escAttr(x)}">`).join('');
+        }
+        async function saveClinicCheck(name, patch) {
+            const ymd = document.getElementById('cl-check-date').value;
+            const sched = clinicScheduledOn(ymd).find(x => x.student_name === name) || {};
+            const r = await adminPost('/api/admin/clinic_check', { date: ymd, student_name: name, time: sched.time || '', ...patch });
+            if (!r.ok) return alert(r.message);
+            CLINIC_CHECKS[name] = r.data.row || { ...(CLINIC_CHECKS[name] || {}), ...patch };
+            const ok = document.getElementById('cl-check-ok-' + name);
+            if (ok) { ok.innerText = '저장됨'; setTimeout(() => { ok.innerText = ''; }, 1500); }
+            if ('attended' in patch) renderClinicCheck();
+        }
+        function addClinicCheckStudent() {
+            const el = document.getElementById('cl-check-add');
+            const n = (el.value || '').trim();
+            if (!n) return;
+            if (!CLINIC_CHECK_EXTRA.includes(n)) CLINIC_CHECK_EXTRA.push(n);
+            el.value = ''; renderClinicCheck();
+        }
+        async function showClinicHistory(name) {
+            const r = await adminGet('/api/admin/clinic_checks?student_name=' + encodeURIComponent(name));
+            if (!r.ok) return alert(r.message);
+            const rows = r.data.rows || [];
+            alert(`${name} — 클리닉 기록 ${rows.length}회\n\n` + (rows.slice(0, 20).map(x =>
+                `${x.date} ${x.attended ? '✅ 참여' : '❌ 불참'}${x.memo ? ' · ' + x.memo : ''}`).join('\n') || '아직 기록이 없습니다.'));
         }
 
         /** 격자의 시간 줄 — 기본 시간대에, 실제로 쓰이는 시간을 더해서 차례대로. */
