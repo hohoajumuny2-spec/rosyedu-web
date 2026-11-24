@@ -3675,7 +3675,7 @@
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <!-- 💡 2026-11-18: 원장님이 만든 유사 문제(원래 문제 + 1-A. 1-B.)를 과제에 붙인다. 채점 뒤 틀린 문항의 유사 문제 버튼이 나온다 -->
                             <label class="text-[11px] text-gray-400 block mb-1">👯 유사 문제 세트 (선택) — 원래 문제 아래에 <b class="text-gray-300">1-A. 1-B.</b>처럼 유사 문제를 적은 워드 · 글 파일.
-                                채점 뒤 틀린 문항의 <b class="text-rose-300">유사 문제 풀기 · 출력</b> 버튼이 나옵니다. <a href="twin-clinic/#teacher" target="_blank" rel="noopener" class="text-sky-300 underline">양식 · 학생 결과 보기 ↗</a></label>
+                                채점 뒤 처음에 틀린 문항의 <b class="text-rose-300">쌍둥이 문제 풀기 · 출력</b> 버튼이 나옵니다(답을 고쳐 다시 내도 그대로). <a href="twin-clinic/#teacher" target="_blank" rel="noopener" class="text-sky-300 underline">양식 · 학생 결과 보기 ↗</a></label>
                             <input type="file" id="hw-twin-file" accept=".docx,.txt,text/plain" class="mb-1 text-white" onchange="readHwTwinSet(this.files && this.files[0]); this.value='';">
                             <div id="hw-twin-status" class="text-[11px] text-gray-500 mb-4"></div>
                             <!-- 💡 같은 날 과제가 여러 개면 과제마다 제목·정답표를 따로 넣고 한 번에 배포한다.
@@ -13932,8 +13932,10 @@ let lavUid = 0;
             document.getElementById('hw-omr-title').innerText = h.title;
             document.getElementById('hw-omr-kind').innerText = (kindLabel || '') + (HW_OMR.editing ? ' · 전에 낸 답이 채워져 있어요. 고칠 문항만 고쳐 다시 내세요.' : '');
             const prevRep = MY_HW_REPORTS[h.title];
-            document.getElementById('hw-omr-result').innerHTML = (prevRep && h.twin_set)
-                ? `<div class="bg-[#151922] border border-rose-700 rounded-xl p-3 text-center"><p class="text-[11px] text-gray-400">지난번에 틀린 문항의 유사 문제</p>${twinButtonsHtml(h.twin_set, prevRep.wrongs || [], h.title)}</div>` : '';
+            // 💡 2026-11-24: 쌍둥이 문제는 '처음 냈을 때 틀린 문항' 기준 — 답을 고쳐 다시 내도 그대로 남는다
+            const prevTwin = prevRep ? (Array.isArray(prevRep.first_wrongs) ? prevRep.first_wrongs : (prevRep.wrongs || [])) : [];
+            document.getElementById('hw-omr-result').innerHTML = (prevRep && h.twin_set && prevTwin.length)
+                ? `<div class="bg-[#151922] border border-rose-700 rounded-xl p-3 text-center"><p class="text-[11px] text-gray-400">처음에 틀린 문항의 쌍둥이 문제</p>${twinButtonsHtml(h.twin_set, prevTwin, h.title)}</div>` : '';
             const sb = document.getElementById('hw-omr-submit-btn');
             sb.disabled = false;
             sb.innerText = HW_OMR.editing ? '고친 답으로 다시 제출하기' : '제출하고 채점받기';
@@ -14106,14 +14108,19 @@ let lavUid = 0;
             if (!setId || !w.length) return '';
             const url = `twin-clinic/?set=${encodeURIComponent(setId)}&wrong=${w.join(',')}&hw=${encodeURIComponent(title || '')}`;
             return `<div class="flex flex-wrap items-center justify-center gap-2 my-2">
-                <a href="${url}" class="inline-flex items-center gap-1 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-full px-4 py-2">👯 유사 문제 풀기 (${w.length}문항)</a>
-                <a href="${url}&print=1" class="inline-flex items-center gap-1 bg-[#151922] border border-rose-500 text-rose-200 text-sm font-bold rounded-full px-4 py-2">🖨 유사 문제 출력</a></div>`;
+                <a href="${url}" class="inline-flex items-center gap-1 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-full px-4 py-2">👯 쌍둥이 문제 풀기 (${w.length}문항)</a>
+                <a href="${url}&print=1" class="inline-flex items-center gap-1 bg-[#151922] border border-rose-500 text-rose-200 text-sm font-bold rounded-full px-4 py-2">🖨 쌍둥이 문제 출력</a></div>`;
         }
 
         function showOmrResult(d) {
             OMR_RESULT = d;
             d.reasons = d.reasons || {};
             const wrongs = new Set((d.wrongs || []).map(Number));
+            // 쌍둥이 문제는 처음 낸 답에서 틀린 문항 기준(서버가 twin_wrongs 로 준다 — 예전 서버면 지금 틀린 문항)
+            const twinWrongs = Array.isArray(d.twin_wrongs) ? d.twin_wrongs.map(Number) : [...wrongs];
+            const twinGuide = (d.twin_set && twinWrongs.length)
+                ? `<div class="my-2 bg-rose-950/40 border border-rose-700 rounded-lg px-3 py-2 text-center text-[12.5px] text-rose-100 leading-relaxed word-break-keep-all">
+                     📌 <b>채점이 끝났어요!</b> 틀린 문항은 해설을 보고 <b>오답 정리</b>를 먼저 한 뒤,<br>아래 <b>쌍둥이 문제</b>를 꼭 풀어요.${d.edited ? '<br><span class="text-[11px] text-rose-300">답을 고쳐 다시 내도 처음에 틀린 문항의 쌍둥이 문제는 그대로 풀어요.</span>' : ''}</div>` : '';
             const unsure = new Set((d.unsure || []).map(Number));
             const expl = d.explanations || {};
             const mine = d.mine || [];
@@ -14141,7 +14148,7 @@ let lavUid = 0;
             document.getElementById('hw-omr-result').innerHTML = `
                 <div class="bg-[#151922] border border-emerald-700 rounded-xl p-3">
                     <p class="text-emerald-300 font-black text-lg text-center mb-1">${d.correct} / ${total}문항 맞음 (${d.score}점)</p>
-                    ${twinButtonsHtml(d.twin_set, wrongs, HW_OMR.title)}
+                    ${twinGuide}${twinButtonsHtml(d.twin_set, twinWrongs, HW_OMR.title)}
                     ${unsureNote}
                     <p class="text-[11px] text-gray-500 text-center mb-2">문항을 누르면 해설을 볼 수 있어요. 틀린 답은 위에서 고쳐 다시 낼 수 있어요.</p>
                     <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-40 overflow-y-auto">${grid}</div>
