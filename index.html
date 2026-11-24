@@ -2849,6 +2849,24 @@
                                     <div class="mt-1">재촉 시간: 숙제 마감 24시간 · 3시간 · 1시간 전 · 마감 뒤 / 저녁 7시 · 9시 반 · 11시(오늘 아직 안 한 학생) / 클리닉 2시간 전 · 30분 지나도 미등원 / 이틀 넘게 안 한 학생 오후 5시. 밤 11시 반~아침 8시는 쉼.</div>
                                 </div>
                                 <div id="nd-run" class="mt-3 text-xs"></div>
+                                <div class="mt-4 pt-3 border-t border-gray-700">
+                                    <h4 class="text-white font-black mb-1">🧪 시험 보내기 <span class="text-[11px] font-normal text-gray-400">시간 · 하루 한도와 상관없이 지금 바로 한 통</span></h4>
+                                    <div class="flex flex-wrap gap-2 mb-2">
+                                        <select id="nd-test-name" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm"><option value="">학생 고르기</option></select>
+                                        <select id="nd-test-kind" onchange="ndTestHint()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                                            <option value="pr19">저녁 7시 오늘 공부 (부드럽게)</option><option value="pr2130">밤 9시 반 오늘 공부</option><option value="pr23">밤 11시 연속 끊김 경고 (단호하게)</option>
+                                            <option value="hw24">숙제 마감 하루 전 (부드럽게)</option><option value="hw3">숙제 마감 3시간 전</option><option value="hw1">숙제 마감 1시간 전 (단호하게)</option><option value="hwlate">숙제 미제출 (단호하게)</option>
+                                            <option value="cl2h">클리닉 2시간 전</option><option value="cl30">클리닉 미등원 (단호하게)</option><option value="idle">이틀 넘게 안 함</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-3 mb-2 text-sm text-gray-200">
+                                        <label class="flex items-center gap-1"><input type="checkbox" id="nd-test-push" checked> 앱 알림</label>
+                                        <label class="flex items-center gap-1"><input type="checkbox" id="nd-test-kakao"> 카톡</label>
+                                        <button onclick="sendNudgeTest()" class="px-4 py-2 rounded bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm">시험 보내기</button>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500">제목 앞에 [시험]이 붙고, 숙제 이름은 '예시 숙제'로 갑니다. 재촉 기록 · 하루 한도에는 들어가지 않습니다.</p>
+                                    <div id="nd-test-out" class="mt-2 text-xs"></div>
+                                </div>
                             </div>
                             <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
                                 <h4 class="text-white font-black mb-2">🏆 반별 주간 리그 <span id="nd-week" class="text-[11px] font-normal text-gray-400"></span></h4>
@@ -7187,6 +7205,10 @@ let lavUid = 0;
             warn.textContent = ND.attendance_ok ? '' : '홈페이지 키오스크 출결을 가져오지 못해 클리닉 미등원은 보이지 않습니다.';
             warn.classList.toggle('hidden', !!ND.attendance_ok);
             document.getElementById('nd-week').textContent = ND.week || '';
+            const tn = document.getElementById('nd-test-name'), tkeep = tn.value;
+            const names = (ND.rows || []).map(x => x.name).sort((a, b) => a.localeCompare(b));
+            tn.innerHTML = '<option value="">학생 고르기</option>' + names.map(n => `<option value="${escAttr(n)}">${escapeHtml(n)}</option>`).join('');
+            if (names.includes(tkeep)) tn.value = tkeep;
             const lgs = Object.entries(ND.leagues || {}).sort((a, b) => a[0].localeCompare(b[0]));
             document.getElementById('nd-leagues').innerHTML = lgs.length ? lgs.map(([cls, L]) => `<div class="bg-[#151922] border border-gray-700 rounded p-2">
                     <p class="font-bold text-gray-200 mb-1">${escapeHtml(cls)} <span class="text-[11px] font-normal text-gray-500">${L.size}명 참여</span></p>
@@ -7240,6 +7262,35 @@ let lavUid = 0;
             box.innerHTML = `<p class="font-bold text-gray-200 mb-1">${head}</p>` + p.map(x => `<div class="mb-1"><b class="text-white">${escapeHtml(x.name)}</b> ` +
                 x.items.map(i => `<div class="ml-3 text-gray-300">[${(i.via || []).map(v => v === 'kakao' ? '카톡' : '앱').join('+') || '보낼 길 없음'}] ${escapeHtml(i.title)} — ${escapeHtml(i.body)}</div>`).join('') + '</div>').join('');
             if (!dry) loadNudge();
+        }
+
+        function ndTestHint() {
+            // 단호한 재촉은 실제로도 카톡이 같이 가므로 카톡에 미리 체크해 둔다
+            const firm = ['pr23', 'hw1', 'hwlate', 'cl30'].includes(document.getElementById('nd-test-kind').value);
+            document.getElementById('nd-test-kakao').checked = firm;
+        }
+
+        async function sendNudgeTest() {
+            const name = document.getElementById('nd-test-name').value;
+            if (!name) return alert('학생을 골라 주세요.');
+            const push = document.getElementById('nd-test-push').checked, kakao = document.getElementById('nd-test-kakao').checked;
+            if (!push && !kakao) return alert('앱 알림이나 카톡 중 하나는 골라 주세요.');
+            const out = document.getElementById('nd-test-out');
+            out.innerHTML = '<span class="text-gray-400">보내는 중…</span>';
+            const r = await adminPost('/api/admin/nudge/test', { student_name: name, kind: document.getElementById('nd-test-kind').value, push, kakao });
+            if (!r.ok) { out.innerHTML = `<span class="text-red-400">${escapeHtml(r.message)}</span>`; return; }
+            const d = r.data, lines = [];
+            if (d.push !== null && d.push !== undefined)
+                lines.push(d.push > 0 ? `✅ 앱 알림: ${d.push}대 기기로 보냈습니다.` : `⚠️ 앱 알림: 보낼 기기가 없습니다(그 학생이 앱 알림을 켜지 않았습니다).`);
+            if (d.kakao) {
+                const k = d.kakao;
+                if (!k.success) lines.push('⚠️ 카톡: ' + (k.detail || '보내지 못했습니다.'));
+                else if ((k.no_phone || []).length) lines.push('⚠️ 카톡: logyedu.com 명단에 이 학생 휴대폰 번호가 없습니다.');
+                else if ((k.unknown || []).length) lines.push('⚠️ 카톡: logyedu.com 명단에 같은 이름의 학생이 없습니다.');
+                else lines.push(`✅ 카톡: 보냈습니다(${k.queued || 0}건). 1~2분 안에 도착합니다.`);
+            }
+            out.innerHTML = lines.map(l => `<p class="${l.startsWith('✅') ? 'text-emerald-300' : 'text-amber-300'}">${escapeHtml(l)}</p>`).join('')
+                + `<div class="mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-300"><b class="text-white">${escapeHtml(d.title)}</b><br>${escapeHtml(d.body)}</div>`;
         }
 
         function copyNudgeUrl() {
