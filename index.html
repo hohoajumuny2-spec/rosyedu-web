@@ -2838,6 +2838,13 @@
                                 <label class="flex items-center gap-2 text-sm text-gray-200 mb-2"><input type="checkbox" id="nd-kakao"> 학생 카톡도 보내기 <span class="text-[11px] text-gray-400">(단호한 재촉만 · 하루 2통까지)</span></label>
                                 <label class="block text-xs text-gray-400 mb-1">재촉을 보내지 않을 학생 (쉼표로)</label>
                                 <input id="nd-exclude" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm mb-2" placeholder="예) 홍길동, 김철수">
+                                <label class="block text-xs text-gray-400 mb-1">💬 원장님 한마디 <span class="text-gray-500">(적으면 재촉 카톡 아래에 붙고, 비우면 안 붙어요 · 200자)</span></label>
+                                <textarea id="nd-memo" rows="2" maxlength="200" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm" placeholder="예) 이번 주는 기말 대비 주간! 하루도 빠지지 말자 💪"></textarea>
+                                <div class="flex flex-wrap items-center gap-2 mb-2 mt-1 text-xs text-gray-400">
+                                    <span>이날까지만</span><input type="date" id="nd-memo-until" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-xs">
+                                    <span class="text-gray-500">(비우면 지울 때까지 · 날짜가 지나면 저절로 빠짐)</span>
+                                    <button type="button" onclick="document.getElementById('nd-memo').value='';document.getElementById('nd-memo-until').value='';" class="px-2 py-1 rounded bg-gray-700 text-gray-200">한마디 지우기</button>
+                                </div>
                                 <div class="flex flex-wrap gap-2 mb-3">
                                     <button onclick="saveNudgeConfig()" class="px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm">설정 저장</button>
                                     <button onclick="runNudge(true)" class="px-3 py-2 rounded bg-gray-700 text-gray-100 text-sm">지금 보낼 것 미리 보기</button>
@@ -7192,6 +7199,8 @@ let lavUid = 0;
                 document.getElementById('nd-enabled').checked = !!c.data.enabled;
                 document.getElementById('nd-kakao').checked = !!c.data.kakao;
                 document.getElementById('nd-exclude').value = (c.data.exclude || []).join(', ');
+                document.getElementById('nd-memo').value = c.data.memo || '';
+                document.getElementById('nd-memo-until').value = c.data.memo_until || '';
                 document.getElementById('nd-url').value = `${API_URL}/api/nudge/tick?key=${c.data.key || ''}`;
             }
             if (!r.ok) { document.getElementById('nd-body').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-400">${escapeHtml(r.message || '불러오지 못했습니다.')}</td></tr>`; return; }
@@ -7247,7 +7256,8 @@ let lavUid = 0;
 
         async function saveNudgeConfig() {
             const ex = document.getElementById('nd-exclude').value.split(/[,，\n]/).map(t => t.trim()).filter(Boolean);
-            const r = await adminPost('/api/admin/nudge/config', { enabled: document.getElementById('nd-enabled').checked, kakao: document.getElementById('nd-kakao').checked, exclude: ex });
+            const r = await adminPost('/api/admin/nudge/config', { enabled: document.getElementById('nd-enabled').checked, kakao: document.getElementById('nd-kakao').checked, exclude: ex,
+                memo: document.getElementById('nd-memo').value.trim(), memo_until: document.getElementById('nd-memo-until').value || '' });
             alert(r.ok ? (r.data.enabled ? '저장했습니다. 자동 재촉이 켜졌습니다.\n(cron-job.org 등록이 되어 있어야 30분마다 돕니다)' : '저장했습니다. 자동 재촉은 꺼져 있습니다.') : r.message);
         }
 
@@ -7290,7 +7300,8 @@ let lavUid = 0;
                 else lines.push(`✅ 카톡: 보냈습니다(${k.queued || 0}건). 1~2분 안에 도착합니다.`);
             }
             out.innerHTML = lines.map(l => `<p class="${l.startsWith('✅') ? 'text-emerald-300' : 'text-amber-300'}">${escapeHtml(l)}</p>`).join('')
-                + `<div class="mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-300"><b class="text-white">${escapeHtml(d.title)}</b><br>${escapeHtml(d.body)}</div>`;
+                + `<div class="mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-300"><b class="text-white">${escapeHtml(d.title)}</b><br>${escapeHtml(d.body)}</div>`
+                + (kakao && d.kakao_text ? `<p class="text-gray-400 mt-2 mb-0.5">카톡 #{내용}에 들어간 글</p><div class="bg-[#151922] border border-gray-700 rounded p-2 text-gray-300 whitespace-pre-line">${escapeHtml(d.kakao_text)}</div>` : '');
         }
 
         function copyNudgeUrl() {
