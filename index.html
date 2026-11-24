@@ -18892,9 +18892,11 @@ let lavUid = 0;
                         return `<div class="bg-[#0f1218] border border-gray-700 rounded-xl p-3">
                             <div class="text-[12.5px] font-bold ${k === 'main' ? 'text-lime-300' : k === 'low' ? 'text-amber-300' : 'text-sky-300'}">${label}${k === 'main' ? ' <span class="text-rose-300">*</span>' : ''}</div>
                             <div class="text-[10.5px] text-gray-500 mb-2 word-break-keep-all">${desc}</div>
-                            ${cur ? `<div class="text-[10.5px] text-gray-400 mb-1">지금: ${escapeHtml(cur.pdf_name || 'PDF')} · 채점 ${cur.graded}문제</div>` : ''}
+                            ${cur ? `<div class="text-[10.5px] text-gray-400 mb-1">지금: ${escapeHtml(cur.pdf_name || 'PDF')} · 채점 ${cur.graded}문제${cur.twins ? ` · 쌍둥이 ${cur.twins}문제` : ''}</div>` : ''}
                             <label class="block text-[11px] text-gray-300 mb-1.5">PDF<input id="cp-${k}-pdf" type="file" accept="application/pdf,.pdf" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-lime-700 file:text-white"></label>
                             <label class="block text-[11px] text-gray-300 mb-1.5">.json<input id="cp-${k}-json" type="file" accept=".json,application/json" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-sky-800 file:text-white"></label>
+                            <label class="block text-[11px] text-gray-300 mb-1.5">쌍둥이 세트 <span class="text-gray-500">(선택 · 워드/글 — 1-A · 1-B 양식)</span><input id="cp-${k}-twin" type="file" accept=".docx,.txt,text/plain" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-[#1e2430] file:text-gray-200"></label>
+                            ${cur && cur.twins ? `<label class="flex items-center gap-1.5 text-[10.5px] text-gray-400 mb-1.5"><input type="checkbox" id="cp-${k}-twin-del"> 지금 쌍둥이 ${cur.twins}문제 빼기</label>` : ''}
                             <details><summary class="text-[10.5px] text-gray-500 cursor-pointer">.json 대신 글 붙여 넣기</summary><textarea id="cp-${k}-text" rows="4" class="w-full mt-1 bg-[#151922] border border-gray-700 rounded p-1.5 text-[11px] text-white font-mono" placeholder="문제지 만들기 입력칸 글 전체"></textarea></details>
                         </div>`; }).join('')}</div>
                     <button onclick="clinicSaveProgram()" class="w-full mt-3 ${e ? 'bg-sky-600 hover:bg-sky-500' : 'bg-lime-600 hover:bg-lime-500'} text-white py-2.5 rounded-lg text-sm font-bold">${e ? '고친 내용 저장' : '올리기'}</button>
@@ -18910,7 +18912,7 @@ let lavUid = 0;
                             <span class="text-[11px] text-gray-400">대상: ${escapeHtml(who)}</span><span class="text-[11px] text-gray-500">${escapeHtml(p.start_date || '')} ~ ${escapeHtml(p.end_date || '')}</span>
                             <span class="text-[11px] text-gray-400">기준 ${p.pass_score}점 · 기초 통과 ${p.low_pass_score}점</span></div>
                         <div class="flex flex-wrap gap-1.5 text-[11px] mb-1">${CLA_SETS.map(([k, label]) => { const s = p.sets[k]; return s
-                            ? `<a href="${API_URL}${escAttr(s.pdf_url)}" target="_blank" class="cp-pdf px-2 py-1 rounded bg-[#0f1218] border border-gray-700 text-gray-300">${label}: 채점 ${s.graded}/${s.total}문제${s.written.length ? ` · 서술형 ${s.written.join(',')}번` : ''}${s.no_answer.length ? ` · <span class="text-amber-300">정답 없음 ${s.no_answer.join(',')}번</span>` : ''} ↗</a>`
+                            ? `<a href="${API_URL}${escAttr(s.pdf_url)}" target="_blank" class="cp-pdf px-2 py-1 rounded bg-[#0f1218] border border-gray-700 text-gray-300">${label}: 채점 ${s.graded}/${s.total}문제${s.written.length ? ` · 서술형 ${s.written.join(',')}번` : ''}${s.no_answer.length ? ` · <span class="text-amber-300">정답 없음 ${s.no_answer.join(',')}번</span>` : ''}${s.twins ? ` · 쌍둥이 ${s.twins}` : ''} ↗</a>`
                             : `<span class="px-2 py-1 rounded bg-[#0f1218] border border-gray-800 text-gray-600">${label}: 없음</span>`; }).join('')}</div>
                         <div class="text-[11px] text-gray-500">시작한 학생 ${p.started.length} · 마친 학생 ${p.done.length}${p.started.length ? ` — ${p.started.map(n => escapeHtml(n) + (p.done.includes(n) ? ' ✔' : '')).join(', ')}` : ''}</div>
                         <div class="mt-2 flex flex-wrap gap-1.5 items-center">
@@ -18927,6 +18929,17 @@ let lavUid = 0;
             let any = false;
             for (const [k, label] of CLA_SETS) {
                 const pdf = document.getElementById(`cp-${k}-pdf`).files[0], js = document.getElementById(`cp-${k}-json`).files[0], text = document.getElementById(`cp-${k}-text`).value;
+                // 쌍둥이 세트: 다시 푼 답을 입력한 뒤, 처음에 틀린 문제의 쌍둥이만 뽑아 복사기로 나간다
+                const twf = document.getElementById(`cp-${k}-twin`).files[0], twDel = document.getElementById(`cp-${k}-twin-del`);
+                if (twf) {
+                    if (!pdf && !(e && e.sets[k])) return alert(`${label}: 쌍둥이 세트만으로는 안 돼요. 문제지 PDF도 골라 주세요.`);
+                    let tw;
+                    try { tw = await clinicReadTwins(twf); } catch (err) { return alert(`${label} 쌍둥이 세트를 읽지 못했습니다: ${err.message}`); }
+                    const n = tw.bank.items.reduce((a, it) => a + it.variants.length, 0);
+                    if (!n) return alert(`${label} 쌍둥이 세트에서 쌍둥이 문제(1-A. 1-B. …)를 찾지 못했습니다.`);
+                    if (tw.warn.length && !confirm(`${label} 쌍둥이 세트(${n}문제) 점검:\n· ${tw.warn.slice(0, 8).join('\n· ')}${tw.warn.length > 8 ? `\n… 외 ${tw.warn.length - 8}건` : ''}\n\n그래도 올릴까요?`)) return;
+                    fd.append(`${k}_twins`, JSON.stringify(tw.bank)); any = true;
+                } else if (twDel && twDel.checked) { fd.append(`${k}_twins`, '-'); any = true; }
                 if ((js || text.trim()) && !pdf && !(e && e.sets[k])) return alert(`${label}의 PDF도 골라 주세요. (복사기로 나갈 문제지)`);
                 if (pdf && !js && !text.trim() && !confirm(`${label}: .json(또는 글) 없이 PDF만 올리면 정답을 몰라서 태블릿 채점을 못 해요. 그대로 올릴까요?`)) return;
                 if (pdf) { fd.append(`${k}_pdf`, pdf); any = true; }
@@ -18948,9 +18961,15 @@ let lavUid = 0;
             try { d = await (await fetch(`${API_URL}/api/admin/clinic/programs`, {method: 'POST', body: fd})).json(); } catch (err) { d = {success: false, detail: '서버에 연결하지 못했습니다.'}; }
             hideLoader();
             if (!d.success) return alert(d.detail || '올리지 못했습니다.');
-            const rep = Object.entries(d.report || {}).map(([k, v]) => `${CLA_SETS.find(s => s[0] === k)[1]}: 채점 ${v.graded}문제` + (v.written.length ? ` (서술형 ${v.written.join(',')}번 제외)` : '') + (v.no_answer.length ? ` ⚠ 정답 없음 ${v.no_answer.join(',')}번` : '')).join('\n');
+            const rep = Object.entries(d.report || {}).map(([k, v]) => `${CLA_SETS.find(s => s[0] === k)[1]}: 채점 ${v.graded}문제` + (v.written.length ? ` (서술형 ${v.written.join(',')}번 제외)` : '') + (v.no_answer.length ? ` ⚠ 정답 없음 ${v.no_answer.join(',')}번` : '') + (v.twins ? ` · 쌍둥이 ${v.twins}문제` : '')).join('\n');
             alert(`'${d.title}' 저장했습니다.` + (rep ? '\n\n' + rep : '') + '\n\n[정답 · 주목할 점 보기/고치기]에서 학생에게 보일 내용을 확인해 보세요.');
             CLA.editing = null; loadClinicPrograms();
+        }
+
+        // 쌍둥이 세트 읽기 — '오답 쌍둥이 클리닉'과 같은 읽기 도구(twin-clinic/setmaker.js)를 그대로 쓴다
+        async function clinicReadTwins(f) {
+            if (!window.TwinSet) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'twin-clinic/setmaker.js?v=20261118b'; sc.onload = ok; sc.onerror = () => no(new Error('읽기 도구를 불러오지 못했습니다')); document.head.appendChild(sc); });
+            return window.TwinSet.parse(await window.TwinSet.readFile(f));
         }
 
         async function clinicProgUpdate(id, patch) {
