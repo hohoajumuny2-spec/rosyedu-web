@@ -2774,7 +2774,7 @@
                                     </div>
                                     <div id="cp-slots" class="flex flex-wrap gap-1.5 mb-3 min-h-[28px]"></div>
                                     <p class="text-[11px] text-gray-400 mb-1">대상 반</p>
-                                    <div class="w-full mb-2"><div id="cp-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="cp-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
+                                    <div class="w-full mb-2"><div id="cp-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div><p id="cp-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
                                     <label class="text-[11px] text-gray-400">신청 마감 (선택)</label>
                                     <input id="cp-deadline" type="datetime-local" class="w-full p-2 mb-3 bg-gray-800 text-white rounded border border-gray-600 text-sm">
                                     <button onclick="saveClinicPoll()" class="w-full bg-violet-600 hover:bg-violet-700 py-2.5 text-white font-bold rounded transition text-sm">신청 열기 (학생에게 알림)</button>
@@ -3284,7 +3284,7 @@
                                 </div>
                                 <div class="w-1/2">
                                     <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
-                                    <div class="w-full"><div id="qz-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="qz-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
+                                    <div class="w-full"><div id="qz-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div><p id="qz-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
                                 </div>
                             </div>
                             <!-- 오픈 일시: 미리 여러 개 올려 두고, 정한 시각부터 학생이 풀게 한다 -->
@@ -3521,7 +3521,7 @@
                                     <option value="math">수학</option>
                                     <option value="english">영어</option>
                                 </select>
-                                <div class="w-1/2"><div id="rt-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="rt-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
+                                <div class="w-1/2"><div id="rt-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div><p id="rt-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
                             </div>
                             <input type="text" id="rt-objective" placeholder="공지사항" class="w-full p-2 bg-gray-800 text-white mb-4 rounded border border-gray-600">
                             <div class="flex gap-2 mb-2">
@@ -3640,7 +3640,7 @@
                                     </div>
                                 </div>
                                 <label class="text-xs text-gray-400 mb-1 block">응시 대상</label>
-                                <div class="w-full mb-3"><div id="vt-target-class" class="class-picker max-h-36 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div><p id="vt-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
+                                <div class="w-full mb-3"><div id="vt-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div><p id="vt-target-class-label" class="text-[11px] mt-1 px-0.5"></p></div>
 
                                 <div id="vt-random-panel">
                                     <p class="text-xs text-gray-400 mb-1">난이도별 출제 개수 (보유한 단어 수 이내로)</p>
@@ -3724,7 +3724,7 @@
                             </div>
 
                             <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">과제 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
-                            <div id="hw-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
+                            <div id="hw-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div>
                             <p id="hw-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
                             <!-- 💡 2026-11-08: 특정 학생에게만 내는 과제 — 공지의 학생 지정과 같은 규칙 -->
                             <label class="text-[11px] text-amber-300 font-bold block mb-1">학생 지정 (고른 학생에게만 보이고, 앱 알림·카톡도 그 학생에게만 갑니다)</label>
@@ -3824,7 +3824,7 @@
                             </div>
                             <div class="mt-4 border-t border-gray-700 pt-3 space-y-2">
                                 <label class="text-[11px] text-sky-300 font-bold block">대상 반 (고르지 않으면 전체 학생)</label>
-                                <div id="sv-target-class" class="class-picker max-h-28 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
+                                <div id="sv-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div>
                                 <p id="sv-target-class-label" class="text-[11px] px-0.5"></p>
                                 <label class="text-[11px] text-amber-300 font-bold block">학생 지정 (선택, 쉼표로 여러 명)</label>
                                 <input id="sv-students" placeholder="예: 김하나, 박세나" class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600 outline-none text-sm">
@@ -3861,7 +3861,7 @@
                             <textarea id="bd-desc-admin" placeholder="내용을 입력하세요" class="w-full p-2 mb-2 bg-gray-800 text-white rounded outline-none border border-gray-600 focus:border-blue-500 h-24"></textarea>
 
                             <label class="text-[11px] text-sky-300 font-bold block mb-1 mt-2">공지 대상 (반을 고르면 그 반 학생에게만 보이고 알림도 그 반에만 갑니다)</label>
-                            <div id="bd-target-class" class="class-picker max-h-32 overflow-y-auto bg-gray-800 rounded border border-gray-600 p-1"></div>
+                            <div id="bd-target-class" class="class-picker bg-gray-800 rounded border border-gray-600 p-2"></div>
                             <p id="bd-target-class-label" class="text-[11px] mt-1 mb-2 px-0.5"></p>
                             <label class="text-[11px] text-amber-300 font-bold block mb-1">학생 지정 (고른 학생에게만 보이고, 앱 알림·카톡도 그 학생에게만 갑니다)</label>
                             <div class="flex gap-1 mb-1">
@@ -11781,23 +11781,60 @@ let lavUid = 0;
                 box.innerHTML = `<p class="text-[11px] text-gray-500 p-2">등록된 반이 없습니다. '반 관리'에서 먼저 반을 만들어주세요. (지금은 전체 대상)</p>`;
                 return;
             }
-            box.innerHTML = ADMIN_CLASSES.map(c => {
+            // 💡 2026-11-25: 스크롤 목록의 작은 체크칸이 누르기 힘들다는 원장님 말씀 → 큰 버튼(칩)을 학년별로 펼쳐 놓고,
+            //    학년마다 [모두] 버튼, 맨 위에 [전체 대상] 버튼. 체크칸은 숨겨 두고 그대로 쓴다(getPickedClasses 는 같다).
+            const groups = [];
+            ADMIN_CLASSES.forEach(c => {
+                const m = String(c.name).match(/^\s*([초중고]\s?\d)/);
+                const g = m ? m[1].replace(/\s/g, '') : '기타';
+                let row = groups.find(x => x.g === g);
+                if (!row) groups.push(row = { g, list: [] });
+                row.list.push(c);
+            });
+            const order = g => g === '기타' ? 'z' : ({ 초: 'a', 중: 'b', 고: 'c' }[g[0]] || 'y') + g.slice(1);
+            groups.sort((a, b) => order(a.g).localeCompare(order(b.g)));
+            const chip = c => {
                 const on = picked.has(c.name);
-                return `<label class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-700/60">
-                    <input type="checkbox" value="${escAttr(c.name)}" ${on ? 'checked' : ''}
-                        onchange="onClassPickerChange(this)" class="w-4 h-4 accent-sky-500 shrink-0">
-                    <span class="text-xs text-gray-200 truncate">${escapeHtml(c.name)}</span>
-                    <span class="text-[10px] text-gray-500 ml-auto shrink-0">${escapeHtml(classScheduleLabel(c))}</span>
+                return `<label class="cursor-pointer select-none rounded-lg border-2 px-3 py-1.5 transition ${on ? 'bg-sky-600 border-sky-300 text-white shadow' : 'bg-gray-900 border-gray-600 text-gray-200 hover:border-sky-400'}">
+                    <input type="checkbox" value="${escAttr(c.name)}" ${on ? 'checked' : ''} onchange="onClassPickerChange(this)" class="hidden">
+                    <span class="block text-sm font-bold leading-tight">${on ? '✓ ' : ''}${escapeHtml(c.name)}</span>
+                    <span class="block text-[10px] leading-tight ${on ? 'text-sky-100' : 'text-gray-500'}">${escapeHtml(classScheduleLabel(c))}</span>
                 </label>`;
-            }).join('');
+            };
+            box.innerHTML = `<div class="flex flex-wrap items-center gap-2 mb-2">
+                    <button type="button" onclick="clearClassPicker(this.closest('.class-picker'))" class="rounded-lg border-2 px-3 py-1.5 text-sm font-bold ${picked.size ? 'bg-gray-900 border-gray-600 text-gray-300 hover:border-emerald-400' : 'bg-emerald-600 border-emerald-300 text-white'}">${picked.size ? '' : '✓ '}전체 대상</button>
+                    <span class="text-[11px] text-gray-500">반을 누르면 골라지고, 한 번 더 누르면 빠집니다</span></div>`
+                + groups.map(gr => {
+                    const allOn = gr.list.every(c => picked.has(c.name));
+                    return `<div class="mb-2">
+                        <div class="flex items-center gap-2 mb-1"><span class="text-[11px] font-bold text-gray-400">${escapeHtml(gr.g)}</span>
+                            <button type="button" data-group="${escAttr(gr.g)}" onclick="togglePickerGrade(this)" class="text-[10px] px-2 py-0.5 rounded border ${allOn ? 'border-sky-400 text-sky-300' : 'border-gray-600 text-gray-400 hover:text-white'}">${allOn ? gr.g + ' 모두 빼기' : gr.g + ' 모두'}</button></div>
+                        <div class="flex flex-wrap gap-1.5">${gr.list.map(chip).join('')}</div></div>`;
+                }).join('');
             updateClassPickerLabel(box);
+        }
+
+        // 학년 버튼: 그 학년 반을 모두 고르거나(하나라도 빠져 있으면) 모두 뺀다
+        function togglePickerGrade(btn) {
+            const box = btn.closest('.class-picker');
+            if (!box) return;
+            const g = btn.dataset.group;
+            const picked = new Set(String(box.dataset.picked || '').split('|').filter(Boolean));
+            const names = ADMIN_CLASSES.map(c => c.name).filter(n => {
+                const m = String(n).match(/^\s*([초중고]\s?\d)/);
+                return (m ? m[1].replace(/\s/g, '') : '기타') === g;
+            });
+            const allOn = names.every(n => picked.has(n));
+            names.forEach(n => allOn ? picked.delete(n) : picked.add(n));
+            box.dataset.picked = [...picked].join('|');
+            renderClassPicker(box);
         }
 
         function onClassPickerChange(input) {
             const box = input.closest('.class-picker');
             if (!box) return;
             box.dataset.picked = getPickedClasses(box).join('|');
-            updateClassPickerLabel(box);
+            renderClassPicker(box);          // 고른 반이 칩 색으로 바로 보이게 다시 그린다
         }
 
         function updateClassPickerLabel(box) {
