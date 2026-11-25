@@ -2885,12 +2885,15 @@
                                     <label class="text-xs text-gray-300 flex items-center gap-1"><input type="checkbox" id="nd-cl-push" checked> 앱 알림도</label>
                                     <button onclick="sendNudgeClinics()" class="px-4 py-1.5 rounded bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm">고른 학생에게 보내기</button>
                                 </div>
-                                <div class="flex flex-wrap items-center gap-2 mb-2 text-xs text-gray-400">
-                                    <span>학생 더하기</span>
-                                    <select id="nd-cl-add" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-sm"><option value="">학생 고르기</option></select>
-                                    <input type="time" id="nd-cl-add-time" value="18:00" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-sm">
-                                    <button onclick="ndClinicAdd()" class="px-2 py-1.5 rounded bg-gray-700 text-gray-100">+ 더하기</button>
-                                    <span class="text-gray-500">등록된 클리닉은 아래에 미리 나옵니다. 시간이 바뀐 학생은 시간 칸을 고쳐서 보내세요.</span>
+                                <div class="mb-3 text-xs text-gray-400 bg-[#151922] border border-gray-700 rounded-lg p-2">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="font-bold text-gray-200">학생 더하기</span>
+                                        <span>클리닉 시간</span>
+                                        <input type="time" id="nd-cl-add-time" value="18:00" class="p-1 bg-black/30 border border-gray-600 rounded text-white text-sm">
+                                        <span class="text-gray-500">① 반을 누르고 ② 학생을 누르면 아래 목록에 들어갑니다. 등록된 클리닉은 미리 들어 있어요.</span>
+                                    </div>
+                                    <div id="nd-cl-classes" class="flex flex-wrap gap-1.5"></div>
+                                    <div id="nd-cl-students" class="flex flex-wrap gap-1.5 mt-2"></div>
                                 </div>
                                 <div id="nd-cl-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 text-sm"><span class="text-gray-500 text-xs">불러오는 중…</span></div>
                                 <div id="nd-cl-out" class="mt-2 text-xs"></div>
@@ -7309,12 +7312,13 @@ let lavUid = 0;
                     <input type="date" class="nd-cl-date p-1 bg-black/30 border border-gray-700 rounded text-white text-xs" data-i="${i}" value="${escAttr(x.date)}">
                     <input type="time" class="nd-cl-time p-1 bg-black/30 border border-gray-700 rounded text-white text-xs" data-i="${i}" value="${escAttr(x.time)}">
                     <span class="ml-auto text-[11px] ${x.sent ? 'text-emerald-300' : 'text-gray-500'}">${x.sent ? '✔ 보냄 ' + escapeHtml(x.sent) : (x.added ? '더함' : '안 보냄')}</span>
-                    ${x.added ? `<button onclick="ND_CL_ROWS.splice(${i},1);ndClinicRender()" class="text-gray-500 hover:text-red-400 text-xs" title="빼기">✕</button>` : ''}</div>`;
+                    ${x.added ? `<button onclick="ndClinicSync();ND_CL_ROWS.splice(${i},1);ndClinicRender()" class="text-gray-500 hover:text-red-400 text-xs" title="빼기">✕</button>` : ''}</div>`;
         }
         function ndClinicRender() {
             const box = document.getElementById('nd-cl-list');
             box.innerHTML = ND_CL_ROWS.length ? ND_CL_ROWS.map(ndClinicRowHtml).join('')
-                : '<span class="text-gray-500 text-xs">이날 등록된 클리닉이 없습니다. 위 \'학생 더하기\'로 보낼 학생을 넣으세요.</span>';
+                : '<span class="text-gray-500 text-xs">이날 등록된 클리닉이 없습니다. 위 \'학생 더하기\'에서 반 → 학생을 누르세요.</span>';
+            ndClinicPickerRender();
         }
 
         async function loadNudgeClinics() {
@@ -7324,20 +7328,55 @@ let lavUid = 0;
             const r = await adminGet(`/api/admin/nudge/clinics?day=${encodeURIComponent(day)}`);
             if (!r.ok) { box.innerHTML = `<span class="text-red-400 text-xs">${escapeHtml(r.message)}</span>`; return; }
             ND_CL_ROWS = (r.data.rows || []).map(x => ({ name: x.name, date: r.data.day, time: (x.time || '').slice(0, 5), sent: x.sent }));
-            const sel = document.getElementById('nd-cl-add');
-            sel.innerHTML = '<option value="">학생 고르기</option>' + (r.data.students || []).map(n => `<option value="${escAttr(n)}">${escapeHtml(n)}</option>`).join('');
+            ND_CL_CLASSES = r.data.classes || [{ name: '전체 학생', students: r.data.students || [] }];
+            if (!ND_CL_CLASSES.some(c => c.name === ND_CL_OPEN)) ND_CL_OPEN = '';
             ndClinicRender();
         }
 
-        function ndClinicAdd() {
-            const name = document.getElementById('nd-cl-add').value, time = document.getElementById('nd-cl-add-time').value;
-            if (!name) return alert('학생을 골라 주세요.');
-            if (!time) return alert('클리닉 시간을 넣어 주세요.');
-            ndClinicSync();
+        // ── 학생 더하기: 반 버튼 → 그 반 학생 버튼(2026-11-25 원장님 요청: 반별로 찾기 쉽게) ──
+        let ND_CL_CLASSES = [], ND_CL_OPEN = '';
+        function ndClinicPickerRender() {
+            const inList = new Set(ND_CL_ROWS.map(x => x.name));
+            const cls = document.getElementById('nd-cl-classes'), st = document.getElementById('nd-cl-students');
+            if (!cls) return;
+            cls.innerHTML = ND_CL_CLASSES.map((c, i) => {
+                const on = c.name === ND_CL_OPEN, n = c.students.filter(x => inList.has(x)).length;
+                return `<button type="button" data-ci="${i}" onclick="ndClinicOpenClass(+this.dataset.ci)" class="rounded-lg border-2 px-3 py-1.5 text-sm font-bold transition ${on ? 'bg-sky-600 border-sky-300 text-white' : 'bg-gray-900 border-gray-600 text-gray-200 hover:border-sky-400'}">${escapeHtml(c.name)} <span class="text-[11px] font-normal ${on ? 'text-sky-100' : 'text-gray-500'}">${c.students.length}명${n ? ' · ' + n + '명 담음' : ''}</span></button>`;
+            }).join('') || '<span class="text-gray-500">학생 명단이 없습니다.</span>';
+            const c = ND_CL_CLASSES.find(x => x.name === ND_CL_OPEN);
+            if (!c) { st.innerHTML = ''; return; }
+            st.innerHTML = `<button type="button" onclick="ndClinicAddClass()" class="rounded-lg border-2 border-dashed border-teal-500 text-teal-300 hover:bg-teal-900/40 px-3 py-1.5 text-sm font-bold">${escapeHtml(c.name)} 모두 담기</button>`
+                + c.students.map((n, i) => {
+                    const on = inList.has(n);
+                    return `<button type="button" data-si="${i}" onclick="ndClinicToggleName(+this.dataset.si)" class="rounded-lg border-2 px-3 py-1.5 text-sm font-bold transition ${on ? 'bg-teal-600 border-teal-300 text-white' : 'bg-gray-900 border-gray-600 text-gray-200 hover:border-teal-400'}">${on ? '✓ ' : ''}${escapeHtml(n)}</button>`;
+                }).join('');
+        }
+        function ndClinicOpenClass(i) {
+            const c = ND_CL_CLASSES[i];
+            ND_CL_OPEN = c && c.name !== ND_CL_OPEN ? c.name : '';
+            ndClinicPickerRender();
+        }
+        function ndClinicAddName(name) {
+            const time = document.getElementById('nd-cl-add-time').value || '18:00';
             const day = document.getElementById('nd-cl-day').value;
-            const old = ND_CL_ROWS.find(x => x.name === name);
-            if (old) { old.time = time; old.date = day; old.sent = ''; }
-            else ND_CL_ROWS.push({ name, date: day, time, sent: '', added: true });
+            if (!ND_CL_ROWS.some(x => x.name === name)) ND_CL_ROWS.push({ name, date: day, time, sent: '', added: true });
+        }
+        // 학생 버튼: 안 담겼으면 담고(시간 칸의 시간으로), 내가 담은 학생이면 다시 누를 때 뺀다
+        function ndClinicToggleName(i) {
+            const c = ND_CL_CLASSES.find(x => x.name === ND_CL_OPEN);
+            const name = c && c.students[i];
+            if (!name) return;
+            ndClinicSync();
+            const at = ND_CL_ROWS.findIndex(x => x.name === name);
+            if (at < 0) ndClinicAddName(name);
+            else if (ND_CL_ROWS[at].added) ND_CL_ROWS.splice(at, 1);
+            ndClinicRender();
+        }
+        function ndClinicAddClass() {
+            const c = ND_CL_CLASSES.find(x => x.name === ND_CL_OPEN);
+            if (!c) return;
+            ndClinicSync();
+            c.students.forEach(ndClinicAddName);
             ndClinicRender();
         }
 
