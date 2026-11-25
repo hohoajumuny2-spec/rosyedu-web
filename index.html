@@ -2835,15 +2835,25 @@
                             <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
                                 <h4 class="text-white font-black mb-2">⚙️ 자동 재촉 설정</h4>
                                 <label class="flex items-center gap-2 text-sm text-gray-200 mb-1"><input type="checkbox" id="nd-enabled"> <b>자동 재촉 켜기</b> <span class="text-[11px] text-gray-400">(앱 알림)</span></label>
-                                <label class="flex items-center gap-2 text-sm text-gray-200 mb-2"><input type="checkbox" id="nd-kakao"> 학생 카톡도 보내기 <span class="text-[11px] text-gray-400">(단호한 재촉만 · 하루 2통까지)</span></label>
+                                <label class="flex items-center gap-2 text-sm text-gray-200 mb-2"><input type="checkbox" id="nd-kakao"> 학생 카톡도 보내기 <span class="text-[11px] text-gray-400">(쓰고 계신 <b class="text-gray-200">알림장 카톡</b>으로 · 과제 마감 · 미제출 · 단호한 재촉 · 하루 4통까지)</span></label>
                                 <label class="block text-xs text-gray-400 mb-1">재촉을 보내지 않을 학생 (쉼표로)</label>
                                 <input id="nd-exclude" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm mb-2" placeholder="예) 홍길동, 김철수">
-                                <label class="block text-xs text-gray-400 mb-1">💬 원장님 한마디 <span class="text-gray-500">(적으면 재촉 앱 알림과 학생 앱 첫 화면에 붙고, 비우면 안 붙어요 · 200자 · 카톡은 카카오 규정상 고정 문구라 안 붙어요)</span></label>
+                                <label class="block text-xs text-gray-400 mb-1">💬 원장님 한마디 <span class="text-gray-500">(적으면 재촉 앱 알림 · 알림장 카톡 · 학생 앱 첫 화면에 붙고, 비우면 안 붙어요 · 200자)</span></label>
                                 <textarea id="nd-memo" rows="2" maxlength="200" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm" placeholder="예) 이번 주는 기말 대비 주간! 하루도 빠지지 말자 💪"></textarea>
                                 <div class="flex flex-wrap items-center gap-2 mb-2 mt-1 text-xs text-gray-400">
                                     <span>이날까지만</span><input type="date" id="nd-memo-until" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-xs">
                                     <span class="text-gray-500">(비우면 지울 때까지 · 날짜가 지나면 저절로 빠짐)</span>
                                     <button type="button" onclick="document.getElementById('nd-memo').value='';document.getElementById('nd-memo-until').value='';" class="px-2 py-1 rounded bg-gray-700 text-gray-200">한마디 지우기</button>
+                                </div>
+                                <label class="block text-xs text-gray-400 mb-1">⚠️ 지키지 않으면 (불이익) <span class="text-gray-500">(과제 · 클리닉 알림장 카톡 끝에 [ 지키지 않으면 ]으로 붙어요 · 비우면 안 붙어요)</span></label>
+                                <textarea id="nd-penalty" rows="2" maxlength="300" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm" placeholder="예) 숙제 미제출 시 수업 후 남아서 끝내고 귀가 · 클리닉 무단 결석 시 학부모님께 연락"></textarea>
+                                <div class="flex flex-wrap items-center gap-1.5 mb-2 mt-1 text-xs">
+                                    <span class="text-gray-500">눌러서 넣기:</span>
+                                    <button type="button" data-ndpen="숙제 미제출 시 수업 후 남아서 끝내고 귀가" class="px-2 py-1 rounded bg-gray-700 text-gray-100">남아서 끝내고 귀가</button>
+                                    <button type="button" data-ndpen="숙제 미제출 시 다음 클리닉에 와서 보충" class="px-2 py-1 rounded bg-gray-700 text-gray-100">다음 클리닉에서 보충</button>
+                                    <button type="button" data-ndpen="클리닉 무단 결석 시 학부모님께 연락" class="px-2 py-1 rounded bg-gray-700 text-gray-100">클리닉 결석 → 학부모 연락</button>
+                                    <button type="button" data-ndpen="2회 이상 반복되면 학부모 상담" class="px-2 py-1 rounded bg-gray-700 text-gray-100">2회 이상 → 학부모 상담</button>
+                                    <button type="button" onclick="document.getElementById('nd-penalty').value=''" class="px-2 py-1 rounded bg-gray-800 text-gray-300">지우기</button>
                                 </div>
                                 <div class="flex flex-wrap gap-2 mb-3">
                                     <button onclick="saveNudgeConfig()" class="px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm">설정 저장</button>
@@ -2877,7 +2887,7 @@
                             </div>
                             <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700 lg:col-span-2">
                                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                                    <h4 class="text-white font-black mr-2">🩺 클리닉 안내 카톡 <span class="text-[11px] font-normal text-gray-400">학생을 골라 날짜 · 시간을 확인하고 보냅니다 (자동으로는 안 보냄)</span></h4>
+                                    <h4 class="text-white font-black mr-2">🩺 클리닉 안내 카톡 <span class="text-[11px] font-normal text-gray-400">학생을 골라 날짜 · 시간을 확인하고 알림장 카톡으로 보냅니다 (자동으로는 안 보냄)</span></h4>
                                     <input type="date" id="nd-cl-day" onchange="loadNudgeClinics()" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-sm">
                                     <button onclick="ndClinicDay(0)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-100 text-xs">오늘</button>
                                     <button onclick="ndClinicDay(1)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-100 text-xs">내일</button>
@@ -7225,6 +7235,11 @@ let lavUid = 0;
                 document.getElementById('nd-exclude').value = (c.data.exclude || []).join(', ');
                 document.getElementById('nd-memo').value = c.data.memo || '';
                 document.getElementById('nd-memo-until').value = c.data.memo_until || '';
+                document.getElementById('nd-penalty').value = c.data.penalty || '';
+                document.querySelectorAll('[data-ndpen]').forEach(b => b.onclick = () => {
+                    const t = document.getElementById('nd-penalty'), cur = t.value.trim(), add = b.dataset.ndpen;
+                    if (!cur.includes(add)) t.value = cur ? cur + ' · ' + add : add;
+                });
                 document.getElementById('nd-url').value = `${API_URL}/api/nudge/tick?key=${c.data.key || ''}`;
             }
             if (!r.ok) { document.getElementById('nd-body').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-400">${escapeHtml(r.message || '불러오지 못했습니다.')}</td></tr>`; return; }
@@ -7281,7 +7296,8 @@ let lavUid = 0;
         async function saveNudgeConfig() {
             const ex = document.getElementById('nd-exclude').value.split(/[,，\n]/).map(t => t.trim()).filter(Boolean);
             const r = await adminPost('/api/admin/nudge/config', { enabled: document.getElementById('nd-enabled').checked, kakao: document.getElementById('nd-kakao').checked, exclude: ex,
-                memo: document.getElementById('nd-memo').value.trim(), memo_until: document.getElementById('nd-memo-until').value || '' });
+                memo: document.getElementById('nd-memo').value.trim(), memo_until: document.getElementById('nd-memo-until').value || '',
+                penalty: document.getElementById('nd-penalty').value.trim() });
             alert(r.ok ? (r.data.enabled ? '저장했습니다. 자동 재촉이 켜졌습니다.\n(cron-job.org 등록이 되어 있어야 30분마다 돕니다)' : '저장했습니다. 자동 재촉은 꺼져 있습니다.') : r.message);
         }
 
@@ -7436,7 +7452,8 @@ let lavUid = 0;
             }
             out.innerHTML = lines.map(l => `<p class="${l.startsWith('✅') ? 'text-emerald-300' : 'text-amber-300'}">${escapeHtml(l)}</p>`).join('')
                 + `<div class="mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-300"><b class="text-white">${escapeHtml(d.title)}</b><br>${escapeHtml(d.body)}</div>`
-                + (kakao && d.kakao_kind ? `<p class="text-gray-400 mt-2">카톡 템플릿: <b class="text-gray-200">${escapeHtml(d.kakao_kind)}</b> · ` + Object.entries(d.kakao_vars || {}).map(([k, v]) => `#{${escapeHtml(k)}} = ${escapeHtml(v)}`).join(' · ') + '</p>' : '');
+                + (kakao && d.kakao_vars ? `<p class="text-gray-400 mt-2 mb-0.5">알림장 카톡에 들어간 내용</p><div class="bg-[#151922] border border-gray-700 rounded p-2 text-gray-300 whitespace-pre-line">`
+                    + `<b class="text-gray-100">■ 오늘 수업 진도</b>\n${escapeHtml(d.kakao_vars['진도'] || '')}\n<b class="text-gray-100">■ 다음 수업까지 과제</b>\n${escapeHtml(d.kakao_vars['과제'] || '')}\n<b class="text-gray-100">■ 출결 · 수업 태도 · 과제 수행 기록</b>\n${escapeHtml(d.kakao_vars['알림장'] || '')}</div>` : '');
         }
 
         function copyNudgeUrl() {
