@@ -2838,7 +2838,7 @@
                                 <label class="flex items-center gap-2 text-sm text-gray-200 mb-2"><input type="checkbox" id="nd-kakao"> 학생 카톡도 보내기 <span class="text-[11px] text-gray-400">(단호한 재촉만 · 하루 2통까지)</span></label>
                                 <label class="block text-xs text-gray-400 mb-1">재촉을 보내지 않을 학생 (쉼표로)</label>
                                 <input id="nd-exclude" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm mb-2" placeholder="예) 홍길동, 김철수">
-                                <label class="block text-xs text-gray-400 mb-1">💬 원장님 한마디 <span class="text-gray-500">(적으면 재촉 카톡 아래에 붙고, 비우면 안 붙어요 · 200자)</span></label>
+                                <label class="block text-xs text-gray-400 mb-1">💬 원장님 한마디 <span class="text-gray-500">(적으면 재촉 앱 알림과 학생 앱 첫 화면에 붙고, 비우면 안 붙어요 · 200자 · 카톡은 카카오 규정상 고정 문구라 안 붙어요)</span></label>
                                 <textarea id="nd-memo" rows="2" maxlength="200" class="w-full p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm" placeholder="예) 이번 주는 기말 대비 주간! 하루도 빠지지 말자 💪"></textarea>
                                 <div class="flex flex-wrap items-center gap-2 mb-2 mt-1 text-xs text-gray-400">
                                     <span>이날까지만</span><input type="date" id="nd-memo-until" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-xs">
@@ -7187,6 +7187,7 @@ let lavUid = 0;
                     <p class="text-sm text-gray-200 mb-3">${line}</p>
                     <div class="flex gap-1.5 md:gap-2 mb-3">${streakWeekDots(d.week, true)}</div>
                     <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-300">${shields}${goal}</div>
+                    ${d.memo ? `<div class="mt-3 text-sm bg-black/25 border border-orange-700/50 rounded-lg px-3 py-2 text-orange-100"><b>💬 원장님 한마디</b><br><span class="whitespace-pre-line">${escapeHtml(d.memo)}</span></div>` : ''}
                 </div>${lg}</div>`;
             box.classList.remove('hidden');
         }
@@ -7301,7 +7302,7 @@ let lavUid = 0;
             }
             out.innerHTML = lines.map(l => `<p class="${l.startsWith('✅') ? 'text-emerald-300' : 'text-amber-300'}">${escapeHtml(l)}</p>`).join('')
                 + `<div class="mt-1 bg-[#151922] border border-gray-700 rounded p-2 text-gray-300"><b class="text-white">${escapeHtml(d.title)}</b><br>${escapeHtml(d.body)}</div>`
-                + (kakao && d.kakao_text ? `<p class="text-gray-400 mt-2 mb-0.5">카톡 #{내용}에 들어간 글</p><div class="bg-[#151922] border border-gray-700 rounded p-2 text-gray-300 whitespace-pre-line">${escapeHtml(d.kakao_text)}</div>` : '');
+                + (kakao && d.kakao_kind ? `<p class="text-gray-400 mt-2">카톡 템플릿: <b class="text-gray-200">${escapeHtml(d.kakao_kind)}</b> · ` + Object.entries(d.kakao_vars || {}).map(([k, v]) => `#{${escapeHtml(k)}} = ${escapeHtml(v)}`).join(' · ') + '</p>' : '');
         }
 
         function copyNudgeUrl() {
