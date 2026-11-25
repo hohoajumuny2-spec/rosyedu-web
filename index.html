@@ -2853,7 +2853,7 @@
                                 <div class="text-[11px] text-gray-400 leading-relaxed bg-[#151922] border border-gray-700 rounded p-2">
                                     <b class="text-gray-200">자동으로 돌게 하기 (처음 한 번):</b> cron-job.org 에 아래 주소를 <b class="text-gray-200">30분마다</b> 부르도록 등록해 주세요.
                                     <div class="flex gap-1 mt-1"><input id="nd-url" readonly class="flex-grow p-1.5 bg-black/40 border border-gray-700 rounded text-[11px] text-emerald-300"><button onclick="copyNudgeUrl()" class="px-2 rounded bg-gray-700 text-gray-100 text-[11px]">복사</button></div>
-                                    <div class="mt-1">재촉 시간: 숙제 마감 24시간 · 3시간 · 1시간 전 · 마감 뒤 / 저녁 7시 · 9시 반 · 11시(오늘 아직 안 한 학생) / 클리닉 2시간 전 · 30분 지나도 미등원 / 이틀 넘게 안 한 학생 오후 5시. 밤 11시 반~아침 8시는 쉼.</div>
+                                    <div class="mt-1">재촉 시간: <b class="text-gray-200">과제 마감 3일 전부터 매일 오후 5시(카톡)</b> · 3시간 · 1시간 전(앱 알림) · <b class="text-gray-200">마감이 지나면 한 번(카톡)</b> / 저녁 7시 · 9시 반 · 11시(오늘 아직 안 한 학생) / 클리닉 2시간 전 · 30분 지나도 미등원(앱 알림 · 클리닉 카톡은 아래에서 눌러서) / 이틀 넘게 안 한 학생 오후 5시. 밤 11시 반~아침 8시는 쉼.</div>
                                 </div>
                                 <div id="nd-run" class="mt-3 text-xs"></div>
                                 <div class="mt-4 pt-3 border-t border-gray-700">
@@ -2862,7 +2862,7 @@
                                         <select id="nd-test-name" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm"><option value="">학생 고르기</option></select>
                                         <select id="nd-test-kind" onchange="ndTestHint()" class="p-2 bg-[#151922] border border-gray-600 rounded text-white text-sm">
                                             <option value="pr19">저녁 7시 오늘 공부 (부드럽게)</option><option value="pr2130">밤 9시 반 오늘 공부</option><option value="pr23">밤 11시 연속 끊김 경고 (단호하게)</option>
-                                            <option value="hw24">숙제 마감 하루 전 (부드럽게)</option><option value="hw3">숙제 마감 3시간 전</option><option value="hw1">숙제 마감 1시간 전 (단호하게)</option><option value="hwlate">숙제 미제출 (단호하게)</option>
+                                            <option value="hwd">과제 마감 안내 (3일 전부터 매일)</option><option value="hw3">숙제 마감 3시간 전</option><option value="hw1">숙제 마감 1시간 전 (단호하게)</option><option value="hwlate">숙제 미제출 (단호하게)</option>
                                             <option value="cl2h">클리닉 2시간 전</option><option value="cl30">클리닉 미등원 (단호하게)</option><option value="idle">이틀 넘게 안 함</option>
                                         </select>
                                     </div>
@@ -2874,6 +2874,18 @@
                                     <p class="text-[11px] text-gray-500">제목 앞에 [시험]이 붙고, 숙제 이름은 '예시 숙제'로 갑니다. 재촉 기록 · 하루 한도에는 들어가지 않습니다.</p>
                                     <div id="nd-test-out" class="mt-2 text-xs"></div>
                                 </div>
+                            </div>
+                            <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700 lg:col-span-2">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <h4 class="text-white font-black mr-2">🩺 클리닉 안내 카톡 <span class="text-[11px] font-normal text-gray-400">고른 학생에게 '클리닉 안내'(날짜 · 시간)를 보냅니다</span></h4>
+                                    <input type="date" id="nd-cl-day" onchange="loadNudgeClinics()" class="p-1.5 bg-[#151922] border border-gray-600 rounded text-white text-sm">
+                                    <button onclick="ndClinicDay(0)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-100 text-xs">오늘</button>
+                                    <button onclick="ndClinicDay(1)" class="px-2 py-1.5 rounded bg-gray-700 text-gray-100 text-xs">내일</button>
+                                    <label class="text-xs text-gray-300 flex items-center gap-1 ml-2"><input type="checkbox" id="nd-cl-all" onchange="document.querySelectorAll('.nd-cl-pick').forEach(c => c.checked = this.checked)"> 모두 고르기</label>
+                                    <button onclick="sendNudgeClinics()" class="px-4 py-1.5 rounded bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm">고른 학생에게 보내기</button>
+                                </div>
+                                <div id="nd-cl-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 text-sm"><span class="text-gray-500 text-xs">불러오는 중…</span></div>
+                                <div id="nd-cl-out" class="mt-2 text-xs"></div>
                             </div>
                             <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
                                 <h4 class="text-white font-black mb-2">🏆 반별 주간 리그 <span id="nd-week" class="text-[11px] font-normal text-gray-400"></span></h4>
@@ -7275,9 +7287,46 @@ let lavUid = 0;
             if (!dry) loadNudge();
         }
 
+        function ndClinicDay(plus) {
+            const d = new Date(Date.now() + 9 * 3600 * 1000 + plus * 86400000);     // 한국 날짜
+            document.getElementById('nd-cl-day').value = d.toISOString().slice(0, 10);
+            loadNudgeClinics();
+        }
+
+        async function loadNudgeClinics() {
+            const day = document.getElementById('nd-cl-day').value, box = document.getElementById('nd-cl-list');
+            document.getElementById('nd-cl-all').checked = false;
+            box.innerHTML = '<span class="text-gray-500 text-xs">불러오는 중…</span>';
+            const r = await adminGet(`/api/admin/nudge/clinics?day=${encodeURIComponent(day)}`);
+            if (!r.ok) { box.innerHTML = `<span class="text-red-400 text-xs">${escapeHtml(r.message)}</span>`; return; }
+            const rows = r.data.rows || [];
+            box.innerHTML = rows.length ? rows.map(x => `<label class="flex items-center gap-2 bg-[#151922] border border-gray-700 rounded px-2 py-1.5 cursor-pointer">
+                    <input type="checkbox" class="nd-cl-pick" value="${escAttr(x.name)}" ${x.sent ? '' : 'checked'}>
+                    <b class="text-white">${escapeHtml(x.name)}</b><span class="text-gray-400">${escapeHtml(x.time)}</span>
+                    <span class="ml-auto text-[11px] ${x.sent ? 'text-emerald-300' : 'text-gray-500'}">${x.sent ? '✔ 보냄 ' + escapeHtml(x.sent) : '안 보냄'}</span></label>`).join('')
+                : `<span class="text-gray-500 text-xs">${escapeHtml(r.data.label || '')} 클리닉이 잡힌 학생이 없습니다. (시험일정 · 클리닉에서 등록)</span>`;
+        }
+
+        async function sendNudgeClinics() {
+            const names = [...document.querySelectorAll('.nd-cl-pick:checked')].map(c => c.value);
+            if (!names.length) return alert('보낼 학생을 골라 주세요.');
+            const day = document.getElementById('nd-cl-day').value;
+            if (!confirm(`${day} 클리닉 안내 카톡을 ${names.length}명에게 보낼까요?`)) return;
+            const out = document.getElementById('nd-cl-out');
+            out.innerHTML = '<span class="text-gray-400">보내는 중…</span>';
+            const r = await adminPost('/api/admin/nudge/clinic_send', { day, names });
+            if (!r.ok) { out.innerHTML = `<span class="text-red-400">${escapeHtml(r.message)}</span>`; return; }
+            const d = r.data, lines = [`✅ ${d.sent.length}명에게 보냈습니다. 1~2분 안에 도착합니다.`];
+            if ((d.no_phone || []).length) lines.push('⚠️ 휴대폰 번호 없음(logyedu.com 명단): ' + d.no_phone.join(', '));
+            if ((d.unknown || []).length) lines.push('⚠️ logyedu.com 명단에 없는 이름: ' + d.unknown.join(', '));
+            if ((d.skipped || []).length) lines.push('⚠️ 그날 클리닉이 없어 건너뜀: ' + d.skipped.join(', '));
+            out.innerHTML = lines.map(l => `<p class="${l.startsWith('✅') ? 'text-emerald-300' : 'text-amber-300'}">${escapeHtml(l)}</p>`).join('');
+            loadNudgeClinics();
+        }
+
         function ndTestHint() {
-            // 단호한 재촉은 실제로도 카톡이 같이 가므로 카톡에 미리 체크해 둔다
-            const firm = ['pr23', 'hw1', 'hwlate', 'cl30'].includes(document.getElementById('nd-test-kind').value);
+            // 실제로도 카톡이 같이 가는 종류(과제 마감 안내 · 미제출 · 밤 11시)는 카톡에 미리 체크해 둔다
+            const firm = ['hwd', 'hwlate', 'pr23'].includes(document.getElementById('nd-test-kind').value);
             document.getElementById('nd-test-kakao').checked = firm;
         }
 
@@ -7458,7 +7507,7 @@ let lavUid = 0;
             else if (!CLASS_DATA_LOADED && tabEl.querySelector('.class-picker, .class-select')) loadAdminClassData();
             if(id==='admin-counsel'){initCounselTab();}
             if(id==='admin-overview'){loadOverview();}
-            if(id==='admin-nudge'){loadNudge();}
+            if(id==='admin-nudge'){loadNudge(); if (!document.getElementById('nd-cl-day').value) ndClinicDay(0); else loadNudgeClinics();}
             if(id==='admin-schedule'){initScheduleTab();}
             if(id==='admin-exam'){loadAdminExams();}
             if(id==='admin-lecture'){loadAdminLectures();}
