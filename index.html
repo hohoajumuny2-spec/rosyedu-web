@@ -2566,6 +2566,7 @@
                             <p class="admin-nav-title"><i class="fa-solid fa-user-group mr-1.5"></i>학생 관리</p>
                             <div class="flex flex-wrap gap-1.5">
                                 <button onclick="switchAdminTab('admin-overview')" id="btn-admin-overview" class="admin-nav-btn" title="키오스크 출결과 성적을 학생마다 한 줄로">한눈에 보기</button>
+                                <button onclick="switchAdminTab('admin-weak')" id="btn-admin-weak" class="admin-nav-btn" title="채점 결과로 학생마다 약한 유형 · 정답률 · 틀린 이유">약점 분석 🎯</button>
                                 <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="admin-nav-btn">학생 명단</button>
                                 <button onclick="switchAdminTab('admin-nudge')" id="btn-admin-nudge" class="admin-nav-btn" title="연속 기록 · 빠진 학생 · 자동 재촉(앱 알림 · 카톡)">재촉 현황 🔥</button>
                                 <span id="admin-dm-badge" class="hidden"></span>
@@ -2914,6 +2915,17 @@
                                 <p class="text-[11px] text-gray-500 mt-2">이번 주(월~일)에 얻은 경험치 순위. 월요일에 새로 시작합니다.</p>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- 🎯 학생별 약점 분석 (2026-11-26) -->
+                    <div id="admin-weak" class="admin-tab-content" style="display:none">
+                        <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700 mb-4">
+                            <h3 class="text-white font-black text-lg mb-1">🎯 학생별 약점 분석</h3>
+                            <p class="text-[11px] text-gray-400 mb-2">과제 · 퀴즈 · 모의고사 채점 결과와 <b class="text-gray-200">문항 유형</b>으로 어느 부분이 약한지 봅니다. 최근에 틀린 것, '몰라서 찍음'으로 틀린 것일수록 더 약점으로 칩니다. 같은 자료를 여러 번 냈으면 마지막 것만 봅니다.</p>
+                            <div id="wk-classes" class="flex flex-wrap gap-1.5"><span class="text-xs text-gray-500">불러오는 중…</span></div>
+                            <div id="wk-students" class="flex flex-wrap gap-1.5 mt-2"></div>
+                        </div>
+                        <div id="wk-report"><div class="bg-[#1a1e29] p-6 rounded-xl border border-gray-700 text-center text-gray-500 text-sm">위에서 반 → 학생을 누르세요.</div></div>
                     </div>
                     <div id="admin-users" class="admin-tab-content grid grid-cols-1 lg:grid-cols-4 gap-4">
                         <div class="col-span-1 lg:col-span-1 space-y-4">
@@ -7463,6 +7475,92 @@ let lavUid = 0;
             alert('주소를 복사했습니다. cron-job.org 에 30분마다로 등록해 주세요.');
         }
 
+
+        // ── 🎯 학생별 약점 분석 (2026-11-26) ──
+        let WK = { classes: [], open: '', student: '' };
+        async function loadWeakStudents() {
+            const r = await adminGet('/api/admin/weakness/students');
+            const box = document.getElementById('wk-classes');
+            if (!r.ok) { box.innerHTML = `<span class="text-xs text-red-400">${escapeHtml(r.message)}</span>`; return; }
+            WK.classes = r.data.classes || [];
+            if (!WK.classes.some(c => c.name === WK.open)) WK.open = (WK.classes[0] || {}).name || '';
+            drawWeakPicker();
+        }
+        function drawWeakPicker() {
+            document.getElementById('wk-classes').innerHTML = WK.classes.map((c, i) =>
+                `<button type="button" data-wi="${i}" onclick="WK.open=WK.classes[+this.dataset.wi].name;drawWeakPicker()" class="rounded-lg border-2 px-3 py-1.5 text-sm font-bold ${c.name === WK.open ? 'bg-sky-600 border-sky-300 text-white' : 'bg-gray-900 border-gray-600 text-gray-200 hover:border-sky-400'}">${escapeHtml(c.name)} <span class="text-[11px] font-normal opacity-70">${c.students.length}명</span></button>`).join('')
+                || '<span class="text-xs text-gray-500">학생이 없습니다.</span>';
+            const c = WK.classes.find(x => x.name === WK.open);
+            document.getElementById('wk-students').innerHTML = c ? c.students.map((n, i) =>
+                `<button type="button" data-si="${i}" onclick="loadWeakStudent(WK.classes.find(x=>x.name===WK.open).students[+this.dataset.si])" class="rounded-lg border-2 px-3 py-1.5 text-sm font-bold ${n === WK.student ? 'bg-orange-600 border-orange-300 text-white' : 'bg-gray-900 border-gray-600 text-gray-200 hover:border-orange-400'}">${escapeHtml(n)}</button>`).join('') : '';
+        }
+        const WK_TREND = { up: ['📈 나아짐', 'text-emerald-300'], down: ['📉 나빠짐', 'text-red-300'], same: ['➖ 그대로', 'text-gray-400'], new: ['🆕 최근 시작', 'text-sky-300'] };
+        const WK_REASON = { guess: '찍음', two: '둘 중 고민', misread: '잘못 봄', unsure: '모름' };
+        const WK_KIND = { '과제 제출': '과제', '타임어택 퀴즈': '퀴즈', '모의고사': '모의고사', '출제 문제': '출제 문제' };
+        function wkReasons(o) {
+            return Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) =>
+                `<span class="inline-block mr-1 mb-0.5 px-1.5 rounded text-[11px] ${k === 'guess' ? 'bg-red-900/60 text-red-200' : k === 'two' ? 'bg-amber-900/60 text-amber-200' : 'bg-gray-700 text-gray-200'}">${WK_REASON[k] || escapeHtml(k)} ${v}</span>`).join('');
+        }
+        function wkBar(rate) {
+            const r = rate == null ? 0 : rate, col = r < 50 ? 'bg-red-500' : r < 75 ? 'bg-amber-400' : 'bg-emerald-500';
+            return `<div class="w-full h-2 rounded bg-gray-700 overflow-hidden"><div class="${col} h-2" style="width:${r}%"></div></div>`;
+        }
+        async function loadWeakStudent(name) {
+            WK.student = name; drawWeakPicker();
+            const box = document.getElementById('wk-report');
+            box.innerHTML = '<div class="bg-[#1a1e29] p-6 rounded-xl border border-gray-700 text-center text-gray-400 text-sm">분석하는 중…</div>';
+            const r = await adminGet(`/api/admin/weakness/student?student_name=${encodeURIComponent(name)}`);
+            if (!r.ok) { box.innerHTML = `<div class="bg-[#1a1e29] p-6 rounded-xl border border-gray-700 text-red-400 text-sm">${escapeHtml(r.message)}</div>`; return; }
+            const d = r.data;
+            WK.last = d;
+            const weak = (d.weak || []).map((x, i) => `
+                <div class="bg-[#151922] border ${i === 0 ? 'border-red-700' : 'border-gray-700'} rounded-lg p-3">
+                    <div class="flex items-center gap-2 mb-1"><span class="text-lg font-black text-white">${i + 1}. ${escapeHtml(x.tag)}</span>
+                        ${x.trend && WK_TREND[x.trend] ? `<span class="text-[11px] ${WK_TREND[x.trend][1]}">${WK_TREND[x.trend][0]}</span>` : ''}
+                        <span class="ml-auto text-sm font-bold ${x.correct_rate < 50 ? 'text-red-300' : 'text-amber-300'}">정답률 ${x.correct_rate}%</span></div>
+                    ${wkBar(x.correct_rate)}
+                    <p class="text-xs text-gray-300 mt-1.5">${x.solved}문항 중 <b class="text-white">${x.wrong}개</b> 틀림 ${x.last_wrong ? `<span class="text-gray-500">· 마지막 ${escapeHtml(x.last_wrong.slice(5).replace('-', '/'))}</span>` : ''}</p>
+                    <div class="mt-1">${wkReasons(x.reasons)}</div>
+                    ${(x.examples || []).length ? `<p class="text-[11px] text-gray-500 mt-1">틀린 문항: ${x.examples.map(e => `${escapeHtml(WK_KIND[e.kind] || e.kind)} '${escapeHtml(e.title)}' ${e.no}번`).join(' · ')}</p>` : ''}
+                </div>`).join('');
+            const all = (d.all || []).map(x => `<tr class="border-b border-gray-800">
+                    <td class="p-1.5 font-bold text-gray-100">${escapeHtml(x.tag)}</td><td class="p-1.5 text-center">${x.solved}</td>
+                    <td class="p-1.5 text-center ${x.wrong ? 'text-red-300' : 'text-gray-500'}">${x.wrong}</td>
+                    <td class="p-1.5 w-40"><div class="flex items-center gap-2">${wkBar(x.correct_rate)}<span class="text-xs w-10 text-right">${x.correct_rate}%</span></div></td>
+                    <td class="p-1.5 text-[11px] ${x.trend && WK_TREND[x.trend] ? WK_TREND[x.trend][1] : 'text-gray-600'}">${x.trend && WK_TREND[x.trend] ? WK_TREND[x.trend][0] : '-'}</td></tr>`).join('');
+            const untagged = (d.untagged_tasks || []).map((t, i) => `<div class="flex items-center gap-2 text-xs py-1">
+                    <span class="text-gray-300">${escapeHtml(WK_KIND[t.kind] || t.kind)} '${escapeHtml(t.title)}'</span><span class="text-gray-500">틀린 ${t.wrong}개</span>
+                    ${t.kind !== '출제 문제' ? `<button type="button" data-ui="${i}" onclick="const t=WK.last.untagged_tasks[+this.dataset.ui];openExplEditor(t.title,t.kind)" class="ml-auto px-2 py-1 rounded bg-sky-700 hover:bg-sky-600 text-white font-bold">유형 넣기 (AI로 붙이기 가능)</button>` : ''}</div>`).join('');
+            const reasons = Object.entries(d.reasons || {}).map(([k, v]) => `${escapeHtml(k)} ${v}`).join(' · ');
+            box.innerHTML = `
+                <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700 mb-4">
+                    <div class="flex flex-wrap items-center gap-2 mb-2"><h3 class="text-white font-black text-lg">${escapeHtml(d.student)}</h3>
+                        <span class="text-xs text-gray-400">자료 ${d.tasks}개 · 틀린 문항 ${d.wrong_total}개 (유형 있음 ${d.tagged_wrong} · 없음 ${d.untagged_wrong})${reasons ? ' · 틀린 이유: ' + reasons : ''}</span></div>
+                    <div class="flex items-start gap-2 bg-orange-900/30 border border-orange-800 rounded-lg p-2.5">
+                        <p id="wk-summary" class="text-sm text-orange-100 flex-grow">${escapeHtml(d.summary || '')}</p>
+                        <button type="button" onclick="try{navigator.clipboard.writeText(document.getElementById('wk-summary').innerText);this.innerText='복사됨'}catch(e){}" class="shrink-0 px-2 py-1 rounded bg-gray-700 text-gray-100 text-xs">복사</button></div>
+                    <p class="text-[11px] text-gray-500 mt-1">알림장 · 상담 때 그대로 쓰실 수 있는 한 줄입니다.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
+                        <h4 class="text-white font-black mb-2">🔻 약한 유형 순위</h4>
+                        <div class="space-y-2">${weak || '<p class="text-sm text-emerald-300">아직 약점으로 볼 만한 유형이 없습니다 👏</p>'}</div>
+                        ${(d.strong || []).length ? `<p class="text-xs text-gray-400 mt-3">💪 잘하는 유형: ${d.strong.map(x => `<span class="inline-block mr-1 px-1.5 rounded bg-emerald-900/50 text-emerald-200">${escapeHtml(x.tag)} ${x.solved}문항 모두 맞힘</span>`).join('')}</p>` : ''}
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-[#1a1e29] p-4 rounded-xl border border-gray-700">
+                            <h4 class="text-white font-black mb-2">📋 유형별 전체 <span class="text-[11px] font-normal text-gray-500">정답률 낮은 순</span></h4>
+                            ${all ? `<div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="text-[11px] text-gray-400 border-b border-gray-700"><tr><th class="p-1.5">유형</th><th class="p-1.5 text-center">푼</th><th class="p-1.5 text-center">틀림</th><th class="p-1.5">정답률</th><th class="p-1.5">최근 흐름</th></tr></thead><tbody>${all}</tbody></table></div>`
+                                  : '<p class="text-sm text-gray-500">유형이 붙은 문항을 푼 기록이 아직 없습니다.</p>'}
+                            <p class="text-[11px] text-gray-500 mt-1">최근 흐름: 최근 3주와 그 전의 정답률 비교</p>
+                        </div>
+                        ${untagged ? `<div class="bg-[#1a1e29] p-4 rounded-xl border border-amber-800">
+                            <h4 class="text-amber-200 font-black mb-1">⚠️ 유형이 없어 분석에서 빠진 자료</h4>
+                            <p class="text-[11px] text-gray-400 mb-1">문항에 유형을 붙이면 이 학생 · 다른 학생 분석에 모두 들어갑니다. [유형 넣기] 창에서 AI로 한 번에 붙일 수 있어요.</p>${untagged}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
         // ── 학생 한눈에 보기: 이번 주 출결 · 숙제 + 성적, 줄을 누르면 지난 주들 ──
         let OV = { rows: [] };
         const OV_OPEN = new Set();          // 펼쳐 둔 학생
@@ -7609,6 +7707,7 @@ let lavUid = 0;
             else if (!CLASS_DATA_LOADED && tabEl.querySelector('.class-picker, .class-select')) loadAdminClassData();
             if(id==='admin-counsel'){initCounselTab();}
             if(id==='admin-overview'){loadOverview();}
+            if(id==='admin-weak'){loadWeakStudents();}
             if(id==='admin-nudge'){loadNudge(); if (!document.getElementById('nd-cl-day').value) ndClinicDay(0); else loadNudgeClinics();}
             if(id==='admin-schedule'){initScheduleTab();}
             if(id==='admin-exam'){loadAdminExams();}
