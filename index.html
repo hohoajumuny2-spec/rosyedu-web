@@ -14649,6 +14649,65 @@ let lavUid = 0;
                 <a href="${url}&print=1" class="inline-flex items-center gap-1 bg-[#151922] border border-rose-500 text-rose-200 text-sm font-bold rounded-full px-4 py-2">🖨 쌍둥이 문제 출력</a></div>`;
         }
 
+        // 💡 2026-11-26: 채점 뒤 '어떤 부분을 많이 틀렸는지'를 학생이 바로 본다.
+        //    ① 이번 과제: 문항 유형(원장님이 붙인 #유형)별로 몇 문항 중 몇 개 틀렸나 · 몇 번인지(누르면 해설)
+        //    ② 요즘 전체: 최근 과제 · 퀴즈 · 모의고사를 모두 모아 자주 틀리는 유형 3개(서버 weakness.py)
+        function omrWeakHtml(d, total) {
+            const meta = d.meta || {};
+            const bad = new Set([...(d.wrongs || []), ...(d.unsure || [])].map(Number));
+            if (!bad.size) return '';
+            const by = {}; let untagged = 0;
+            for (let i = 1; i <= total; i++) {
+                const tag = String((meta[String(i)] || {}).tag || '').trim();
+                if (!tag) { if (bad.has(i)) untagged++; continue; }
+                const t = by[tag] || (by[tag] = { tag, n: 0, nos: [] });
+                t.n++; if (bad.has(i)) t.nos.push(i);
+            }
+            const rows = Object.values(by).filter(t => t.nos.length)
+                .sort((a, b) => b.nos.length - a.nos.length || (a.n - a.nos.length) / a.n - (b.n - b.nos.length) / b.n);
+            if (!rows.length) return '';
+            const max = rows[0].nos.length;
+            const line = t => {
+                const rate = Math.round(100 * (t.n - t.nos.length) / t.n);
+                const top = t.nos.length === max;
+                return `<div class="py-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[13px] font-bold ${top ? 'text-rose-200' : 'text-gray-100'}">${top ? '🔥 ' : ''}${escapeHtml(t.tag)}</span>
+                        <span class="text-[12px] text-gray-300 shrink-0">${t.n}문항 중 <b class="text-rose-300">${t.nos.length}개</b> 틀림</span>
+                    </div>
+                    <div class="h-1.5 bg-rose-900/60 rounded-full overflow-hidden mt-1"><div class="h-full bg-emerald-500" style="width:${rate}%"></div></div>
+                    <div class="flex flex-wrap gap-1 mt-1">${t.nos.map(n => `<button onclick="showOmrExplain(${n})" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-900/50 border border-rose-700 text-rose-100">${n}번 해설</button>`).join('')}</div>
+                </div>`;
+            };
+            return `<div class="my-2 bg-[#1e2430] border border-rose-800/70 rounded-lg px-3 py-2 text-left">
+                <p class="text-[13px] font-black text-white mb-0.5">🎯 이번 과제에서 많이 틀린 부분</p>
+                <p class="text-[11px] text-gray-400 mb-1">막대는 맞힌 비율이에요. 번호를 누르면 그 문항 해설이 열려요.</p>
+                <div class="divide-y divide-gray-700/70">${rows.slice(0, 4).map(line).join('')}</div>
+                ${rows.length > 4 ? `<p class="text-[11px] text-gray-500 mt-1">그 밖의 유형 ${rows.length - 4}개도 아래 번호판에서 볼 수 있어요.</p>` : ''}
+                ${untagged ? `<p class="text-[11px] text-gray-500 mt-1">유형이 아직 안 붙은 틀린 문항 ${untagged}개는 아래 번호판에서 확인해요.</p>` : ''}
+                <div id="hw-omr-weak-all" class="mt-2"></div>
+            </div>`;
+        }
+
+        async function loadMyWeakness() {
+            const box = document.getElementById('hw-omr-weak-all');
+            if (!box || !currentUser || currentUser.isAdmin) return;
+            let d;
+            try { d = await (await fetch(`${API_URL}/api/student/weakness?student_name=${encodeURIComponent(currentUser.name)}`)).json(); }
+            catch (e) { return; }
+            if (!d || !d.success || !(d.weak || []).length || (d.tasks || 0) < 2) return;
+            const tone = { down: 'text-rose-300', up: 'text-emerald-300', new: 'text-amber-300', same: 'text-gray-400' };
+            box.innerHTML = `<div class="border-t border-gray-700 pt-2">
+                <p class="text-[13px] font-black text-white mb-0.5">📈 요즘 내가 자주 틀리는 부분 <span class="text-[11px] font-normal text-gray-400">(과제 · 퀴즈 · 모의고사 ${d.tasks}개를 모아서)</span></p>
+                ${d.weak.map((w, i) => `<div class="flex items-center justify-between gap-2 py-1 text-[12.5px]">
+                    <span class="text-gray-100"><b class="text-amber-300 mr-1">${i + 1}</b>${escapeHtml(w.tag)}</span>
+                    <span class="shrink-0 text-gray-300">정답률 <b class="text-white">${w.correct_rate == null ? '-' : w.correct_rate + '%'}</b>${w.trend_label ? ` · <span class="${tone[w.trend] || 'text-gray-400'}">${escapeHtml(w.trend_label)}</span>` : ''}</span>
+                </div>`).join('')}
+                <p class="text-[11px] text-sky-200 mt-1">💡 <b>${escapeHtml(d.weak[0].tag)}</b> 문제는 해설을 보고 오답 정리를 꼭 하고, 모르면 선생님께 질문해요.</p>
+                ${(d.strong || []).length ? `<p class="text-[11px] text-emerald-300 mt-0.5">👍 잘하는 부분: ${d.strong.map(x => escapeHtml(x.tag)).join(' · ')}</p>` : ''}
+            </div>`;
+        }
+
         function showOmrResult(d) {
             OMR_RESULT = d;
             d.reasons = d.reasons || {};
@@ -14685,12 +14744,14 @@ let lavUid = 0;
             document.getElementById('hw-omr-result').innerHTML = `
                 <div class="bg-[#151922] border border-emerald-700 rounded-xl p-3">
                     <p class="text-emerald-300 font-black text-lg text-center mb-1">${d.correct} / ${total}문항 맞음 (${d.score}점)</p>
+                    ${omrWeakHtml(d, total)}
                     ${twinGuide}${twinButtonsHtml(d.twin_set, twinWrongs, HW_OMR.title)}
                     ${unsureNote}
                     <p class="text-[11px] text-gray-500 text-center mb-2">문항을 누르면 해설을 볼 수 있어요. 틀린 답은 위에서 고쳐 다시 낼 수 있어요.</p>
                     <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-40 overflow-y-auto">${grid}</div>
                     <div id="hw-omr-explain" class="hidden mt-2 bg-[#1e2430] border border-gray-600 rounded-lg p-3"></div>
                 </div>`;
+            loadMyWeakness();
         }
 
         function showOmrExplain(no) {
@@ -14718,6 +14779,7 @@ let lavUid = 0;
                     isUnsure, understood: (d.understood || {})[String(no)],
                     lockedNote: d.expl_locked ? '해설은 마감 뒤에 열려요. 그때 다시 확인해 주세요.' : '' })}`;
             box.classList.remove('hidden');
+            try { box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
         }
 
         async function submitHomeworkOmr() {
