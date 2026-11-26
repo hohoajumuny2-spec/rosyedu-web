@@ -14655,13 +14655,21 @@ let lavUid = 0;
         function omrWeakHtml(d, total) {
             const meta = d.meta || {};
             const bad = new Set([...(d.wrongs || []), ...(d.unsure || [])].map(Number));
-            if (!bad.size) return '';
+            const items = [];
+            for (let i = 1; i <= total; i++) items.push({ no: i, tag: (meta[String(i)] || {}).tag, bad: bad.has(i) });
+            return weakPartsHtml(items, 'showOmrExplain', 'hw-omr-weak-all', '이번 과제에서');
+        }
+
+        // 퀴즈 · 모의고사도 같은 칸 — items: [{no, tag, bad}], jump: 번호를 눌렀을 때 부를 함수 이름
+        function weakPartsHtml(items, jump, allBoxId, where) {
+            if (!items.some(x => x.bad)) return '';
             const by = {}; let untagged = 0;
-            for (let i = 1; i <= total; i++) {
-                const tag = String((meta[String(i)] || {}).tag || '').trim();
-                if (!tag) { if (bad.has(i)) untagged++; continue; }
+            for (const it of items) {
+                const i = Number(it.no);
+                const tag = String(it.tag || '').trim();
+                if (!tag) { if (it.bad) untagged++; continue; }
                 const t = by[tag] || (by[tag] = { tag, n: 0, nos: [] });
-                t.n++; if (bad.has(i)) t.nos.push(i);
+                t.n++; if (it.bad) t.nos.push(i);
             }
             const rows = Object.values(by).filter(t => t.nos.length)
                 .sort((a, b) => b.nos.length - a.nos.length || (a.n - a.nos.length) / a.n - (b.n - b.nos.length) / b.n);
@@ -14676,21 +14684,35 @@ let lavUid = 0;
                         <span class="text-[12px] text-gray-300 shrink-0">${t.n}문항 중 <b class="text-rose-300">${t.nos.length}개</b> 틀림</span>
                     </div>
                     <div class="h-1.5 bg-rose-900/60 rounded-full overflow-hidden mt-1"><div class="h-full bg-emerald-500" style="width:${rate}%"></div></div>
-                    <div class="flex flex-wrap gap-1 mt-1">${t.nos.map(n => `<button onclick="showOmrExplain(${n})" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-900/50 border border-rose-700 text-rose-100">${n}번 해설</button>`).join('')}</div>
+                    <div class="flex flex-wrap gap-1 mt-1">${t.nos.map(n => `<button onclick="${jump}(${n})" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-900/50 border border-rose-700 text-rose-100">${n}번 해설</button>`).join('')}</div>
                 </div>`;
             };
             return `<div class="my-2 bg-[#1e2430] border border-rose-800/70 rounded-lg px-3 py-2 text-left">
-                <p class="text-[13px] font-black text-white mb-0.5">🎯 이번 과제에서 많이 틀린 부분</p>
+                <p class="text-[13px] font-black text-white mb-0.5">🎯 ${where} 많이 틀린 부분</p>
                 <p class="text-[11px] text-gray-400 mb-1">막대는 맞힌 비율이에요. 번호를 누르면 그 문항 해설이 열려요.</p>
                 <div class="divide-y divide-gray-700/70">${rows.slice(0, 4).map(line).join('')}</div>
-                ${rows.length > 4 ? `<p class="text-[11px] text-gray-500 mt-1">그 밖의 유형 ${rows.length - 4}개도 아래 번호판에서 볼 수 있어요.</p>` : ''}
-                ${untagged ? `<p class="text-[11px] text-gray-500 mt-1">유형이 아직 안 붙은 틀린 문항 ${untagged}개는 아래 번호판에서 확인해요.</p>` : ''}
-                <div id="hw-omr-weak-all" class="mt-2"></div>
+                ${rows.length > 4 ? `<p class="text-[11px] text-gray-500 mt-1">그 밖의 유형 ${rows.length - 4}개도 아래에서 볼 수 있어요.</p>` : ''}
+                ${untagged ? `<p class="text-[11px] text-gray-500 mt-1">유형이 아직 안 붙은 틀린 문항 ${untagged}개는 아래에서 확인해요.</p>` : ''}
+                <div id="${allBoxId}" class="mt-2"></div>
             </div>`;
         }
 
-        async function loadMyWeakness() {
-            const box = document.getElementById('hw-omr-weak-all');
+        function quizJumpTo(no) {
+            const el = document.getElementById(`qz-card-${no}`);
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-rose-400');
+            setTimeout(() => el.classList.remove('ring-2', 'ring-rose-400'), 1500);
+        }
+
+        function examJumpTo(no) {
+            showExamExplain(no);
+            const box = document.getElementById('exam-explain-box');
+            if (box) try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+        }
+
+        async function loadMyWeakness(boxId) {
+            const box = document.getElementById(boxId || 'hw-omr-weak-all');
             if (!box || !currentUser || currentUser.isAdmin) return;
             let d;
             try { d = await (await fetch(`${API_URL}/api/student/weakness?student_name=${encodeURIComponent(currentUser.name)}`)).json(); }
@@ -14751,7 +14773,7 @@ let lavUid = 0;
                     <div class="grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-40 overflow-y-auto">${grid}</div>
                     <div id="hw-omr-explain" class="hidden mt-2 bg-[#1e2430] border border-gray-600 rounded-lg p-3"></div>
                 </div>`;
-            loadMyWeakness();
+            loadMyWeakness('hw-omr-weak-all');
         }
 
         function showOmrExplain(no) {
@@ -15505,6 +15527,7 @@ let lavUid = 0;
                         </div>`;
 
                         html += questionStatsHtml(data.question_stats, det);
+                        html += weakPartsHtml(det.map(d => ({ no: d.no, tag: d.tag, bad: !d.ok || !!d.unsure })), 'examJumpTo', 'exam-weak-all', '이번 모의고사에서');
 
                         const wrongList = det.filter(d => !d.ok);
                         const unsureCount = det.filter(d => d.unsure).length;
@@ -15555,6 +15578,7 @@ let lavUid = 0;
                     }
                     if(data.explanation_text) html+=`<div class="bg-gray-800 p-4 text-sm whitespace-pre-wrap rounded border border-gray-700 leading-relaxed text-gray-300">${escapeHtml(data.explanation_text)}</div>`;
                     rEl.innerHTML=html;
+                    loadMyWeakness('exam-weak-all');
                     onXpGained(data.level_up);
                 } else {
                     // 이미 제출했다고 막힌 것이면 원장님께 부탁할 길을 준다
@@ -18775,6 +18799,7 @@ let lavUid = 0;
                 </div>`;
 
             html += questionStatsHtml(data.question_stats, det);
+            html += weakPartsHtml(det.map(d => ({ no: d.no, tag: d.tag, bad: !d.ok || !!d.unsure })), 'quizJumpTo', 'quiz-weak-all', '이번 퀴즈에서');
 
             if (!det.length) {
                 html += `<p class="text-gray-400 text-center py-6">채점 내역을 불러오지 못했습니다.</p>`;
@@ -18789,7 +18814,7 @@ let lavUid = 0;
                     html += `<p class="text-[11px] text-amber-300 mb-2">모르겠다고 표시한 문항 ${unsureN}개 — 해설을 꼭 보세요.</p>`;
                 }
                 html += '<div class="space-y-3 mb-6">' + det.map(d => `
-                    <div class="rounded-xl p-4 border ${d.unsure ? 'bg-amber-950/20 border-amber-900/60' : (d.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60')}">
+                    <div id="qz-card-${d.no}" class="rounded-xl p-4 border transition ${d.unsure ? 'bg-amber-950/20 border-amber-900/60' : (d.ok ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60')}">
                         <div class="flex items-start gap-2 mb-3">
                             <span class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${d.unsure ? 'bg-amber-600' : (d.ok ? 'bg-emerald-600' : 'bg-red-600')} text-white">${d.unsure ? '?' : (d.ok ? 'O' : 'X')}</span>
                             <p class="text-white text-sm font-bold leading-relaxed">${d.no}. ${escapeHtml(d.q_text || '')}</p>
@@ -18824,6 +18849,7 @@ let lavUid = 0;
             view.innerHTML = html;
             view.classList.remove('hidden');
             view.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            loadMyWeakness('quiz-weak-all');
         }
 
         // ═════════════════════════════════════════════
