@@ -2568,7 +2568,7 @@
                                 <button onclick="switchAdminTab('admin-overview')" id="btn-admin-overview" class="admin-nav-btn" title="키오스크 출결과 성적을 학생마다 한 줄로">한눈에 보기</button>
                                 <button onclick="switchAdminTab('admin-weak')" id="btn-admin-weak" class="admin-nav-btn" title="채점 결과로 학생마다 약한 유형 · 정답률 · 틀린 이유">약점 분석 🎯</button>
                                 <button onclick="switchAdminTab('admin-users')" id="btn-admin-users" class="admin-nav-btn">학생 명단</button>
-                                <button onclick="switchAdminTab('admin-nudge')" id="btn-admin-nudge" class="admin-nav-btn" title="연속 기록 · 빠진 학생 · 자동 재촉(앱 알림 · 카톡)">재촉 현황 🔥</button>
+                                <a href="https://logyedu.com/admin/study/nudge" target="_blank" rel="noopener" class="admin-nav-btn admin-nav-link" title="재촉 · 클리닉 카톡은 홈페이지 관리자로 옮겼습니다">재촉 · 클리닉 카톡 <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i></a>
                                 <span id="admin-dm-badge" class="hidden"></span>
                             </div>
                         </div>
@@ -3943,7 +3943,8 @@
         // ── 도구 모드 (2026-11-09) ─────────────────────────────
         //   logyedu.com 관리자 화면(알림·소식)이 이 사이트를 틀 안에 열어 한 메뉴만 쓴다.
         //   원장님 계정이면 logyedu.com 이 관리자 토큰을 보내 준다(postMessage) — 다시 로그인하지 않는다.
-        const TOOL_TABS = { counsel: 'admin-counsel', board: 'admin-board', generator: 'admin-generator', vocab: 'admin-vocab' };
+        // 💡 2026-11-26: 재촉 · 클리닉 카톡(admin-nudge)도 홈페이지(logyedu.com 관리자 → 재촉 · 클리닉 카톡)에서 연다
+        const TOOL_TABS = { counsel: 'admin-counsel', board: 'admin-board', generator: 'admin-generator', vocab: 'admin-vocab', nudge: 'admin-nudge' };
         const TOOL = (() => { try { const t = new URLSearchParams(location.search).get('tool'); return TOOL_TABS[t] ? t : ''; } catch (e) { return ''; } })();
         const TOOL_PARENTS = ['https://logyedu.com', 'https://www.logyedu.com'];
         if (TOOL) {
