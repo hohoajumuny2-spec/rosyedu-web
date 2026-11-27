@@ -6647,7 +6647,7 @@ let lavUid = 0;
             };
             const head = d.homeworks.map(h => `<th class="p-1.5 text-center align-bottom min-w-[76px]">
                 <div class="text-gray-200 font-bold text-[11px] leading-tight word-break-keep-all">${escapeHtml(h.title)}</div>
-                <div class="text-[10px] text-gray-500">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5)) : '마감 없음'}</div>
+                <div class="text-[10px] text-gray-500">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5).replace('T', ' ')) : '마감 없음'}</div>
                 <div class="text-[10px]"><span class="text-emerald-300">${h.counts.submitted + h.counts.late}</span><span class="text-gray-500">/${d.rows.length}</span>${h.counts.missing ? ` <span class="text-red-400">✕${h.counts.missing}</span>` : ''}</div></th>`).join('');
             const body = d.rows.map(row => `<tr class="border-t border-gray-800">
                 <td class="p-1.5 sticky left-0 bg-[#151922] whitespace-nowrap"><b class="text-white">${escapeHtml(row.name)}</b>${row.missing ? ` <span class="text-[10px] text-red-400">안 낸 것 ${row.missing}</span>` : ''}</td>
@@ -14254,7 +14254,7 @@ let lavUid = 0;
                         <input type="checkbox" class="hw-del-pick w-4 h-4 accent-red-500 shrink-0" data-t="${escAttr(h.title)}" ${HW_DEL.has(h.title) ? 'checked' : ''} onchange="toggleHwDelete(this); loadHwGradeBoard();" title="한 번에 지울 과제로 고르기">
                         <span class="text-[10px] px-2 py-0.5 rounded-full ${clinic ? 'bg-purple-900/60 text-purple-200' : 'bg-emerald-900/60 text-emerald-200'}">${clinic ? '🩺 클리닉' : '📚 수업'}</span>
                         <b class="text-white text-sm">${escapeHtml(h.title)}</b>
-                        <span class="ml-auto text-[11px] text-gray-400">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5)) : '마감 없음'}</span>
+                        <span class="ml-auto text-[11px] text-gray-400">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5).replace('T', ' ')) : '마감 없음'}</span>
                         <button onclick="deleteHomework('${escAttr(h.title)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
                     </div>
                     <div class="flex flex-wrap items-center gap-3 mt-1.5 text-[12px]">${ans}
