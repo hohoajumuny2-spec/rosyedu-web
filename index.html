@@ -3825,7 +3825,7 @@
                                 <button onclick="pickHwForDelete('past')" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded">☑ 마감 지난 과제 고르기</button>
                                 <button onclick="pickHwForDelete('all')" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded">☑ 보이는 과제 모두 고르기</button>
                                 <button onclick="pickHwForDelete('none')" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded">고르기 풀기</button>
-                                <button id="admin-hw-del-btn" onclick="deletePickedHomeworks()" class="hidden bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded"><i class="fa-solid fa-trash mr-1"></i>고른 과제 지우기 <span id="admin-hw-del-count"></span></button>
+                                <button id="admin-hw-del-btn" onclick="deletePickedHomeworks()" class="bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed" disabled title="과제 앞 체크칸으로 지울 과제를 고르세요"><i class="fa-solid fa-trash mr-1"></i>고른 과제 지우기 <span id="admin-hw-del-count"></span></button>
                             </div>
                             <div class="mt-2 flex gap-1.5 text-[12px]" role="tablist" aria-label="과제 종류">
                                 <button id="admin-hw-kind-all" onclick="setAdminHwKind('all')" class="admin-hw-kind px-3 py-1 rounded-full font-bold">전체</button>
@@ -14207,7 +14207,7 @@ let lavUid = 0;
 
         // ── 학년별 과제 · 클리닉 (2026-11-10) ─────────────────────
         //   학년을 누르면 그 학년에 나간 최근 과제마다 정답을 올렸는지, 낸 학생 · 안 낸 학생을 바로 본다.
-        let ADMIN_HW_GRADE = '', HW_GRADES = null;
+        let ADMIN_HW_GRADE = '', HW_GRADES = null, HW_GRADE_LIST = [];
         async function loadHwGrades() {
             const r = await adminGet('/api/admin/homework_by_grade');
             if (!r.ok) return;
@@ -14243,16 +14243,19 @@ let lavUid = 0;
             const kindName = kind === 'clinic' ? '클리닉 과제' : kind === 'class' ? '수업 과제' : '과제 · 클리닉';
             if (!list.length) { box.innerHTML = `<p class="text-[12px] text-gray-500 py-6 text-center">최근 45일 안에 ${escapeHtml(g)}에게 나간 ${kindName}가 없습니다.</p>`; return; }
             const nameChip = (n, cls) => `<span class="inline-block px-2 py-0.5 rounded-full text-[11px] ${cls}">${n}</span>`;
+            HW_GRADE_LIST = list;
             box.innerHTML = `<p class="text-[12px] text-gray-400">${escapeHtml(g)} 학생 ${d.students}명 · 최근 ${kindName} ${list.length}개</p>` + list.map(h => {
                 const clinic = h.kind === 'clinic';
                 const ans = h.question_count ? `<span class="text-emerald-300">✅ 정답 ${h.question_count}문항</span>`
                     : h.has_answer_file ? '<span class="text-sky-300">📄 해답 파일만</span>' : '<span class="text-amber-300 font-bold">⚠️ 정답 안 올림</span>';
                 const done = h.submitted.length;
-                return `<div class="rounded-xl border ${clinic ? 'border-purple-800/70' : 'border-gray-700'} bg-[#1b2030] p-3">
+                return `<div class="rounded-xl border ${HW_DEL.has(h.title) ? 'border-red-500' : clinic ? 'border-purple-800/70' : 'border-gray-700'} bg-[#1b2030] p-3">
                     <div class="flex flex-wrap items-center gap-2">
+                        <input type="checkbox" class="hw-del-pick w-4 h-4 accent-red-500 shrink-0" data-t="${escAttr(h.title)}" ${HW_DEL.has(h.title) ? 'checked' : ''} onchange="toggleHwDelete(this); loadHwGradeBoard();" title="한 번에 지울 과제로 고르기">
                         <span class="text-[10px] px-2 py-0.5 rounded-full ${clinic ? 'bg-purple-900/60 text-purple-200' : 'bg-emerald-900/60 text-emerald-200'}">${clinic ? '🩺 클리닉' : '📚 수업'}</span>
                         <b class="text-white text-sm">${escapeHtml(h.title)}</b>
                         <span class="ml-auto text-[11px] text-gray-400">${h.deadline ? '마감 ' + escapeHtml(h.deadline.slice(5)) : '마감 없음'}</span>
+                        <button onclick="deleteHomework('${escAttr(h.title)}')" class="text-red-400 text-xs bg-red-900/30 hover:bg-red-900/50 px-3 py-1 rounded transition">삭제</button>
                     </div>
                     <div class="flex flex-wrap items-center gap-3 mt-1.5 text-[12px]">${ans}
                         <span class="text-gray-300">낸 학생 <b class="${done === h.audience ? 'text-emerald-300' : 'text-white'}">${done}</b> / ${h.audience}명</span></div>
@@ -14344,8 +14347,8 @@ let lavUid = 0;
         function updateHwDeleteBtn() {
             const b = document.getElementById('admin-hw-del-btn');
             if (!b) return;
-            b.classList.toggle('hidden', !HW_DEL.size);
-            document.getElementById('admin-hw-del-count').innerText = HW_DEL.size ? `(${HW_DEL.size}개)` : '';
+            b.disabled = !HW_DEL.size;
+            document.getElementById('admin-hw-del-count').innerText = `(${HW_DEL.size}개)`;
         }
         function toggleHwDelete(cb) {
             cb.checked ? HW_DEL.add(cb.dataset.t) : HW_DEL.delete(cb.dataset.t);
@@ -14354,7 +14357,10 @@ let lavUid = 0;
             updateHwDeleteBtn();
         }
         function pickHwForDelete(which) {
-            const list = (ADMIN_HW_LIST || []).filter(hwVisibleNow);
+            // 학년별 화면이면 그 화면에 보이는 과제에서 고른다(마감 기준은 전체 목록의 같은 과제로 본다)
+            const list = ADMIN_HW_GRADE
+                ? (HW_GRADE_LIST || []).map(g => (ADMIN_HW_LIST || []).find(h => h.title === g.title) || { title: g.title, deadline: g.deadline })
+                : (ADMIN_HW_LIST || []).filter(hwVisibleNow);
             if (which === 'none') HW_DEL = new Set();
             else {
                 const add = which === 'past' ? list.filter(isHomeworkPast) : list;
@@ -14362,6 +14368,7 @@ let lavUid = 0;
                 add.forEach(h => HW_DEL.add(h.title));
             }
             loadAdminHWList();
+            if (ADMIN_HW_GRADE) loadHwGradeBoard();
         }
         async function deletePickedHomeworks() {
             const titles = [...HW_DEL];
@@ -14375,6 +14382,7 @@ let lavUid = 0;
             HW_DEL = new Set();
             showToast(`과제 ${r.data.count}개를 지웠습니다.`);
             loadAdminHWList();
+            if (ADMIN_HW_GRADE) loadHwGradeBoard();
         }
 
         // 마감이 지난 과제 (기한이 없는 과제는 원장님이 하나씩 숨긴다)
@@ -14937,7 +14945,7 @@ let lavUid = 0;
             return { ok: true, data: data };
         }
 
-        async function deleteHomework(title) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(title)}`,{method:'DELETE'}); loadAdminHWList(); hideLoader(); } }
+        async function deleteHomework(title) { if(confirm("삭제하시겠습니까?")) { showLoader("삭제 중..."); await fetch(`${API_URL}/api/admin/homework/${encodeURIComponent(title)}`,{method:'DELETE'}); loadAdminHWList(); if (ADMIN_HW_GRADE) loadHwGradeBoard(); hideLoader(); } }
 
         async function submitEssayGrade() {
             const t=document.getElementById('essay-topic').value, f=document.getElementById('essay-file').files[0];
