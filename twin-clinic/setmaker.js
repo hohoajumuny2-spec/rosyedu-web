@@ -15,6 +15,12 @@
  *   해설: …
  *   1-B. 유사 문제 …
  * 정답은 맨 뒤 '정답 모아보기' 줄 아래에 '1번 ④ / 1-A ② / 1-B ③'처럼 모아 적어도 된다.
+ *
+ * 2026-11-28: 유사 문제 번호를 1, 2, 3…으로 그냥 붙여도 된다 — 어느 원래 문제의 쌍둥이인지만 알려 주면 된다.
+ *   ① 머리줄:  '1번 유사 문제' · '[1번 쌍둥이]' · '원래 1번' · '원 1번의 쌍둥이' 처럼 한 줄 적고 그 아래에 1. 2. …
+ *              (다음 머리줄이 나올 때까지 그 아래 문제는 모두 그 원래 문제의 쌍둥이)
+ *   ② 꼬리표:  '3. (1번 유사) 다음 중 …' 처럼 문제 앞에 (원래 번호) 를 붙이기
+ *   맨 뒤 '정답 모아보기'의 번호는 그 파일에 적힌 번호(1, 2, 3…) 그대로 적으면 된다(유사 문제만 있는 파일).
  */
 window.TwinSet = (function () {
   const C = "①②③④⑤";
@@ -24,6 +30,11 @@ window.TwinSet = (function () {
   const BOX = /^\s*[〈<＜]\s*보\s*기\s*[〉>＞]\s*/;
   const PASSAGE = /^\s*지문\s*[:：]\s*(.+)$/;                   // '지문: 정보 시스템 접근' 양식
   const ORIG = /^\s*원\s*(\d{1,3})\s*번\s*의?\s*(쌍둥이|유사)/;     // '원 3번의 쌍둥이' — 원래 문제 없이 유사 문제만
+  // 머리줄: '1번 유사 문제' · '[1번 쌍둥이]' · '<1번 변형 문항>' · '(원래 1번)' · '원래 문제 1번' — 그 아래 1. 2. …는 이 번호의 쌍둥이
+  const HEAD = /^\s*[\[【<〈(（]?\s*(?:원래?\s*(?:문제\s*|문항\s*)?)?(\d{1,3})\s*번\s*(?:문제|문항)?\s*(?:의|에\s*대한)?\s*(?:(?:쌍둥이|유사|변형)\s*(?:문제|문항)?\s*(?:\d+\s*개)?)?\s*[\]】>〉)）]?\s*[:：]?\s*$/;
+  const HEAD_NEEDS = /쌍둥이|유사|변형|원래?/;
+  // 꼬리표: '3. (1번 유사) 다음 중…' · '3. [원 1번] …'
+  const TAG = /^[\[【(（<〈]\s*(?:원래?\s*)?(\d{1,3})\s*번\s*(?:의)?\s*(?:쌍둥이|유사|변형)?\s*(?:문제|문항)?\s*[\]】)）>〉]\s*/;
   const EXP_TAIL = /^\s*(\d{1,3}(?:\s*-\s*[A-Da-d])?)\s*[.)．]\s*(?:\[?정답\]?\s*[:：]?\s*)?([①②③④⑤]|[1-5](?![\d.]))?\s*(.*)$/;
 
   function ansOf(s) {
@@ -53,11 +64,23 @@ window.TwinSet = (function () {
   function parse(text) {
     const lines = String(text || "").replace(/\r/g, "").split("\n");
     const passages = [], items = [], key = {}, warn = [], tailEx = {};
-    let title = "", pass = null, cur = null, mode = "", tail = "";
+    let title = "", pass = null, cur = null, mode = "", tail = "", twinFor = 0;
+    const alias = {};   // 파일에 적힌 번호(1, 2, 3…) → 쌍둥이 vid('1-A') — 정답 모아보기 채우기용
+    function addVariant(baseNo, stem, plainNo) {
+      let base = items.find(x => x.no === baseNo);
+      if (!base) { base = baseOnly(baseNo, pass ? pass.id : ""); items.push(base); }
+      const q = newQ(stem, pass ? pass.id : base.passage);
+      q.vid = baseNo + "-" + "ABCDEFGH"[Math.min(base.variants.length, 7)];
+      if (base.variants.length >= 4) warn.push(baseNo + "번 쌍둥이가 4개를 넘습니다. 앞의 4개만 씁니다.");
+      if (plainNo) { q.plainNo = plainNo; alias[String(plainNo)] = q.vid; }
+      base.variants.push(q);
+      return q;
+    }
 
-    // 제목: 첫 줄이 지문 · 문항 시작이 아니면
+    // 제목: 첫 줄이 지문 · 문항 · 쌍둥이 머리줄이 아니면
+    const isHead = l => HEAD.test(l) && HEAD_NEEDS.test(l);
     const fi = lines.findIndex(l => l.trim());
-    if (fi >= 0 && !RANGE.test(lines[fi]) && !Q.test(lines[fi]) && lines[fi].trim().length <= 80) { title = lines[fi].trim(); lines.splice(fi, 1); }
+    if (fi >= 0 && !RANGE.test(lines[fi]) && !Q.test(lines[fi]) && !isHead(lines[fi]) && !ORIG.test(lines[fi]) && lines[fi].trim().length <= 80) { title = lines[fi].trim(); lines.splice(fi, 1); }
 
     for (const raw of lines) {
       const l = raw.trim();
@@ -83,8 +106,9 @@ window.TwinSet = (function () {
         passages.push(pass); mode = "passage"; cur = null; continue;
       }
       if (mode === "passage" && pass && !pass.lead && !pass.paras.some(Boolean) && /^(다음|윗글|아래)/.test(l) && /읽고|물음/.test(l)) { pass.lead = l; continue; }
-      if ((m = l.match(ORIG))) {
+      if ((m = l.match(ORIG)) || (isHead(l) && (m = l.match(HEAD)))) {
         if (!items.some(x => x.no === +m[1])) items.push(baseOnly(+m[1], pass ? pass.id : ""));
+        twinFor = +m[1];      // 이 아래 1. 2. …는 이 번호의 쌍둥이
         mode = ""; cur = null; continue;
       }
       if ((m = l.match(RANGE))) {
@@ -105,6 +129,11 @@ window.TwinSet = (function () {
           cur.vid = m[1] + "-" + m[2].toUpperCase();
           base.variants.push(cur); mode = "q"; continue;
         }
+      }
+      if ((m = l.match(Q)) && (twinFor || TAG.test(m[2])) && (mode !== "passage" || /[?？]|것은|고른|쓰시오|하시오|\[3점\]|^[\[【(（<〈]/.test(m[2]))) {
+        const t = m[2].match(TAG);
+        cur = addVariant(t ? +t[1] : twinFor, t ? m[2].replace(TAG, "") : m[2], +m[1]);
+        mode = "q"; continue;
       }
       if ((m = l.match(Q))) {
         const no = +m[1];
@@ -133,8 +162,14 @@ window.TwinSet = (function () {
       const e = tailEx[k];
       if (e) { if (!q.answer && e.a) q.answer = e.a; if (!q.explain && e.t) q.explain = e.t.trim(); }
     };
-    for (const it of items) { if (!it.twinOnly) fill(it, String(it.no)); for (const v of it.variants) fill(v, v.vid); }
-    const clean = q => { const o = { ...q }; delete o._inBox; delete o._seenChoice; delete o._last; o.explain = o.explain.trim(); return o; };
+    // 1, 2, 3…으로 적은 쌍둥이는 정답 모아보기도 그 번호로 적었을 수 있다(원래 문제가 같이 없는 파일일 때만 — 번호가 겹치지 않게)
+    const plainNos = items.flatMap(it => it.variants.map(v => v.plainNo).filter(Boolean));
+    const onlyTwins = items.every(it => it.twinOnly) && new Set(plainNos).size === plainNos.length;   // 번호가 겹치면(머리줄마다 1부터) 번호로는 안 채운다
+    for (const it of items) {
+      if (!it.twinOnly) fill(it, String(it.no));
+      for (const v of it.variants) { fill(v, v.vid); if (onlyTwins && v.plainNo) fill(v, String(v.plainNo)); }
+    }
+    const clean = q => { const o = { ...q }; delete o._inBox; delete o._seenChoice; delete o._last; delete o.plainNo; o.explain = o.explain.trim(); return o; };
     const outItems = items.map(it => ({ ...clean(it), variants: it.variants.map(clean) })).sort((a, b) => a.no - b.no);
     const outPass = passages.map((p, i) => {
       const paras = []; let buf = [];
@@ -150,7 +185,7 @@ window.TwinSet = (function () {
       const name = it.no + "번";
       if (!it.twinOnly && it.choices.some(c => !c)) warn.push(name + ": 선택지 ①~⑤가 다 있지 않습니다.");
       if (!it.twinOnly && !it.answer) warn.push(name + ": 정답이 없습니다.");
-      if (!it.variants.length) warn.push(name + ": 유사 문제가 없습니다. (" + it.no + "-A. 처럼 붙여 주세요)");
+      if (!it.variants.length) warn.push(name + ": 유사 문제가 없습니다. (" + it.no + "-A. 처럼 붙이거나, '" + it.no + "번 유사 문제' 줄 아래에 적어 주세요)");
       for (const v of it.variants) {
         if (v.choices.some(c => !c)) warn.push(v.vid + ": 선택지 ①~⑤가 다 있지 않습니다.");
         if (!v.answer) warn.push(v.vid + ": 정답이 없습니다.");
