@@ -1,16 +1,24 @@
-const CACHE_NAME = 'logyedu-app-v3';
+// 💡 2026-11-28: v4 — 예전(v3)에는 모든 요청(학생 앱 서버 자료 · PDF · 그림)을 캐시에 쌓아
+//    휴대폰 저장 공간이 차면 브라우저가 사이트 자료(로그인 포함)를 통째로 지워 학생이 '튕겼다'.
+//    이제 앱 껍데기(화면 · 스타일 · 아이콘)만 캐시하고, 이름을 바꿔 쌓인 예전 캐시를 지운다.
+const CACHE_NAME = 'logyedu-app-v4';
 const urlsToCache = [
   './index.html',
   './tailwind.css',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
+// 캐시해 두는 것: 이 사이트의 화면 · 스타일 · 아이콘 · 매니페스트만(주소 끝으로 판단)
+const SHELL = /(\/|\.html|\.css|manifest\.json|icon-\d+\.png)$/;
 
 self.addEventListener('install', event => {
   // 💡 새 서비스워커를 받는 즉시 활성화 (기존 탭이 닫힐 때까지 기다리지 않음)
   self.skipWaiting();
+  // 하나가 실패해도 새 워커는 꼭 설치되게(그래야 예전 캐시를 지운다)
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then(cache => Promise.all(urlsToCache.map(u => cache.add(u).catch(() => {}))))
   );
 });
 
@@ -54,17 +62,25 @@ self.addEventListener('notificationclick', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // 💡 네트워크 우선(Network First) 전략으로 변경.
-  // 예전에는 캐시 우선이라, 새 버전을 배포해도 한 번 방문한 기기(특히 홈 화면에 추가한 PWA)는
-  // index.html을 계속 예전 버전으로만 보여주는 문제가 있었음.
-  // 이제는 항상 최신 버전을 먼저 시도하고, 오프라인이거나 네트워크 실패 시에만 캐시를 사용.
+  const req = event.request;
+  // 💡 학생 앱 서버(onrender) 요청 · 다른 사이트 · POST 등은 건드리지 않고 그대로 보낸다(캐시에 쌓지 않음)
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  const isPage = req.mode === 'navigate';
+  if (!isPage && !SHELL.test(url.pathname)) return;
+  // 네트워크 우선: 새로 배포한 화면을 바로 받고, 인터넷이 끊겼을 때만 캐시로 연다
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        if (response && response.ok && response.type === 'basic') {
+          const clone = response.clone();
+          // 페이지는 주소(?code= 등)와 상관없이 index.html 한 칸에만 둔다 — 캐시가 늘어나지 않게
+          const key = isPage ? './index.html' : req;
+          caches.open(CACHE_NAME).then(cache => cache.put(key, clone)).catch(() => {});
+        }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => caches.match(isPage ? './index.html' : req).then(r => r || caches.match('./index.html')))
   );
 });
