@@ -14332,6 +14332,10 @@ let lavUid = 0;
             const t = escAttr(h.title);
             const target = ((h.target_classes || []).length || (h.target_students || []).length) ? boardTargetLabel(h) : '전체 학생';
             const facts = [h.question_count ? `${h.question_count}문항 · OMR 자동 채점` : '정답표 없음 · 파일 제출'];
+            // 💡 2026-11-28 원장님: 과제를 올린 날짜도 보이게
+            const up = String(h.created_at || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+            const upLabel = up ? (() => { const d = new Date(+up[1], +up[2] - 1, +up[3]);
+                return `${+up[2]}/${+up[3]}(${'일월화수목금토'[d.getDay()]}) ${up[4]}:${up[5]}`; })() : '';
             if (h.answer_file) facts.push(`<a href="${API_URL}${encodeURI(h.answer_file)}" target="_blank" rel="noopener" class="text-sky-300 hover:underline">해답 파일</a>`);
             if (h.has_paper) facts.push(`<a href="${API_URL}/api/homework/paper?title=${encodeURIComponent(h.title)}" target="_blank" rel="noopener" class="text-indigo-300 hover:underline">📄 문제지</a>`);
             if (h.group) facts.push(`<span class="text-amber-200/90" title="학생 화면에서 이 묶음 게시물 안에 함께 보입니다">📦 ${escapeHtml(h.group)}</span>`);
@@ -14358,6 +14362,7 @@ let lavUid = 0;
                             ${hwDdayBadge(h)}
                             <span class="text-gray-500">·</span>
                             <span class="text-amber-200" title="이 과제를 받는 대상">🎯 ${escapeHtml(target)}</span>
+                            ${upLabel ? `<span class="text-gray-500">·</span><span class="text-gray-300" title="과제를 올린 날짜">📤 ${upLabel} 올림</span>` : ''}
                         </div>
                         <div class="mt-1 text-[11px] text-gray-400 flex flex-wrap gap-x-2">${facts.join('<span class="text-gray-600">·</span>')}</div>
                     </div>
