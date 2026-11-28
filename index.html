@@ -2266,9 +2266,20 @@
                     <!-- 💡 과제 · 클리닉 질문: 어느 과제 몇 번인지 달면 선생님이 해설 · 영상으로 답해 준다 -->
                     <div id="qna-task-row" class="hidden flex flex-wrap items-center gap-2 mb-2">
                         <label for="qna-task" class="sr-only">과제</label>
-                        <select id="qna-task" class="flex-1 min-w-[10rem] p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm"></select>
-                        <label class="flex items-center gap-1 text-sm text-gray-300"><input id="qna-qnum" type="number" min="1" max="200" placeholder="번호" class="w-20 p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm"> 번</label>
+                        <select id="qna-task" onchange="QNA_QNUM_PICK = new Set(); renderQnaPick()" class="flex-1 min-w-[10rem] p-2 bg-gray-800 text-white rounded border border-gray-600 text-sm"></select>
+                        <input id="qna-qnum" type="hidden">
                         <label class="flex items-center gap-1.5 text-[12px] text-amber-200 cursor-pointer"><input type="checkbox" id="qna-private" checked class="w-4 h-4 accent-amber-500"> 선생님께만 보이게</label>
+                    </div>
+                    <!-- 💡 2026-11-28 원장님: 과제 · 클리닉 질문은 ① 문항을 (여러 개) 고르고 ② 왜 질문하는지 이유를 고른다 -->
+                    <div id="qna-pick-row" class="hidden mb-3 space-y-3">
+                        <div>
+                            <p class="text-[12px] font-bold text-gray-200 mb-1.5">① 질문할 문항 <span class="font-normal text-gray-500">여러 개 골라도 돼요 · <span class="text-rose-300">빨간 번호</span>는 내가 틀린 문항</span></p>
+                            <div id="qna-qnums" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                        <div>
+                            <p class="text-[12px] font-bold text-gray-200 mb-1.5">② 왜 질문하나요? <span class="font-normal text-gray-500">해당하는 것을 모두 골라요</span></p>
+                            <div id="qna-reasons" class="flex flex-wrap gap-1.5"></div>
+                        </div>
                     </div>
                     <label for="qna-text" class="sr-only">질문 내용</label>
                     <textarea id="qna-text" rows="3" placeholder="모르는 문제나 궁금한 것을 적어 주세요. 문제를 캡처했다면 여기서 Ctrl+V 로 붙여넣을 수 있어요." class="w-full p-3 bg-[#151922] text-white rounded-lg border border-gray-600 focus:border-rose-500 outline-none text-sm resize-y"></textarea>
@@ -3793,7 +3804,8 @@
                                 <p class="text-[11px] text-gray-400 mt-0.5">여기를 누르거나, 캡처한 뒤 이 칸에서 <b class="text-gray-300">Ctrl+V</b></p>
                                 <p class="text-[10px] text-gray-500 mt-0.5">문항별 정답과 해설을 한 번에 읽어옵니다 (해설이 적혀 있으면 함께)</p>
                             </div>
-                            <label class="text-[11px] text-gray-400 block mb-1">해답지 · 해설지 파일 (선택) — <b class="text-sky-300">PDF · 사진이면 AI가 문항별 해설을 자동으로 채웁니다</b></label>
+                            <label class="text-[11px] text-gray-400 block mb-1">해답지 · 해설지 파일 (선택) — <b class="text-sky-300">PDF · 사진이면 AI가 문항별 해설을 자동으로 채웁니다</b>
+                                · 배포하면 파일 글(PDF · 워드 · hwpx · txt)과 정답 · 해설이 <b class="text-emerald-300">문제 보관함(출제 화면 오른쪽)</b>에 자동으로 저장됩니다</label>
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="const f = this.files && this.files[0]; handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual'); readHwExplFile(f);">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <!-- 💡 2026-11-18: 원장님이 만든 유사 문제(원래 문제 + 1-A. 1-B.)를 과제에 붙인다. 채점 뒤 틀린 문항의 유사 문제 버튼이 나온다 -->
@@ -4562,8 +4574,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <div class="flex justify-between items-center gap-2">
                                 <button onclick="viewGeneratedQuestion(${i})" class="text-left min-w-0 flex-grow">
                                     <div class="text-yellow-400 font-bold truncate hover:underline"><span class="text-[10px] text-indigo-300 font-normal">[${subjLabel}]</span> ${escapeHtml(q.title)}</div>
-                                    <div class="text-[10px] text-gray-500">${escapeHtml(when)}${q.updated_at ? ' 수정' : ''}${on ? ' · 편집 중' : ''}</div>
+                                    <div class="text-[10px] text-gray-500">${escapeHtml(when)}${q.updated_at ? ' 수정' : ''}${on ? ' · 편집 중' : ''}${q.origin === 'homework_file' ? ' · <span class="text-sky-300">📎 과제 파일에서 자동 저장</span>' : q.origin === 'homework_paste' ? ' · <span class="text-sky-300">📋 과제에서 저장</span>' : ''}</div>
                                 </button>
+                                ${q.file_url ? `<a href="${API_URL}${encodeURI(q.file_url)}" target="_blank" rel="noopener" title="${escAttr(q.file_name || '원본 파일')}" class="shrink-0 text-sky-300 text-xs font-bold bg-sky-900/40 hover:bg-sky-900/70 px-2 py-1 rounded transition">원본</a>` : ''}
                                 <div class="shrink-0 flex gap-1">
                                     <button onclick="viewGeneratedQuestion(${i})" class="text-emerald-300 text-xs font-bold bg-emerald-900/40 hover:bg-emerald-900/70 px-3 py-1 rounded transition">수정</button>
                                     <button onclick="deleteGeneratedQuestion('${escAttr(q.id)}')" class="text-red-400 text-xs font-bold hover:text-red-300 bg-red-900/40 px-3 py-1 rounded transition">삭제</button>
@@ -8587,7 +8600,11 @@ let lavUid = 0;
             if (!currentUser) return showModal('auth');
             const text = document.getElementById('qna-text').value.trim();
             const imgs = QNA_IMAGES.post || [];
-            if (!text && !imgs.length) return alert('질문 내용을 적거나 사진을 올려 주세요.');
+            const topicNow = document.getElementById('qna-topic').value;
+            if (topicNow) {
+                if (!QNA_REASON_PICK.size) return alert('② 왜 질문하는지 이유를 하나 이상 골라 주세요.');
+                if (QNA_REASON_PICK.has('etc') && !text) return alert("'기타'를 골랐다면 무엇이 궁금한지 적어 주세요.");
+            } else if (!text && !imgs.length) return alert('질문 내용을 적거나 사진을 올려 주세요.');
             const fd = new FormData();
             fd.append('student_name', currentUser.name || '');
             fd.append('school', currentUser.school || ''); fd.append('grade', currentUser.grade || '');
@@ -8597,7 +8614,10 @@ let lavUid = 0;
             if (topic) {
                 fd.append('topic', topic);
                 fd.append('task_title', document.getElementById('qna-task').value || '');
-                fd.append('qnum', document.getElementById('qna-qnum').value || '');
+                const nums = [...QNA_QNUM_PICK].sort((a, b) => a - b);
+                fd.append('qnum', nums.length ? String(nums[0]) : '');
+                fd.append('qnums', nums.join(','));
+                fd.append('reasons', [...QNA_REASON_PICK].join(','));
                 fd.append('private', document.getElementById('qna-private').checked ? '1' : '');
             }
             imgs.forEach((f, i) => fd.append('images', f, `photo${i + 1}.jpg`));
@@ -8611,6 +8631,7 @@ let lavUid = 0;
             if (!d || !d.success) return alert('질문을 올리지 못했습니다. ' + ((d && d.detail) || ''));
             document.getElementById('qna-text').value = '';
             document.getElementById('qna-qnum').value = '';
+            QNA_QNUM_PICK = new Set(); QNA_REASON_PICK = new Set(); renderQnaPick();
             QNA_IMAGES.post = []; renderQnaThumbs('post');
             showToast(topic && document.getElementById('qna-private').checked
                 ? '선생님께 질문을 보냈어요. 해설이나 영상으로 답이 오면 알려 드릴게요.'
@@ -8678,11 +8699,65 @@ let lavUid = 0;
         function onQnaTopicChange(pick) {
             const topic = document.getElementById('qna-topic').value;
             document.getElementById('qna-task-row').classList.toggle('hidden', !topic);
+            document.getElementById('qna-pick-row').classList.toggle('hidden', !topic);
             document.getElementById('qna-private').checked = !!topic;
             document.getElementById('qna-who-hint').innerText = topic
-                ? '선생님이 해설이나 영상으로 답해 드려요. 몇 번인지 적어 주면 더 빨라요.'
+                ? '선생님이 해설이나 영상으로 답해 드려요. 문항과 이유를 골라 주면 더 빨라요.'
                 : '학원 친구들과 선생님이 모두 보고 답해 줄 수 있어요.';
-            if (topic) fillQnaTasks(topic, pick);
+            if (topic) fillQnaTasks(topic, pick).then(renderQnaPick);
+        }
+        // ── 과제 질문: 문항 여러 개 · 질문 이유 고르기 (2026-11-28) ── 열쇠는 서버 QNA_REASONS 와 같다
+        const QNA_REASON_LIST = [
+            ['expl', '해설을 봐도 이해가 안 돼요'], ['why_answer', '정답이 왜 정답인지 모르겠어요'],
+            ['why_wrong', '내 답이 왜 틀렸는지 모르겠어요'], ['passage', '지문(글) 내용이 이해가 안 돼요'],
+            ['choice', '선택지 뜻이 헷갈려요'], ['concept', '개념 · 어휘를 모르겠어요'],
+            ['answer_error', '정답이 잘못된 것 같아요'], ['etc', '기타 (직접 적을게요)'],
+        ];
+        let QNA_QNUM_PICK = new Set(), QNA_REASON_PICK = new Set();
+        function qnaTaskInfo() {
+            const title = (document.getElementById('qna-task') || {}).value || '';
+            const list = (typeof STUDENT_HW_LIST !== 'undefined' && STUDENT_HW_LIST) || [];
+            const hw = list.find(h => h.title === title) || {};
+            const rep = (typeof MY_HW_REPORTS !== 'undefined' && MY_HW_REPORTS[title]) || null;
+            const wrong = new Set(((rep && (rep.wrongs || rep.first_wrongs)) || []).map(Number));
+            const count = Number(hw.question_count || (hw.answers || []).length || 0) || (wrong.size ? Math.max(...wrong) : 0);
+            return { title, count, wrong };
+        }
+        function toggleQnaQnum(n) { QNA_QNUM_PICK.has(n) ? QNA_QNUM_PICK.delete(n) : QNA_QNUM_PICK.add(n); renderQnaPick(); }
+        function toggleQnaReason(k) { QNA_REASON_PICK.has(k) ? QNA_REASON_PICK.delete(k) : QNA_REASON_PICK.add(k); renderQnaPick(); }
+        function pickQnaWrongs() { const { wrong } = qnaTaskInfo(); wrong.forEach(n => QNA_QNUM_PICK.add(n)); renderQnaPick(); }
+        function addQnaTypedNums(v) {
+            String(v || '').split(/[^0-9]+/).map(Number).filter(n => n > 0 && n < 1000).forEach(n => QNA_QNUM_PICK.add(n));
+            renderQnaPick();
+        }
+        function renderQnaPick() {
+            const box = document.getElementById('qna-qnums'), rbox = document.getElementById('qna-reasons');
+            if (!box || !rbox) return;
+            const { title, count, wrong } = qnaTaskInfo();
+            const chip = (on, cls) => `px-2.5 py-1 rounded-lg text-[12px] font-bold border transition ${on ? 'bg-violet-600 border-violet-400 text-white' : cls}`;
+            let h = '';
+            if (count) {
+                for (let n = 1; n <= count; n++) {
+                    const bad = wrong.has(n);
+                    h += `<button type="button" onclick="toggleQnaQnum(${n})" class="${chip(QNA_QNUM_PICK.has(n), bad ? 'bg-rose-950/60 border-rose-600 text-rose-200 hover:bg-rose-900/60' : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700')}">${n}</button>`;
+                }
+                if (wrong.size) h += `<button type="button" onclick="pickQnaWrongs()" class="px-2.5 py-1 rounded-lg text-[12px] font-bold bg-rose-700 hover:bg-rose-600 text-white">틀린 문항 모두 (${wrong.size})</button>`;
+                if (QNA_QNUM_PICK.size) h += `<button type="button" onclick="QNA_QNUM_PICK = new Set(); renderQnaPick()" class="px-2.5 py-1 rounded-lg text-[12px] text-gray-400 hover:text-white">고르기 풀기</button>`;
+            } else {
+                const picked = [...QNA_QNUM_PICK].sort((a, b) => a - b);
+                h += `<input type="text" inputmode="numeric" placeholder="${title ? '번호 (예: 3, 5)' : '과제를 고르면 번호가 나와요 · 직접 쓰기 (예: 3, 5)'}" onchange="addQnaTypedNums(this.value); this.value=''" class="w-56 p-1.5 px-2.5 bg-gray-800 text-white rounded border border-gray-600 text-[12px]">`
+                    + picked.map(n => `<button type="button" onclick="toggleQnaQnum(${n})" class="${chip(true, '')}">${n} ✕</button>`).join('');
+            }
+            box.innerHTML = h;
+            rbox.innerHTML = QNA_REASON_LIST.map(([k, label]) =>
+                `<button type="button" onclick="toggleQnaReason('${k}')" class="${chip(QNA_REASON_PICK.has(k), 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700')}">${QNA_REASON_PICK.has(k) ? '✓ ' : ''}${label}</button>`).join('');
+            const t = document.getElementById('qna-text');
+            if (t && document.getElementById('qna-topic').value) {
+                const nums = [...QNA_QNUM_PICK].sort((a, b) => a - b);
+                t.placeholder = QNA_REASON_PICK.has('etc')
+                    ? '무엇이 궁금한지 적어 주세요.'
+                    : `${nums.length ? nums.join(', ') + '번에 대해 ' : ''}더 하고 싶은 말이 있으면 적어 주세요(안 적어도 돼요). 내 풀이를 찍어 올리면 더 정확히 답해 드려요.`;
+            }
         }
         // 과제 카드 · 문항 해설에서 바로 '선생님께 질문하기'
         function askTeacher(title, no, kind, afterExplain) {
@@ -8692,10 +8767,11 @@ let lavUid = 0;
             const topic = kind === 'clinic' ? 'clinic' : 'homework';
             document.getElementById('qna-topic').value = topic;
             onQnaTopicChange(title || '');
-            document.getElementById('qna-qnum').value = no ? String(no) : '';
+            const nums = (Array.isArray(no) ? no : [no]).map(Number).filter(n => n > 0);
+            QNA_QNUM_PICK = new Set(nums); QNA_REASON_PICK = new Set(afterExplain ? ['expl'] : []);
+            document.getElementById('qna-qnum').value = nums.length ? String(nums[0]) : '';
+            renderQnaPick();
             const t = document.getElementById('qna-text');
-            t.placeholder = `${title ? `'${title}' ` : ''}${no ? no + '번 ' : ''}에서 무엇이 궁금한지 적어 주세요. 내 풀이를 찍어 올리면 더 정확히 답해 드려요.`;
-            if (afterExplain && !t.value.trim()) t.value = '해설을 봤는데도 이해가 안 돼요. ';
             setTimeout(() => { t.scrollIntoView({ behavior: 'smooth', block: 'center' }); t.focus(); }, 200);
         }
 
@@ -8758,7 +8834,9 @@ let lavUid = 0;
                         ${qnaImagesHtml(a.images)}
                         ${a.video_url ? `<button onclick="openExplainVideo('${escAttr(a.video_url)}')" class="mt-2 inline-flex items-center gap-1 text-[12px] font-bold bg-red-600/90 hover:bg-red-500 text-white rounded-full px-3 py-1"><i class="fa-solid fa-circle-play"></i>해설 영상 보기</button>` : ''}
                     </div>`).join('');
-                const about = p.topic ? `<span class="text-[11px] bg-violet-900/60 text-violet-200 px-2 py-0.5 rounded-full">${p.topic === 'clinic' ? '클리닉' : '과제'}${p.task_title ? ' · ' + escapeHtml(p.task_title) : ''}${p.qnum ? ' · ' + escapeHtml(String(p.qnum)) + '번' : ''}</span>` : '';
+                const about = p.topic ? `<span class="text-[11px] bg-violet-900/60 text-violet-200 px-2 py-0.5 rounded-full">${p.topic === 'clinic' ? '클리닉' : '과제'}${p.task_title ? ' · ' + escapeHtml(p.task_title) : ''}${(p.qnums && p.qnums.length) ? ' · ' + escapeHtml(p.qnums.join('·')) + '번' : (p.qnum ? ' · ' + escapeHtml(String(p.qnum)) + '번' : '')}</span>`
+ : '';
+                const reasonsHtml = (p.reasons || []).length ? `<div class="flex flex-wrap gap-1 mt-2">${p.reasons.map(r => `<span class="text-[11px] bg-rose-900/40 text-rose-200 border border-rose-800/60 px-2 py-0.5 rounded-full">🙋 ${escapeHtml(r)}</span>`).join('')}</div>` : '';
                 const lock = p.private ? '<span class="text-[11px] bg-amber-900/60 text-amber-200 px-2 py-0.5 rounded-full"><i class="fa-solid fa-lock mr-0.5"></i>선생님께만</span>' : '';
                 const teacherOk = p.teacher_answered ? '<span class="text-[11px] font-bold bg-sky-900/60 text-sky-200 px-2 py-0.5 rounded-full">선생님 답변</span>' : '';
                 const sharedN = (p.shared_with || []).length;
@@ -8783,7 +8861,7 @@ let lavUid = 0;
                 const admExtra = isAdm ? `
                             <div class="flex flex-wrap items-center gap-2 mt-2">
                                 <input id="qna-answer-video-${escAttr(p.id)}" type="url" placeholder="해설 영상 링크 (유튜브 등, 선택)" class="flex-1 min-w-[12rem] p-1.5 bg-gray-800 text-white text-[12px] rounded border border-gray-600 outline-none focus:border-red-400">
-                                ${(p.topic === 'homework' && p.task_title && p.qnum) ? `<label class="flex items-center gap-1 text-[11px] text-sky-200 cursor-pointer"><input type="checkbox" id="qna-answer-expl-${escAttr(p.id)}" class="accent-sky-500"> 이 답을 '${escapeHtml(p.task_title)}' ${escapeHtml(String(p.qnum))}번 해설에도 넣기 (모든 학생이 봄)</label>` : ''}
+                                ${(p.topic === 'homework' && p.task_title && p.qnum && (p.qnums || []).length <= 1) ? `<label class="flex items-center gap-1 text-[11px] text-sky-200 cursor-pointer"><input type="checkbox" id="qna-answer-expl-${escAttr(p.id)}" class="accent-sky-500"> 이 답을 '${escapeHtml(p.task_title)}' ${escapeHtml(String(p.qnum))}번 해설에도 넣기 (모든 학생이 봄)</label>` : ''}
                             </div>` : '';
                 return `<article class="bg-[#1e2430] border ${p.solved ? 'border-gray-700' : 'border-rose-700/50'} rounded-2xl p-5">
                     <div class="flex items-center justify-between gap-2">
@@ -8794,6 +8872,7 @@ let lavUid = 0;
                             ${p.solved ? '<span class="text-[11px] font-bold bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded-full">해결됨</span>' : ''}
                         </span>
                     </div>
+                    ${reasonsHtml}
                     ${p.text ? `<p class="text-white whitespace-pre-wrap mt-2">${escapeHtml(p.text)}</p>` : ''}
                     ${qnaImagesHtml(p.images)}
                     <div class="flex flex-wrap items-center gap-3 mt-3 text-sm">
