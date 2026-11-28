@@ -3804,7 +3804,8 @@
                                 <p class="text-[11px] text-gray-400 mt-0.5">여기를 누르거나, 캡처한 뒤 이 칸에서 <b class="text-gray-300">Ctrl+V</b></p>
                                 <p class="text-[10px] text-gray-500 mt-0.5">문항별 정답과 해설을 한 번에 읽어옵니다 (해설이 적혀 있으면 함께)</p>
                             </div>
-                            <label class="text-[11px] text-gray-400 block mb-1">해답지 · 해설지 파일 (선택) — <b class="text-sky-300">PDF · 사진이면 AI가 문항별 해설을 자동으로 채웁니다</b></label>
+                            <label class="text-[11px] text-gray-400 block mb-1">해답지 · 해설지 파일 (선택) — <b class="text-sky-300">PDF · 사진이면 AI가 문항별 해설을 자동으로 채웁니다</b>
+                                · 배포하면 파일 글(PDF · 워드 · hwpx · txt)과 정답 · 해설이 <b class="text-emerald-300">문제 보관함(출제 화면 오른쪽)</b>에 자동으로 저장됩니다</label>
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="const f = this.files && this.files[0]; handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual'); readHwExplFile(f);">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <!-- 💡 2026-11-18: 원장님이 만든 유사 문제(원래 문제 + 1-A. 1-B.)를 과제에 붙인다. 채점 뒤 틀린 문항의 유사 문제 버튼이 나온다 -->
@@ -4573,8 +4574,9 @@ body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-siz
                             <div class="flex justify-between items-center gap-2">
                                 <button onclick="viewGeneratedQuestion(${i})" class="text-left min-w-0 flex-grow">
                                     <div class="text-yellow-400 font-bold truncate hover:underline"><span class="text-[10px] text-indigo-300 font-normal">[${subjLabel}]</span> ${escapeHtml(q.title)}</div>
-                                    <div class="text-[10px] text-gray-500">${escapeHtml(when)}${q.updated_at ? ' 수정' : ''}${on ? ' · 편집 중' : ''}</div>
+                                    <div class="text-[10px] text-gray-500">${escapeHtml(when)}${q.updated_at ? ' 수정' : ''}${on ? ' · 편집 중' : ''}${q.origin === 'homework_file' ? ' · <span class="text-sky-300">📎 과제 파일에서 자동 저장</span>' : q.origin === 'homework_paste' ? ' · <span class="text-sky-300">📋 과제에서 저장</span>' : ''}</div>
                                 </button>
+                                ${q.file_url ? `<a href="${API_URL}${encodeURI(q.file_url)}" target="_blank" rel="noopener" title="${escAttr(q.file_name || '원본 파일')}" class="shrink-0 text-sky-300 text-xs font-bold bg-sky-900/40 hover:bg-sky-900/70 px-2 py-1 rounded transition">원본</a>` : ''}
                                 <div class="shrink-0 flex gap-1">
                                     <button onclick="viewGeneratedQuestion(${i})" class="text-emerald-300 text-xs font-bold bg-emerald-900/40 hover:bg-emerald-900/70 px-3 py-1 rounded transition">수정</button>
                                     <button onclick="deleteGeneratedQuestion('${escAttr(q.id)}')" class="text-red-400 text-xs font-bold hover:text-red-300 bg-red-900/40 px-3 py-1 rounded transition">삭제</button>
