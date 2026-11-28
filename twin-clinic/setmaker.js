@@ -21,6 +21,8 @@
  *              (다음 머리줄이 나올 때까지 그 아래 문제는 모두 그 원래 문제의 쌍둥이)
  *   ② 꼬리표:  '3. (1번 유사) 다음 중 …' 처럼 문제 앞에 (원래 번호) 를 붙이기
  *   맨 뒤 '정답 모아보기'의 번호는 그 파일에 적힌 번호(1, 2, 3…) 그대로 적으면 된다(유사 문제만 있는 파일).
+ *   ③ 차례대로: 머리줄 · 꼬리표 없이 1~56번만 적은 파일 + 원래 문제 수(28) → 1·2번은 원 1번, 3·4번은 원 2번 …
+ *              parse(text, {originals: 28}). 원래 문제 수를 모르면 결과의 plain(문제 수)을 보고 화면이 물어본다.
  */
 window.TwinSet = (function () {
   const C = "①②③④⑤";
@@ -61,7 +63,8 @@ window.TwinSet = (function () {
              explain: "", note: [], passage: passage || "", points: three ? 3 : 2, _inBox: false, _seenChoice: false, _last: -1 };
   }
 
-  function parse(text) {
+  function parse(text, opts) {
+    opts = opts || {};
     const lines = String(text || "").replace(/\r/g, "").split("\n");
     const passages = [], items = [], key = {}, warn = [], tailEx = {};
     let title = "", pass = null, cur = null, mode = "", tail = "", twinFor = 0;
@@ -162,6 +165,29 @@ window.TwinSet = (function () {
       const e = tailEx[k];
       if (e) { if (!q.answer && e.a) q.answer = e.a; if (!q.explain && e.t) q.explain = e.t.trim(); }
     };
+    // ③ 차례대로 묶기: 원래 문제 없이 1~N번만 적은 파일(머리줄 · 꼬리표 · 1-A 없음)
+    const plain = items.length > 0 && items.every(it => !it.twinOnly && !it.variants.length) ? items.length : 0;
+    let grouped = 0;
+    const M = parseInt(opts.originals, 10);
+    if (plain && M > 0) {
+      if (plain % M) warn.push(`유사 문제 ${plain}개를 원래 문제 ${M}개로 똑같이 나눌 수 없습니다. (원래 문제마다 같은 수만큼 적어 주세요)`);
+      else {
+        const k = plain / M;
+        if (k > 4) warn.push(`원래 문제마다 쌍둥이가 ${k}개입니다. 앞의 4개만 씁니다.`);
+        const qs = items.slice().sort((a, b) => a.no - b.no);
+        items.length = 0;
+        for (let g = 0; g < M; g++) {
+          const base = baseOnly(g + 1, qs[g * k].passage);
+          qs.slice(g * k, g * k + k).forEach((q, j) => {
+            q.plainNo = q.no; delete q.no; delete q.variants;
+            q.vid = (g + 1) + "-" + "ABCDEFGH"[Math.min(j, 7)];
+            base.variants.push(q);
+          });
+          items.push(base);
+        }
+        grouped = k;
+      }
+    }
     // 1, 2, 3…으로 적은 쌍둥이는 정답 모아보기도 그 번호로 적었을 수 있다(원래 문제가 같이 없는 파일일 때만 — 번호가 겹치지 않게)
     const plainNos = items.flatMap(it => it.variants.map(v => v.plainNo).filter(Boolean));
     const onlyTwins = items.every(it => it.twinOnly) && new Set(plainNos).size === plainNos.length;   // 번호가 겹치면(머리줄마다 1부터) 번호로는 안 채운다
@@ -192,7 +218,23 @@ window.TwinSet = (function () {
       }
     }
     const twinOnly = outItems.length > 0 && outItems.every(i => i.twinOnly);
-    return { bank: { title, passages: outPass, items: outItems, twinOnly }, warn };
+    // plain: 차례대로 묶을 수 있는 파일이면 그 문제 수(아직 안 묶었을 때만) · grouped: 원래 문제마다 몇 개씩 묶었나
+    return { bank: { title, passages: outPass, items: outItems, twinOnly }, warn, plain: grouped ? 0 : plain, grouped };
+  }
+
+  // 화면 도우미: 파일 글 → 세트. 1~N번만 적은 유사 문제 파일이면 원래 문제 수로 차례대로 묶는다.
+  //   known: 화면이 아는 원래 문제 수(과제 정답표 문항 수 등). 모르거나 나누어떨어지지 않으면 물어본다.
+  function parseAuto(text, known) {
+    let r = parse(text);
+    if (!r.plain) return r;
+    let M = parseInt(known, 10);
+    if (!(M > 0 && r.plain % M === 0 && r.plain >= M)) {
+      const guess = r.plain % 2 === 0 ? r.plain / 2 : r.plain;
+      const a = typeof prompt === "function" ? prompt(`이 파일에서 1~${r.plain}번 문제를 찾았습니다.\n원래 문제는 몇 문제인가요? (예: 28 → 1·2번은 원 1번, 3·4번은 원 2번 …)\n\n원래 문제와 유사 문제가 같은 파일에 있으면 [취소]를 누르세요.`, String(M > 0 ? M : guess)) : null;
+      M = parseInt(a, 10);
+      if (!(M > 0)) return r;
+    }
+    return parse(text, { originals: M });
   }
 
   // ── 워드(.docx) 읽기: 브라우저만으로 (라이브러리 없이) ──
@@ -313,5 +355,5 @@ window.TwinSet = (function () {
     return html;
   }
 
-  return { parse, readFile, printHTML, SAMPLE };
+  return { parse, parseAuto, readFile, printHTML, SAMPLE };
 })();

@@ -156,7 +156,7 @@ th{color:var(--muted);font-weight:500}
 </script>
 <!-- 문항은행: 파일을 더블클릭해 열 때도 동작하도록 JS로 함께 실음 -->
 <script src="banks/banks.js"></script>
-<script src="setmaker.js?v=20261128a"></script>
+<script src="setmaker.js?v=20261128b"></script>
 </head>
 <body>
 <div class="wrap">
@@ -433,7 +433,7 @@ async function drawSetBox(){
     const prev=document.getElementById("setPrev"), save=document.getElementById("setSave");
     save.disabled=true; NEWSET=null;
     try{
-      const {bank:b,warn}=window.TwinSet.parse(await window.TwinSet.readFile(f));
+      const {bank:b,warn}=window.TwinSet.parseAuto(await window.TwinSet.readFile(f));
       const t=document.getElementById("setTitle"); if(!t.value.trim()) t.value=b.title||f.name.replace(/\.[^.]+$/,"");
       const nv=b.items.reduce((a,i)=>a+i.variants.length,0);
       prev.innerHTML=`<div class="li"><b>문항 ${b.items.length}개</b><span>유사 문제 ${nv}개</span><span>지문 ${b.passages.length}개</span>${b.twinOnly?'<span class="pill ask">유사 문제만 — 클리닉 과제에 붙여 쓰는 세트</span>':""}</div>`+
