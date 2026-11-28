@@ -156,7 +156,7 @@ th{color:var(--muted);font-weight:500}
 </script>
 <!-- 문항은행: 파일을 더블클릭해 열 때도 동작하도록 JS로 함께 실음 -->
 <script src="banks/banks.js"></script>
-<script src="setmaker.js?v=20261118b"></script>
+<script src="setmaker.js?v=20261128b"></script>
 </head>
 <body>
 <div class="wrap">
@@ -420,7 +420,7 @@ let NEWSET=null;
 async function drawSetBox(){
   const box=document.getElementById("setBox"); if(!box) return;
   box.innerHTML=`<h3>새 세트 올리기 — 원래 문제 + 내가 만든 유사 문제</h3>
-    <p class="muted">워드(.docx)나 글(.txt) 파일을 고르세요. 문항마다 <b>정답:</b>을 적고, 그 아래에 <b>1-A.</b> <b>1-B.</b>처럼 유사 문제를 붙입니다. <a href="#" id="sampleDl">양식 내려받기</a></p>
+    <p class="muted">워드(.docx)나 글(.txt) 파일을 고르세요. 문항마다 <b>정답:</b>을 적고, 그 아래에 <b>1-A.</b> <b>1-B.</b>처럼 유사 문제를 붙입니다. 번호를 그냥 1, 2, 3…으로 붙여도 됩니다 — <b>'1번 유사 문제'</b>처럼 어느 문제의 쌍둥이인지 한 줄 적고 그 아래에 적거나, 문제 앞에 <b>(1번 유사)</b>를 붙이세요. <a href="#" id="sampleDl">양식 내려받기</a></p>
     <div class="row"><label class="f">세트 파일<input type="file" id="setFile" accept=".docx,.txt,text/plain"></label>
       <label class="f" for="setTitle">세트 제목<input id="setTitle" type="text" placeholder="예: 11월 2주 클리닉"></label>
       <label class="f" for="setSchool">학교 · 학년(선택)<input id="setSchool" type="text" placeholder="예: 미강고 2학년"></label></div>
@@ -433,7 +433,7 @@ async function drawSetBox(){
     const prev=document.getElementById("setPrev"), save=document.getElementById("setSave");
     save.disabled=true; NEWSET=null;
     try{
-      const {bank:b,warn}=window.TwinSet.parse(await window.TwinSet.readFile(f));
+      const {bank:b,warn}=window.TwinSet.parseAuto(await window.TwinSet.readFile(f));
       const t=document.getElementById("setTitle"); if(!t.value.trim()) t.value=b.title||f.name.replace(/\.[^.]+$/,"");
       const nv=b.items.reduce((a,i)=>a+i.variants.length,0);
       prev.innerHTML=`<div class="li"><b>문항 ${b.items.length}개</b><span>유사 문제 ${nv}개</span><span>지문 ${b.passages.length}개</span>${b.twinOnly?'<span class="pill ask">유사 문제만 — 클리닉 과제에 붙여 쓰는 세트</span>':""}</div>`+

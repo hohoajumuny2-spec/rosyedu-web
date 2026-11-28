@@ -564,7 +564,7 @@
         </div>
     </div>
 
-    <script src="twin-clinic/setmaker.js?v=20261118b" defer></script>
+    <script src="twin-clinic/setmaker.js?v=20261128b" defer></script>
     <!-- 📝 해설 나중에 붙이기 -->
     <div id="expl-modal" class="hidden fixed inset-0 z-[195] modal-bg flex items-stretch md:items-center justify-center md:p-4">
         <div class="bg-[#1e2430] rounded-none md:rounded-2xl w-full max-w-3xl h-full md:h-auto md:max-h-[92vh] shadow-2xl border-0 md:border border-sky-500 flex flex-col">
@@ -3796,7 +3796,7 @@
                             <input type="file" id="hw-ans-file" class="mb-2 text-white" onchange="const f = this.files && this.files[0]; handleFileSelect(event, hwFilesAdmin, 'hw-ans-file-visual'); readHwExplFile(f);">
                             <div id="hw-ans-file-visual" class="flex flex-wrap gap-2 mb-4"></div>
                             <!-- 💡 2026-11-18: 원장님이 만든 유사 문제(원래 문제 + 1-A. 1-B.)를 과제에 붙인다. 채점 뒤 틀린 문항의 유사 문제 버튼이 나온다 -->
-                            <label class="text-[11px] text-gray-400 block mb-1">👯 유사 문제 세트 (선택) — 원래 문제 아래에 <b class="text-gray-300">1-A. 1-B.</b>처럼 유사 문제를 적은 워드 · 글 파일.
+                            <label class="text-[11px] text-gray-400 block mb-1">👯 유사 문제 세트 (선택) — 원래 문제 아래에 <b class="text-gray-300">1-A. 1-B.</b>처럼, 또는 <b class="text-gray-300">'1번 유사 문제'</b> 줄 아래에 1. 2. …처럼 유사 문제를 적은 워드 · 글 파일.
                                 채점 뒤 처음에 틀린 문항의 <b class="text-rose-300">쌍둥이 문제 풀기 · 출력</b> 버튼이 나옵니다(답을 고쳐 다시 내도 그대로). <a href="twin-clinic/#teacher" target="_blank" rel="noopener" class="text-sky-300 underline">양식 · 학생 결과 보기 ↗</a></label>
                             <input type="file" id="hw-twin-file" accept=".docx,.txt,text/plain" class="mb-1 text-white" onchange="readHwTwinSet(this.files && this.files[0]); this.value='';">
                             <div id="hw-twin-status" class="text-[11px] text-gray-500 mb-4"></div>
@@ -13449,7 +13449,9 @@ let lavUid = 0;
             if (!f) return;
             if (!window.TwinSet) return alert('잠시 뒤 다시 골라 주세요. (읽기 도구를 불러오는 중)');
             let r;
-            try { r = window.TwinSet.parse(await window.TwinSet.readFile(f)); }
+            // 1~56번만 적은 유사 문제 파일이면 정답표 문항 수(예: 28)로 차례대로 묶는다(2개씩)
+            const knownN = (() => { try { return parseAnswerListJS(mathifyAnswers(document.getElementById('hw-answers').value.trim())).length; } catch (e) { return 0; } })();
+            try { r = window.TwinSet.parseAuto(await window.TwinSet.readFile(f), knownN); }
             catch (e) { HW_TWIN = null; hwTwinStatus(''); return alert(e.message || '파일을 읽지 못했습니다.'); }
             const b = r.bank, nv = b.items.reduce((a, i) => a + i.variants.length, 0);
             if (!b.items.length || r.warn.length) {
@@ -13470,7 +13472,7 @@ let lavUid = 0;
                 updateHwExplCount();
             }
             const needKey = !ansBox.value.trim() ? ' · <b class="text-amber-300">원래 문제의 정답표는 위 칸에 넣어 주세요</b>' : '';
-            hwTwinStatus(`<span class="text-rose-300">👯 유사 문제 세트: 원 문항 ${b.items.length}개 · 유사 문제 ${nv}개${filled}${b.twinOnly ? needKey : ''}. 배포하면 함께 올라갑니다.</span>`);
+            hwTwinStatus(`<span class="text-rose-300">👯 유사 문제 세트: 원 문항 ${b.items.length}개 · 유사 문제 ${nv}개${r.grouped ? ` (차례대로 ${r.grouped}개씩 묶음)` : ''}${filled}${b.twinOnly ? needKey : ''}. 배포하면 함께 올라갑니다.</span>`);
         }
         // 배포 직전에 세트를 서버에 올리고 그 id를 돌려준다 (없으면 '')
         async function uploadHwTwin(title) {
@@ -19629,7 +19631,7 @@ let lavUid = 0;
                             ${cur ? `<div class="text-[10.5px] text-gray-400 mb-1">지금: ${escapeHtml(cur.pdf_name || 'PDF')} · 채점 ${cur.graded}문제${cur.twins ? ` · 쌍둥이 ${cur.twins}문제` : ''}</div>` : ''}
                             <label class="block text-[11px] text-gray-300 mb-1.5">PDF<input id="cp-${k}-pdf" type="file" accept="application/pdf,.pdf" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-lime-700 file:text-white"></label>
                             <label class="block text-[11px] text-gray-300 mb-1.5">.json<input id="cp-${k}-json" type="file" accept=".json,application/json" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-sky-800 file:text-white"></label>
-                            <label class="block text-[11px] text-gray-300 mb-1.5">쌍둥이 세트 <span class="text-gray-500">(선택 · 워드/글 — 1-A · 1-B 양식)</span><input id="cp-${k}-twin" type="file" accept=".docx,.txt,text/plain" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-[#1e2430] file:text-gray-200"></label>
+                            <label class="block text-[11px] text-gray-300 mb-1.5">쌍둥이 세트 <span class="text-gray-500">(선택 · 워드/글 — '1-A. 1-B.' 또는 '1번 유사 문제' 줄 아래 1. 2. …)</span><input id="cp-${k}-twin" type="file" accept=".docx,.txt,text/plain" class="block w-full mt-0.5 text-[11px] text-gray-300 file:mr-2 file:px-2 file:py-1 file:rounded file:border-0 file:bg-[#1e2430] file:text-gray-200"></label>
                             ${cur && cur.twins ? `<label class="flex items-center gap-1.5 text-[10.5px] text-gray-400 mb-1.5"><input type="checkbox" id="cp-${k}-twin-del"> 지금 쌍둥이 ${cur.twins}문제 빼기</label>` : ''}
                             <details><summary class="text-[10.5px] text-gray-500 cursor-pointer">.json 대신 글 붙여 넣기</summary><textarea id="cp-${k}-text" rows="4" class="w-full mt-1 bg-[#151922] border border-gray-700 rounded p-1.5 text-[11px] text-white font-mono" placeholder="문제지 만들기 입력칸 글 전체"></textarea></details>
                         </div>`; }).join('')}</div>
@@ -19670,9 +19672,9 @@ let lavUid = 0;
                 if (twf) {
                     if (!pdf && !(e && e.sets[k])) return alert(`${label}: 쌍둥이 세트만으로는 안 돼요. 문제지 PDF도 골라 주세요.`);
                     let tw;
-                    try { tw = await clinicReadTwins(twf); } catch (err) { return alert(`${label} 쌍둥이 세트를 읽지 못했습니다: ${err.message}`); }
+                    try { tw = await clinicReadTwins(twf, e && e.sets[k] ? e.sets[k].total : 0); } catch (err) { return alert(`${label} 쌍둥이 세트를 읽지 못했습니다: ${err.message}`); }
                     const n = tw.bank.items.reduce((a, it) => a + it.variants.length, 0);
-                    if (!n) return alert(`${label} 쌍둥이 세트에서 쌍둥이 문제(1-A. 1-B. …)를 찾지 못했습니다.`);
+                    if (!n) return alert(`${label} 쌍둥이 세트에서 쌍둥이 문제(1-A. 1-B. … 또는 '1번 유사 문제' 줄 아래 1. 2. …)를 찾지 못했습니다.`);
                     if (tw.warn.length && !confirm(`${label} 쌍둥이 세트(${n}문제) 점검:\n· ${tw.warn.slice(0, 8).join('\n· ')}${tw.warn.length > 8 ? `\n… 외 ${tw.warn.length - 8}건` : ''}\n\n그래도 올릴까요?`)) return;
                     fd.append(`${k}_twins`, JSON.stringify(tw.bank)); any = true;
                 } else if (twDel && twDel.checked) { fd.append(`${k}_twins`, '-'); any = true; }
@@ -19706,9 +19708,9 @@ let lavUid = 0;
         }
 
         // 쌍둥이 세트 읽기 — '오답 쌍둥이 클리닉'과 같은 읽기 도구(twin-clinic/setmaker.js)를 그대로 쓴다
-        async function clinicReadTwins(f) {
-            if (!window.TwinSet) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'twin-clinic/setmaker.js?v=20261118b'; sc.onload = ok; sc.onerror = () => no(new Error('읽기 도구를 불러오지 못했습니다')); document.head.appendChild(sc); });
-            return window.TwinSet.parse(await window.TwinSet.readFile(f));
+        async function clinicReadTwins(f, knownN) {
+            if (!window.TwinSet) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'twin-clinic/setmaker.js?v=20261128b'; sc.onload = ok; sc.onerror = () => no(new Error('읽기 도구를 불러오지 못했습니다')); document.head.appendChild(sc); });
+            return window.TwinSet.parseAuto(await window.TwinSet.readFile(f), knownN);
         }
 
         async function clinicProgUpdate(id, patch) {
